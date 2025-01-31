@@ -195,6 +195,10 @@ var Criteria = exports.Criteria = Montage.specialize({
         value: function () {
             var clone = (new this.constructor);
 
+            if(this.name) {
+                clone.name = this.name;
+            }
+
             if(this._expression) {
                 clone._expression = this._expression;
             }

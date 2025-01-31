@@ -54,6 +54,11 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
                 this.fetchLimit = value;
             }
 
+            value = deserializer.getProperty("hints");
+            if (value !== void 0) {
+                this.hints = value;
+            }
+
 
             return result ? Promise.resolve(this) : this;
         }
@@ -78,6 +83,9 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             }
             if(this.fetchLimit) {
                 serializer.setProperty("fetchLimit", this.fetchLimit);
+            }
+            if(this.hints) {
+                serializer.setProperty("hints", this.hints);
             }
 
             // if (this.typeModule || (this.type && this.type.objectDescriptorInstanceModule)) {
@@ -104,7 +112,8 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
                 this.super(otherQuery) &&
                 (this.fetchLimit === otherQuery.fetchLimit) &&
                 (this.readExpressions && this.readExpressions.equals(otherQuery.readExpressions)) &&
-                (this.orderings && this.orderings.equals(otherQuery.orderings))
+                (this.orderings && this.orderings.equals(otherQuery.orderings)) &&
+                (this.hints && this.hints.equals(otherQuery.hints))
             ) {
                 return true;
             } else {
@@ -263,9 +272,20 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
 
     fetchLimit: {
         value: null
-    }
+    },
 
 
+    /**
+     * An object other objects can use to alter or optimize fetch operations.
+     * It is used for example to carry an object's originDataSnapshot if present, 
+     * or to pass an object's snapshot to provide context needed to a stateless, serverless
+     * Mod worker processing DataOperations 
+     * @type {Object}
+     */
+
+    hints: {
+        value: undefined
+    },
 
 
 });

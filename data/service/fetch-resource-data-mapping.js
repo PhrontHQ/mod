@@ -1,9 +1,12 @@
-const Montage = require("../../core/core").Montage,
+const Montage = require("core/core").Montage,
     ExpressionDataMapping = require("./expression-data-mapping").ExpressionDataMapping,
-    parse = require("../../core/frb/parse"),
-    compile = require("../../core/frb/compile-evaluator"),
-    assign = require("../../core/frb/assign"),
-    Scope = require("../../core/frb/scope");
+    RawForeignValueToObjectConverter = require("../converter/raw-foreign-value-to-object-converter").RawForeignValueToObjectConverter,
+    SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
+    Criteria = require("core/criteria").Criteria,
+    parse = require("core/frb/parse"),
+    compile = require("core/frb/compile-evaluator"),
+    assign = require("core/frb/assign"),
+    Scope = require("core/frb/scope");
 
 /**
  * Extends ExpressionDataMapping to add the ability to map a DataOperatin to an HTTP Request
@@ -103,7 +106,98 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
             }
         }
     },
+    */
 
+    _mapDataOperationToFetchRequestWithMappingRulesWithScope(dataOperation, fetchRequests, fetchRequestMappingRules, dataOperationScope) {
+        let j, jRule, jRuleEvaluationResult, iUrl, options, iRequest;
+
+        for(j=0;(jRule = fetchRequestMappingRules[j]); j++) {
+
+            jRuleEvaluationResult = jRule.evaluate(dataOperationScope);
+            if(jRule.targetPath === "url") {
+                iUrl = jRuleEvaluationResult;
+            } else {
+                assign( (options || (options = {})), jRule.targetPath, jRuleEvaluationResult, undefined /*parameters*/, undefined /*document*/, undefined /*components*/);
+            }
+        }
+
+        //Turn a JSON body to form if needed
+        if(options?.method == "POST" && typeof options?.body === "object") {
+            let headers = options?.headers,
+                contentType = headers && (headers["content-type"] || headers["Content-Type"]);
+            if(contentType === this._xWwwFormUrlencodedType) {
+                options.body = new URLSearchParams(options.body);
+            } else if(contentType?.includes(this._formData)) {
+                let formData = new FormData(),
+                body = options.body,
+                bodyKeys = Object.keys(body);
+
+                for(let i=0, countI = bodyKeys.length; (i < countI); i++) {
+                    formData.append(bodyKeys[i], body[bodyKeys[i]]);
+                }
+                options.body = formData;
+            }
+        }
+
+        if(!iUrl) {
+            throw new Error("mapDataOperationToFetchRequests: no url found for dataOperation: ",+dataOperation, " and criteria: "+iCriteria);
+        } else {
+            iRequest = new Request(iUrl, options);
+            //console.debug("Request "+iUrl+" with  options: "+ JSON.stringify(options));
+            (fetchRequests || (fetchRequests = [])).push(iRequest);
+        }
+
+    }
+
+    _criteriaFromOrCombinedSyntaxAndCombinedParameters(syntax, combinedParameters) {
+
+        /*
+            {
+                "type":"equals",
+                "args":[
+                    {
+                        "type":"property",
+                        "args":[
+                            {
+                                "type": "value"
+                            },
+                            {
+                                "type":"literal",
+                                "value":"factoryId"
+                            }
+                        ]
+                    },
+                    {
+                        "type":"parameters"
+                    }
+                ]
+            }
+        */
+
+        let _syntax = structuredClone(syntax),
+            parameterArg = _syntax.args[0].args[0].type == "parameters"
+            ? _syntax.args[0].args
+            : _syntax.args[0].args[1].type == "parameters"
+                ? _syntax.args[0].args
+                : _syntax.args[1].args[0].type == "parameters"
+                    ? _syntax.args[1].args
+                    : _syntax.args[1].args[1].type == "parameters"
+                        ? _syntax.args[1].args
+                        : null;
+
+        if(parameterArg) {
+            let parameterKey = parameterArg[1].value,
+                parameters = combinedParameters[parameterKey];
+            console.log("parameterArg: ",parameterArg);
+
+            parameterArg.pop();
+            let criteria = new Criteria().initWithSyntax(_syntax, parameters);
+            return criteria;
+        } else {
+            return null;
+        }
+    
+    }
 
     /**
      * Returns fetchRequestDescriptor conforming to the options object of a Request constructot .
@@ -146,42 +240,78 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
                         fetchRequestMappingByCriteria.set(iCriteria, (fetchRequestMappingRules = this._buildFetchRequestMappingRulesFromRawRules(fetchRequestMappingRules)))
                     }
 
-                    
-                    for(j=0;(jRule = fetchRequestMappingRules[j]); j++) {
+                    if(dataOperation.criteria?.name === RawForeignValueToObjectConverter.RawForeignValueToObjectConverterCombinedCriteria) {
 
-                        jRuleEvaluationResult = jRule.evaluate(dataOperationScope);
-                        if(jRule.targetPath === "url") {
-                            iUrl = jRuleEvaluationResult;
-                        } else {
-                            assign( (options || (options = {})), jRule.targetPath, jRuleEvaluationResult, undefined /*parameters*/, undefined /*document*/, undefined /*components*/);
-                        }
-                    }
+                        var iterator = new SyntaxInOrderIterator(dataOperation.criteria.syntax, "or"),
+                            originalCriteria = dataOperation.criteria,
+                            currentCriteria,
+                            combinedParameters = originalCriteria.parameters,
+                            parentSyntax, currentSyntax, firstArgSyntax, secondArgSyntax,
+                            localeSyntax;
+                            while ((currentSyntax = iterator.next("or").value)) {
+                                firstArgSyntax = currentSyntax.args[0];
+                                secondArgSyntax = currentSyntax.args[1];
 
-                    //Turn a JSON body to form if needed
-                    if(options?.method == "POST" && typeof options?.body === "object") {
-                        let headers = options?.headers,
-                            contentType = headers && (headers["content-type"] || headers["Content-Type"]);
-                        if(contentType === this._xWwwFormUrlencodedType) {
-                            options.body = new URLSearchParams(options.body);
-                        } else if(contentType?.includes(this._formData)) {
-                            let formData = new FormData(),
-                            body = options.body,
-                            bodyKeys = Object.keys(body);
+                                if(firstArgSyntax.type !== "or") {
+                                    currentCriteria = this._criteriaFromOrCombinedSyntaxAndCombinedParameters(firstArgSyntax, combinedParameters);
+                                    //Temporarily changing the criteria to do what we need
+                                    dataOperation.criteria = currentCriteria;
+                                    this._mapDataOperationToFetchRequestWithMappingRulesWithScope(dataOperation, fetchRequests, fetchRequestMappingRules, dataOperationScope);    
+                                }
 
-                            for(let i=0, countI = bodyKeys.length; (i < countI); i++) {
-                                formData.append(bodyKeys[i], body[bodyKeys[i]]);
+                                if(secondArgSyntax.type !== "or") {
+                                    currentCriteria = this._criteriaFromOrCombinedSyntaxAndCombinedParameters(secondArgSyntax, combinedParameters);
+                                    //Temporarily changing the criteria to do what we need
+                                    dataOperation.criteria = currentCriteria;
+                                    this._mapDataOperationToFetchRequestWithMappingRulesWithScope(dataOperation, fetchRequests, fetchRequestMappingRules, dataOperationScope);
+                                }
                             }
-                            options.body = formData;
-                        }
+        
+
+                            //Reseting to what it should be:
+                            dataOperation.criteria = originalCriteria;
+
+
+                    } else {
+                        this._mapDataOperationToFetchRequestWithMappingRulesWithScope(dataOperation, fetchRequests, fetchRequestMappingRules, dataOperationScope);
                     }
 
-                    if(!iUrl) {
-                        throw new Error("mapDataOperationToFetchRequests: no url found for dataOperation: ",+dataOperation, " and criteria: "+iCriteria);
-                    } else {
-                        iRequest = new Request(iUrl, options);
-                        //console.debug("Request "+iUrl+" with  options: "+ JSON.stringify(options));
-                        (fetchRequests || (fetchRequests = [])).push(iRequest);
-                    }
+                    
+                    // for(j=0;(jRule = fetchRequestMappingRules[j]); j++) {
+
+                    //     jRuleEvaluationResult = jRule.evaluate(dataOperationScope);
+                    //     if(jRule.targetPath === "url") {
+                    //         iUrl = jRuleEvaluationResult;
+                    //     } else {
+                    //         assign( (options || (options = {})), jRule.targetPath, jRuleEvaluationResult, undefined /*parameters*/, undefined /*document*/, undefined /*components*/);
+                    //     }
+                    // }
+
+                    // //Turn a JSON body to form if needed
+                    // if(options?.method == "POST" && typeof options?.body === "object") {
+                    //     let headers = options?.headers,
+                    //         contentType = headers && (headers["content-type"] || headers["Content-Type"]);
+                    //     if(contentType === this._xWwwFormUrlencodedType) {
+                    //         options.body = new URLSearchParams(options.body);
+                    //     } else if(contentType?.includes(this._formData)) {
+                    //         let formData = new FormData(),
+                    //         body = options.body,
+                    //         bodyKeys = Object.keys(body);
+
+                    //         for(let i=0, countI = bodyKeys.length; (i < countI); i++) {
+                    //             formData.append(bodyKeys[i], body[bodyKeys[i]]);
+                    //         }
+                    //         options.body = formData;
+                    //     }
+                    // }
+
+                    // if(!iUrl) {
+                    //     throw new Error("mapDataOperationToFetchRequests: no url found for dataOperation: ",+dataOperation, " and criteria: "+iCriteria);
+                    // } else {
+                    //     iRequest = new Request(iUrl, options);
+                    //     //console.debug("Request "+iUrl+" with  options: "+ JSON.stringify(options));
+                    //     (fetchRequests || (fetchRequests = [])).push(iRequest);
+                    // }
 
 
                 }
@@ -212,24 +342,37 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
         return value;
     }
 
-    mapFetchResponseToRawData(fetchReponse, rawData) {
+    /**
+     * This method allows to reshape the data returned by an API into an array of identically shaped
+     * objects, which is what mod data expects
+     *
+     * @method
+     * @argument {Object}fetchResponse
+     *                      JSON content of the response
+     * @argument {Array}rawData
+     *                     The array where rawData is expected.
+     *
+     * @returns undefined
+     *
+     */
+    mapFetchResponseToRawData(fetchResponse, rawData) {
 
         /*
             We need to find the criteria that led us to the current response:
 
-            fetchReponse -> fetchRequest -> criteria -> response mapping
+            fetchResponse -> fetchRequest -> criteria -> response mapping
         */
 
             let criteriaIterator = this.fetchResponseRawDataMappingExpressionByCriteria.keys(),
-                fetchReponseScope = this._scope.nest(fetchReponse),
+                fetchResponseScope = this._scope.nest(fetchResponse),
                 iCriteria;
 
         while ((iCriteria = criteriaIterator.next().value)) {
 
-            if(iCriteria.evaluate(fetchReponse)) {
+            if(iCriteria.evaluate(fetchResponse)) {
                 //We have a match, we need to evaluate the rules to 
                 let fetchResponseRawDataMappingFunction = this.fetchResponseRawDataMappingFunctionForCriteria(iCriteria),
-                    result = fetchResponseRawDataMappingFunction(fetchReponseScope);
+                    result = fetchResponseRawDataMappingFunction(fetchResponseScope);
 
                 if(result) {
                     Array.isArray(result) 

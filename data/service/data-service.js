@@ -342,6 +342,10 @@ DataService.addClassProperties({
                 this.shouldAuthenticateReadOperation = value;
             }
 
+            value = deserializer.getProperty("originIdKey");
+            if (value) {
+                this.originIdKey = value;
+            }
 
             return this;
         }
@@ -2584,7 +2588,7 @@ DataService.addClassProperties({
                 var dataObject;
                 // TODO [Charles]: Object uniquing.
                 if (this.isUniquing && dataIdentifier) {
-                    dataObject = this.objectForDataIdentifier(dataIdentifier);
+                    dataObject = this.objectForDataIdentifier(dataIdentifier, rawData, context);
                 }
                 if (!dataObject) {
                     if (dataIdentifier === undefined) {
@@ -2699,11 +2703,13 @@ DataService.addClassProperties({
      * of this method. That method will be called by this method when needed.
      *
      * @method
-     * @argument {object} object        - object
-     * @returns {DataIdentifier}        - object's DataIdentifier
+     * @argument {DataIdentifier} dataIdentifier        - the dataIdentifier object
+     * @argument {Object} rawData                       - the raw data for the object expected to be found
+     * @argument {Object} context                       - the context around, typically a DataOperation
+     * @returns {Objecr}                                - object found for that dataIdentifier if any
      */
     objectForDataIdentifier: {
-        value: function(dataIdentifier) {
+        value: function(dataIdentifier, rawData, context) {
             return this._objectByDataIdentifier.get(dataIdentifier);
         }
     },
@@ -2825,8 +2831,8 @@ DataService.addClassProperties({
                 var service = this.childServiceForType(type),
                     //Gives a chance to raw data service to provide a primary key for clien-side creation/
                     //Especially useful for systems that use uuid as primary keys.
-                    //object = this._createDataObject(type, service.dataIdentifierForNewDataObject(type));
-                    object = this._createDataObject(type, service.dataIdentifierForNewDataObject(this.objectDescriptorForType(type)));
+                    //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type));
+                    object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type)));
                 this.registerCreatedDataObject(object);
 
                 return object;
@@ -2861,14 +2867,26 @@ DataService.addClassProperties({
     _createDataObject: {
         value: function (type, dataIdentifier) {
             var objectDescriptor = this.objectDescriptorForType(type),
-                object = Object.create(this._getPrototypeForType(objectDescriptor));
+                object = Object.create(this._getPrototypeForType(objectDescriptor)),
+                dataIdentifierDataService = dataIdentifier.dataService,
+                delegateDataIdentifier;
                 // constructor = this._getPrototypeForType(objectDescriptor).constructor,
                 // object = new constructor;
                 // //object = Reflect.construct(constructor, this._emptyArray);
             if (object) {
 
+                delegateDataIdentifier = dataIdentifierDataService.callDelegateMethod("dataIdentifierForRawDataServiceCreatingObjectWithDataIdentifier", dataIdentifier.dataService, dataIdentifier) ?? dataIdentifier;
+
+                /*
+                    Our delegate overrode our dataIdentifier, we're going to keep a reference from 
+                    dataIdentifier to the object
+                */
+                if(delegateDataIdentifier !== dataIdentifier) {
+                    this.mainService.recordObjectForDataIdentifier(object, dataIdentifier);
+                    dataIdentifier = delegateDataIdentifier;
+                }
                 //This needs to be done before a user-land code can attempt to do
-                //anyting inside its constructor, like creating a binding on a relationships
+                //anything inside its constructor, like creating a binding on a relationships
                 //causing a trigger to fire, not knowing about the match between identifier
                 //and object... If that's feels like a real situation, it is.
                 this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
@@ -2883,6 +2901,9 @@ DataService.addClassProperties({
                     this._setObjectType(object, objectDescriptor);
                     this._objectDescriptorForObjectCache.set(object,objectDescriptor);
                 }
+
+                dataIdentifierDataService.callDelegateMethod("rawDataServiceDidCreateObject", dataIdentifierDataService, object);
+
             }
             return object;
         }
@@ -2899,7 +2920,7 @@ DataService.addClassProperties({
      */
    registerUniqueObjectWithDataIdentifier: {
         value: function(object, dataIdentifier) {
-            //Benoit, this is currently relying on a manual turn-on of isUniquing on the MainService, which is really not something people should have to worry about...
+            //Benoit: this is currently relying on a manual turn-on of isUniquing on the MainService, which is really not something people should have to worry about...
             if (object && dataIdentifier && this.isRootService && this.isUniquing) {
                 this.recordDataIdentifierForObject(dataIdentifier, object);
                 this.recordObjectForDataIdentifier(object, dataIdentifier);
@@ -3011,14 +3032,14 @@ DataService.addClassProperties({
                     let service = this.childServicesThatCanSaveDataType(objectDescriptor)[0],
                     //     //In case the object's primarykey is a public property 
                     //     //
-                    //     //primaryKey = service.dataIdentifierForNewDataObject(objectDescriptor, dataObject),
+                    //     //primaryKey = service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject),
                     //     primaryKey = service.primaryKeyForTypeRawData(objectDescriptor, dataObject),
                         prototype = this._getPrototypeForType(objectDescriptor),
                     //     dataIdentifier = primaryKey 
                     //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
-                    //         : service.dataIdentifierForNewDataObject(objectDescriptor);
+                    //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
 
-                        dataIdentifier = service?.dataIdentifierForNewDataObject(objectDescriptor, dataObject);
+                        dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
 
                     this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
 
@@ -5029,7 +5050,9 @@ DataService.addClassProperties({
             }
             handlers.push(rawDataService);
 
-            this.registerRawDataServiceHandlerForReadEventId(rawDataService, readOperation.referrerId);
+            //When readOperation's referrer was a readEvent 
+            //this.registerRawDataServiceHandlerForReadEventId(rawDataService, readOperation.referrerId);
+            this.registerRawDataServiceHandlerForReadEventId(rawDataService, readOperation.id);
         }
     },
 
@@ -5064,7 +5087,17 @@ DataService.addClassProperties({
                     This means no RawDataService were able to handle that read. 
                     We need to report am error
                 */
-                readEvent.dataStream.dataError(new Error("No RawDataService to handle query for "+readEvent.dataStream.query.type.name));
+
+                /*
+                    REFACTOR: There could be more than one rawDataService handling a read operation.
+
+                    RawDataService in handleRead used to create a readDataOperation for itself,
+                    and set itself as:
+                                readOperation.rawDataService = this;
+                    Now in captureReadOperation(), it's missing...
+
+                */
+                //readEvent.dataStream.dataError(new Error("No RawDataService to handle query for "+readEvent.dataStream.query.type.name));
             }
 
             this._rawDataServiceHandlersByReadEventId.delete(readEvent.id);
@@ -5187,27 +5220,168 @@ DataService.addClassProperties({
                 */
 
                 if(self.supportsDataOperation && query.type.dispatchEvent) {
+                    // try {
+
+                    //     var readEvent = ReadEvent.checkout();
+
+                    //     readEvent.type = ReadEvent.read;
+                    //     readEvent.query = query;
+                    //     readEvent.dataStream = stream;
+
+                    //     self.registerReadEvent(readEvent);
+
+                    //     query.type.dispatchEvent(readEvent);
+                    //     if(readEvent.propagationPromise) {
+                    //         readEvent.propagationPromise.finally(() => {
+                    //             self.unregisterReadEvent(readEvent);
+                    //         });
+                    //     } else {
+                    //         self.unregisterReadEvent(readEvent);
+                    //     }
+                    // } catch (e) {
+                    //     stream.dataError(e);
+                    // }
+
+
                     try {
 
-                        var readEvent = ReadEvent.checkout();
+                        var readOperation = new DataOperation();
 
-                        readEvent.type = ReadEvent.read;
-                        readEvent.query = query;
-                        readEvent.dataStream = stream;
+                        readOperation.type = DataOperation.Type.ReadOperation;
+                        readOperation.target = query.type;
 
-                        self.registerReadEvent(readEvent);
+                        if(query.identity) {
+                            readOperation.identity = query.identity;
+                        } else if(self.identity) {
+                            readOperation.identity = self.identity;
+                        }
+            
+                        //Need to add a check to see if criteria may have more spefific instructions for "locale".
+                        /*
+                            1/19/2021 - we were only adding locale when the object descriptor being fetched has some localizableProperties, but a criteria may involve a subgraph and we wou'd have to go through the syntactic tree of the criteria, and readExpressions, to figure out if anywhere in that subgraph, there might be localizable properties we need to include the locales for.
 
-                        query.type.dispatchEvent(readEvent);
-                        if(readEvent.propagationPromise) {
-                            readEvent.propagationPromise.finally(() => {
-                                self.unregisterReadEvent(readEvent);
+                            Since we're localized by default, we're going to include it no matter what, it's going to be more rare that it is not needed than it is.
+                        */
+                        /*
+                            WIP Adds locale as needed. Most common case is that it's left to the framework to qualify what Locale to use.
+
+                            A core principle is that each data object (DO) has a locale property behaving in the following way:
+                            locales has 1 locale value, a locale object.
+                            This is the most common use case. The property’s getter returns the user’s locale.
+                            Fetching an object with a criteria asking for a specific locale will return an object in that locale.
+                            Changing the locale property of an object to another locale instance (singleton in Locale’s case), updates all the values of its localizable properties to the new locale set.
+                            locales has either no value, or “*” equivalent, an “All Locale Locale”
+                            This feches the json structure and returns all the values in all the locales
+                            locales has an array of locale instances.
+                            If locale’s cardinality is > 1 then each localized property would return a json/dictionary of locale->value instead of 1 value.
+                        */
+
+                        readOperation.locales = self.userLocales;
+
+                        if (query.criteria) {
+                            //readOperation.criteria = criteria.clone();
+                            readOperation.criteria = query.criteria;
+                        }
+                        if (query.fetchLimit) {
+                            readOperation.data.readLimit = query.fetchLimit;
+                        }
+                        if (query.batchSize) {
+                            readOperation.data.batchSize = query.batchSize;
+                        }
+                        if (query.orderings && query.orderings > 0) {
+                            rawOrderings = [];
+                            // self._mapObjectDescriptorOrderingsToRawOrderings(objectDescriptor, query.sortderings,rawOrderings);
+                            // readOperation.data.orderings = rawOrderings;
+                            readOperation.data.orderings = query.orderings;
+                        }
+                        if (query.readExpressions && query.readExpressions.length) {
+                            readOperation.data.readExpressions = query.readExpressions;
+                        }
+                        /*
+                            We need to do this in node's DataWorker, it's likely that we'll want that client side as well, where it's some sort of token set post authorization.
+                        */
+                        if (self.application.identity && self.shouldAuthenticateReadOperation) {
+                            readOperation.identity = self.application.identity;
+                        }
+
+
+                       if(query.hints) {
+                            readOperation.hints = query.hints;
+                       }
+
+    
+                    /*
+
+                        this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
+                        phront-service does it, but we need to stop doing it half way there and the other half over there.
+                        SaveChanges is cleaner, but the job is also easier there.
+
+                    */
+                        let criteria = query.criteria;
+                        
+                        parameters = criteria ? criteria.parameters : undefined;
+                        rawParameters = parameters;
+            
+                        if (parameters && typeof criteria.parameters === "object") {
+                            var keys = Object.keys(parameters),
+                                i, countI, iKey, iValue, iRecord,
+                                criteriaClone;
+            
+                            //rawParameters = Array.isArray(parameters) ? [] : {};
+            
+                            for (i = 0, countI = keys.length; (i < countI); i++) {
+                                iKey = keys[i];
+                                iValue = parameters[iKey];
+                                if (!iValue) {
+                                    console.warn("fetchData: criteria ",criteria, "has value: "+value+" for parameter key " + iKey);
+                                } else {
+                                    if (iValue.dataIdentifier) {
+            
+            
+                                        if (!criteriaClone) {
+                                            criteriaClone = criteria.clone();
+                                            rawParameters = criteriaClone.parameters;
+                                        }
+                                        /*
+                                            this isn't working because it's causing triggers to fetch properties we don't have
+                                            and somehow fails, but it's wastefull. Going back to just put primary key there.
+                                        */
+                                        // iRecord = {};
+                                        // rawParameters[iKey] = iRecord;
+                                        // (promises || (promises = [])).push(
+                                        //     self._mapObjectToRawData(iValue, iRecord)
+                                        // );
+                                        rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
+                                    }
+                                    // else {
+                                    //     rawParameters[iKey] = iValue;
+                                    // }
+                                }
+            
+                            }
+            
+                            if (criteriaClone) {
+                                readOperation.criteria = criteriaClone;
+                            }
+                        }
+
+                        readOperation.dataStream = stream;
+
+                        self.registerReadEvent(readOperation);
+
+                        query.type.dispatchEvent(readOperation);
+                        if(readOperation.propagationPromise) {
+                            readOperation.propagationPromise.finally(() => {
+                                self.unregisterReadEvent(readOperation);
                             });
                         } else {
-                            self.unregisterReadEvent(readEvent);
+                            self.unregisterReadEvent(readOperation);
                         }
                     } catch (e) {
                         stream.dataError(e);
                     }
+
+
 
                     // try {
                     //     self._fetchDataWithOperation(query, stream);

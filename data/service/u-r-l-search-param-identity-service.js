@@ -102,7 +102,14 @@ exports.URLSearchParamIdentityService = URLSearchParamIdentityService = Identity
     handleReadOperation: {
         value: function (operation) {
             // var stream = DataService.mainService.registeredDataStreamForDataOperation(operation);
-            var stream = this.contextForPendingDataOperation(operation);
+            
+            /*
+                As we evolve the stack, rawDataService doesn't do
+                                this.registerPendingDataOperationWithContext(readOperation, stream);
+
+                in its implementation of handleReadOperation(), which would force RawDataServices to call super...
+            */
+            var stream = this.contextForPendingDataOperation(operation) || operation.dataStream;
             this.fetchRawData(stream);
             this.unregisterPendingDataOperation(operation);
         }

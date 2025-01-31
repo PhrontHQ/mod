@@ -321,6 +321,10 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             if(this._context) {
                 serializer.setProperty("context", this._context);
             }
+            if(this.hints) {
+                serializer.setProperty("hints", this.hints);
+            }
+
 
             if(this.hasOwnProperty("needsDataMapping")) {
                 serializer.setProperty("needsDataMapping", this.needsDataMapping);
@@ -430,6 +434,11 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             value = deserializer.getProperty("context");
             if (value !== void 0) {
                 this.context = value;
+            }
+
+            value = deserializer.getProperty("hints");
+            if (value !== void 0) {
+                this.hints = value;
             }
 
             value = deserializer.getProperty("needsDataMapping");
@@ -787,6 +796,19 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             }
         }
     },
+
+    /**
+     * An object other objects can use to alter or optimize fetch operations.
+     * It is used for example to carry an object's originDataSnapshot if present, 
+     * or to pass an object's snapshot to provide context needed to a stateless, serverless
+     * Mod worker processing DataOperations 
+     * @type {Object}
+     */
+
+    hints: {
+        value: undefined
+    },
+    
 
     /***************************************************************************
      * Data Properties

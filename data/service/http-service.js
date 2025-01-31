@@ -12,7 +12,8 @@ const RawDataService = require("./raw-data-service").RawDataService,
     compile = require("../../core/frb/compile-evaluator"),
     evaluate = require("../../core/frb/evaluate"),
     Scope = require("../../core/frb/scope"),
-    Promise = require("../../core/promise").Promise;
+    Promise = require("../../core/promise").Promise,
+    DataOperation = require("./data-operation").DataOperation;
 
 
 var HttpError = exports.HttpError = Montage.specialize({
@@ -240,90 +241,110 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             //if(accessToken?.accessToken) console.debug("accessToken: ",accessToken.accessToken);
             // mapping = objectDescriptor && this.mappingForType(objectDescriptor),
             var fetchRequests = [],
-            i, iRequest;
+                readOperations = [];
 
-            if(typeof mapping.mapDataOperationToFetchRequests === "function") {
-                mapping.mapDataOperationToFetchRequests(readOperation, fetchRequests);
-            }
-            else {
-                let error = new Error(this.name+": No Mapping for "+ readOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
-                responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-                responseOperation.target.dispatchEvent(responseOperation);
+            /*
+                As dataOperation move up the model, meaning criteria's expression are expected to be object level, while keeping the option to 
+                perform data mapping client side, when possible, we need to check if it's done or not.
 
-                //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                responseOperation.propagationPromise.then(() => {
-                    readOperationCompletionPromiseResolve?.(responseOperation);
-                });
-                
-            }
-            
-            if(fetchRequests.length > 0) {
+                One common case is a read operation for an object's property, can also be a relationship to another type.
+                We're first adding this. This kind of operation where the read expression is a relationship to another type 
+                typically needs to become a read operation to that other type, in most cases.
 
-                for(i=0; (iRequest = fetchRequests[i]); i++) {
-                    console.debug(iRequest.url);
-                    // console.debug("iRequest headers: ",iRequest.headers);
-                    // console.debug("iRequest body: ",iRequest.body);
-                    // .finally((value) => {
-                    //     console.debug("finally objectDescriptor.dispatchEvent("+responseOperation+");");
-                    //     objectDescriptor.dispatchEvent(responseOperation);
-                    // })
-                    this._fetchReadOperationRequest(readOperation, iRequest, mapping, readOperationCompletionPromiseResolve);
-                }              
-            } else {
-                let criteriaParameters = readOperation?.criteria?.parameters,
-                    qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
-                    rawDataPrimaryKeyProperties = mapping.rawDataPrimaryKeyProperties,
-                    rawData = [];
+                Also, 
+            */
 
-                if(readOperation.data.readExpressions && readOperation.data.readExpressions.length > 0 && qualifiedProperties?.length == 1) {
-                    /*
-                        The test obove is for a query initiated by mod's data-triggers to resolve values of one object at a time and that qualifiedProperties only is the primary key.
-                        So far mod supports a single primary key, that can be an object.
+            this.mapDataOperationToRawDataOperations(readOperation, readOperations);
 
-                        We should more carefully use the syntax to match the property to it's value
-                    */
-                    // let readExpressions = readOperation.data.readExpressions,
-                    //         rawDataObject = {};
+            for(let i=0, iReadOperation; (iReadOperation = readOperations[i]); i++) {
+                let iMapping = this.mappingForObjectDescriptor(iReadOperation.target);
+                if(typeof iMapping.mapDataOperationToFetchRequests === "function") {
+                    iMapping.mapDataOperationToFetchRequests(iReadOperation, fetchRequests);
 
-                    //     rawData.push(rawDataObject);
-                    // //Set the primary key:
-                    // rawDataObject[qualifiedProperties[0]] = criteriaParameters;
-                    
-                    // console.once.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
-                    
-                    // //console.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions+" and criteria: ",readOperation.criteria);
-                    // for(let i = 0, countI = readExpressions.length, iReadExpression, iPropertyDescriptor; (i < countI); i++ ) {
-                    //     iReadExpression = readExpressions[i]
-                    //     iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iReadExpression);
-                    //     rawDataObject[iReadExpression] = iPropertyDescriptor.defaultValue || iPropertyDescriptor.defaultFalsyValue;
-                    // }
-                    
-                    responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
-                    responseOperation.target.dispatchEvent(responseOperation);
+                    if(fetchRequests.length > 0) {
 
-                    //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                    responseOperation.propagationPromise.then(() => {
-                        readOperationCompletionPromiseResolve?.(responseOperation);
-                    });
-
-                } else {
-                    let error = new Error("No Mapping found "+ readOperation.target.name+ " "+readOperation.data.readExpressions);
-                
-                    console.once.error(error.message);
-                    if(readOperation.clientId) {
-                        error.stack = null;
+                        for(let i=0, iRequest; (iRequest = fetchRequests[i]); i++) {
+                            console.debug(iRequest.url);
+                            // console.debug("iRequest headers: ",iRequest.headers);
+                            // console.debug("iRequest body: ",iRequest.body);
+                            // .finally((value) => {
+                            //     console.debug("finally objectDescriptor.dispatchEvent("+responseOperation+");");
+                            //     objectDescriptor.dispatchEvent(responseOperation);
+                            // })
+                            this._fetchReadOperationRequest(iReadOperation, iRequest, readOperationCompletionPromiseResolve);
+                        }              
+                    } else {
+                        let criteriaParameters = readOperation?.criteria?.parameters,
+                            qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
+                            rawDataPrimaryKeyProperties = mapping.rawDataPrimaryKeyProperties,
+                            rawData = [];
+        
+                        if(readOperation.data.readExpressions && readOperation.data.readExpressions.length > 0 && qualifiedProperties?.length == 1) {
+                            /*
+                                The test obove is for a query initiated by mod's data-triggers to resolve values of one object at a time and that qualifiedProperties only is the primary key.
+                                So far mod supports a single primary key, that can be an object.
+        
+                                We should more carefully use the syntax to match the property to it's value
+                            */
+                            // let readExpressions = readOperation.data.readExpressions,
+                            //         rawDataObject = {};
+        
+                            //     rawData.push(rawDataObject);
+                            // //Set the primary key:
+                            // rawDataObject[qualifiedProperties[0]] = criteriaParameters;
+                            
+                            // console.once.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
+                            
+                            // //console.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions+" and criteria: ",readOperation.criteria);
+                            // for(let i = 0, countI = readExpressions.length, iReadExpression, iPropertyDescriptor; (i < countI); i++ ) {
+                            //     iReadExpression = readExpressions[i]
+                            //     iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iReadExpression);
+                            //     rawDataObject[iReadExpression] = iPropertyDescriptor.defaultValue || iPropertyDescriptor.defaultFalsyValue;
+                            // }
+                            
+                            responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
+                            responseOperation.target.dispatchEvent(responseOperation);
+        
+                            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                            responseOperation.propagationPromise.then(() => {
+                                readOperationCompletionPromiseResolve?.(responseOperation);
+                            });
+        
+                        } else {
+                            let error = new Error("No Mapping found "+ readOperation.target.name+ " "+readOperation.data.readExpressions);
+                        
+                            console.once.error(error.message);
+                            if(readOperation.clientId) {
+                                error.stack = null;
+                            }
+                            responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                            responseOperation.target.dispatchEvent(responseOperation);
+        
+                            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                            responseOperation.propagationPromise.then(() => {
+                                readOperationCompletionPromiseResolve?.(responseOperation);
+                            });
+                            
+                        }
+        
                     }
-                    responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+        
+                }
+                else {
+                    let error = new Error(this.name+": No Mapping for "+ iReadOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
+                    responseOperation = this.responseOperationForReadOperation(iReadOperation.referrer ? iReadOperation.referrer : iReadOperation, error, null);
                     responseOperation.target.dispatchEvent(responseOperation);
-
+    
                     //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
                     responseOperation.propagationPromise.then(() => {
                         readOperationCompletionPromiseResolve?.(responseOperation);
                     });
                     
                 }
-
             }
+
+
+            
 
 
         })
@@ -342,7 +363,105 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         return readOperationCompletionPromise;
     }
 
-    _fetchReadOperationRequest(readOperation, iRequest, mapping, readOperationCompletionPromiseResolve) {
+    mapDataOperationToRawDataOperations(dataOperation, rawDataOperations) {
+
+        /*
+            As dataOperation move up the model, expected to be object level, while keeping the option to 
+            perform data mapping client side, when possible, we need to check.
+
+            One common case is a read operation for an objet's property, can also be a relationship to another type.
+            We're first adding this. 
+        */
+       let  readExpressions = dataOperation.data?.readExpressions,
+            readExpressionsCount = readExpressions?.length || 0;
+
+        if(dataOperation?.criteria?.name === "rawDataPrimaryKeyCriteria" && readExpressions?.length > 0) {
+            var objectDescriptor = dataOperation.target,
+            mapping = this.mappingForType(objectDescriptor),
+            rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
+            primaryKeyPropertyDescriptors = mapping.primaryKeyPropertyDescriptors,
+            criteria = dataOperation.criteria;
+
+            /*
+                We'd need a way to struture how to inform what readExpression a RawDataService can combine.
+                For a database data service, one raw data operation / query can retrieve all columns at once
+                But for an HTTP Service, there aren't any "rules", it depends... Performance-wise it would be better
+                to have that sorted out at the end of looping on readExpressions.
+                It might be better done in FetchResourceDataMapping
+            */
+    
+            for(let i=0, countI = readExpressionsCount, iExpression;(i<countI); i++) {
+
+                iExpression = readExpressions[i];
+
+                let iObjectRule = mapping.objectMappingRuleForPropertyName(iExpression),
+                    iObjectRuleConverter = iObjectRule && iObjectRule.converter,
+    
+                    iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iExpression),
+                    iValueDescriptorReference = iObjectRule && iObjectRule.propertyDescriptor._valueDescriptorReference,
+                    iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
+
+                //If it's a relationship to another type, we're going to need to build a different DataOperation
+                if(iValueDescriptorReference !== objectDescriptor) {
+
+                    let iReadOperation = new DataOperation();
+                    iReadOperation.clientId = dataOperation.clientId;
+                    //We need this to keep the link with the original when commplete the read 
+                    iReadOperation.referrer = dataOperation;
+                    iReadOperation.type = DataOperation.Type.ReadOperation;
+                    iReadOperation.target = iValueDescriptorReference;
+                    iReadOperation.data = dataOperation.data;
+                    rawDataOperations.push(iReadOperation);
+
+
+                    let originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier],
+                        iRawDataMappingRules = mapping.rawDataMappingRulesForObjectProperty(iExpression),
+                        iRawDataMappingRulesIterator = iRawDataMappingRules && iRawDataMappingRules.values(),
+                        iRawDataMappingRule;
+
+
+                    /*
+                        If instead of passing just the originDataSnapshot in hints, we could pass all snapshots,
+                        including from what we consider the "primary" destination. Each RawDataService will look 
+                        up their own thing.
+                    */
+                    //Loop on potential matches
+                    while((iRawDataMappingRule = iRawDataMappingRulesIterator.next().value)) {
+
+                        let iTargetPath = iRawDataMappingRule.targetPath,
+                            iRawDataMappingRuleConverter = iRawDataMappingRule.reverter,
+                            iRawDataMappingRuleConverterForeignDescriptorMapping = iRawDataMappingRuleConverter && iRawDataMappingRuleConverter.foreignDescriptorMatchingRawProperty && iRawDataMappingRuleConverter.foreignDescriptorMatchingRawProperty(iTargetPath);
+
+                        if(iRawDataMappingRuleConverterForeignDescriptorMapping) {
+                            //Test
+                            iValueDescriptorReference = iRawDataMappingRuleConverterForeignDescriptorMapping.type;
+                            iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
+                        }
+
+                        if(readExpressionsCount === 1) {
+                            let mappingScope = mapping._scope.nest(dataOperation);
+                            mappingScope = mappingScope.nest(dataOperation.hints?.originDataSnapshot?.[this.identifier]);
+                            iReadOperation.criteria = iRawDataMappingRule.reverter.convertCriteriaForValue(iObjectRule.expression(mappingScope));
+                            //iReadOperation.criteria = iRawDataMappingRuleConverter.convertCriteriaForValue(criteria.parameters.id);
+
+                        } else {
+                            throw "HTTPService mapDataOperationToRawDataOperations() is not implememnted yer to handle more than one expression"
+                        }
+                     
+                    }
+                }
+
+            }
+
+
+
+        } else {
+            rawDataOperations.push(dataOperation);
+        }
+    }
+
+    _fetchReadOperationRequest(readOperation, iRequest, readOperationCompletionPromiseResolve) {
+
         fetch(iRequest)
         .then((response) => {
             if (response.status === 200) {
@@ -381,11 +500,12 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         })
         .then((responseContent) => {
             //console.debug(iRequest.url+": ",JSON.stringify(responseContent));
-
+            let mapping = this.mappingForObjectDescriptor(readOperation.target);
             let rawData = [];
+
             mapping.mapFetchResponseToRawData(responseContent, rawData);
             //console.debug("rawData: ",rawData);
-            let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
+            let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, false /*isNotLast*/, readOperation.target/*responseOperationTarget*/);
             console.debug("then responseOperation.target.dispatchEvent("+responseOperation+");");
             responseOperation.target.dispatchEvent(responseOperation);
 

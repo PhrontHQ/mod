@@ -97,7 +97,7 @@
         "values": {
             "name": "originId",
             "valueType": "string",
-            "isUnique": true,
+            "isUnique": false,
             "isSearchable": true,
             "description": "The primaryKey from a different system a Data Object may have come from originally"
         }
@@ -108,7 +108,6 @@
         "values": {
             "name": "originDataSnapshot",
             "valueType": "object",
-            "isUnique": true,
             "isSearchable": true,
             "description": "Stores the latest known data snapshot from an origin service it was imported from. An entry per origin data service contains the data snapshot from that origin"
         }

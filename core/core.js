@@ -1371,23 +1371,28 @@ Montage.defineProperty(Montage.prototype, "callDelegateMethod", {
             }
 
             if (delegateFunction) {
-                if(arguments.length === 2) {
-                    return delegateFunction.call(delegate,arguments[1]);
-                }
-                else if(arguments.length === 3) {
-                    return delegateFunction.call(delegate,arguments[1],arguments[2]);
-                }
-                else if(arguments.length === 4) {
-                    return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3]);
-                }
-                else if(arguments.length === 5) {
-                    return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3],arguments[4]);
-                }
-                else {
-                    // remove first argument
-                    ARRAY_PROTOTYPE.shift.call(arguments);
-                    return delegateFunction.apply(delegate, arguments);
-                }
+                //Using modern JS:
+                // Destructure the array to skip the first element
+                const [, ...rest] = arguments;
+                return delegateFunction.call(delegate, ...rest);
+
+                // if(arguments.length === 2) {
+                //     return delegateFunction.call(delegate,arguments[1]);
+                // }
+                // else if(arguments.length === 3) {
+                //     return delegateFunction.call(delegate,arguments[1],arguments[2]);
+                // }
+                // else if(arguments.length === 4) {
+                //     return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3]);
+                // }
+                // else if(arguments.length === 5) {
+                //     return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3],arguments[4]);
+                // }
+                // else {
+                //     // remove first argument
+                //     ARRAY_PROTOTYPE.shift.call(arguments);
+                //     return delegateFunction.apply(delegate, arguments);
+                // }
             }
         }
     }

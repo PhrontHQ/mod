@@ -1,6 +1,6 @@
 var DataService = require("./data-service").DataService,
     RawDataService = require("./raw-data-service").RawDataService,
-    //DataQuery = (require) ("mod/data/model/data-query").DataQuery,
+    DataQuery = require("data/model/data-query").DataQuery,
     Promise = require("core/promise").Promise,
     Date = require("core/extras/date").Date,
     Range = require("core/range").Range,
@@ -467,7 +467,7 @@ WebSocketDataOperationService.addClassProperties({
       overriden to efficently counters the data structure
       returned by AWS RDS DataAPI efficently
     */
-      addOneRawData: {
+    addOneRawData: {
         value: function (stream, rawData, context) {
             //Data coming from Postresql
                 if(!this.useDataAPI) {
@@ -622,10 +622,168 @@ WebSocketDataOperationService.addClassProperties({
         value: undefined
     },
 
+    // handleRead: {
+    //     value: function (readEvent) {
+    //         if(this.handlesType(readEvent.target)) {
+    //             this._readOperationQueue.push(readEvent);
+
+    //             //Overrides operation's needsDataMapping to get started
+    //             // readEvent.needsDataMapping = true;
+
+    //             if (this._readOperationQueue.length === 1) {
+    //                 queueMicrotask(() => {
+    //                 //this._processOperationQueueTimeout = setTimeout(() => {
+
+    //                     if(this._processOperationQueueTimeout) {
+    //                         clearTimeout(this._processOperationQueueTimeout);
+    //                     }
+    //                     var _operation;
+    //                     if(this._readOperationQueue.length > 1) {
+    //                         // _operation = new DataOperation();
+    //                         // _operation.type = DataOperation.Type.BatchOperation;
+    //                         // // batchOperation.target= transactionObjecDescriptors,
+    //                         // _operation.data = {
+    //                         //         batchedOperations: this._dispatchOperationQueue
+    //                         // };
+    //                         // this._pendingOperationById.set(_operation.id, _operation);
+    //                         //console.log("this._socketSendOperation ",this._readOperationQueue);
+    //                         this._socketSendOperation(this._readOperationQueue);
+
+    //                     } else {
+    //                         //console.log("this._socketSendOperation ",this._readOperationQueue[0]);
+
+    //                         this._socketSendOperation(this._readOperationQueue[0]);
+
+    //                     }
+
+    //                     // var serializedOperation = this._serializer.serializeObject(_operation);
+    //                     // this._socket.send(serializedOperation);
+    //                     this._readOperationQueue = [];
+
+    //                 //},0);
+    //                 });
+    //             }
+
+    //             //this._socketSendOperation(operation);
+    //         }
+    //     }
+    // },
+
+
+    
+    fetchRawObjectProperty: {
+        value: function (object, propertyName) {
+            let overrodeValue = this._fetchRawObjectProperty(object, propertyName);
+            return overrodeValue;
+
+            let superValue = this.super(object, propertyName);
+
+            return Promise.all([superValue])
+            .then((results) => {
+                if(results[0] !== results[1]) {
+                    console.debug(`fetchRawObjectProperty '${propertyName}' super result:`, results[0]);
+                    console.debug(`fetchRawObjectProperty '${propertyName}' overrode result:`, results[1]);    
+                }
+                return results[0];
+            });
+
+        }
+    },
+
+    _fetchRawObjectProperty: {
+        value: function (object, propertyName) {
+
+
+            var self = this,
+                objectDescriptor = this.objectDescriptorForObject(object),
+                propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
+                isObjectCreated = this.isObjectCreated(object);
+
+            if(isObjectCreated) {
+                return Promise.resolve(null);
+            } else {
+
+                //TODO: leverage this as used in the foreign key value converter to find the object locally first
+                //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
+
+
+                var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor));
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+
+                /*
+                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+                */
+               let mapping = this.mappingForType(objectDescriptor),
+                    rule = mapping.objectMappingRuleForPropertyName(propertyName),
+                    requirements = rule.requirements,
+                    hintSnapshot;
+
+                if(requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                    hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
+                    for(let snapshot = object.snapshot, i=0, countI = requirements.length; (i<countI); i++) {
+                        hintSnapshot[requirements[i]] = snapshot[requirements[i]];
+                    }
+
+
+                }
+
+
+                /*
+                    FIXME: Context, as we're fetching an object property, in a situation where the app's rely on some
+                    origin data services, the data from those services may not be imported yet. In which case, the worker
+                    will need info to do so, and origin-related data info is stored in the originDataSnapshot property.
+
+                    If we happen to have that client-side, we can send it as part of the attempt to acquire that object's property value 
+                    from an origin service. If we don't the SynchronizationDataService (or any other analoguous logic) will have to fetch it from the DB
+                    using the criteria here that specify the object, to support obtaining that data from origin services.
+                    
+                    We pass that as a hint through DataQuery's hints property.
+                */
+                if(object.snapshot.hasOwnProperty("originDataSnapshot")) {
+                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = object.snapshot.originDataSnapshot;
+                }
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.readExpressions = [propertyName];
+
+                //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+
+                return DataService.mainService.fetchData(propertyNameQuery)
+                .then(function(object) {
+                    if(Array.isArray(object)) {
+                        if(propertyDescriptor.cardinality === 1) {
+                            return object[0] || null;
+                        } else {
+                            return object;
+                        }
+                    } else {
+                    /*
+                        Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
+                        keeping 
+                    */
+                        console.warn("Investigarte: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+                        return object[propertyName];
+                    }
+                });
+            }
+        }
+    },
+
+
     handleReadOperation: {
         value: function (operation) {
             if(this.handlesType(operation.target)) {
+
+                operation.rawDataService = this;
+                this.registerPendingDataOperationWithContext(operation, operation.dataStream);
+
+
                 this._readOperationQueue.push(operation);
+
+                //Overrides operation's needsDataMapping to get started
+                operation.needsDataMapping = true;
+
                 if (this._readOperationQueue.length === 1) {
                     queueMicrotask(() => {
                     //this._processOperationQueueTimeout = setTimeout(() => {
