@@ -631,6 +631,23 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             */
             this.unregisterReadOperation(readCompletedOperation.referrer);
         } else {
+
+            /*
+                We got involved, so we need to be the only one that feed those data to an eventual data stream.
+                So we handle it and stop propagation so it doesn't reach the origin and destination services.
+            */
+            if(readCompletedOperation.rawDataService === this) {
+                this.handleReadCompletedOperation(readCompletedOperation);
+                readCompletedOperation.stopImmediatePropagation();    
+
+                // /*
+                //     Data found!! We prevent the origin services to act on it
+                //     In the future if one would want to do so for fetching update
+                //     We'd have to introduce some subtlety here
+                // */
+                // readCompletedOperation.referrer.stopImmediatePropagation()
+
+            }
             /*
                 Data found!! We prevent the origin services to act on it
                 In the future if one would want to do so for fetching update
@@ -782,6 +799,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         }
     }
+
     
     _invokeChildServiceFetchObjectProperty(childService, object, propertyName, isObjectCreated, promise) {
         if(promise && promise.then) {

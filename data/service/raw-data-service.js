@@ -2827,7 +2827,8 @@ RawDataService.addClassProperties({
                 objectDescriptor = operation.target,
                 records = operation.data,
                 //stream = DataService.mainService.registeredDataStreamForDataOperation(operation),
-                stream = this.referrerContextForDataOperation(operation),
+                stream = this.contextForPendingDataOperation(operation),
+                // stream = this.referrerContextForDataOperation(operation),
 
                 streamObjectDescriptor;
             // if(operation.type === DataOperation.Type.ReadCompletedOperation) {
@@ -2853,6 +2854,9 @@ RawDataService.addClassProperties({
                     if (records && records.length > 0) {
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);
+                        if (stream.query.doesBatchResult) {
+                            self.rawDataBatchDone(stream);
+                        }
 
                     } else if (operation.type !== DataOperation.Type.ReadCompletedOperation) {
                         console.log("operation of type:" + operation.type + ", has no data");
@@ -2862,6 +2866,9 @@ RawDataService.addClassProperties({
                     if (records && records.length > 0) {
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);
+                        if (stream.query.doesBatchResult) {
+                            self.rawDataBatchDone(stream);
+                        }
 
                     } else if (operation.type !== DataOperation.Type.ReadCompletedOperation) {
                         console.log("operation of type:" + operation.type + ", has no data");
@@ -2883,27 +2890,29 @@ RawDataService.addClassProperties({
     handleReadCompletedOperation: {
         value: function (operation) {
 
-            //FIXME - WE SHOULDN'T HAVE TO DO THIS, BUT A RAW DATA SERVICE HANDLES A READ COMPLETED OPERATION FROM ANOTHER...
-            //SO ADDING A CHECK
-            // if(operation.rawDataService !== this) {
-            //     return;
-            // }
+            /*
+                Not ideal, we should find a way to avoid this, 
+                but when mutliple RawDataServices handle the same object descriptors,
+                a RawDataService should only take care of raw data it produced
+            */
 
-
+            if(operation.rawDataService === this) {
             
-            //The read is complete
-            this.handleReadUpdateOperation(operation);
-            //var stream = DataService.mainService.registeredDataStreamForDataOperation(operation);
-            var stream = this.referrerContextForDataOperation(operation);
-            if (stream) {
-                this.rawDataDone(stream);
-                //this._thenableByOperationId.delete(operation.referrerId);
-                this.unregisterDataOperationPendingReferrer(operation);
+                //The read is complete
+                this.handleReadUpdateOperation(operation);
+                //var stream = DataService.mainService.registeredDataStreamForDataOperation(operation);
+                // var stream = this.referrerContextForDataOperation(operation);
+                var stream = this.contextForPendingDataOperation(operation);
+                if (stream) {
+                    this.rawDataDone(stream);
+                    //this._thenableByOperationId.delete(operation.referrerId);
+                    this.unregisterDataOperationPendingReferrer(operation);
+                }
+                // else {
+                //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
+                // }
+                //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
             }
-            // else {
-            //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
-            // }
-            //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
 
         }
     },
@@ -3005,17 +3014,17 @@ RawDataService.addClassProperties({
                     on handling the same data operation.
                 */
 
-                var stream = this.contextForPendingDataOperation(operation);
-                //var stream = DataService.mainService.registeredDataStreamForDataOperation(operation);
-                if (stream) {
-                    this.addRawData(stream, data, operation);
+                // var stream = this.contextForPendingDataOperation(operation);
+                // //var stream = DataService.mainService.registeredDataStreamForDataOperation(operation);
+                // if (stream) {
+                //     this.addRawData(stream, data, operation);
 
-                    if (operation.type === DataOperation.Type.ReadCompletedOperation) {
-                        this.rawDataDone(stream);
-                    } else if (stream.query.doesBatchResult) {
-                        self.rawDataBatchDone(stream);
-                    }
-                }
+                //     if (operation.type === DataOperation.Type.ReadCompletedOperation) {
+                //         this.rawDataDone(stream);
+                //     } else if (stream.query.doesBatchResult) {
+                //         self.rawDataBatchDone(stream);
+                //     }
+                // }
             }
             return operation;
         }
