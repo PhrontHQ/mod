@@ -23,7 +23,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
             this._serializer = new MontageSerializer().initWithRequire(global.require);
             this._deserializer = new Deserializer();
 
-            this._gatewayClientByClientId = new Map();
+            //this._gatewayClientByClientId = new Map();
             this._pendingOperationById = new Map();
 
             var mainService = worker.mainService;
@@ -96,36 +96,36 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
         value: 63
     },
 
-    registerGatewayClientForClientId: {
-        value: function(gatewayClient, clientId) {
-            this._gatewayClientByClientId.set(clientId,gatewayClient);
-        }
-    },
-    gatewayClientForClientId: {
-        value: function(clientId) {
-            return this._gatewayClientByClientId.get(clientId);
-        }
-    },
-    unregisterGatewayClientForClientId: {
-        value: function(gatewayClient, clientId) {
-            this._gatewayClientByClientId.set(clientId,gatewayClient);
-        }
-    },
+    // registerGatewayClientForClientId: {
+    //     value: function(gatewayClient, clientId) {
+    //         this._gatewayClientByClientId.set(clientId,gatewayClient);
+    //     }
+    // },
+    // gatewayClientForClientId: {
+    //     value: function(clientId) {
+    //         return this._gatewayClientByClientId.get(clientId);
+    //     }
+    // },
+    // unregisterGatewayClientForClientId: {
+    //     value: function(gatewayClient, clientId) {
+    //         this._gatewayClientByClientId.set(clientId,gatewayClient);
+    //     }
+    // },
 
     _sendData: {
-        value: function (previousPromise, connection, clientId, data) {
+        value: function (previousPromise, clientId, data) {
             //console.log("OperationCoordinator: _sendData to connection:", connection, clientId, data);
 
             return (previousPromise || Promise.resolve(true))
-                    .then(function() {
+                    .then(() => {
                         try {
 
-                            return postToConnectionPromise = connection.postToConnection({
+                            return postToConnectionPromise = this.worker.postToConnection({
                                 ConnectionId: clientId,
                                 Data: data
                             });
                         } catch (e) {
-                            console.log("OperationCoordinator: _sendData postToConnection error:", e, connection, clientId, data);
+                            console.log("OperationCoordinator: _sendData postToConnection error:", e, clientId, data);
 
                             if (e.statusCode === 410) {
                                 console.log(`Found stale connection, should delete connectionId ${clientId}`);
@@ -187,9 +187,18 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
             operation.currentTarget = null;
             operation.context = null;
 
+            var dataMessage;
+            if(this.messageToDataOperationConverter) {
+                dataMessage = this.messageToDataOperationConverter.revert(operation);
+                //Defensive check
+                if(dataMessage === iReadUpdateOperation) {
+                    dataMessage = this._serializer.serializeObject(operation);
+                }                
+            } else {
+                dataMessage = this._serializer.serializeObject(operation);
+            }
             //We need to assess the size of the data returned.
             //serialize
-            var operationSerialization = this._serializer.serializeObject(operation);
 
             //Set it back for local use now that we've serialized it:
             operation.currentTarget = _currentTarget;
@@ -198,12 +207,12 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                 operation.data.stack = errorStack;
             }
 
-            var operationDataKBSize = sizeof(operationSerialization) / 1024;
+            var operationDataKBSize = sizeof(dataMessage) / 1024;
             if(operationDataKBSize < this.MAX_PAYLOAD_SIZE) {
                 //console.log("operation size is "+operationDataKBSize);
                 //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #1 operation.referrerId "+operation.referrerId);
 
-                return this._sendData(undefined, connection, clientId, operationSerialization)
+                return this._sendData(undefined, clientId, dataMessage)
                 .then(function() {
                     return operation;
                 });
@@ -253,8 +262,18 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                             iReadUpdateOperation.type = DataOperation.Type.ReadCompletedOperation;
                         }
 
+                        if(this.messageToDataOperationConverter) {
+                            dataMessage = this.messageToDataOperationConverter.revert(iReadUpdateOperation);
+                            //Defensive check
+                            if(dataMessage === iReadUpdateOperation) {
+                                dataMessage = this._serializer.serializeObject(iReadUpdateOperation);
+                            }
+                        } else {
+                            dataMessage = this._serializer.serializeObject(iReadUpdateOperation);
+                        }
+            
                         //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
-                        iPromise = this._sendData(iPromise, connection, clientId, self._serializer.serializeObject(iReadUpdateOperation));
+                        iPromise = this._sendData(iPromise, clientId, dataMessage);
 
                         // iPromise = iPromise.then(function() {
                         //     console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2",operation, connection, clientId);
@@ -267,8 +286,19 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
                     //Sends the last if some left:
                     if(lengthRemainder || operationData.length) {
+
+                        if(this.messageToDataOperationConverter) {
+                            dataMessage = this.messageToDataOperationConverter.revert(operation);
+                            //Defensive check
+                            if(dataMessage === operation) {
+                                dataMessage = this._serializer.serializeObject(operation);
+                            }
+                        } else {
+                            dataMessage = this._serializer.serializeObject(operation);
+                        }
+
                         //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #3 operation.referrerId "+operation.referrerId);
-                        iPromise = this._sendData(iPromise, connection, clientId, self._serializer.serializeObject(operation));
+                        iPromise = this._sendData(iPromise, clientId, dataMessage);
 
                         // iPromise = iPromise.then(function() {
                         //     console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #3",operation, connection, clientId);
@@ -283,7 +313,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                         return operation;
                     });
             } else {
-                return Promise.reject(new Error("can't send operation "+operation.type+"that is bigger serialized ("+operationDataKBSize+"kb) than MAX_PAYLOAD_SIZE ("+this.MAX_PAYLOAD_SIZE+"kb) - serialization: "+operationSerialization));
+                return Promise.reject(new Error("can't send operation "+operation.type+"that is bigger serialized ("+operationDataKBSize+"kb) than MAX_PAYLOAD_SIZE ("+this.MAX_PAYLOAD_SIZE+"kb) - serialization: "+dataMessage));
             }
         }
     },
