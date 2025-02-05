@@ -140,6 +140,46 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
         }
     },
 
+    _dataMessagePromiseForOperation: {
+        value: function(operation) {
+            var dataMessage,
+                dataMessagePromise;
+            if(this.worker.messageToDataOperationConverter) {
+                dataMessage = this.worker.messageToDataOperationConverter.revert(operation);
+                if(Promise.is(dataMessage)) {
+                    dataMessagePromise = dataMessage;
+                } else {
+                    dataMessagePromise = Promise.resolve(dataMessage);
+                }
+
+                return dataMessagePromise.then((dataMessage) => {
+                    /*
+                        cleanup referrer we don't want to serialize back to the client:
+                    */
+                    if(operation.referrer) {
+                        operation.referrer = null;
+                    }
+    
+                    //Defensive check
+                    if(dataMessage === operation) {
+                        dataMessage = this._serializer.serializeObject(operation);
+                    }
+                    
+                    return dataMessage;
+                })
+            } else {
+
+                /*
+                    cleanup referrer we don't want to serialize back to the client:
+                */
+                if(operation.referrer) {
+                    operation.referrer = null;
+                }
+                return Promise.resolve(this._serializer.serializeObject(operation));
+            }
+        }
+    },
+
     dispatchOperationToConnectionClientId: {
         value: function(operation, connection, clientId) {
 
@@ -180,149 +220,98 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
             operation.currentTarget = null;
             operation.context = null;
 
-            var dataMessage;
-            if(this.worker.messageToDataOperationConverter) {
-                dataMessage = this.worker.messageToDataOperationConverter.revert(operation);
+            return this._dataMessagePromiseForOperation(operation)
+            .then((dataMessage) => {
+                //We need to assess the size of the data returned.
+                //serialize
 
-                /*
-                    cleanup referrer we don't want to serialize back to the client:
-                */
-                if(operation.referrer) {
-                    operation.referrer = null;
+                //Set it back for local use now that we've serialized it:
+                operation.currentTarget = _currentTarget;
+                operation.context = _context;
+                if(errorStack) {
+                    operation.data.stack = errorStack;
                 }
 
-                //Defensive check
-                if(dataMessage === iReadUpdateOperation) {
-                    dataMessage = this._serializer.serializeObject(operation);
-                }                
-            } else {
+                var operationDataKBSize = sizeof(dataMessage) / 1024;
+                if(operationDataKBSize < this.MAX_PAYLOAD_SIZE) {
+                    //console.log("operation size is "+operationDataKBSize);
+                    //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #1 operation.referrerId "+operation.referrerId);
 
-                /*
-                    cleanup referrer we don't want to serialize back to the client:
-                */
-                if(operation.referrer) {
-                    operation.referrer = null;
-                }
-                dataMessage = this._serializer.serializeObject(operation);
-            }
-            //We need to assess the size of the data returned.
-            //serialize
-
-            //Set it back for local use now that we've serialized it:
-            operation.currentTarget = _currentTarget;
-            operation.context = _context;
-            if(errorStack) {
-                operation.data.stack = errorStack;
-            }
-
-            var operationDataKBSize = sizeof(dataMessage) / 1024;
-            if(operationDataKBSize < this.MAX_PAYLOAD_SIZE) {
-                //console.log("operation size is "+operationDataKBSize);
-                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #1 operation.referrerId "+operation.referrerId);
-
-                return this._sendData(undefined, clientId, dataMessage)
-                .then(function() {
-                    return operation;
-                });
-
-                // return connection
-                // .postToConnection({
-                //     ConnectionId: clientId,
-                //     Data: this._serializer.serializeObject(operation)
-                // });
-            }
-            else if(operation.type === DataOperation.Type.ReadCompletedOperation || operation.type === DataOperation.Type.ReadUpdateOperation) {
-                /*
-                    Failing:
-                    Large ReadOperation split in 1 sub operations: operationDataKBSize:230.927734375, integerSizeQuotient:1, sizeRemainder:102.927734375, operationData.length:0, integerLengthQuotient:170, lengthRemainder: 0
-
-
-                */
-
-               //console.log("dispatchOperationToConnectionClientId: referrerId "+operation.referrerId);
-
-                var integerSizeQuotient = Math.floor(operationDataKBSize / this.MAX_PAYLOAD_SIZE),
-                    sizeRemainder = operationDataKBSize % this.MAX_PAYLOAD_SIZE,
-                    sizeRemainderRatio = sizeRemainder/operationDataKBSize,
-                    operationData = operation.data,
-                    integerLengthQuotient = Math.floor(operationData.length / integerSizeQuotient),
-                    lengthRemainder = operationData.length % integerSizeQuotient,
-                    i=0, countI = integerSizeQuotient, iData, iReadUpdateOperation,
-                    iPromise = Promise.resolve(true);
-                    promises = [],
-                    self = this;
-
-                    if(lengthRemainder === 0 && sizeRemainder > 0) {
-                        lengthRemainder = Math.floor(operationData.length*sizeRemainderRatio);
-                        integerLengthQuotient = integerLengthQuotient-Math.floor(lengthRemainder/integerSizeQuotient);
-                        //integerLengthQuotient = operationData.length-lengthRemainder;
-                    }
-
-                    iReadUpdateOperation = new DataOperation();
-                    iReadUpdateOperation.type = DataOperation.Type.ReadUpdateOperation;
-                    iReadUpdateOperation.target = operation.target;
-                    iReadUpdateOperation.criteria = operation.criteria;
-                    iReadUpdateOperation.referrerId = operation.referrerId;
-
-                    for(;(i<countI);i++) {
-                        iReadUpdateOperation.data = operationData.splice(0,integerLengthQuotient);
-                        if((operation.type === DataOperation.Type.ReadCompletedOperation) && i === (countI-1) && (operationData.length === 0)) {
-                            iReadUpdateOperation.type = DataOperation.Type.ReadCompletedOperation;
-                        }
-
-                        if(this.worker.messageToDataOperationConverter) {
-                            dataMessage = this.worker.messageToDataOperationConverter.revert(iReadUpdateOperation);
-                            //Defensive check
-                            if(dataMessage === iReadUpdateOperation) {
-                                dataMessage = this._serializer.serializeObject(iReadUpdateOperation);
-                            }
-                        } else {
-                            dataMessage = this._serializer.serializeObject(iReadUpdateOperation);
-                        }
-            
-                        //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
-                        iPromise = this._sendData(iPromise, clientId, dataMessage);
-
-                        // iPromise = iPromise.then(function() {
-                        //     console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2",operation, connection, clientId);
-                        //     return connection.postToConnection({
-                        //         ConnectionId: clientId,
-                        //         Data: self._serializer.serializeObject(iReadUpdateOperation)
-                        //     }).promise();
-                        //})
-                    }
-
-                    //Sends the last if some left:
-                    if(lengthRemainder || operationData.length) {
-
-                        if(this.worker.messageToDataOperationConverter) {
-                            dataMessage = this.worker.messageToDataOperationConverter.revert(operation);
-                            //Defensive check
-                            if(dataMessage === operation) {
-                                dataMessage = this._serializer.serializeObject(operation);
-                            }
-                        } else {
-                            dataMessage = this._serializer.serializeObject(operation);
-                        }
-
-                        //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #3 operation.referrerId "+operation.referrerId);
-                        iPromise = this._sendData(iPromise, clientId, dataMessage);
-
-                        // iPromise = iPromise.then(function() {
-                        //     console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #3",operation, connection, clientId);
-                        //     return connection.postToConnection({
-                        //         ConnectionId: clientId,
-                        //         Data: self._serializer.serializeObject(operation)
-                        //     }).promise()
-                        // });
-                    }
-                    //console.log(">>>>Large ReadOperation split in "+(countI+lengthRemainder)+ " sub operations: operationDataKBSize:"+operationDataKBSize+", integerSizeQuotient:"+integerSizeQuotient+", sizeRemainder:"+sizeRemainder+", operationData.length:"+operationData.length+", integerLengthQuotient:"+integerLengthQuotient+", lengthRemainder:",lengthRemainder );
-                    return iPromise.then(function() {
+                    return this._sendData(undefined, clientId, dataMessage)
+                    .then(function() {
                         return operation;
                     });
-            } else {
-                return Promise.reject(new Error("can't send operation "+operation.type+"that is bigger serialized ("+operationDataKBSize+"kb) than MAX_PAYLOAD_SIZE ("+this.MAX_PAYLOAD_SIZE+"kb) - serialization: "+dataMessage));
-            }
+
+                    // return connection
+                    // .postToConnection({
+                    //     ConnectionId: clientId,
+                    //     Data: this._serializer.serializeObject(operation)
+                    // });
+                }
+                else if(operation.type === DataOperation.Type.ReadCompletedOperation || operation.type === DataOperation.Type.ReadUpdateOperation) {
+                    /*
+                        Failing:
+                        Large ReadOperation split in 1 sub operations: operationDataKBSize:230.927734375, integerSizeQuotient:1, sizeRemainder:102.927734375, operationData.length:0, integerLengthQuotient:170, lengthRemainder: 0
+
+
+                    */
+
+                //console.log("dispatchOperationToConnectionClientId: referrerId "+operation.referrerId);
+
+                    var integerSizeQuotient = Math.floor(operationDataKBSize / this.MAX_PAYLOAD_SIZE),
+                        sizeRemainder = operationDataKBSize % this.MAX_PAYLOAD_SIZE,
+                        sizeRemainderRatio = sizeRemainder/operationDataKBSize,
+                        operationData = operation.data,
+                        integerLengthQuotient = Math.floor(operationData.length / integerSizeQuotient),
+                        lengthRemainder = operationData.length % integerSizeQuotient,
+                        i=0, countI = integerSizeQuotient, iData, iReadUpdateOperation,
+                        iPromise = Promise.resolve(true);
+                        promises = [],
+                        self = this;
+
+                        if(lengthRemainder === 0 && sizeRemainder > 0) {
+                            lengthRemainder = Math.floor(operationData.length*sizeRemainderRatio);
+                            integerLengthQuotient = integerLengthQuotient-Math.floor(lengthRemainder/integerSizeQuotient);
+                            //integerLengthQuotient = operationData.length-lengthRemainder;
+                        }
+
+                        iReadUpdateOperation = new DataOperation();
+                        iReadUpdateOperation.type = DataOperation.Type.ReadUpdateOperation;
+                        iReadUpdateOperation.target = operation.target;
+                        iReadUpdateOperation.criteria = operation.criteria;
+                        iReadUpdateOperation.referrerId = operation.referrerId;
+
+                        for(;(i<countI);i++) {
+                            iReadUpdateOperation.data = operationData.splice(0,integerLengthQuotient);
+                            if((operation.type === DataOperation.Type.ReadCompletedOperation) && i === (countI-1) && (operationData.length === 0)) {
+                                iReadUpdateOperation.type = DataOperation.Type.ReadCompletedOperation;
+                            }
+
+                            iPromise = this._dataMessagePromiseForOperation(iReadUpdateOperation)
+                            .then((dataMessage) => {
+                                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
+                                return this._sendData(iPromise, clientId, dataMessage);
+                            })
+                        }
+
+                        //Sends the last if some left:
+                        if(lengthRemainder || operationData.length) {
+
+                            iPromise = this._dataMessagePromiseForOperation(operation)
+                            .then((dataMessage) => {
+                                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
+                                return this._sendData(iPromise, clientId, dataMessage);
+                            })
+                        }
+                        //console.log(">>>>Large ReadOperation split in "+(countI+lengthRemainder)+ " sub operations: operationDataKBSize:"+operationDataKBSize+", integerSizeQuotient:"+integerSizeQuotient+", sizeRemainder:"+sizeRemainder+", operationData.length:"+operationData.length+", integerLengthQuotient:"+integerLengthQuotient+", lengthRemainder:",lengthRemainder );
+                        return iPromise.then(function() {
+                            return operation;
+                        });
+                } else {
+                    return Promise.reject(new Error("can't send operation "+operation.type+"that is bigger serialized ("+operationDataKBSize+"kb) than MAX_PAYLOAD_SIZE ("+this.MAX_PAYLOAD_SIZE+"kb) - serialization: "+dataMessage));
+                }
+            })
+         
         }
     },
 
