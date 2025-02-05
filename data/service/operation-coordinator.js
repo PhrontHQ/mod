@@ -176,25 +176,33 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                 errorStack = operation.data.stack;
                 operation.data.stack = null;
             }
-            /*
-                cleanup referrer we don't want to serialize back to the client:
-            */
-            if(operation.referrer) {
-                operation.referrer = null;
-            }
-
 
             operation.currentTarget = null;
             operation.context = null;
 
             var dataMessage;
-            if(this.messageToDataOperationConverter) {
-                dataMessage = this.messageToDataOperationConverter.revert(operation);
+            if(this.worker.messageToDataOperationConverter) {
+                dataMessage = this.worker.messageToDataOperationConverter.revert(operation);
+
+                /*
+                    cleanup referrer we don't want to serialize back to the client:
+                */
+                if(operation.referrer) {
+                    operation.referrer = null;
+                }
+
                 //Defensive check
                 if(dataMessage === iReadUpdateOperation) {
                     dataMessage = this._serializer.serializeObject(operation);
                 }                
             } else {
+
+                /*
+                    cleanup referrer we don't want to serialize back to the client:
+                */
+                if(operation.referrer) {
+                    operation.referrer = null;
+                }
                 dataMessage = this._serializer.serializeObject(operation);
             }
             //We need to assess the size of the data returned.
@@ -262,8 +270,8 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                             iReadUpdateOperation.type = DataOperation.Type.ReadCompletedOperation;
                         }
 
-                        if(this.messageToDataOperationConverter) {
-                            dataMessage = this.messageToDataOperationConverter.revert(iReadUpdateOperation);
+                        if(this.worker.messageToDataOperationConverter) {
+                            dataMessage = this.worker.messageToDataOperationConverter.revert(iReadUpdateOperation);
                             //Defensive check
                             if(dataMessage === iReadUpdateOperation) {
                                 dataMessage = this._serializer.serializeObject(iReadUpdateOperation);
@@ -287,8 +295,8 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                     //Sends the last if some left:
                     if(lengthRemainder || operationData.length) {
 
-                        if(this.messageToDataOperationConverter) {
-                            dataMessage = this.messageToDataOperationConverter.revert(operation);
+                        if(this.worker.messageToDataOperationConverter) {
+                            dataMessage = this.worker.messageToDataOperationConverter.revert(operation);
                             //Defensive check
                             if(dataMessage === operation) {
                                 dataMessage = this._serializer.serializeObject(operation);
