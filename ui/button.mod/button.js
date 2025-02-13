@@ -51,12 +51,12 @@ const { Control } = require("ui/control");
 const Button = (exports.Button = class Button extends Control {
     /** @lends module:"mod/ui/native/button.mod".Button# */
 
-     /**
+    /**
      * Available image placements
      * @readonly
      * @enum {ButtonPosition}
      */
-     static IMAGE_POSITIONS = Object.freeze({
+    static IMAGE_POSITIONS = Object.freeze({
         start: "mod--start",
         end: "mod--end",
     });
@@ -83,7 +83,10 @@ const Button = (exports.Button = class Button extends Control {
      * @param {ButtonPosition} position - The position of the image
      */
     set imagePosition(position) {
-        if (position !== this._imagePosition && Button.IMAGE_POSITIONS[position]) {
+        if (
+            position !== this._imagePosition &&
+            Button.IMAGE_POSITIONS[position]
+        ) {
             this._imagePosition = Button.IMAGE_POSITIONS[position];
             this._applyImagePositionStyles();
         }
@@ -101,7 +104,10 @@ const Button = (exports.Button = class Button extends Control {
      * @param {ButtonOrientation} orientation - The orientation of the button
      */
     set orientation(orientation) {
-        if (orientation !== this._orientation && Button.ORIENTATIONS[orientation]) {
+        if (
+            orientation !== this._orientation &&
+            Button.ORIENTATIONS[orientation]
+        ) {
             this._orientation = Button.ORIENTATIONS[orientation];
             this._applyOrientationStyles();
         }
