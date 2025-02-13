@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="button.css" />
+        <script type="text/montage-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "owner"}
+                    }
+                },
+                "label": {
+                    "prototype": "ui/text.mod",
+                    "values": {
+                        "element": {"#": "label"},
+                        "value": {"<-": "@owner.label"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <button data-mod-id="owner" class="Button">
+            <div data-mod-id="label"></div>
+        </button>
+    </body>
+</html>
