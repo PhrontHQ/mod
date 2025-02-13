@@ -166,22 +166,35 @@ const Button = (exports.Button = class Button extends Control {
         return this._promise;
     }
 
-    set promise(value) {
-        const handleResolution = () => {
-            if (handleResolution.promise === this._promise) {
-                this.classList.remove("mod--pending");
-                this._promise = undefined;
-            }
-        };
+    set promise(promise) {
+        // Only proceed if the new promise is different from the current one
+        if (this._promise === promise) return;
 
-        if (this._promise !== value) {
-            this._promise = value;
+        const shouldClearPendingState = !!this._promise;
+        this._promise = promise;
 
-            if (this._promise) {
-                this.classList.add("mod--pending");
-                handleResolution.promise = value;
-                this._promise.then(handleResolution);
-            }
+        if (promise) {
+            // Set up pending state when promise is set
+            this.classList.add("mod--pending");
+
+            // Create a closure to handle promise resolution
+            const handleResolution = () => {
+                // Only clear pending state if this is still the current promise
+                if (handleResolution.originalPromise === this._promise) {
+                    this.classList.remove("mod--pending");
+                    this._promise = undefined;
+                }
+            };
+
+            // Store reference to the original promise for comparison
+            handleResolution.originalPromise = promise;
+
+            // Ensure pending state is cleared even on rejection
+            // TODO: we should propably add an error state?...
+            promise.finally(handleResolution);
+        } else if (shouldClearPendingState) {
+            // Clear pending state when the current promise is set to null
+            this.classList.remove("mod--pending");
         }
     }
 

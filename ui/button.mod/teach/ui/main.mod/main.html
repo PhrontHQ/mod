@@ -6,8 +6,7 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "main"},
-                        "promiseButton": {"@": "promiseButton"}
+                        "element": {"#": "main"}
                     },
                     "listeners":[
                         {
@@ -20,7 +19,6 @@
                         }
                     ]
                 },
-
                 "simpleButton": {
                     "prototype": "mod/ui/button.mod",
                     "values": {
@@ -28,7 +26,6 @@
                         "label": "simple"
                     }
                 },
-
                 "buttonWithImage": {
                     "prototype": "mod/ui/button.mod",
                     "values": {
@@ -36,7 +33,6 @@
                         "label": "With Image"
                     }
                 },
-
                 "buttonWithImageBellow": {
                     "prototype": "mod/ui/button.mod",
                     "values": {
@@ -46,22 +42,21 @@
                         "orientation": "vertical"
                     }
                 },
-
                 "onlyImage": {
                     "prototype": "mod/ui/button.mod",
                     "values": {
                         "element": {"#": "onlyImage"}
                     }
                 },
-
                 "promiseButton": {
                     "prototype": "mod/ui/button.mod",
                     "values": {
                         "element": {"#": "button-promise"},
+                        "promise": {"<-": "@owner.promise"},
+                        "disbaled": {"<-": "@owner.promiseButtonDisabled"},
                         "label": "promise"
                     }
                 },
-
                 "text": {
                     "prototype": "mod/ui/text.mod",
                     "values": {
