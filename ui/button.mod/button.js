@@ -7,6 +7,11 @@ const { Control } = require("ui/control");
 // TODO: migrate away from using undefinedGet and undefinedSet
 
 /**
+ * @typedef {"horizontal"|"vertical"} ButtonOrientation
+ * @typedef {"start"|"end"} ButtonPosition
+ * /
+
+/**
  * Wraps a native <code>&lt;button></code> or <code>&lt;input[type="button"]></code> HTML element.
  * The element's standard attributes are exposed as bindable properties.
  * @class module:"mod/ui/native/button.mod".Button
@@ -45,6 +50,62 @@ const { Control } = require("ui/control");
  */
 const Button = (exports.Button = class Button extends Control {
     /** @lends module:"mod/ui/native/button.mod".Button# */
+
+     /**
+     * Available image placements
+     * @readonly
+     * @enum {ButtonPosition}
+     */
+     static IMAGE_POSITIONS = Object.freeze({
+        start: "mod--start",
+        end: "mod--end",
+    });
+
+    /**
+     * Available main axis orientations
+     * @readonly
+     * @enum {ButtonOrientation}
+     */
+    static ORIENTATIONS = Object.freeze({
+        horizontal: "mod--horizontal",
+        vertical: "mod--vertical",
+    });
+
+    _imagePosition = Button.IMAGE_POSITIONS.start;
+
+    get imagePosition() {
+        return this._imagePosition;
+    }
+
+    /**
+     * The position of the image
+     * @type {ButtonPosition}
+     * @param {ButtonPosition} position - The position of the image
+     */
+    set imagePosition(position) {
+        if (position !== this._imagePosition && Button.IMAGE_POSITIONS[position]) {
+            this._imagePosition = Button.IMAGE_POSITIONS[position];
+            this._applyImagePositionStyles();
+        }
+    }
+
+    _orientation = Button.ORIENTATIONS.horizontal;
+
+    get orientation() {
+        return this._orientation;
+    }
+
+    /**
+     * The orientation of the button
+     * @type {ButtonOrientation}
+     * @param {ButtonOrientation} orientation - The orientation of the button
+     */
+    set orientation(orientation) {
+        if (orientation !== this._orientation && Button.ORIENTATIONS[orientation]) {
+            this._orientation = Button.ORIENTATIONS[orientation];
+            this._applyOrientationStyles();
+        }
+    }
 
     drawsFocusOnPointerActivation = true;
 
@@ -170,6 +231,10 @@ const Button = (exports.Button = class Button extends Control {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
             this.element.addEventListener("keyup", this, false);
+
+            // Apply Button styles
+            this._applyImagePositionStyles();
+            this._applyOrientationStyles();
         }
     }
 
@@ -303,6 +368,35 @@ const Button = (exports.Button = class Button extends Control {
         this._pressComposer.removeEventListener("press", this, false);
         this._pressComposer.removeEventListener("pressCancel", this, false);
         this._pressComposer.removeEventListener("longPress", this, false);
+    }
+
+    /**
+     * Applies the current image position's styling by updating CSS classes
+     * @private
+     * @see Button.IMAGE_POSITIONS
+     */
+    _applyImagePositionStyles() {
+        this._removeClassListTokens(...Object.values(Button.IMAGE_POSITIONS));
+        this.classList.add(this.imagePosition);
+    }
+
+    /**
+     * Applies the current orientation's styling by updating CSS classes
+     * @private
+     * @see Button.ORIENTATIONS
+     */
+    _applyOrientationStyles() {
+        this._removeClassListTokens(...Object.values(Button.ORIENTATIONS));
+        this.classList.add(this.orientation);
+    }
+
+    // FIXME: Remove this method when the classList's remove method is fixed!
+    // Our implementation doesn't support multiple arguments
+    // https://dom.spec.whatwg.org/#dom-domtokenlist-remove
+    _removeClassListTokens(...tokens) {
+        for (const token of tokens) {
+            this.classList.remove(token);
+        }
     }
 });
 

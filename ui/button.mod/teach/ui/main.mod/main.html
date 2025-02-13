@@ -25,7 +25,9 @@
                 "prototype": "mod/ui/button.mod",
                 "values": {
                     "element": {"#": "button-custom"},
-                    "label": "custom"
+                    "label": "custom",
+                    "imagePosition": "end",
+                    "orientation": "vertical"
                 }
             },
 
@@ -67,7 +69,9 @@
     <div data-mod-id="main" class="Main">
         <header>Teach Button Mod</header>
         <section class="buttons">
-            <div data-mod-id="button-custom" class="button custom"></div>
+            <div data-mod-id="button-custom" class="button custom">
+                <div data-arg="image">+</div>
+            </div>
             <input data-mod-id="button-input" type="button" class="button native"></input>
             <button data-mod-id="button-native" class="button native"></button>
             <button data-mod-id="button-promise" class="button"></button>

@@ -1,2 +1,63 @@
 .Button {
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-weight: 600;
+    position: relative;
+
+    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+    transition: background-color .2s ease-in-out;
+    gap: 6px;
+}
+
+.Button:hover {
+    cursor: pointer;
+}
+
+/* Main Orientation */
+
+.Button.mod--vertical {
+    flex-direction: column;
+}
+
+.Button.mod--horizontal {
+    flex-direction: row;
+}
+
+/* Main Axis Direction */
+
+.Button.mod--horizontal.mod--end {
+    flex-direction: row-reverse;
+}
+
+.Button.mod--vertical.mod--end {
+    flex-direction: column-reverse;
+}
+
+/* Hide Empty Elements */
+.Button>div:empty {
+    display: none;
+}
+
+/* Image Specifications */
+
+.Button>.Button-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.Button>svg.Button-image {
+    fill: currentColor;
+}
+
+/* Pending State */
+
+.Button.mod--pending {
+    pointer-events: none;
+    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+    opacity: 0.75;
 }
