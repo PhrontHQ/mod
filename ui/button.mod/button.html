@@ -8,21 +8,13 @@
                     "values": {
                         "element": {"#": "owner"}
                     }
-                },
-                "label": {
-                    "prototype": "ui/text.mod",
-                    "values": {
-                        "element": {"#": "label"},
-                        "value": {"<-": "@owner.label"}
-                    }
                 }
             }
         </script>
     </head>
     <body>
-        <button data-mod-id="owner" class="Button">
-            <div data-param="image" class="Button-image"></div>
-            <div data-mod-id="label"></div>
-        </button>
+        <!-- Any whitespace (including indentation) in the template will create a #text node -->
+        <!-- That's why the template has no indentation - to avoid unwanted text nodes -->
+        <button data-mod-id="owner" class="Button"><div data-param="image" class="Button-image"></div></button>
     </body>
 </html>

@@ -83,10 +83,12 @@ const Button = (exports.Button = class Button extends Control {
      * @param {ButtonPosition} position - The position of the image
      */
     set imagePosition(position) {
-        if (
-            position !== this._imagePosition &&
-            Button.IMAGE_POSITIONS[position]
-        ) {
+        if (!Button.IMAGE_POSITIONS[position]) {
+            console.warn('Invalid image position: "' + position + '"');
+            return;
+        }
+
+        if (position !== this._imagePosition) {
             this._imagePosition = Button.IMAGE_POSITIONS[position];
             this._applyImagePositionStyles();
         }
@@ -104,10 +106,12 @@ const Button = (exports.Button = class Button extends Control {
      * @param {ButtonOrientation} orientation - The orientation of the button
      */
     set orientation(orientation) {
-        if (
-            orientation !== this._orientation &&
-            Button.ORIENTATIONS[orientation]
-        ) {
+        if (!Button.ORIENTATIONS[orientation]) {
+            console.warn('Invalid orientation: "' + orientation + '"');
+            return;
+        }
+
+        if (orientation !== this._orientation) {
             this._orientation = Button.ORIENTATIONS[orientation];
             this._applyOrientationStyles();
         }
@@ -344,11 +348,37 @@ const Button = (exports.Button = class Button extends Control {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
 
+            const lastChild = this.element.lastChild;
+
+            // Ensure that the last child is a text node
+            // Any whitespace (including indentation) in the template will create a #text node
+            // That's why the template has no indentation - to avoid unwanted text nodes
+            // But just in case we still need to check if the last child is a text node
+            if (!lastChild || lastChild.nodeType !== Node.TEXT_NODE) {
+                // Create a text node if the last child is not a text node
+                this.element.appendChild(document.createTextNode(""));
+            }
+
+            this._labelNode = this.element.lastChild;
+
             // Apply Button styles
             this._applyImagePositionStyles();
             this._applyOrientationStyles();
         }
     }
+
+    /**
+     * Draws the component.
+     * @override
+     */
+    draw() {
+        super.draw();
+
+        if (this._labelNode) {
+            this._labelNode.data = this.label;
+        }
+    }
+
     // <---- Private ---->
 
     /**
