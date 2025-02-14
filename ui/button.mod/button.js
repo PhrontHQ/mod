@@ -136,22 +136,24 @@ const Button = (exports.Button = class Button extends Control {
     }
 
     set label(value) {
-        const isDefined = typeof value !== "undefined";
+        if (value !== this._label) {
+            const isDefined = typeof value !== "undefined";
 
-        if (isDefined && this.converter) {
-            try {
-                value = this.converter.convert(value);
+            if (isDefined && this.converter) {
+                try {
+                    value = this.converter.convert(value);
 
-                if (this.error) {
-                    this.error = null;
+                    if (this.error) {
+                        this.error = null;
+                    }
+                } catch (e) {
+                    // unable to convert - maybe error
+                    this.error = e;
                 }
-            } catch (e) {
-                // unable to convert - maybe error
-                this.error = e;
             }
-        }
 
-        this._label = isDefined && value !== null ? String(value) : null;
+            this._label = isDefined && value !== null ? String(value) : null;
+        }
     }
 
     _promise = undefined;
@@ -215,6 +217,7 @@ const Button = (exports.Button = class Button extends Control {
                 "space"
             );
         }
+
         return this.__spaceKeyComposer;
     }
 
@@ -228,20 +231,8 @@ const Button = (exports.Button = class Button extends Control {
                 "enter"
             );
         }
+
         return this.__enterKeyComposer;
-    }
-
-    enterDocument(firstDraw) {
-        super.enterDocument?.call(firstDraw);
-
-        if (firstDraw) {
-            this.element.setAttribute("role", "button");
-            this.element.addEventListener("keyup", this, false);
-
-            // Apply Button styles
-            this._applyImagePositionStyles();
-            this._applyOrientationStyles();
-        }
     }
 
     /**
@@ -264,12 +255,7 @@ const Button = (exports.Button = class Button extends Control {
      * @param {boolean} useCapture - The useCapture flag
      */
     addEventListener(type, listener, useCapture) {
-        Control.prototype.addEventListener.call(
-            this,
-            type,
-            listener,
-            useCapture
-        );
+        super.addEventListener(this, type, listener, useCapture);
 
         if (type === "longAction") {
             this._pressComposer.addEventListener("longPress", this, false);
@@ -350,6 +336,19 @@ const Button = (exports.Button = class Button extends Control {
         this._removeEventListeners();
     }
 
+    // <---- Life Cycle ---->
+
+    enterDocument(firstDraw) {
+        super.enterDocument?.call(firstDraw);
+
+        if (firstDraw) {
+            this.element.setAttribute("role", "button");
+
+            // Apply Button styles
+            this._applyImagePositionStyles();
+            this._applyOrientationStyles();
+        }
+    }
     // <---- Private ---->
 
     /**
