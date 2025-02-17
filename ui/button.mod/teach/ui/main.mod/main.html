@@ -1,81 +1,91 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <link rel="stylesheet" type="text/css" href="main.css">
-    <script type="text/mod-serialization">
-        {
-            "owner": {
-                "values": {
-                    "element": {"#": "main"},
-                    "promiseButton": {"@": "promiseButton"}
-                },
-                "listeners":[
-                    {
-                        "type": "action",
-                        "listener": {"@": "owner"}
+    <head>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
                     },
-                    {
-                        "type": "longAction",
-                        "listener": {"@": "owner"}
+                    "listeners":[
+                        {
+                            "type": "action",
+                            "listener": {"@": "owner"}
+                        },
+                        {
+                            "type": "longAction",
+                            "listener": {"@": "owner"}
+                        }
+                    ]
+                },
+                "simpleButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "simpleButton"},
+                        "label": "simple"
                     }
-                ]
-            },
-
-            "custom": {
-                "prototype": "mod/ui/button.mod",
-                "values": {
-                    "element": {"#": "button-custom"},
-                    "label": "custom"
-                }
-            },
-
-            "input": {
-                "prototype": "mod/ui/button.mod",
-                "values": {
-                    "element": {"#": "button-input"},
-                    "label": "input"
-                }
-            },
-
-            "native": {
-                "prototype": "mod/ui/button.mod",
-                "values": {
-                    "element": {"#": "button-native"},
-                    "label": "native"
-                }
-            },
-
-            "promiseButton": {
-                "prototype": "mod/ui/button.mod",
-                "values": {
-                    "element": {"#": "button-promise"},
-                    "label": "promise"
-                }
-            },
-
-            "text": {
-                "prototype": "mod/ui/text.mod",
-                "values": {
-                    "element": {"#": "text"},
-                    "value": {"<-": "@owner.message || 'please hit a button'"}
+                },
+                "buttonWithImage": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "buttonWithImage"},
+                        "label": "With Image"
+                    }
+                },
+                "buttonWithImageBellow": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "buttonWithImageBellow"},
+                        "label": "With Image Bellow",
+                        "imagePosition": "end",
+                        "orientation": "vertical"
+                    }
+                },
+                "onlyImage": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "onlyImage"}
+                    }
+                },
+                "promiseButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "button-promise"},
+                        "promise": {"<-": "@owner.promise"},
+                        "disbaled": {"<-": "@owner.promiseButtonDisabled"},
+                        "label": "promise"
+                    }
+                },
+                "text": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "text"},
+                        "value": {"<-": "@owner.message || 'please hit a button'"}
+                    }
                 }
             }
-        }
-    </script>
-</head>
-<body>
-    <div data-mod-id="main" class="Main">
-        <header>Teach Button Mod</header>
-        <section class="buttons">
-            <div data-mod-id="button-custom" class="button custom"></div>
-            <input data-mod-id="button-input" type="button" class="button native"></input>
-            <button data-mod-id="button-native" class="button native"></button>
-            <button data-mod-id="button-promise" class="button"></button>
-            <span data-mod-id="text"></span>
-            <br>
-            <button>Bare Button</button>
-
-        </section>
-    </div>
-</body>
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <header>Teach Button Mod</header>
+            <section class="buttons">
+                <button data-mod-id="simpleButton" class="button"></button>
+                <div data-mod-id="buttonWithImage" class="button">
+                    <div data-arg="image">+</div>
+                </div>
+                <div data-mod-id="buttonWithImageBellow" class="button">
+                    <div data-arg="image">+</div>
+                </div>
+                <button data-mod-id="onlyImage" class="button">
+                    <div data-arg="image">+</div>
+                </button>
+                <button data-mod-id="button-promise" class="button"></button>
+                <span data-mod-id="text" class="infoText"></span>
+                <br />
+                <button>Bare Button</button>
+            </section>
+        </div>
+    </body>
 </html>

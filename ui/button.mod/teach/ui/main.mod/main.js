@@ -1,45 +1,50 @@
-var Component = require("mod/ui/component").Component,
-    Promise = require('mod/core/promise').Promise;
+const { Component } = require("mod/ui/component");
 
-exports.Main = Component.specialize(/** @lends Main# */{
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-    message: {
-        value: null
-    },
+exports.Main = class Main extends Component {
+    message = null;
 
-    handleAction: {
-        value: function (event) {
-            this.message = event.target.identifier + " button has been clicked";
-        }
-    },
-
-    handleLongAction: {
-        value: function (event) {
-            this.message = event.target.identifier + " button has been clicked (long action)";
-        }
-    },
-
-    handlePromiseButtonAction: {
-        value: function (event) {
-            var self = this;
-
-            this.message = "Promise is pending resolution";
-
-            this.promiseButton.promise = new Promise(function(resolve){
-                setTimeout(function(){
-                    resolve();
-                }, 2000);
-            }).then(function(){
-                self.message = "First promise resolved!";
-            });
-
-            this.promiseButton.promise = new Promise(function(resolve){
-                setTimeout(function(){
-                    resolve();
-                }, 5000);
-            }).then(function(){
-                self.message = "Second promise resolved!";
-            });
-        }
+    handleAction(event) {
+        this.message = `${event.target.identifier} button has been clicked`;
     }
-});
+
+    handleLongAction(event) {
+        this.message = `${event.target.identifier} button has been clicked (long action)`;
+    }
+
+    async handlePromiseButtonAction(event) {
+        this.message = "First Promise is pending resolution";
+
+        this.promise = delay(2_500);
+        await this.promise;
+        this.message = "First Promise resolved! Wait for the second one...";
+
+        this.promise = delay(2_500);
+        await this.promise;
+        this.message = "Second Promise resolved!";
+
+        this.promise = delay(2_500).then(() => {
+            throw new Error("Promise rejected");
+        });
+
+        try {
+            await this.promise;
+            this.message = "Third Promise resolved!";
+        } catch (error) {
+            this.message = `Third Promise rejected! Wait 2 seconds...`;
+        }
+
+        this.promiseButtonDisabled = true;
+        await delay(2_500);
+        this.message = `Will clear fourth Promise before resolving it...`;
+
+        this.promise = delay(5_000);
+
+        setTimeout(() => {
+            this.promise = null;
+            this.promiseButtonDisabled = false;
+            this.message = `Fourth promise cleared before resolving it!`;
+        }, 2_500);
+    }
+};
