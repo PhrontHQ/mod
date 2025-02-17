@@ -7,6 +7,10 @@ exports.Main = Component.specialize({
         }
     },
 
+    // FIXME: When the overlay is displayed, it is attached to the root component,
+    // placing it on a different node than the main component. As a result, the
+    // close button's action event is not propagated to the main component,
+    // preventing it from handling the event as intended.
     handleCloseOverlayButtonAction: {
         value: function () {
             this.overlay.hide();
