@@ -3,28 +3,7 @@
         "values": {
             "element": {"#": "main"},
             "overlay": {"@": "overlay"},
-            "closeButton": {"@": "closeButton"}
-        }
-    },
-
-    "openOverlayButton": {
-        "prototype": "mod/ui/button.mod",
-        "values": {
-            "element": {"#": "fillOutFormButton"},
-            "label": "Open Overlay Label"
-        },
-        "listeners": [
-            {
-                "type": "press",
-                "listener": {"@": "owner"}
-            }
-        ]
-    },
-
-    "closeButton": {
-        "prototype": "mod/ui/button.mod",
-        "values": {
-            "element": {"#": "closeButton"}
+            "closeButton": {"@": "closeOverlayButton"}
         },
         "listeners": [
             {
@@ -32,6 +11,21 @@
                 "listener": {"@": "owner"}
             }
         ]
+    },
+
+    "openOverlayButton": {
+        "prototype": "mod/ui/button.mod",
+        "values": {
+            "element": {"#": "fillOutFormButton"},
+            "label": "Open Overlay"
+        }
+    },
+
+    "closeOverlayButton": {
+        "prototype": "mod/ui/button.mod",
+        "values": {
+            "element": {"#": "closeButton"}
+        }
     },
 
     "overlay": {

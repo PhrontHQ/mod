@@ -7,7 +7,7 @@ exports.Main = Component.specialize({
         }
     },
 
-    handleCloseButtonAction: {
+    handleCloseOverlayButtonAction: {
         value: function () {
             this.overlay.hide();
         }
