@@ -352,8 +352,7 @@ const Button = (exports.Button = class Button extends Control {
 
             // Ensure that the last child is a text node
             // Any whitespace (including indentation) in the template will create a #text node
-            // That's why the template has no indentation - to avoid unwanted text nodes
-            // But just in case we still need to check if the last child is a text node
+            // But just in case (compressed version) we still check if the last child is a text node
             if (!lastChild || lastChild.nodeType !== Node.TEXT_NODE) {
                 // Create a text node if the last child is not a text node
                 this.element.appendChild(document.createTextNode(""));
