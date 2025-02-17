@@ -1,9 +1,8 @@
 var Component = require("mod/ui/component").Component;
 
-exports.Main = Component.specialize(/** @lends Main# */ {
-
-    handleOpenOverlayButtonPress: {
-        value: function(event) {
+exports.Main = Component.specialize({
+    handleOpenOverlayButtonAction: {
+        value: function (event) {
             this.overlay.show();
         }
     },
@@ -16,13 +15,13 @@ exports.Main = Component.specialize(/** @lends Main# */ {
 
     didShowOverlay: {
         value: function (overlay) {
-            console.log("didShowOverlay",overlay);
+            console.log("didShowOverlay", overlay);
         }
     },
 
     didHideOverlay: {
         value: function (overlay) {
-            console.log("didHideOverlay",overlay);
+            console.log("didHideOverlay", overlay);
         }
     },
 
