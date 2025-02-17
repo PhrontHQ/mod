@@ -44,9 +44,6 @@
 /* Image Specifications */
 
 .Button>.Button-image {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     position: relative;
 }
 
