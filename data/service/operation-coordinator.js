@@ -180,6 +180,16 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
         }
     },
 
+    _dispatchOperationToConnectionClientIdAfterResolvedPromise: {
+        value: function(operation, connectionClientId, promise) {
+            return this._dataMessagePromiseForOperation(operation)
+            .then((dataMessage) => {
+                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
+                return this._sendData(promise, connectionClientId, dataMessage);
+            })
+        }
+    },
+
     dispatchOperationToConnectionClientId: {
         value: function(operation, connection, clientId) {
 
@@ -287,21 +297,13 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                                 iReadUpdateOperation.type = DataOperation.Type.ReadCompletedOperation;
                             }
 
-                            iPromise = this._dataMessagePromiseForOperation(iReadUpdateOperation)
-                            .then((dataMessage) => {
-                                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
-                                return this._sendData(iPromise, clientId, dataMessage);
-                            })
+                            iPromise = this._dispatchOperationToConnectionClientIdAfterResolvedPromise(iReadUpdateOperation, clientId, iPromise);
                         }
 
                         //Sends the last if some left:
                         if(lengthRemainder || operationData.length) {
+                            iPromise = this._dispatchOperationToConnectionClientIdAfterResolvedPromise(operation, clientId, iPromise);
 
-                            iPromise = this._dataMessagePromiseForOperation(operation)
-                            .then((dataMessage) => {
-                                //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #2 operation.referrerId "+operation.referrerId);
-                                return this._sendData(iPromise, clientId, dataMessage);
-                            })
                         }
                         //console.log(">>>>Large ReadOperation split in "+(countI+lengthRemainder)+ " sub operations: operationDataKBSize:"+operationDataKBSize+", integerSizeQuotient:"+integerSizeQuotient+", sizeRemainder:"+sizeRemainder+", operationData.length:"+operationData.length+", integerLengthQuotient:"+integerLengthQuotient+", lengthRemainder:",lengthRemainder );
                         return iPromise.then(function() {
