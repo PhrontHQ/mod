@@ -3520,6 +3520,12 @@ Component.addClassProperties(
         value: null
     },
 
+    /**
+     * The current build animation that is playing.
+     * @type {CssBasedAnimation}
+     * @default null
+     * @readonly
+     */
     currentBuildAnimation: {
         get: function () {
             return this._currentBuildAnimation;
