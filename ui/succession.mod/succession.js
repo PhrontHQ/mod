@@ -157,6 +157,11 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
         value: null
     },
 
+    /**
+     * A promise that resolves when the Succession is done transitioning.
+     * @property {Promise}
+     * @readonly
+     */
     transitioningPromise: {
         get: function () {
             return this._transitioningPromise;
