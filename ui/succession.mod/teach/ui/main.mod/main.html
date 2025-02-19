@@ -11,6 +11,7 @@
         "owner": {
             "values": {
                 "element": {"#": "Main"},
+                "transitioningPromise": {"<-": "@succession1.transitioningPromise"},
                 "succession1": {"@": "succession1"}
             },
             "listeners": [
@@ -289,6 +290,13 @@
                 "element": {"#": "transitioningStatus"},
                 "value": {"<-": "@succession1.isTransitioning"}
             }
+        },
+        "transitioningPromiseStatus": {
+            "prototype": "mod/ui/text.mod",
+            "values": {
+                "element": {"#": "transitioningPromiseStatus"},
+                "value": {"<-": "@owner.transitioningPromiseStatus"}
+            }
         }
     }
     </script>
@@ -349,6 +357,8 @@
                 Last component built-out: <code data-mod-id="lastBuildOutComponentIdentifier"></code>
                 <br/>
                 Is Transitioning: <code data-mod-id="transitioningStatus"></code>
+                <br/>
+                Transitioning Promise Status: <code data-mod-id="transitioningPromiseStatus"></code>
 
                 <h3>The stack</h3>
                 <ul data-mod-id="stack">
