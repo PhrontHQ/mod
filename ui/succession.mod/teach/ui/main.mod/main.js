@@ -164,7 +164,7 @@ exports.Main = Component.specialize({
 
     handlePushx5Action: {
         value: function () {
-            var numberOfPushes = 10,
+            var numberOfPushes = 5,
                 self = this;
 
             var pushInterval = setInterval(function () {
@@ -192,7 +192,7 @@ exports.Main = Component.specialize({
                 if (numberOfPops === 0) {
                     clearInterval(popInterval);
                 }
-            }, 750);
+            }, 50);
 
         }
     },
