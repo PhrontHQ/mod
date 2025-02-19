@@ -3530,6 +3530,12 @@ Component.addClassProperties(
         value: null
     },
 
+    currentBuildAnimation: {
+        get: function () {
+            return this._currentBuildAnimation;
+        }
+    },
+
     _buildIn: {
         value: function () {
             var self = this;

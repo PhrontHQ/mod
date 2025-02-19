@@ -296,6 +296,13 @@
             "values": {
                 "element": {"#": "baz"}
             }
+        },
+        "transitioningStatus": {
+            "prototype": "mod/ui/text.mod",
+            "values": {
+                "element": {"#": "transitioningStatus"},
+                "value": {"<-": "@succession1.isTransitioning"}
+            }
         }
     }
     </script>
@@ -354,6 +361,8 @@
                 Last component built-in: <code data-mod-id="lastBuildInComponentIdentifier"></code>
                 <br/>
                 Last component built-out: <code data-mod-id="lastBuildOutComponentIdentifier"></code>
+                <br/>
+                Is Transitioning: <code data-mod-id="transitioningStatus"></code>
 
                 <h3>The stack</h3>
                 <ul data-mod-id="stack">
