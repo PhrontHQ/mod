@@ -301,11 +301,18 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this._updateDomContentWith(this.content);
                 this.dispatchOwnPropertyChange("content", this.content);
 
-                const changes = [...plus, ...minus];
-                this._prepareComponentsForBuild(changes);
+                const affectedComponents = [...plus, ...minus];
+
+                // As we only prepare the incoming and outgoing components for build and if there are multiple affected
+                // components (e.g., during a complex history change, like a `clear()`), we need to ensure that all
+                // components in between are also prepared for build. This guarantees that animation overrides are
+                // applied consistently across all relevant components.
+                if (affectedComponents.length > 1) {
+                    this._prepareComponentsForBuild(affectedComponents);
+                }
 
                 // Let's determine if the Succession should be marked as transitioning.
-                let hasComponentsWithAnimations = this._hasComponentsWithAnimations(changes);
+                let hasComponentsWithAnimations = this._hasComponentsWithAnimations(affectedComponents);
                 this._setTransitioningStatus(hasComponentsWithAnimations);
             }
         }
