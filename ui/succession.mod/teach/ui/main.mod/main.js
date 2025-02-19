@@ -52,6 +52,37 @@ exports.Main = Component.specialize({
         }
     },
 
+    transitioningPromiseStatus: {
+        value: null
+    },
+
+    _transitioningPromise: {
+        value: null
+    },
+
+    transitioningPromise: {
+        set: function (value) {
+            if (this._transitioningPromise !== value) {
+                this._transitioningPromise = value;
+
+                if (value ) {
+                    const handlePromise =  () => {
+                        if (handlePromise.promise === value) {
+                            this.transitioningPromiseStatus = "resolved";
+                            this._transitioningPromise = null;
+                        }
+                    };
+
+                    this.transitioningPromiseStatus = "pending";
+                    handlePromise.promise = value;
+                    value.finally(handlePromise);
+                } else {
+                    this.transitioningPromiseStatus = null;
+                }
+            }
+        }
+    },
+
     barCount: {
         value: 0
     },

@@ -153,6 +153,21 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
         }
     },
 
+    _transitioningPromise: {
+        value: null
+    },
+
+    transitioningPromise: {
+        get: function () {
+            return this._transitioningPromise;
+        }
+    },
+
+    _transitioningPromiseResolver: {
+        value: null,
+        writable: true
+    },
+
     /**
      * Updates the transitioning status of the Succession.
      * @param {boolean} value - The new transitioning status.
@@ -169,6 +184,21 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this.dispatchBeforeOwnPropertyChange("isTransitioning", this._isTransitioning);
                 this._isTransitioning = value;
                 this.dispatchOwnPropertyChange("isTransitioning", value);
+
+                // Update the transitioning promise.
+                this.dispatchBeforeOwnPropertyChange("transitioningPromise", this._transitioningPromise);
+
+                if (!value && this._transitioningPromise) {
+                    this._transitioningPromiseResolver();
+                    this._transitioningPromiseResolver = null;
+                    this._transitioningPromise = null;
+                } else {
+                    this._transitioningPromise = new Promise(resolve => {
+                        this._transitioningPromiseResolver = resolve;
+                    });
+                }
+
+                this.dispatchOwnPropertyChange("transitioningPromise", this._transitioningPromise);
             }
         }
     },
