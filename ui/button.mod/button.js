@@ -1,15 +1,11 @@
 /*global require, exports*/
 
+const { VisualPosition, VisualOrientation } = require("core/enums/visual");
 const { PressComposer } = require("composer/press-composer");
 const { KeyComposer } = require("composer/key-composer");
 const { Control } = require("ui/control");
 
 // TODO: migrate away from using undefinedGet and undefinedSet
-
-/**
- * @typedef {"horizontal"|"vertical"} ButtonOrientation
- * @typedef {"start"|"end"} ButtonPosition
- * /
 
 /**
  * Wraps a native <code>&lt;button></code> or <code>&lt;input[type="button"]></code> HTML element.
@@ -51,68 +47,56 @@ const { Control } = require("ui/control");
 const Button = (exports.Button = class Button extends Control {
     /** @lends module:"mod/ui/native/button.mod".Button# */
 
-    /**
-     * Available image placements
-     * @readonly
-     * @enum {ButtonPosition}
-     */
-    static IMAGE_POSITIONS = Object.freeze({
-        start: "mod--start",
-        end: "mod--end",
-    });
+    // <---- Static ---->
 
-    /**
-     * Available main axis orientations
-     * @readonly
-     * @enum {ButtonOrientation}
-     */
-    static ORIENTATIONS = Object.freeze({
-        horizontal: "mod--horizontal",
-        vertical: "mod--vertical",
-    });
+    static VisualOrientation = VisualOrientation;
 
-    _imagePosition = Button.IMAGE_POSITIONS.start;
+    static VisualPosition = VisualPosition;
 
-    get imagePosition() {
-        return this._imagePosition;
+    // <---- Properties ---->
+
+    _visualPosition = VisualPosition.start;
+
+    get visualPosition() {
+        return this._visualPosition;
     }
 
     /**
      * The position of the image
-     * @type {ButtonPosition}
-     * @param {ButtonPosition} position - The position of the image
+     * @type {VisualPosition}
+     * @param {VisualPosition} position - The position of the image
      */
-    set imagePosition(position) {
-        if (!Button.IMAGE_POSITIONS[position]) {
+    set visualPosition(position) {
+        if (!VisualPosition[position]) {
             console.warn('Invalid image position: "' + position + '"');
             return;
         }
 
-        if (position !== this._imagePosition) {
-            this._imagePosition = Button.IMAGE_POSITIONS[position];
+        if (position !== this._visualPosition) {
+            this._visualPosition = VisualPosition[position];
             this._applyImagePositionStyles();
         }
     }
 
-    _orientation = Button.ORIENTATIONS.horizontal;
+    _visualOrientation = VisualOrientation.horizontal;
 
-    get orientation() {
-        return this._orientation;
+    get visualOrientation() {
+        return this._visualOrientation;
     }
 
     /**
      * The orientation of the button
-     * @type {ButtonOrientation}
-     * @param {ButtonOrientation} orientation - The orientation of the button
+     * @type {VisualOrientation}
+     * @param {VisualOrientation} orientation - The orientation of the button
      */
-    set orientation(orientation) {
-        if (!Button.ORIENTATIONS[orientation]) {
+    set visualOrientation(orientation) {
+        if (!VisualOrientation[orientation]) {
             console.warn('Invalid orientation: "' + orientation + '"');
             return;
         }
 
-        if (orientation !== this._orientation) {
-            this._orientation = Button.ORIENTATIONS[orientation];
+        if (orientation !== this._visualOrientation) {
+            this._visualOrientation = VisualOrientation[orientation];
             this._applyOrientationStyles();
         }
     }
@@ -407,21 +391,21 @@ const Button = (exports.Button = class Button extends Control {
     /**
      * Applies the current image position's styling by updating CSS classes
      * @private
-     * @see Button.IMAGE_POSITIONS
+     * @see VisualPosition
      */
     _applyImagePositionStyles() {
-        this._removeClassListTokens(...Object.values(Button.IMAGE_POSITIONS));
-        this.classList.add(this.imagePosition);
+        this._removeClassListTokens(...Object.values(VisualPosition));
+        this.classList.add(this.visualPosition);
     }
 
     /**
      * Applies the current orientation's styling by updating CSS classes
      * @private
-     * @see Button.ORIENTATIONS
+     * @see VisualOrientation
      */
     _applyOrientationStyles() {
-        this._removeClassListTokens(...Object.values(Button.ORIENTATIONS));
-        this.classList.add(this.orientation);
+        this._removeClassListTokens(...Object.values(VisualOrientation));
+        this.classList.add(this.visualOrientation);
     }
 
     // FIXME: Remove this method when the classList's remove method is fixed!
