@@ -464,13 +464,6 @@ Button.addAttributes({
     type: { value: "button" },
 
     /**
-     * The name associated with the component's DOM element.
-     * @type {string}
-     * @default null
-     */
-    name: null,
-
-    /**
      * <strong>Use <code>label</code> to set the displayed text on the button</strong>
      * The value associated with the element. This sets the value attribute of
      * the button that gets sent when the form is submitted.
