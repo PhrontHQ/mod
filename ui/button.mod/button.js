@@ -394,7 +394,7 @@ const Button = (exports.Button = class Button extends Control {
      * @see VisualPosition
      */
     _applyImagePositionStyles() {
-        this._removeClassListTokens(...Object.values(VisualPosition));
+        this.classList.deleteEach(...Object.values(VisualPosition));
         this.classList.add(this.visualPosition);
     }
 
@@ -404,17 +404,8 @@ const Button = (exports.Button = class Button extends Control {
      * @see VisualOrientation
      */
     _applyOrientationStyles() {
-        this._removeClassListTokens(...Object.values(VisualOrientation));
+        this.classList.deleteEach(...Object.values(VisualOrientation));
         this.classList.add(this.visualOrientation);
-    }
-
-    // FIXME: Remove this method when the classList's remove method is fixed!
-    // Our implementation doesn't support multiple arguments
-    // https://dom.spec.whatwg.org/#dom-domtokenlist-remove
-    _removeClassListTokens(...tokens) {
-        for (const token of tokens) {
-            this.classList.remove(token);
-        }
     }
 });
 
