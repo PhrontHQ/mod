@@ -75,7 +75,7 @@ const Button = (exports.Button = class Button extends Control {
 
         if (position !== this._visualPosition) {
             this._visualPosition = VisualPosition[position];
-            this._applyImagePositionStyles();
+            this._applyVisualPositionStyles();
         }
     }
 
@@ -98,7 +98,7 @@ const Button = (exports.Button = class Button extends Control {
 
         if (orientation !== this._visualOrientation) {
             this._visualOrientation = VisualOrientation[orientation];
-            this._applyOrientationStyles();
+            this._applyVisualOrientationStyles();
         }
     }
 
@@ -347,8 +347,8 @@ const Button = (exports.Button = class Button extends Control {
             this._labelNode = this.element.lastChild;
 
             // Apply Button styles
-            this._applyImagePositionStyles();
-            this._applyOrientationStyles();
+            this._applyVisualPositionStyles();
+            this._applyVisualOrientationStyles();
         }
     }
 
@@ -395,7 +395,7 @@ const Button = (exports.Button = class Button extends Control {
      * @private
      * @see VisualPosition
      */
-    _applyImagePositionStyles() {
+    _applyVisualPositionStyles() {
         this.classList.deleteEach(...Object.values(VisualPosition));
         this.classList.add(this.visualPosition);
     }
@@ -405,7 +405,7 @@ const Button = (exports.Button = class Button extends Control {
      * @private
      * @see VisualOrientation
      */
-    _applyOrientationStyles() {
+    _applyVisualOrientationStyles() {
         this.classList.deleteEach(...Object.values(VisualOrientation));
         this.classList.add(this.visualOrientation);
     }
