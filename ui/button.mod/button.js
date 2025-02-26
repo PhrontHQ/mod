@@ -117,7 +117,7 @@ const Button = (exports.Button = class Button extends Control {
      */
     converter = null;
 
-    label = null;
+    _label = null;
 
     get label() {
         return this._label;
@@ -141,6 +141,7 @@ const Button = (exports.Button = class Button extends Control {
             }
 
             this._label = isDefined && value !== null ? String(value) : null;
+            this.needsDraw = true;
         }
     }
 
@@ -243,7 +244,7 @@ const Button = (exports.Button = class Button extends Control {
      * @param {boolean} useCapture - The useCapture flag
      */
     addEventListener(type, listener, useCapture) {
-        super.addEventListener(this, type, listener, useCapture);
+        super.addEventListener(type, listener, useCapture);
 
         if (type === "longAction") {
             this._pressComposer.addEventListener("longPress", this, false);

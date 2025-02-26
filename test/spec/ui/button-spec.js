@@ -27,21 +27,6 @@ describe("test/ui/button-spec", function () {
                 aButton.label = "";
                 expect(aButton.label).toEqual("");
             });
-            it("should have a default value", function () {
-                aButton.label = "";
-                expect(aButton.label).toEqual("");
-                aButton.label = void 0;
-                expect(aButton.label).toEqual("Button");
-                aButton.label = null;
-                expect(aButton.label).toEqual("Button");
-            });
-            it("should update the value if isInputElement is true", function () {
-                aButton.element.tagName = "INPUT";
-                // aButton.isInputElement = true;
-                aButton.label = "hello";
-                aButton.draw();
-                expect(aButton.element.value).toEqual( "hello");
-            });
         });
         describe("draw", function () {
             var aButton;
@@ -72,7 +57,6 @@ describe("test/ui/button-spec", function () {
             beforeEach(function () {
                 aButton = new Button();
                 aButton.element = MockDOM.element();
-                aButton.element.tagName = "INPUT";
                 aButton.originalElement = aButton.element;
             });
             it("should be enabled after the corresponding property change", function () {
@@ -125,7 +109,6 @@ describe("test/ui/button-spec", function () {
             beforeEach(function () {
                 aButton = new Button();
                 aButton.element = MockDOM.element();
-                aButton.element.tagName = "INPUT";
                 aButton.originalElement = aButton.element;
                 aButton.element.firstChild = MockDOM.element();
                 aButton.converter = {
@@ -135,11 +118,11 @@ describe("test/ui/button-spec", function () {
                 };
             });
             it("shouldn't go into infinite loop", function () {
-                aButton.element.value = "fail";
+                aButton.label = "fail";
                 aButton.enterDocument(true);
                 aButton.draw();
                 aButton.label = "FAIL";
-                expect(aButton.element.value).toEqual("pass");
+                expect(aButton.label).toEqual("pass");
             });
         });
 
