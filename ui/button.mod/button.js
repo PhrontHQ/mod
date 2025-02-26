@@ -1,6 +1,7 @@
 /*global require, exports*/
 
-const { VisualPosition, VisualOrientation } = require("core/enums/visual");
+const { VisualOrientation } = require("core/enums/visual-orientation");
+const { VisualPosition } = require("core/enums/visual-position");
 const { PressComposer } = require("composer/press-composer");
 const { KeyComposer } = require("composer/key-composer");
 const { Control } = require("ui/control");
