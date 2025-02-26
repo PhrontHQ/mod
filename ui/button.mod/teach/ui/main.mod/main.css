@@ -54,17 +54,11 @@ header {
     color: white;
 }
 
-.button.custom {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
 .button.mod--pending {
     background:red;
 }
 
-.text-mod {
+.infoText {
     display: block;
     margin-top: 40px;
     font-size: 13px;
