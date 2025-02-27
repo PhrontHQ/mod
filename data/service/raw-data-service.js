@@ -1164,7 +1164,7 @@ RawDataService.addClassProperties({
 
     primaryKeyForNewObjectWithObjectDescriptor: {
         value: function (type) {
-            return uuid.generate();
+            return uuid.generate( Date.now(), /* isFull, to include hyphens*/ true);
         }
     },
 
