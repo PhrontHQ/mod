@@ -8,7 +8,7 @@ var parse = require("./frb/parse"),
     Scope = require("./frb/scope"),
     syntaxProperties = require("./frb/syntax-properties"),
     compile = require("./frb/compile-evaluator"),
-    SyntaxInOrderIterator = require("./frb/syntax-iterator").SyntaxInOrderIterator;
+    SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator;
 
 var Criteria = exports.Criteria = Montage.specialize({
 
