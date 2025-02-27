@@ -178,7 +178,15 @@ function toHex(value) {
 
 const generateUUIDv7Buffer = new Uint8Array(16);
 
-function generateUUIDv7(aDate) {
+/**
+ * UUID with hyphens/dashes are considered the full version.
+ * The trimmed version is the same without hyphens/dashes 
+ * 
+ * PostgreSQL can take input in both but only return 
+ * uuids as string in their full representation.
+ */
+
+function generateUUIDv7(aDate, isFull) {
     // random bytes
     const value = generateUUIDv7Buffer;
     crypto.getRandomValues(value);
@@ -214,8 +222,9 @@ function generateUUIDv7(aDate) {
     // }
 
     //Final implementation: no loop as it's a fixed size we can unroll. Intermediary strings are reused from LUT_HEX_8b Array
-    return `${toHex(Number((timestamp >> 40n) & 0xffn))}${toHex(Number((timestamp >> 32n) & 0xffn))}${toHex(Number((timestamp >> 24n) & 0xffn))}${toHex(Number((timestamp >> 16n) & 0xffn))}${toHex(Number((timestamp >> 8n) & 0xffn))}${toHex(Number(timestamp & 0xffn))}${toHex(((value[6] & 0x0f) | 0x70))}${toHex((value[7]))}${toHex(((value[8] & 0x3f) | 0x80))}${toHex(value[9])}${toHex(value[10])}${toHex(value[11])}${toHex(value[12])}${toHex(value[13])}${toHex(value[14])}${toHex(value[15])}`
-
+    return isFull 
+        ? `${toHex(Number((timestamp >> 40n) & 0xffn))}${toHex(Number((timestamp >> 32n) & 0xffn))}${toHex(Number((timestamp >> 24n) & 0xffn))}${toHex(Number((timestamp >> 16n) & 0xffn))}-${toHex(Number((timestamp >> 8n) & 0xffn))}${toHex(Number(timestamp & 0xffn))}-${toHex(((value[6] & 0x0f) | 0x70))}${toHex((value[7]))}-${toHex(((value[8] & 0x3f) | 0x80))}${toHex(value[9])}-${toHex(value[10])}${toHex(value[11])}${toHex(value[12])}${toHex(value[13])}${toHex(value[14])}${toHex(value[15])}`
+        : `${toHex(Number((timestamp >> 40n) & 0xffn))}${toHex(Number((timestamp >> 32n) & 0xffn))}${toHex(Number((timestamp >> 24n) & 0xffn))}${toHex(Number((timestamp >> 16n) & 0xffn))}${toHex(Number((timestamp >> 8n) & 0xffn))}${toHex(Number(timestamp & 0xffn))}${toHex(((value[6] & 0x0f) | 0x70))}${toHex((value[7]))}${toHex(((value[8] & 0x3f) | 0x80))}${toHex(value[9])}${toHex(value[10])}${toHex(value[11])}${toHex(value[12])}${toHex(value[13])}${toHex(value[14])}${toHex(value[15])}`
 }
 
 
