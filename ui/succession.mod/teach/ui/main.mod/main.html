@@ -45,67 +45,78 @@
         "push": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "push"}
+                "element": {"#": "push"},
+                "label": "Push"
             }
         },
         "pushx5": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "pushx5"}
+                "element": {"#": "pushx5"},
+                "label": "Push x5"
             }
         },
         "pop": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "pop"}
+                "element": {"#": "pop"},
+                "label": "Pop"
             }
         },
         "popx5": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "popx5"}
+                "element": {"#": "popx5"},
+                "label": "Pop x5"
             }
         },
         "contentComponent": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "contentComponent"}
+                "element": {"#": "contentComponent"},
+                "label": "Set content to component"
             }
         },
         "contentNull": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "contentNull"}
+                "element": {"#": "contentNull"},
+                "label": "Set content to null"
             }
         },
         "multiOp": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "multiOp"}
+                "element": {"#": "multiOp"},
+                "label": "push x10 pop x5"
             }
         },
         "toggleOverflow": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "toggleOverflow"}
+                "element": {"#": "toggleOverflow"},
+                "label": "Toggle Container Overflow"
             }
         },
         "setSuccessionBuildInOut": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "setSuccessionBuildInOut"}
+                "element": {"#": "setSuccessionBuildInOut"},
+                "label": "Set builds to CSS animation"
             }
         },
         "clearSuccessionBuildInOut": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "clearSuccessionBuildInOut"}
+                "element": {"#": "clearSuccessionBuildInOut"},
+                "label": "Clear builds (undefined)"
             }
         },
         "disableSuccessionBuildInOut": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "disableSuccessionBuildInOut"}
+                "element": {"#": "disableSuccessionBuildInOut"},
+                "label": "Disable builds (null)"
             }
         },
 
@@ -182,7 +193,8 @@
         "SubstitutionMultiOp": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "SubstitutionMultiOp"}
+                "element": {"#": "SubstitutionMultiOp"},
+                "label": "Switch 3 times between 2 items in 500ms"
             }
         },
         "substitution": {
@@ -211,7 +223,8 @@
         "detach": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "detach"}
+                "element": {"#": "detach"},
+                "label": "Detach from Component tree"
             }
         },
         "Bar2": {
@@ -267,7 +280,8 @@
         "conditionToggle": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "conditionToggle"}
+                "element": {"#": "conditionToggle"},
+                "label": "Toggle"
             }
         },
         "condition": {
@@ -288,7 +302,7 @@
 </head>
 <body>
     <div data-mod-id="Main" class="main">
-        <button data-mod-id="detach">Detach from Component tree</button>
+        <button data-mod-id="detach"></button>
 
         <h2>Stand-alone components declared in serialization</h2>
         <div data-mod-id="Bar2" style="position: static;"></div>
@@ -310,20 +324,20 @@
         <h2>Inside Succession with overridden animation</h2>
         <br>
         <div>
-            <button data-mod-id="push">Push</button>
-            <button data-mod-id="pushx5">Push x5</button>
-            <button data-mod-id="pop">Pop</button>
-            <button data-mod-id="popx5">Pop x5</button>
-            <button data-mod-id="contentComponent">Set content to component</button>
-            <button data-mod-id="contentNull">Set content to null</button>
-            <button data-mod-id="multiOp">push x10 pop x5</button>
+            <button data-mod-id="push"></button>
+            <button data-mod-id="pushx5"></button>
+            <button data-mod-id="pop"></button>
+            <button data-mod-id="popx5"></button>
+            <button data-mod-id="contentComponent"></button>
+            <button data-mod-id="contentNull"></button>
+            <button data-mod-id="multiOp"></button>
         </div>
         <br/>
         <div>
-            <button data-mod-id="toggleOverflow">Toggle Container Overflow</button>
-            <button data-mod-id="setSuccessionBuildInOut">Set Succession builds to CSS animation</button>
-            <button data-mod-id="clearSuccessionBuildInOut">Clear builds (undefined)</button>
-            <button data-mod-id="disableSuccessionBuildInOut">Disable builds (null)</button>
+            <button data-mod-id="toggleOverflow"></button>
+            <button data-mod-id="setSuccessionBuildInOut"></button>
+            <button data-mod-id="clearSuccessionBuildInOut"></button>
+            <button data-mod-id="disableSuccessionBuildInOut"></button>
         </div>
 
         <div class="wrapper">
@@ -358,7 +372,7 @@
 
         <h2>Inside Substitution</h2>
         <select data-mod-id="select"></select>
-        <button data-mod-id="SubstitutionMultiOp">Switch 3 times between 2 items in 500ms</button>
+        <button data-mod-id="SubstitutionMultiOp"></button>
         <div class="wrapper">
             <div data-mod-id="substitution" class="container overflow-hidden">
                 <div data-mod-id="FooForSubstitution" data-arg="Foo"></div>
@@ -367,7 +381,7 @@
         </div>
 
         <h2>Condition, CSS transition, access getComputedStyle properties in willDraw</h2>
-        <button data-mod-id="conditionToggle">Toggle</button>
+        <button data-mod-id="conditionToggle"></button>
         <div class="wrapper">
             <div class="container overflow-hidden">
                 <div data-mod-id="condition">
