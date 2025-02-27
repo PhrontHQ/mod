@@ -45,7 +45,7 @@ var Criteria = exports.Criteria = Montage.specialize({
      * @type {object}
      */
     _parameters: {
-        value: null
+        value: undefined
     },
     parameters: {
         get: function() {
