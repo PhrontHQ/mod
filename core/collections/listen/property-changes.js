@@ -160,14 +160,16 @@ PropertyChanges.prototype.removeOwnPropertyChangeListener = function removeOwnPr
 
                 var index = listeners._current.lastIndexOf(listener);
                 if (index === -1) {
-                    throw new Error("Can't remove property change listener: does not exist: property name" + JSON.stringify(key));
-                }
-                if(descriptor.isActive) {
-                    listeners.ghostCount = listeners.ghostCount+1;
-                    listeners._current[index]=removeOwnPropertyChangeListener.ListenerGhost;
-                }
-                else {
-                    listeners._current.spliceOne(index);
+                    //throw new Error("Can't remove property change listener: does not exist: property name" + JSON.stringify(key));
+                    console.error("Can't remove property change listener: does not exist: property name" + JSON.stringify(key));
+                } else {
+                    if(descriptor.isActive) {
+                        listeners.ghostCount = listeners.ghostCount+1;
+                        listeners._current[index]=removeOwnPropertyChangeListener.ListenerGhost;
+                    }
+                    else {
+                        listeners._current.spliceOne(index);
+                    }    
                 }
             }
         }
