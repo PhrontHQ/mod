@@ -58,6 +58,9 @@ exports.MappingRule = Montage.specialize(/** @lends MappingRule.prototype */ {
      * have all of the properties referenced in .expression before the
      * the MappingRule is used. This array is used at the time of mapping to
      * populate the raw data with any properties that are missing.
+     * 
+     * FIXME: This is currently returning a flattened list regardless of the shape / depth 
+     * where those property names might have been found
      *
      * @type {string[]}
      */

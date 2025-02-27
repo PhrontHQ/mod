@@ -201,7 +201,7 @@ var Montage = require("../../core/core").Montage,
 
 exports.DataOperationType = DataOperationType = new Enum().initWithMembersAndValues(dataOperationTypes,dataOperationTypes);
 
-var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing"];
+var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing", "InvalidInput"];
 exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithMembersAndValues(dataOperationErrorNames,dataOperationErrorNames);
 
 // exports.DataOperationError.ObjectDescriptorStoreMissingError = Error.specialize({
@@ -322,7 +322,24 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
                 serializer.setProperty("context", this._context);
             }
             if(this.hints) {
-                serializer.setProperty("hints", this.hints);
+                let serializationHints;
+                /*
+                    We do not want to send a rawDataService serialized to another process...
+                */
+                if(this.hints.rawDataService) {
+                    if(Object.keys(this.hints).length > 1) {
+                        serializationHints = {};
+                        Object.assign(serializationHints, this.hints);
+                        delete serializationHints.rawDataService;
+                    } else {
+                        serializationHints = null;
+                    }
+                } else {
+                    serializationHints = this.hints;
+                }
+                if(serializationHints) {
+                    serializer.setProperty("hints", serializationHints);
+                }
             }
 
 

@@ -449,9 +449,13 @@ exports.RawValueToObjectConverter = ExpressionConverter.specialize( /** @lends R
      */
     service: {
         get: function () {
-            return  this._service ? this._service :
-                this.owner    ? this.owner.then(function (object) { return object.service; }) :
-                    undefined;
+            return  this._service 
+                ? this._service 
+                : this.owner    
+                    ? this.owner.then(function (object) { 
+                        return object.service; 
+                    }) 
+                    : undefined;
         },
         set: function (value) {
             this._service = !value || value.then ? value : Promise.resolve(value);

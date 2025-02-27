@@ -80,7 +80,9 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
     }
 
 
-    handleReadOperation(readOperation) {}
+    handleReadOperation(readOperation) {
+        
+    }
  
 }
 
@@ -502,7 +504,97 @@ RawDataService.addClassProperties({
         }
     },
 
+
     fetchRawObjectProperty: {
+        value: function (object, propertyName) {
+
+            console.warn("\t~~~~~~~~~~~~~~~~~~~ "+this.identifier+" fetchRawObject: "+object.dataIdentifier+", property: "+propertyName);
+
+            var self = this,
+                objectDescriptor = this.objectDescriptorForObject(object),
+                propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
+                isObjectCreated = this.isObjectCreated(object);
+
+            if(isObjectCreated) {
+                return Promise.resolve(null);
+            } else {
+
+                //TODO: leverage this as used in the foreign key value converter to find the object locally first
+                //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
+
+
+                var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor)),
+                    objectSnpashot = this.snapshotForObject(object);
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+
+                /*
+                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+                */
+               let mapping = this.mappingForType(objectDescriptor),
+                    rule = mapping.objectMappingRuleForPropertyName(propertyName);
+
+                if(!rule) {
+                    console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+propertyName);
+                    return Promise.resolveNull;
+                }
+                
+                let requirements = rule.requirements,
+                    hintSnapshot;
+
+                if(objectSnpashot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                    hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
+                    for(let i=0, countI = requirements.length; (i<countI); i++) {
+                        hintSnapshot[requirements[i]] = objectSnpashot[requirements[i]];
+                    }
+
+
+                }
+
+
+                /*
+                    FIXME: Context, as we're fetching an object property, in a situation where the app's rely on some
+                    origin data services, the data from those services may not be imported yet. In which case, the worker
+                    will need info to do so, and origin-related data info is stored in the originDataSnapshot property.
+
+                    If we happen to have that client-side, we can send it as part of the attempt to acquire that object's property value 
+                    from an origin service. If we don't the SynchronizationDataService (or any other analoguous logic) will have to fetch it from the DB
+                    using the criteria here that specify the object, to support obtaining that data from origin services.
+                    
+                    We pass that as a hint through DataQuery's hints property.
+                */
+                if(objectSnpashot?.hasOwnProperty("originDataSnapshot")) {
+                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = objectSnpashot.originDataSnapshot;
+                }
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.readExpressions = [propertyName];
+
+                //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+
+                return DataService.mainService.fetchData(propertyNameQuery)
+                .then(function(object) {
+                    if(Array.isArray(object)) {
+                        if(propertyDescriptor.cardinality === 1) {
+                            return object[0] || null;
+                        } else {
+                            return object;
+                        }
+                    } else {
+                    /*
+                        Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
+                        keeping 
+                    */
+                        console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+                        return object[propertyName];
+                    }
+                });
+            }
+        }
+    },
+
+
+    _og_fetchRawObjectProperty: {
         value: function (object, propertyName) {
             var self = this,
                 objectDescriptor = this.objectDescriptorForObject(object),
@@ -567,6 +659,13 @@ RawDataService.addClassProperties({
                         var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor));
 
                         propertyNameQuery.readExpressions = [propertyName];
+
+                        /*
+                            This is an addition to help the SynchronizationDataService get involved in the propagation of an operation:
+                            A RawDataService typically can't understand the raw format of another, so it helps avoid such read operation
+                            to reach a RawDataService for which it would be a waste of time to handle the operation as-is.
+                        */
+                        propertyNameQuery.hints = {rawDataService: self};
 
                         //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
 
@@ -924,6 +1023,13 @@ RawDataService.addClassProperties({
 
     addOneRawData: {
         value: function (stream, rawData, context) {
+
+
+            if(!rawData) {
+                console.warn("stream received null rawData in result from operatinon ", context);
+                return;
+            }
+
             var type,
                 streamQueryType = this._descriptorForParentAndRawData(stream.query.type, rawData),
                 readExpressions = stream.query.readExpressions,
@@ -969,7 +1075,7 @@ RawDataService.addClassProperties({
                 this._addRawDataPrimaryKeyValuesIfNeeded(rawData, type, stream.query);
 
                 dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData, context),
-
+                //console.log("addOneRawData "+dataIdentifier);
                 // if(!object) {
                 object = this.objectForTypeRawData(type, rawData, dataIdentifier, context);
                 // }
@@ -1094,6 +1200,13 @@ RawDataService.addClassProperties({
 
             //Record snapshot before mapping
             this.recordSnapshot(dataIdentifier, rawData);
+
+            /*
+                getDataObject() ends up on the mainService and guarantee uniquing 
+                But the rawDataService needs to register that object with it's own native dataIdentifier
+                which could be different when an object can come from different sources with different raw data shapes
+            */
+            // this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
 
             result = this.mapRawDataToObject(rawData, object, context);
 
@@ -1801,9 +1914,9 @@ RawDataService.addClassProperties({
      * @argument {Object} mappingScope - A Scope object (from FRB) that holds objects involved in mappig logic.
 
      */
-    mappingDidMapRawDataToObjectProperty: {
-        value: function (mapping, rawData, dataObject, propertyName, context, mappingScope) {
-            this.callDelegateMethod("rawDataServiceMappingRawDataToObjectWillCompleteProperty", this, mapping, rawData, dataObject, propertyName, context, mappingScope);
+    mappingDidMapRawDataToObjectPropertyDescriptor: {
+        value: function (mapping, rawData, dataObject, propertyDescriptor, context, mappingScope) {
+            this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidCompletePropertyDescriptor", this, mapping, rawData, dataObject, propertyDescriptor, context, mappingScope);
         }
     },
     
@@ -1813,7 +1926,7 @@ RawDataService.addClassProperties({
      * 
      * Default implementation invokes the delegate method
      * 
-     *  rawDataServiceMappingRawDataToObjectWillComplete()
+     *  rawDataServiceMappingRawDataToObjectDidComplete()
      *
      * Which is ivoked while there's still a blackout on tracking changes
      * Subclasses should override this method as needed:
@@ -1832,7 +1945,7 @@ RawDataService.addClassProperties({
      */
     mappingDidMapRawDataToObject: {
         value: function (mapping, rawData, dataObject, context, mappedProperties) {
-            this.callDelegateMethod("rawDataServiceMappingRawDataToObjectWillComplete", this, mapping, rawData, dataObject, context, mappedProperties);
+            this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, rawData, dataObject, context, mappedProperties);
         }
     },
 
@@ -1861,16 +1974,21 @@ RawDataService.addClassProperties({
      * `mapRawDataToHazard()` and `mapRawDataToProduct()`.
      *
      * @method
-     * @argument {Object} record - An object whose properties' values hold
-     *                             the raw data.
-     * @argument {Object} object - An object whose properties must be set or
-     *                             modified to represent the raw data.
-     * @argument {?} context     - The value that was passed in to the
-     *                             [addRawData()]{@link RawDataService#addRawData}
-     *                             call that invoked this method.
+     * @argument {Object} record            - An object whose properties' values hold
+     *                                      the raw data.
+     * @argument {Object} object            - An object whose properties must be set or
+     *                                      modified to represent the raw data.
+     * @argument {Object} context            - The value that was passed in to the
+     *                                      [addRawData()]{@link RawDataService#addRawData}
+     *                                      all that invoked this method.
+     * @argument {Array} readExpressions    - A list of expressions to map
+     * @argument {Boolean} registerMappedPropertiesAsChanged    - Instructing the mapping to treat mapped properties as changes on the mapped objec.
+     *                                                          this is needed when objects are mapped for the sake of being saved
+     *                            
+
      */
     mapRawDataToObject: {
-        value: function (record, object, context, readExpressions) {
+        value: function (record, object, context, readExpressions, registerMappedPropertiesAsChanged) {
             var self = this,
                 mapping = this.mappingForObject(object),
                 snapshot,
@@ -1886,12 +2004,12 @@ RawDataService.addClassProperties({
                     So to break the cycle, if there's a known snapshot and the object is being mapped, then we don't return a promise, knowing there's already one pending for the first pass.
                 */
                 snapshot = this.snapshotForObject(object);
-                //Changed order of snapshot being set before mapping so thqt doesn't work
+                //Changed order of snapshot being set before mapping so that doesn't work
                 //if(Object.equals(snapshot,record) ) {
 
                 //Replacing with:
                 if (this._objectsBeingMapped.has(object)) {
-                    return object;
+                    return Promise.resolve(object);
 
                     // if(this._objectsBeingMapped.has(object)) {
                     //     console.log(object.dataIdentifier.objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FOUND EXISTING MAPPING PROMISE");
@@ -1907,7 +2025,7 @@ RawDataService.addClassProperties({
 
                 this._objectsBeingMapped.add(object);
 
-                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties);
+                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged);
 
                 //Recording snapshot even if we already had an object
                 //Record snapshot before we may create an object
@@ -1916,7 +2034,7 @@ RawDataService.addClassProperties({
                 // console.log(object.dataIdentifier.objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FIRST NEW MAPPING PROMISE");
 
                 if (result) {
-                    result = result.then( (resultValue) => {
+                    return result.then( (resultValue) => {
                         result = self.mapRawDataToObject(record, object, context, readExpressions);
                         if (!this._isAsync(result)) {
                             // self._deleteMapRawDataToObjectPromise(record, object);
@@ -1956,10 +2074,10 @@ RawDataService.addClassProperties({
                         this._objectsBeingMapped.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
-                        return result;
+                        return Promise.resolve(result);
                     }
                     else {
-                        result = result.then((resolved) => {
+                        return result.then((resolved) => {
 
                             // self._deleteMapRawDataToObjectPromise(record, object);
                             this._objectsBeingMapped.delete(object);
@@ -1988,10 +2106,10 @@ RawDataService.addClassProperties({
                     this._objectsBeingMapped.delete(object);
                     this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
-                    return result;
+                    return Promise.resolve(result);
                 }
                 else {
-                    result = result.then((resolved) => {
+                    return result.then((resolved) => {
                         // self._deleteMapRawDataToObjectPromise(record, object);
                         this._objectsBeingMapped.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
@@ -2008,7 +2126,7 @@ RawDataService.addClassProperties({
 
             //this._setMapRawDataToObjectPromise(record, object, result);
 
-            return result;
+            // return result;
 
         }
     },
@@ -2855,7 +2973,7 @@ RawDataService.addClassProperties({
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);
                         if (stream.query.doesBatchResult) {
-                            self.rawDataBatchDone(stream);
+                            this.rawDataBatchDone(stream);
                         }
 
                     } else if (operation.type !== DataOperation.Type.ReadCompletedOperation) {
@@ -2867,7 +2985,7 @@ RawDataService.addClassProperties({
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);
                         if (stream.query.doesBatchResult) {
-                            self.rawDataBatchDone(stream);
+                            this.rawDataBatchDone(stream);
                         }
 
                     } else if (operation.type !== DataOperation.Type.ReadCompletedOperation) {
@@ -2908,9 +3026,9 @@ RawDataService.addClassProperties({
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
                 }
-                // else {
-                //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
-                // }
+                else {
+                    console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
+                }
                 //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
             }
 
@@ -2943,9 +3061,9 @@ RawDataService.addClassProperties({
         value: function (readOperation, err, data, isNotLast, responseOperationTarget = readOperation.target) {
             var isDataArray = Array.isArray(data);
 
-            if (isDataArray && data.length === 0 && isNotLast) {
-                return null;
-            }
+            // if (isDataArray && data.length === 0 && isNotLast) {
+            //     return null;
+            // }
 
             var operation = new DataOperation();
 
@@ -2985,7 +3103,11 @@ RawDataService.addClassProperties({
                     Make sure we have an array
                 */
                 if (!isDataArray) {
-                    data = [data];
+                    if(data === undefined) {
+                        data = [];
+                    } else {
+                        data = [data];
+                    }
                 }
 
                 //We provide the inserted records as the operation's payload
@@ -3902,6 +4024,7 @@ RawDataService.addClassProperties({
         value: function (object, operationType, dataObjectChangesMap, dataOperationsByObject, commitTransactionOperation) {
             try {
 
+                console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id)
                 //TODO
                 //First thing we should be doing here is run validation
                 //on the object, which should be done one level up
@@ -3987,8 +4110,10 @@ RawDataService.addClassProperties({
                     operation.snapshot = dataSnapshot;
                 } 
 
+                console.log("_save ("+operationType+") for "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
                 return this._mapObjectChangesToOperationData(object, dataObjectChanges, operationData, snapshot, dataSnapshot, isNewObject, isDeletedObject, objectDescriptor)
                     .then(function (resolvedOperationData) {
+                        console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping ends")
 
                         if (!isDeletedObject) {
 

@@ -389,7 +389,7 @@ WebSocketDataOperationService.addClassProperties({
             //console.log("received socket message ",event);
                 serializedOperation = event.data;
 
-            //console.log("serializedOperation: ",serializedOperation);
+            console.log("handleMessage: ",serializedOperation);
 
             if(serializedOperation) {
                 var deserializedOperation,
@@ -715,8 +715,14 @@ WebSocketDataOperationService.addClassProperties({
                     Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
                 */
                let mapping = this.mappingForType(objectDescriptor),
-                    rule = mapping.objectMappingRuleForPropertyName(propertyName),
-                    requirements = rule.requirements,
+                    rule = mapping.objectMappingRuleForPropertyName(propertyName);
+
+                if(!rule) {
+                    console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+propertyName);
+                    return Promise.resolveNull;
+                }
+                
+                let requirements = rule.requirements,
                     hintSnapshot;
 
                 if(requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
@@ -762,7 +768,7 @@ WebSocketDataOperationService.addClassProperties({
                         Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
                         keeping 
                     */
-                        console.warn("Investigarte: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+                        console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
                         return object[propertyName];
                     }
                 });
@@ -892,6 +898,7 @@ WebSocketDataOperationService.addClassProperties({
                 // if(isMod) {
                 //     console.log("send message size: "+ this._bytesConverter.convert(this._textEncoder.encode(serializedOperation).length));
                 // }
+                console.log("_socketSendOperation: ",serializedOperation);
 
                 this._socket.send(serializedOperation);
             });

@@ -97,7 +97,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 this.rawDataTypeName = value;
             }
 
-
+            value = deserializer.getProperty("rawDataTypeIdentificationCriteria");
+            if (value) {
+                this.rawDataTypeIdentificationCriteria = value;
+            }
 
             value = deserializer.getProperty("primaryKeyPropertyDescriptors");
             if (value) {
@@ -270,6 +273,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      * of multiple types.
      *
      * If a mapping doesn't have a value set, it looks to it's service for an answer.
+     * 
+     * TODO: We now have data/model/object-store[.mjson], which would be better as it allows
+     * a clean consolidation of the concept, especially if multiple mappings en up having to specify a rawDataTypeName.
+     * That should become a pointer to an ObjectStore
      *
      * @property {string}
      * @default undefined
@@ -287,25 +294,26 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     /**
-     * An expression that should be added to any criteria when reading/writing data
+     * A Criteria that should be added to any criteria when reading/writing data
      * for the ObjectDescriptor in the rawDataTypeName. This is necessary
-     * to add this  expression to any fecth's criteria to get instances
+     * to add this criteria to any fetch's criteria to get instances
      * of a type that is stored in the same table as others, or fetching a super class
      * and getting instances of any possible subclass.
      *
-     * When creating data, every rawData needs to have this expression validate to
-     * true, so we should use it like a binding that can change the rawData
-     * to make the expression value.
-     *
-     * This might be worth turning into a  RawDataTypeMapping for effieciency,
-     * but it's an implementation detail specic to a type's raw data mapping and
-     * therefore belongs there rather than in another construction
-     * at the DataService level.
-     *
-     * @property {string}
+     * When creating data, every rawData needs to have this criteria validate to
+     * true. We should be able to do this with rawDataTypeIdentificationCriteria's expression and frb's assign() 
+     * on the following principle:
+     * 
+     * it("should be able to assign to equality", function () {
+     *      var object = {a: 10};
+     *      assign(object, "a==20", true);
+     *      expect(object.a).toBe(20);
+     * });
+     * 
+     * @property {Criteria}
      * @default undefined
      */
-    rawDataTypeExpression: {
+    rawDataTypeIdentificationCriteria: {
         value: undefined
     },
     /**
@@ -1018,22 +1026,23 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope);
                         if(isObjectCreated) {
                             if (this._isAsync(result)) {
-                                const targetPath = aRule.targetPath;
+                                const targetPath = aRule.targetPath,
+                                        propertyDescriptor = aRule.propertyDescriptor;
                                 result = result.then((resultValue) => {
                                     this._registerMappedPropertyValueAsChangesForCreatedObject(targetPath, resultValue, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));      
                                     /*
-                                        Tell our service: mappingDidMapRawDataToObjectProperty
+                                        Tell our service: mappingDidMapRawDataToObjectPropertyDescriptor
                                     */
-                                    service.mappingDidMapRawDataToObjectProperty(this, data, object, targetPath, context, mappingScope);
+                                    service.mappingDidMapRawDataToObjectPropertyDescriptor(this, data, object, propertyDescriptor, context, mappingScope);
   
                                     return resultValue;
                                 });
                             } else {
                                 this._registerMappedPropertyValueAsChangesForCreatedObject(aRule.targetPath, result, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));
                                 /*
-                                    Tell our service: mappingDidMapRawDataToObjectProperty
+                                    Tell our service: mappingDidMapRawDataToObjectPropertyDescriptor
                                 */
-                                service.mappingDidMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
+                                service.mappingDidMapRawDataToObjectPropertyDescriptor(this, data, object, aRule.propertyDescriptor, context, mappingScope);
 
                             }
                         }
@@ -1088,7 +1097,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     mapRawDataToObject: {
-        value: function (rawData, object, context, readExpressions, mappedProperties) {
+        value: function (rawData, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged) {
             var promises,
                 requisitePropertyNames = this.requisitePropertyNames,
                 unmappedRequisitePropertyNames = new Set(requisitePropertyNames),
@@ -1193,7 +1202,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             return (promises && promises.length &&
                 ( promises.length === 1
                     ? promises[0].then(() => object)
-                    : Promise.all(promises).then(() => object))
+                    : Promise.all(promises).then(() => {
+                        return object
+                    }))
                 ) 
                 || 
                 (
@@ -1330,7 +1341,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     data = result;
                 }
 
-                return hasInverse ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule).then(function() {return data;}) : data;
+                return hasInverse 
+                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule).then(function() {
+                        return data;
+                    }) 
+                    : data;
             }
 
             function ruleEvaluationError(error) {
@@ -1350,7 +1365,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             if (this._isAsync(penultimateStep)) {
                 return penultimateStep.then(function (data) {
-                    self._setObjectValueForPropertyDescriptor(object, data, propertyDescriptor, true);
+                    self._setObjectValueForPropertyDescriptor(object, data, propertyDescriptor, true); //This is potentially triggering async stuff, but we're not accounting fot that
                     return data;
                 });
             } else {
@@ -1759,7 +1774,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 requiredObjectProperties = (rule && this.rawDataPrimaryKeys) ? rule.requirements : null,
                 result, self = this;
 
-            if(requiredObjectProperties) {
+            if(requiredObjectProperties) { //NOT USED!
                 result = this.service.rootService.getObjectPropertyExpressions(object, requiredObjectProperties);
             }
 
@@ -2300,6 +2315,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _setObjectValueForPropertyDescriptor: {
         value: function (object, value, propertyDescriptor, shouldFlagObjectBeingMapped) {
+
+            if(!object) return;
+
             var propertyName = propertyDescriptor.name,
                 isToMany = propertyDescriptor.cardinality !== 1;
             //Add checks to make sure that data matches expectations of propertyDescriptor.cardinality
@@ -2334,7 +2352,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                         and when that promise resolves we continue the assignment, which might be unnecessary as we'd have that data in the result as this is propagation of fecthed data, not new,
 
-                        or find a way to jut access the local state without triggering the fetch and just update it.
+                        or find a way to just access the local state without triggering the fetch and just update it.
                     */
                    //We call the getter passing shouldFetch = false flag stating that it's an internal call
                    var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
@@ -2343,10 +2361,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         object[propertyName] = value;
                     }
                     else {
-                        if(objectPropertyValue.includes(value)) {
-                            console.warn("property "+propertyName+" already contains value: ", value);
+                        if(objectPropertyValue.includes(value) && propertyDescriptor.hasUniqueValues) {
+                            console.warn("Attempted to add duplicate value for property "+propertyName+" already contains it: ", value);
+                        } else {
+                            objectPropertyValue.push(value);
                         }
-                        objectPropertyValue.push(value);
                     }
                 } else {
                     object[propertyName] = value;
@@ -2576,6 +2595,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     this._objectMappingRules = {};
                     this._initializeRules();
                 }
+                //console.debug("this.objectDescriptor.name is "+this.objectDescriptor.name);
                 if (this.parent && Object.getPrototypeOf(this._objectMappingRules) !== this.parent.objectMappingRules) {
                     Object.setPrototypeOf(this._objectMappingRules, this.parent.objectMappingRules);
                 }   
