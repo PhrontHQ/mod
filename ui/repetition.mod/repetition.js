@@ -1274,7 +1274,7 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
             if (this._iterationTemplate) {
                 this._teardownIterationTemplate();
             }
-            if (innerTemplate && this.getPath(this._setupRequirements)) {
+            if (innerTemplate && this.valueForExpression(this._setupRequirements)) {
                 this._setupIterationTemplate();
             }
         }
