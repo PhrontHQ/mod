@@ -1766,7 +1766,7 @@ var Flow = exports.Flow = Component.specialize( /** @lends Flow.prototype # */ {
 
     content: {
         get: function () {
-            return this.getPath("contentController.content");
+            return this.valueForExpression("contentController.content");
         },
         set: function (content) {
             this.contentController = new RangeController().initWithContent(content);
