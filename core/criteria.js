@@ -419,6 +419,103 @@ var Criteria = exports.Criteria = Montage.specialize({
     },
 
 
+    /**
+     * Walks a criteria's syntax and prefix all root properties
+     * with the provided prefix.
+     * 
+     * Only tested for adding "proA.propB" to something like
+     * 
+     * propC == $propC && propD == $propD
+     * 
+     * leading to: 
+     * 
+     * proA.propB.propC == $propC && proA.propB.propD == $propD
+     *
+     * @method
+     * @argument {string} prefixExpression - an frb expression.
+     *
+     * @returns {Criteria} - the new criteria 
+     */
+    criteriaPrefixedWithExpression: {
+        value: function(prefixExpression) {
+            // let expectedPrefixedExpression = 'originDataSnapshot.gspas.plantSeq == $.plantSeq && originDataSnapshot.gspas.plantNodeId == $.plantNodeId',
+            //     mockExtendedSyntax = {
+            //         "type":"property",
+            //         "args":[
+            //             {
+            //                 "type":"property",
+            //                 "args":[
+            //                     {
+            //                         "type":"property",
+            //                         "args":[
+            //                             {"type":"value"},
+            //                             {
+            //                                 "type":"literal",
+            //                                 "value":"originDataSnapshot"
+            //                             }
+            //                         ]
+            //                     },
+            //                     {
+            //                         "type":"literal",
+            //                         "value":"gspas"
+            //                     }
+            //                 ]
+            //             },
+            //             {
+            //                 "type":"literal",
+            //                 "value":"plantSeq"
+            //             }
+            //         ]
+            //     };
+
+            var prefixedSyntax = structuredClone(this.syntax),
+                componentIterator = new SyntaxInOrderIterator(prefixedSyntax, "property"),
+                iValue,
+                currentIteration,
+                currentSyntax;
+
+            while ((currentIteration = componentIterator.next("property")) && currentIteration.done !== true) {
+                let currentSyntax = currentIteration.value;
+
+                if(currentSyntax.args[0].type === "parameters") continue;
+
+                let prefixSyntax = parse(prefixExpression),
+                    currentSyntaxParent = componentIterator.parent(currentSyntax),
+                    currentSyntaxArgs = currentSyntax.args,
+                    prefixedPropertySyntax = {
+                        "type":"property",
+                        "args":[]
+                    };
+                    //Setup new prefixedPropertySyntax
+                    prefixedPropertySyntax.args[0] = prefixSyntax;
+                    if(currentSyntax.args[0].type === "value") {
+                        prefixedPropertySyntax.args[1] = currentSyntax.args[1];
+                    } else {
+                        prefixedPropertySyntax.args[1] = currentSyntax;
+                    }
+
+
+                    //Replace currentSyntax in parent with it:
+                    let parentSyntaxArgIndex = currentSyntaxParent.args[0] === currentSyntax ? 0 : 1;
+                    currentSyntaxParent.args[parentSyntaxArgIndex] = prefixedPropertySyntax;
+
+                /*
+                    currentSyntaxParent.args[0] === currentSyntax is true on loop 1
+                    So we'd want to replace currentSyntaxParent.args[0] with prefixSyntax,
+                    and then extend prefixSyntax with currentSyntax
+                */
+
+                //console.log(currentSyntax);
+                
+            }
+
+            // console.log("prefixedSyntax: ", prefixedSyntax);
+            // console.log("prefixedExpression: ", stringify(prefixedSyntax));
+
+            return Criteria.withSyntax(prefixedSyntax, this.parameters);
+        }
+    },
+
 
     /**
      * Walks a criteria's syntax:
