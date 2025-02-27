@@ -101,7 +101,9 @@ var wrapPropertyGetter = function (key, storageKey) {
          */
         preventDefault: {
             value: function () {
-                this._event.preventDefault();
+                this._event 
+                    ? this._event.preventDefault()
+                    : (this._defaultPrevented = true);
             }
         },
 
@@ -121,9 +123,14 @@ var wrapPropertyGetter = function (key, storageKey) {
             }
         },
 
+        _defaultPrevented: {
+            value: false
+        },
         defaultPrevented: {
             value: function () {
-                return this._event.defaultPrevented;
+                return this._event
+                    ? this._event.defaultPrevented
+                    : this._defaultPrevented;
             }
         },
 
