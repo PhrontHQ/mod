@@ -2601,7 +2601,24 @@ DataService.addClassProperties({
                 return dataObject;
             }
             else {
-                return this.rootService.getDataObject(type, rawData, dataIdentifier, context);
+                let dataObject = this.objectForDataIdentifier(dataIdentifier);
+
+    
+                if(!dataObject) {
+                    dataObject = this.rootService.getDataObject(type, rawData, dataIdentifier, context);
+               
+                    /*
+                        If the root service uses a different dataIdentifier than ours,
+                        We keep a reference for ourselves to the unique object returned 
+                        for our own dataIdentifier for it.
+                    */
+                    if(dataObject.dataIdentifier !== dataIdentifier) {
+                        this.recordObjectForDataIdentifier(dataObject, dataIdentifier);
+                    }
+    
+                }
+                
+                return dataObject;
             }
 
         }
@@ -2634,7 +2651,14 @@ DataService.addClassProperties({
         // This property is shared with all child services.
         // If created lazily the wrong data identifier will be returned when
         // accessed by a child service.
-        value: new WeakMap()
+
+        /*
+            Benoit 2/13/2025. Going for a per service bookkeeping, so rootService is the one creating and uniquing
+            objects, but RawDataServices can keep track with their own native dataIdentifiers
+        */
+        get: function() {
+            return this.__dataIdentifierByObject || (this.__dataIdentifierByObject = new WeakMap());
+        }
     },
 
     /**
@@ -2650,7 +2674,8 @@ DataService.addClassProperties({
      */
      dataIdentifierForObject: {
         value: function (object) {
-            return this._dataIdentifierByObject.get(object);
+            //If we don't have a local / native one, we return the one assigned by the main service
+            return this._dataIdentifierByObject.get(object) || object.dataIdentifier;
         }
     },
 
@@ -2671,6 +2696,9 @@ DataService.addClassProperties({
             if(this._dataIdentifierByObject.has(object) && this._dataIdentifierByObject.get(object).primaryKey !== dataIdentifier.primaryKey) {
                 throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
             }
+            /*
+                TODO: This is called twice when this._dataIdentifierByObject already contains (object, dataIdentifier)
+            */
             this._dataIdentifierByObject.set(object, dataIdentifier);
         }
     },
@@ -2899,7 +2927,7 @@ DataService.addClassProperties({
                 //object = object.constructor.call(object) || object;
                 if (object) {
                     this._setObjectType(object, objectDescriptor);
-                    this._objectDescriptorForObjectCache.set(object,objectDescriptor);
+                    this._objectDescriptorForObjectCache.set(object, objectDescriptor);
                 }
 
                 dataIdentifierDataService.callDelegateMethod("rawDataServiceDidCreateObject", dataIdentifierDataService, object);
@@ -2921,7 +2949,13 @@ DataService.addClassProperties({
    registerUniqueObjectWithDataIdentifier: {
         value: function(object, dataIdentifier) {
             //Benoit: this is currently relying on a manual turn-on of isUniquing on the MainService, which is really not something people should have to worry about...
-            if (object && dataIdentifier && this.isRootService && this.isUniquing) {
+            /*
+                Benoit 2/13/25: Relaxing to have RawDataServices keep track of this in a context  
+                where mutliple RawDataServices for the same ObjectDescriptors are involved 
+                with different native RawData shapes
+            */
+            //if (object && dataIdentifier && this.isRootService && this.isUniquing) {
+            if (object && dataIdentifier) {
                 this.recordDataIdentifierForObject(dataIdentifier, object);
                 this.recordObjectForDataIdentifier(object, dataIdentifier);
             }
@@ -4248,6 +4282,7 @@ DataService.addClassProperties({
                 objectDescriptorsWithChanges = transaction.objectDescriptors = new Set(this.objectDescriptorsWithChanges);
 
             //console.log("saveChanges: transaction-"+this.identifier, transaction);
+            console.log("saveChanges: createdDataObjects ["+createdDataObjects.length+"]: ",createdDataObjects, "changedDataObjects ["+changedDataObjects.length+"]: ",changedDataObjects, "deletedDataObjects ["+deletedDataObjects.length+"]: ",deletedDataObjects);
 
             this.addPendingTransaction(transaction);
 
@@ -4983,12 +5018,25 @@ DataService.addClassProperties({
         }
     },
 
-    registeredDataStreamMapForObjectDescriptorCriteria: {
-        value: function(objectDescriptor, criteria = Criteria.thatEvaluatesToTrue) {
-            var criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria),
-                parametersKey = typeof criteria.parameters === "string" ? criteria.parameters : JSON.stringify(criteria.parameters, this.makeCriteriaParametersReplacer());
+    _criteriaExpressionMapKeyForDataQuery: {
+        value: function(dataQuery) {
+            return typeof (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters === "string" 
+                ? dataQuery.readExpressions 
+                    ?`${JSON.stringify(dataQuery.readExpressions)}-${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters}` 
+                    : (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
+                : dataQuery.readExpressions
+                    ?`${JSON.stringify(dataQuery.readExpressions)}-${JSON.stringify((dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters, this.makeCriteriaParametersReplacer())}` 
+                    : JSON.stringify((dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters, this.makeCriteriaParametersReplacer());
+        }
+    },
 
-            return criteriaExpressionMap.get(parametersKey);
+    registeredDataStreamMapForDataQuery: {
+        value: function(dataQuery) {
+            var objectDescriptor = dataQuery.type,
+                criteria = dataQuery.criteria || Criteria.thatEvaluatesToTrue,
+                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria);
+
+            return criteriaExpressionMap.get(this._criteriaExpressionMapKeyForDataQuery(dataQuery));
         }
     },
 
@@ -4996,20 +5044,18 @@ DataService.addClassProperties({
         value: function(dataStream) {
             var objectDescriptor = dataStream.query.type,
                 criteria = dataStream.query.criteria || Criteria.thatEvaluatesToTrue,
-                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria),
-                parametersKey = typeof criteria.parameters === "string" ? criteria.parameters : JSON.stringify(criteria.parameters, this.makeCriteriaParametersReplacer());
+                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria);
 
-            return criteriaExpressionMap.set(parametersKey,dataStream);
+            return criteriaExpressionMap.set(this._criteriaExpressionMapKeyForDataQuery(dataStream.query),dataStream);
         }
     },
     unregisterDataStream: {
         value: function(dataStream) {
             var objectDescriptor = dataStream.query.type,
                 criteria = dataStream.query.criteria || Criteria.thatEvaluatesToTrue,
-                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria),
-                parametersKey = typeof criteria.parameters === "string" ? criteria.parameters : JSON.stringify(criteria.parameters, this.makeCriteriaParametersReplacer());
+                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor,criteria);
 
-            return criteriaExpressionMap.delete(parametersKey);
+            return criteriaExpressionMap.delete(this._criteriaExpressionMapKeyForDataQuery(dataStream.query));
         }
     },
 
@@ -5177,8 +5223,8 @@ DataService.addClassProperties({
 
             if (this.supportsDataOperation) {
                 //Check if we already have a DataStream pending for that same query:
-                if(stream = this.registeredDataStreamMapForObjectDescriptorCriteria(query.type, query.criteria)) {
-                    //console.debug("registeredDataStreamMapForObjectDescriptorCriteria found for "+query.type.name+", criteria:",query.criteria);
+                if(stream = this.registeredDataStreamMapForDataQuery(query)) {
+                    //console.debug("registeredDataStreamMapForDataQuery found for "+query.type.name+", criteria:",query.criteria);
                     return stream;
                 }
             }
@@ -5317,10 +5363,9 @@ DataService.addClassProperties({
                         SaveChanges is cleaner, but the job is also easier there.
 
                     */
-                        let criteria = query.criteria;
-                        
-                        parameters = criteria ? criteria.parameters : undefined;
-                        rawParameters = parameters;
+                        let criteria = query.criteria,
+                            parameters = criteria ? criteria.parameters : undefined;
+                            rawParameters = parameters;
             
                         if (parameters && typeof criteria.parameters === "object") {
                             var keys = Object.keys(parameters),

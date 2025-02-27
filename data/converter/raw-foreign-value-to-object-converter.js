@@ -169,7 +169,41 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     //console.log("_fetchConvertedDataForObjectDescriptorCriteria()",typeToFetch, criteria, currentRule);
 
                     if(!fetchPromise) {
+
+                        /* HACK BEGIN - TO GET originId sent in DataOperation without impacting main postgreSQL path */
+                        var sourceType = currentRule.propertyDescriptor.owner,
+                            mapping = service.mappingForType(sourceType),
+                            rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
+                            dataIdentifier,
+                            sourceObjectSnapshot;
+
+                        if(rawDataPrimaryKeys.has(currentRule.sourcePath) && service.addsOriginIdToReadOperationContext) {
+                            if(typeof criteria.parameters === "string") {
+                                dataIdentifier = service.dataIdentifierForTypePrimaryKey(sourceType,criteria.parameters);
+                            } else {
+                                console.warn("TODO");
+                            }
+                            if(dataIdentifier) {
+                                sourceObjectSnapshot = service.snapshotForDataIdentifier(dataIdentifier);
+                                if(sourceObjectSnapshot.hasOwnProperty("originId")) {
+                                    /*
+                                        TEMP HACK until find a better solution. This will allow the handleRead logic to get it and set it 
+                                        on the data operation's context.
+                                    */
+                                    criteria._scope.originId = sourceObjectSnapshot.originId;
+                                }
+                            }
+
+                        }
+                        /* HACK END — TO GET originId sent in DataOperation without impacting main postgreSQL path */
+
                         var query = DataQuery.withTypeAndCriteria(typeToFetch, criteria);
+
+                        query.hints = {rawDataService: service};
+
+                        if(sourceObjectSnapshot?.originDataSnapshot) {
+                            query.hints.originDataSnapshot = sourceObjectSnapshot.originDataSnapshot;
+                        }
 
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
@@ -416,6 +450,9 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
             query = DataQuery.withTypeAndCriteria(type, combinedCriteria);
 
+            query.hints = {rawDataService: service};
+
+
             if(queryParts.readExpressions && queryParts.readExpressions.length > 0) {
                 query.readExpressions = queryParts.readExpressions;
             }
@@ -447,13 +484,16 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             jValue = combinedFetchedValues[j];
                             jSnapshot = combinedFetchedValuesSnapshots && combinedFetchedValuesSnapshots[j];
                             if(!jSnapshot) {
-                                jSnapshot = service.snapshotForObject(jValue);
+                                //Now in a multi-origin world, we have to use where the current object actually came from:
+                                // jSnapshot = service.snapshotForObject(jValue);
+                                jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
                                 (combinedFetchedValuesSnapshots || (combinedFetchedValuesSnapshots = []))[j] = jSnapshot;
                             }
 
                             iFetchPromise = (iFetchPromise || (iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)));
 
                             if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
+                                console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
                                 (iFetchPromise.result || (iFetchPromise.result = [])).push(jValue);
 
                             }
@@ -470,6 +510,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             } else {
                                 iFetchPromise.resolve(null);
                             }
+
+                            // ??
+                            // self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
+
                         }
 
                         self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
@@ -595,6 +639,14 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
     convert: {
         value: function (v) {
+            return this.service.then((service) => {
+                return this._convert(v, service);
+            });
+        }
+    },
+
+   _convert: {
+        value: function (v, service) {
 
             if((v && !(v instanceof Array )) || (v instanceof Array && v.length > 0)) {
                 var self = this,

@@ -275,7 +275,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                         integerLengthQuotient = Math.floor(operationData.length / integerSizeQuotient),
                         lengthRemainder = operationData.length % integerSizeQuotient,
                         i=0, countI = integerSizeQuotient, iData, iReadUpdateOperation,
-                        iPromise = Promise.resolve(true);
+                        iPromise = Promise.resolve(true),
                         promises = [],
                         self = this;
 
@@ -338,9 +338,12 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
             //         console.log("OperationCoordinator: handleEvent",operation, "operation.clientId: ",operation.clientId);
             // }
 
+            //console.log("operationCoordinator handle "+ operation.type+ " " + operation.id+" from "+ (operation?.rawDataService?.identifier ? operation.rawDataService.identifier : "????")+", referrer "+(operation?.referrer?.id ? operation?.referrer?.id: "????") +", for "+ (operation?.referrer?.target?.name ? operation.referrer.target.name : "????") + " like "+ (operation?.referrer?.criteria ? operation.referrer.criteria : "????"));
+
             if(operation.clientId) {
                 var self = this;
-                //console.log("handleEvent:",operation);
+                console.log("\n<<<<<<< operationCoordinator dispatch "+ operation.type+ " " +operation.id+" from "+operation.rawDataService.identifier+", referrer "+operation.referrer.id+", for ["+operation.referrer.target.name + (operation?.referrer?.data?.readExpressions? (" "+operation?.referrer?.data?.readExpressions) : "") + "] like "+ operation.referrer.criteria+"\n");
+
                 this.dispatchOperationToConnectionClientId(operation,this.gateway,operation.clientId)
                 .then(function(operation) {
                     /*
