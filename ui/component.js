@@ -2555,84 +2555,95 @@ Component.addClassProperties(
     },
 
     _bindTemplateParametersToArguments: {
-        value: function () {
-            var parameters = this._templateDocumentPart ? this._templateDocumentPart.parameters : null,
-                templateArguments = this._domArguments,
-                parameterElement,
-                argument,
-                validation,
-                contents,
-                components,
-                range,
-                component;
+        value: function() {
+            const parameters = this._templateDocumentPart ? this._templateDocumentPart.parameters : null;
+            const templateArguments = this._domArguments;
+            const validation = this._validateTemplateArguments(templateArguments, parameters);
 
-            if ((validation = this._validateTemplateArguments(templateArguments, parameters))) {
-                throw validation;
-            }
+            if (validation) throw validation;
 
             for (const key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
+                    const parameterElement = parameters[key];
 
-                    parameterElement = parameters[key];
-                    argument = templateArguments ? templateArguments[key] : void 0;
-
-
-                    if ((key === "*") /** || (key === "each") */) {
-                        if (this._element.childElementCount === 0 &&
-                            !(this._element.firstChild &&
-                                this._element.firstChild.data &&
-                                this._element.firstChild.data.trim())
-                        ) {
-                         //We're missing an argument, we're going to check if we have a default
-                            if (parameterElement && parameterElement.childElementCount > 0) {
-                                range = this._element.ownerDocument.createRange();
-                                range.selectNodeContents(parameterElement);
-                                parameterElement.parentNode.replaceChild(range.extractContents(), parameterElement);
-
-                                //Should we re-construct the structure from the default?
-                                //  if(!templateArguments) {
-                                //      templateArguments = this._domArguments = {"*":};
-                                //
-                                //  }
-                            } else {
-                                //  throw new Error('No arguments provided for ' +
-                                //  this.templateModuleId + '. Arguments needed for data-param: ' +
-                                //  key + '.');
-                                //Remove the data-parm="*" element
-                                parameterElement.parentNode.removeChild(parameterElement);
-                            }
-                        } else {
-                            range = this._element.ownerDocument.createRange();
-                            range.selectNodeContents(this._element);
-                            contents = range.extractContents();
-                        }
+                    if (key === "*") {
+                        this._bindWildcardParameter(parameterElement);
                     } else {
-                        contents = argument;
-                    }
-
-                    if (contents) {
-                        var i, length;
-
-                        if (contents instanceof Element) {
-                            var classList = parameterElement.classList,
-                                contentsClassList = contents.component ? contents.component.classList : contents.classList;
-
-                            for (i = 0, length = classList.length; i < length; i++) {
-                                contentsClassList.add(classList[i]);
-                            }
-                        }
-
-                        components = this._findAndDetachComponentsFromNode(contents, (components = []));
-                        parameterElement.parentNode.replaceChild(contents, parameterElement);
-
-                        for (i = 0; (component = components[i]); i++) {
-                            component.attachToParentComponent();
-                        }
-                    } else {
-                        // Remove the parameter element if there is no argument for it.
-                        parameterElement.parentNode.removeChild(parameterElement);
+                        const argument = templateArguments ? templateArguments[key] : undefined;
+                        this._bindNamedParameter(parameterElement, argument);
                     }
                 }
+            }
+        }
+    },
+
+    _bindWildcardParameter: {
+        value: function(parameterElement) {
+            if (this._element.childElementCount === 0 &&
+                !(this._element.firstChild &&
+                  this._element.firstChild.data &&
+                  this._element.firstChild.data.trim())) {
+
+                // We're missing an argument, we're going to check if we have a default
+                if (parameterElement && parameterElement.childElementCount > 0) {
+                    const range = this._element.ownerDocument.createRange();
+                    range.selectNodeContents(parameterElement);
+
+                    // If there is a default, we replace the data-param="*" element with the default content
+                    parameterElement.parentNode.replaceChild(range.extractContents(), parameterElement);
+                } else {
+                    // If there is no default, we remove the data-param="*" element
+                    parameterElement.parentNode.removeChild(parameterElement);
+                }
+            } else {
+                const range = this._element.ownerDocument.createRange();
+                range.selectNodeContents(this._element);
+                const contents = range.extractContents();
+                this._applyArgumentContentsToParameter(parameterElement, contents);
+            }
+        }
+    },
+
+    _bindNamedParameter: {
+        value: function(parameterElement, argumentContents) {
+            if (argumentContents) {
+                this._applyArgumentContentsToParameter(parameterElement, argumentContents);
+            } else {
+                // Remove the parameter element if there is no argument content for it
+                parameterElement.parentNode.removeChild(parameterElement);
+            }
+        }
+    },
+
+    _applyArgumentContentsToParameter: {
+        value: function(parameterElement, argumentContents) {
+            if (argumentContents instanceof Element) {
+                this._transferClassList(parameterElement, argumentContents);
+            }
+
+            // Detach the components from the argument content so that they can be
+            // re-attached to their new parent component after the argument content
+            // has replaced the parameter element.
+            const components = this._findAndDetachComponentsFromNode(argumentContents, []);
+
+            // Replace the parameter element with the argument content
+            parameterElement.parentNode.replaceChild(argumentContents, parameterElement);
+
+            // Attach the components that were detached from the argument content
+            // to their new parent component.
+            for (let i = 0, length = components.length;  i < length; i++) {
+                components[i]?.attachToParentComponent();
+            }
+        }
+    },
+
+    _transferClassList: {
+        value: function(source, target) {
+            const targetClassList = (target.component || target).classList;
+            const sourceClassList = source.classList;
+
+            for (let i = 0, length = sourceClassList.length; i < length; i++) {
+                targetClassList.add(sourceClassList[i]);
             }
         }
     },
@@ -4773,7 +4784,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                     styles = resources.createStylesForDocument(ownerDocument);
 
 
-                /*  
+                /*
                     What we need to scope is a selector made of all the classes of the template's root element
 
                     template.document.querySelector("[data-mod-id=owner]").classList
