@@ -841,7 +841,17 @@ var Criteria = exports.Criteria = Montage.specialize({
         value: function(propertyName) {
             throw "Implementation Missing. Time to roll your sleeves ;-)"
         }
+    },
+
+    /**
+     * @function
+     */
+    toString: {
+        value: function () {
+            return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters) : ""}`;
+        }
     }
+    
 
 },{
     forObjectsLike: {
