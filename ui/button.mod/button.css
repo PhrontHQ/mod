@@ -1,4 +1,4 @@
-.Button {
+.ModButton {
     border: none;
     display: inline-flex;
     align-items: center;
@@ -12,48 +12,48 @@
     gap: 6px;
 }
 
-.Button:hover {
+.ModButton:hover {
     cursor: pointer;
 }
 
 /* Main Orientation */
 
-.Button.mod--vertical {
+.ModButton.mod--vertical {
     flex-direction: column;
 }
 
-.Button.mod--horizontal {
+.ModButton.mod--horizontal {
     flex-direction: row;
 }
 
 /* Main Axis Direction */
 
-.Button.mod--horizontal.mod--end {
+.ModButton.mod--horizontal.mod--end {
     flex-direction: row-reverse;
 }
 
-.Button.mod--vertical.mod--end {
+.ModButton.mod--vertical.mod--end {
     flex-direction: column-reverse;
 }
 
 /* Hide Empty Elements */
-.Button>div:empty {
+.ModButton>div:empty {
     display: none;
 }
 
 /* Image Specifications */
 
-.Button>.Button-image {
+.ModButton>.ModButton-image {
     position: relative;
 }
 
-.Button>svg.Button-image {
+.ModButton>svg.ModButton-image {
     fill: currentColor;
 }
 
 /* Pending State */
 
-.Button.mod--pending {
+.ModButton.mod--pending {
     pointer-events: none;
     /* FIXME: Temporary arbitrary values, waiting for Button Themes */
     opacity: 0.75;
