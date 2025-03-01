@@ -1,0 +1,113 @@
+{
+    "root": {
+        "prototype": "mod/core/meta/module-object-descriptor",
+        "values": {
+            "name": "Transaction",
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "objectDescriptors"},
+                {"@": "createdDataObjects"},
+                {"@": "updatedDataObjects"},
+                {"@": "dataObjectChanges"},
+                {"@": "deletedDataObjects"}
+                
+            ],
+            "objectDescriptorModule": {
+                "%":"./transaction.mjson"
+            },
+            "exportName": "Transaction",
+            "module": {
+                "%": "./transaction"
+            },
+            "object":{"@": "TransactionClass"},
+            "parent":{"@": "DataObjectDescriptor"}
+        }
+    },
+    "TransactionClass": {
+        "object": "./transaction"
+    },
+    "DataObjectDescriptor": {
+        "object": "mod/data/model/data-object.mjson"
+    },
+
+    "identifier": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "ObjectDescriptor-Descriptor": {
+        "object": "mod/core/meta/module-object-descriptor"
+    },
+    "objectDescriptors": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "objectDescriptors",
+            "cardinality": -1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ObjectDescriptor-Descriptor"}
+        }
+    },
+
+    "MapDescriptor": {
+        "object": "core/collection/map"
+    },
+    "SetDescriptor": {
+        "object": "core/collection/set"
+    },
+
+    "createdDataObjects": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "createdDataObjects",
+            "keyType": "object",
+            "keyDescriptor": {"@": "ObjectDescriptor-Descriptor"},
+            "valueDescriptor": {"@": "SetDescriptor"},
+            "collectionValueType": "map",
+            "cardinality": -1,
+            "description": "data objects being created within the transaction, by object descriptor"
+        }
+    },
+
+    "updatedDataObjects": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "updatedDataObjects",
+            "keyType": "object",
+            "keyDescriptor": {"@": "ObjectDescriptor-Descriptor"},
+            "valueDescriptor": {"@": "SetDescriptor"},
+            "collectionValueType": "map",
+            "cardinality": -1,
+            "description": "data objects being updated within the transaction, by object descriptor"
+        }
+    },
+
+    "dataObjectChanges": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "dataObjectChanges",
+            "keyType": "object",
+            "keyDescriptor": {"@": "DataObjectDescriptor"},
+            "valueDescriptor": {"@": "MapDescriptor"},
+            "collectionValueType": "map",
+            "cardinality": -1,
+            "description": "a map containing for each object, a map with propertyName -> changed value"
+        }
+    },
+
+    "deletedDataObjects": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "deletedDataObjects",
+            "keyType": "object",
+            "keyDescriptor": {"@": "ObjectDescriptor-Descriptor"},
+            "valueDescriptor": {"@": "SetDescriptor"},
+            "collectionValueType": "map",
+            "cardinality": -1,
+            "description": "data objects being created within the transaction, by object descriptor"
+        }
+    }
+
+}
