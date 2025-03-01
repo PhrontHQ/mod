@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Transaction",
             "propertyDescriptors": [
@@ -27,11 +27,11 @@
         "object": "./transaction"
     },
     "DataObjectDescriptor": {
-        "object": "mod/data/model/data-object.mjson"
+        "object": "data/model/data-object.mjson"
     },
 
     "identifier": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "identifier",
             "valueType": "string"
@@ -39,10 +39,10 @@
     },
 
     "ObjectDescriptor-Descriptor": {
-        "object": "mod/core/meta/module-object-descriptor"
+        "object": "core/meta/module-object-descriptor"
     },
     "objectDescriptors": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "objectDescriptors",
             "cardinality": -1,
@@ -59,7 +59,7 @@
     },
 
     "createdDataObjects": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "createdDataObjects",
             "keyType": "object",
@@ -72,7 +72,7 @@
     },
 
     "updatedDataObjects": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "updatedDataObjects",
             "keyType": "object",
@@ -85,7 +85,7 @@
     },
 
     "dataObjectChanges": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "dataObjectChanges",
             "keyType": "object",
@@ -98,7 +98,7 @@
     },
 
     "deletedDataObjects": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "deletedDataObjects",
             "keyType": "object",
