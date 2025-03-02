@@ -3,7 +3,7 @@
         "object": "global[Set]"
     },
     "root": {
-        "prototype": "../meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Set",
             "propertyDescriptors": [
