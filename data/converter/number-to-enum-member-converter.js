@@ -3,7 +3,8 @@
  * @requires mod/core/converter/converter
  */
 var RawValueToObjectConverter = require("./raw-value-to-object-converter").RawValueToObjectConverter,
-    Enum = require("mod/core/enum").Enum;
+    Montage = require("core/core").Montage,
+    Enum = require("core/enum").Enum;
 
 /**
  * Converts a number to an integer
@@ -16,10 +17,12 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
     static {
 
         Montage.defineProperties(this.prototype, {
-            _enum: {value: null}
+            _enum: {value: undefined}
         });
 
-        _singleton;
+        Montage.defineProperties(this, {
+            _singleton: {value: undefined}
+        });
         
     }
 
@@ -43,9 +46,9 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
     }
 
     get enum() {
-        return this_enum !== undefined 
-            ? this_enum 
-            : this_enum = (this.currentRule?.propertyDescriptor?._valueDescriptorReference instanceof Enum) && this.currentRule.propertyDescriptor._valueDescriptorReference
+        return this._enum !== undefined 
+            ? this._enum 
+            : this._enum = (this.currentRule?.propertyDescriptor?._valueDescriptorReference instanceof Enum) && this.currentRule.propertyDescriptor._valueDescriptorReference
     }
 
     convert(number) {
@@ -78,5 +81,5 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
 }
 
 Object.defineProperty(exports, 'singleton', {
-    get: NumberToNearestIntegerConverter.singleton
+    get: Object.getOwnPropertyDescriptor(NumberToEnumMemberConverter, 'singleton').get
 });

@@ -1,0 +1,86 @@
+{
+    "ExpressionConverterDescriptor": {
+        "object": "core/converter/expression-converter.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "RawValueToObjectConverter",
+            "customPrototype": false,
+            "parent": { "@": "ExpressionConverterDescriptor"},
+            "propertyDescriptors": [
+                {"@": "foreignDescriptor"},
+                {"@": "foreignDescriptorMappings"},
+                {"@": "service"},
+                {"@": "serviceIdentifier"}
+            ],
+            "propertyDescriptorGroups": {},
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "./expression-converter.mjson"
+            },
+            "exportName": "RawValueToObjectConverter",
+            "module": {
+                "%": "./raw-value-to-object-converter"
+            }
+        }
+    },
+
+    "ExpressionConverterDescriptor": {
+        "object": "core/converter/expression-converter.mjson"
+    },
+
+    "ModuleObjectDescriptorDescriptor": {
+        "object": "core/meta/module-object-descriptor.mjson"
+    },
+
+
+    "foreignDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "foreignDescriptor",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ModuleObjectDescriptorDescriptor"}
+        }
+    },
+
+    "RawDataTypeMappingDescriptor": {
+        "object": "data/service/raw-data-type-mapping.mjson"
+    },
+
+    "foreignDescriptorMappings": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "foreignDescriptorMappings",
+            "cardinality": -1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ModuleObjectDescriptorDescriptor"}
+        }
+    },
+
+    "RawDataServiceDescriptor": {
+        "object": "data/service/raw-data-service.mjson"
+    },
+
+    "service": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "service",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "RawDataServiceDescriptor"}
+        }
+    },
+
+    "serviceIdentifier": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "serviceIdentifier",
+            "cardinality": 1,
+            "valueType": "string"
+        }
+    }
+
+
+}
