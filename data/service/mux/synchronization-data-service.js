@@ -1,6 +1,7 @@
 const MuxDataService = require("./mux-data-service").MuxDataService,
     Montage = require('core/core').Montage,
     Promise = require("core/promise").Promise,
+    CountedSet = require("core/counted-set").CountedSet,
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     DataOperation = require("../data-operation").DataOperation;
 
@@ -41,7 +42,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             _readOperationsPendingSynchronization: { value: null},
             __childDataServiceReadCompletionOperationByReadOperation: { value: null},
             __readEmptyHandedDataServicesByReadOperation: { value: null},
-            __readEmptyHandedDataServicesByCreatedObjectsToSync: { value: null}
+            __readEmptyHandedDataServicesByCreatedObjectsToSync: { value: null},
+            __syncingObjectsCountedSet: { value: null}
         });
     }
 
@@ -133,6 +135,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _readEmptyHandedDataServicesByCreatedObjectsToSync() {
         return this.__readEmptyHandedDataServicesByCreatedObjectsToSync || (this.__readEmptyHandedDataServicesByCreatedObjectsToSync = new Map());
     }
+
+
+     get _syncingObjectsCountedSet() {
+        return this.__syncingObjectsCountedSet  || (this.__syncingObjectsCountedSet = new CountedSet());
+     }
+
+     isSyncingObject(aDataObject) {
+        return this._syncingObjectsCountedSet.has(aDataObject);
+     }
 
     /**
      * Prefetches any object properties required to map the rawData property
@@ -351,11 +362,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
      *                             call that invoked this method.
      * @argument {Object} mappingScope - A Scope object (from FRB) that holds objects involved in mappig logic.
      */
-    rawDataServiceMappingRawDataToObjectDidCompletePropertyDescriptor(rawDataService, mapping, rawData, dataObject, propertyDescriptor, context, mappingScope) {
+    rawDataServiceMappingDidMapRawDataToObjectPropertyValue(rawDataService, mapping, rawData, dataObject, propertyName, propertyValue, context, mappingScope) {
         
+        if(this.isSyncingObject(dataObject)) {
+            //Make sure we register the change
+            this.mainService.changesForDataObject(dataObject).set(propertyName, propertyValue);
+        }
         //Here we need to make sure that this is registered by the main service as a change, 
         // which is obviously not the default when objects are mapped when fetched
-        //console.log("rawDataServiceMappingRawDataToObjectDidCompletePropertyDescriptor("+propertyDescriptor?.name+")");
+        //console.log("rawDataServiceMappingDidMapRawDataToObjectPropertyValue("+propertyName+")");
     }
 
 
@@ -388,7 +403,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
     _syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync) {
-        console.log("sync "+objectDescriptor.name+" rawData: ", rawData);
+        if(objectDescriptor.name === "Task") {
+            console.log("sync "+objectDescriptor.name+" rawData: ", rawData);
+        }
 
         let rawDataService = readCompletedOperation.rawDataService,
             //We might want to ask the delegate his take on what readExpressions to use 
@@ -399,7 +416,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         rawDataService.recordSnapshot(dataIdentifier,  rawData);
 
         //We get, if it's been created before, or create a brand new object
-        let dataObject = rawDataService.getDataObject(objectDescriptor, rawData, dataIdentifier, readCompletedOperation)
+        let dataObject = rawDataService.getDataObject(objectDescriptor, rawData, dataIdentifier, readCompletedOperation);
+
+        this._syncingObjectsCountedSet.add(dataObject);
         //let dataObject = this.mainService.createDataObject(objectDescriptor);
         /*
             Because we trigger the creation and we forward dataIdentifier creation to our destinationDataService,
@@ -574,6 +593,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         })
         .then((value) => {
 
+
+
             if(this.delegate?.synchronizationDataServiceDidMapRawDataToObjectFromDataOperationWithReadExpressions) {
                 this.delegate.synchronizationDataServiceDidMapRawDataToObjectFromDataOperationWithReadExpressions(this, rawData, dataObject, readCompletedOperation, readExpressions)
             }    
@@ -590,15 +611,23 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     }
                 }
             }
+
+
+            if(dataObject.objectDescriptor.name === "Task") {
+                console.log("\n\n\############# Task "+dataObject.dataIdentifier+" originId: "+JSON.stringify(dataObject.originId)+" "+dataObject.description+" "+dataObject.associatedTools.length+" associatedTools: ["+dataObject.associatedTools.map((value) => value?.description)+"], "+rawData.tools.length+" rawData.tools: " + rawData.tools.map((value) => value?.description)+"\n\n")
+            }
+
             return value;
 
 
         })
         .catch((error) => {
-            reject(error);
+            throw error;
         })
         .finally(() => {
             //cleanup:
+            this._syncingObjectsCountedSet.delete(dataObject);
+
             //this.removeEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
         });
 
