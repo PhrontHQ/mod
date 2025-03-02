@@ -603,7 +603,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                         /*
                             this._getValue() sets object[this._privatePropertyName] to [] via calling this
                         */
-                        if(value) {
+                        if(value?.length) {
                             object[this._privatePropertyName].splice.apply(initialValue, [0, Infinity].concat(value));
                         }
                     } else if(isMap && value) {
