@@ -52,10 +52,10 @@
     },
 
     "MapDescriptor": {
-        "object": "core/collection/map"
+        "object": "core/collections/map.mjson"
     },
     "SetDescriptor": {
-        "object": "core/collection/set"
+        "object": "core/collections/set.mjson"
     },
 
     "createdDataObjects": {

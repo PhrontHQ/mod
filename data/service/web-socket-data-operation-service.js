@@ -18,6 +18,7 @@ var DataService = require("./data-service").DataService,
     //RawEmbeddedValueToObjectConverter = (require) ("mod/data/converter/raw-embedded-value-to-object-converter").RawEmbeddedValueToObjectConverter,
     //ReadEvent = (require) ("mod/data/model/read-event").ReadEvent,
     BytesConverter = require("core/converter/bytes-converter").BytesConverter,
+    TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     WebSocketSession = require("../model/app/web-socket-session").WebSocketSession,
     WebSocketSessionConnection = require("../model/app/web-socket-session-connection").WebSocketSessionConnection,
     sizeof = require('object-sizeof'),
@@ -671,110 +672,110 @@ WebSocketDataOperationService.addClassProperties({
 
 
     
-    fetchRawObjectProperty: {
-        value: function (object, propertyName) {
-            let overrodeValue = this._fetchRawObjectProperty(object, propertyName);
-            return overrodeValue;
+    // fetchRawObjectProperty: {
+    //     value: function (object, propertyName) {
+    //         let overrodeValue = this._fetchRawObjectProperty(object, propertyName);
+    //         return overrodeValue;
 
-            let superValue = this.super(object, propertyName);
+    //         let superValue = this.super(object, propertyName);
 
-            return Promise.all([superValue])
-            .then((results) => {
-                if(results[0] !== results[1]) {
-                    console.debug(`fetchRawObjectProperty '${propertyName}' super result:`, results[0]);
-                    console.debug(`fetchRawObjectProperty '${propertyName}' overrode result:`, results[1]);    
-                }
-                return results[0];
-            });
+    //         return Promise.all([superValue])
+    //         .then((results) => {
+    //             if(results[0] !== results[1]) {
+    //                 console.debug(`fetchRawObjectProperty '${propertyName}' super result:`, results[0]);
+    //                 console.debug(`fetchRawObjectProperty '${propertyName}' overrode result:`, results[1]);    
+    //             }
+    //             return results[0];
+    //         });
 
-        }
-    },
+    //     }
+    // },
 
-    _fetchRawObjectProperty: {
-        value: function (object, propertyName) {
-
-
-            var self = this,
-                objectDescriptor = this.objectDescriptorForObject(object),
-                propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
-                isObjectCreated = this.isObjectCreated(object);
-
-            if(isObjectCreated) {
-                return Promise.resolve(null);
-            } else {
-
-                //TODO: leverage this as used in the foreign key value converter to find the object locally first
-                //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
+    // _fetchRawObjectProperty: {
+    //     value: function (object, propertyName) {
 
 
-                var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor));
+    //         var self = this,
+    //             objectDescriptor = this.objectDescriptorForObject(object),
+    //             propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
+    //             isObjectCreated = this.isObjectCreated(object);
 
-                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+    //         if(isObjectCreated) {
+    //             return Promise.resolve(null);
+    //         } else {
 
-                /*
-                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
-                */
-               let mapping = this.mappingForType(objectDescriptor),
-                    rule = mapping.objectMappingRuleForPropertyName(propertyName);
+    //             //TODO: leverage this as used in the foreign key value converter to find the object locally first
+    //             //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
 
-                if(!rule) {
-                    console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+propertyName);
-                    return Promise.resolveNull;
-                }
+
+    //             var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor));
+
+    //             propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+
+    //             /*
+    //                 Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+    //             */
+    //            let mapping = this.mappingForType(objectDescriptor),
+    //                 rule = mapping.objectMappingRuleForPropertyName(propertyName);
+
+    //             if(!rule) {
+    //                 console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+propertyName);
+    //                 return Promise.resolveNull;
+    //             }
                 
-                let requirements = rule.requirements,
-                    hintSnapshot;
+    //             let requirements = rule.requirements,
+    //                 hintSnapshot;
 
-                if(requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
-                    hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
-                    for(let snapshot = object.snapshot, i=0, countI = requirements.length; (i<countI); i++) {
-                        hintSnapshot[requirements[i]] = snapshot[requirements[i]];
-                    }
-
-
-                }
+    //             if(requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+    //                 hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
+    //                 for(let snapshot = object.snapshot, i=0, countI = requirements.length; (i<countI); i++) {
+    //                     hintSnapshot[requirements[i]] = snapshot[requirements[i]];
+    //                 }
 
 
-                /*
-                    FIXME: Context, as we're fetching an object property, in a situation where the app's rely on some
-                    origin data services, the data from those services may not be imported yet. In which case, the worker
-                    will need info to do so, and origin-related data info is stored in the originDataSnapshot property.
+    //             }
 
-                    If we happen to have that client-side, we can send it as part of the attempt to acquire that object's property value 
-                    from an origin service. If we don't the SynchronizationDataService (or any other analoguous logic) will have to fetch it from the DB
-                    using the criteria here that specify the object, to support obtaining that data from origin services.
+
+    //             /*
+    //                 FIXME: Context, as we're fetching an object property, in a situation where the app's rely on some
+    //                 origin data services, the data from those services may not be imported yet. In which case, the worker
+    //                 will need info to do so, and origin-related data info is stored in the originDataSnapshot property.
+
+    //                 If we happen to have that client-side, we can send it as part of the attempt to acquire that object's property value 
+    //                 from an origin service. If we don't the SynchronizationDataService (or any other analoguous logic) will have to fetch it from the DB
+    //                 using the criteria here that specify the object, to support obtaining that data from origin services.
                     
-                    We pass that as a hint through DataQuery's hints property.
-                */
-                if(object.snapshot.hasOwnProperty("originDataSnapshot")) {
-                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = object.snapshot.originDataSnapshot;
-                }
+    //                 We pass that as a hint through DataQuery's hints property.
+    //             */
+    //             if(object.snapshot.hasOwnProperty("originDataSnapshot")) {
+    //                 (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = object.snapshot.originDataSnapshot;
+    //             }
 
-                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
-                propertyNameQuery.readExpressions = [propertyName];
+    //             propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+    //             propertyNameQuery.readExpressions = [propertyName];
 
-                //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+    //             //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
 
-                return DataService.mainService.fetchData(propertyNameQuery)
-                .then(function(object) {
-                    if(Array.isArray(object)) {
-                        if(propertyDescriptor.cardinality === 1) {
-                            return object[0] || null;
-                        } else {
-                            return object;
-                        }
-                    } else {
-                    /*
-                        Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
-                        keeping 
-                    */
-                        console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
-                        return object[propertyName];
-                    }
-                });
-            }
-        }
-    },
+    //             return DataService.mainService.fetchData(propertyNameQuery)
+    //             .then(function(object) {
+    //                 if(Array.isArray(object)) {
+    //                     if(propertyDescriptor.cardinality === 1) {
+    //                         return object[0] || null;
+    //                     } else {
+    //                         return object;
+    //                     }
+    //                 } else {
+    //                 /*
+    //                     Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
+    //                     keeping 
+    //                 */
+    //                     console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+    //                     return object[propertyName];
+    //                 }
+    //             });
+    //         }
+    //     }
+    // },
 
 
     handleReadOperation: {
@@ -886,7 +887,7 @@ WebSocketDataOperationService.addClassProperties({
 
                  var operationDataKBSize = sizeof(serializedOperation) / 1024;
 
-                //  console.debug("----> send "+operationDataKBSize+" KB operation "+serializedOperation);
+                console.debug("----> send "+operationDataKBSize+" KB operation "+serializedOperation);
 
                 // if(operation.type === "batch") {
                 //     var deserializer = new Deserializer();

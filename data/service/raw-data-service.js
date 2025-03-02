@@ -19,6 +19,7 @@ var DataService = require("./data-service").DataService,
     SyntaxInOrderIterator = require("../../core/frb/syntax-iterator").SyntaxInOrderIterator,
     RawEmbeddedValueToObjectConverter = require("../converter/raw-embedded-value-to-object-converter").RawEmbeddedValueToObjectConverter,
     ReadEvent = require("../model/read-event").ReadEvent,
+    TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     TransactionEvent = require("../model/transaction-event").TransactionEvent,
     uuid = require("../../core/uuid"),
     syntaxProperties = require("../../core/frb/syntax-properties"),
@@ -1914,11 +1915,13 @@ RawDataService.addClassProperties({
      * @argument {Object} mappingScope - A Scope object (from FRB) that holds objects involved in mappig logic.
 
      */
-    mappingDidMapRawDataToObjectPropertyDescriptor: {
-        value: function (mapping, rawData, dataObject, propertyDescriptor, context, mappingScope) {
-            this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidCompletePropertyDescriptor", this, mapping, rawData, dataObject, propertyDescriptor, context, mappingScope);
+    mappingDidMapRawDataToObjectPropertyValue: {
+        value: function (mapping, rawData, dataObject, propertyName, propertyValue, context, mappingScope) {
+            this.callDelegateMethod("rawDataServiceMappingDidMapRawDataToObjectPropertyValue", this, mapping, rawData, dataObject, propertyName, propertyValue, context, mappingScope);
         }
     },
+
+    
     
     /**
      * Called by a mapping after doing it's mapping work, giving the data service.
@@ -3254,7 +3257,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3273,7 +3276,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3299,7 +3302,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3345,7 +3348,7 @@ RawDataService.addClassProperties({
                 createTransactionOperation.id = transaction.identifier;
 
                 createTransactionOperation.type = DataOperation.Type.CreateTransactionOperation;
-                createTransactionOperation.target = DataService.mainService;
+                createTransactionOperation.target = TransactionDescriptor;
                 createTransactionOperation.data = {};
 
                 transactionRawContext.operations = {};
@@ -3406,7 +3409,7 @@ RawDataService.addClassProperties({
 
                             createTransactionOperation.data.objectDescriptors = operationObjectDescriptors.map((objectDescriptor) => { return objectDescriptor.module.id });
 
-                            self.dispatchEvent(createTransactionOperation);
+                            createTransactionOperation.target.dispatchEvent(createTransactionOperation);
 
                             createTransactionDataOperationCompletionPromise
                                 .then(function (dataOperationCompletion) {
@@ -3528,10 +3531,11 @@ RawDataService.addClassProperties({
             transactionEvent.type = TransactionEvent.transactionPrepareStart;
             transactionEvent.transaction = transaction;
             transactionEvent.data = data;
+            transactionEvent.target = TransactionDescriptor
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3547,10 +3551,12 @@ RawDataService.addClassProperties({
             transactionEvent.type = TransactionEvent.transactionPrepareComplete;
             transactionEvent.transaction = transaction;
             transactionEvent.data = data;
+            transactionEvent.target = TransactionDescriptor
+
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3570,10 +3576,12 @@ RawDataService.addClassProperties({
             transactionEvent.type = TransactionEvent.transactionPrepareFail;
             transactionEvent.transaction = transaction;
             transactionEvent.data = data;
+            transactionEvent.target = TransactionDescriptor
+
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -3641,7 +3649,7 @@ RawDataService.addClassProperties({
 
                 transaction.createCompletionPromiseForParticipant(this);
 
-                self.dispatchEvent(appendTransactionOperation);
+                TransactionDescriptor.dispatchEvent(appendTransactionOperation);
 
                 appendCompletedOperationCompletionPromise
                     .then(function (dataOperationCompletion) {
@@ -3710,7 +3718,7 @@ RawDataService.addClassProperties({
             var createTransaction = new DataOperation();
 
             createTransaction.type = DataOperation.Type.CreateTransactionOperation;
-            createTransaction.target = this;
+            createTransaction.target = TransactionDescriptor;
             createTransaction.data = [];
 
             return createTransaction;
@@ -3726,7 +3734,7 @@ RawDataService.addClassProperties({
                 appendTransactionOperation = new DataOperation();
 
             appendTransactionOperation.type = DataOperation.Type.AppendTransactionOperation;
-            appendTransactionOperation.target = this;
+            appendTransactionOperation.target = TransactionDescriptor;
             appendTransactionOperation.referrerId = createTransactionOperation.id;
             appendTransactionOperation.data = {
                 rawTransactions: rawTransactions
@@ -4197,7 +4205,7 @@ RawDataService.addClassProperties({
                                 transactionPrepareProgressEvent.type = TransactionEvent.transactionPrepareProgress;
                                 transactionPrepareProgressEvent.transaction = transaction;
                                 transactionPrepareProgressEvent.data = percentCompletion;
-                                self.dispatchEvent(transactionPrepareProgressEvent);
+                                TransactionDescriptor.dispatchEvent(transactionPrepareProgressEvent);
                                 /*  Return the event to the pool */
                                 TransactionEvent.checkin(transactionPrepareProgressEvent);
 
@@ -4256,7 +4264,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -4275,7 +4283,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -4299,7 +4307,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionEvent);
+            TransactionDescriptor.dispatchEvent(transactionEvent);
             /*
                 Return the event to the pool
             */
@@ -4344,7 +4352,7 @@ RawDataService.addClassProperties({
 
                 transaction.createCompletionPromiseForParticipant(this);
 
-                this.dispatchEvent(commitTransactionOperation);
+                TransactionDescriptor.dispatchEvent(commitTransactionOperation);
 
                 commitTransactionDataOperationCompletionPromise
                     .then(function (dataOperationCompletion) {
@@ -4404,7 +4412,7 @@ RawDataService.addClassProperties({
                 commitTransaction = new DataOperation();
 
                 commitTransaction.type = DataOperation.Type.CommitTransactionOperation;
-                commitTransaction.target = this;
+                commitTransaction.target = TransactionDescriptor;
                 commitTransaction.referrerId = createTransactionOperation.id;
                 commitTransaction.data = {
                     rawTransactions: rawTransactions
@@ -4441,7 +4449,7 @@ RawDataService.addClassProperties({
             /*
                 There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
             */
-            this.dispatchEvent(transactionCommitProgressEvent);
+            TransactionDescriptor.dispatchEvent(transactionCommitProgressEvent);
             TransactionEvent.checkin(transactionCommitProgressEvent);
         }
     },
@@ -4498,7 +4506,7 @@ RawDataService.addClassProperties({
                 /*
                     There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
                 */
-                this.dispatchEvent(transactionRollbackStartEvent);
+                TransactionDescriptor.dispatchEvent(transactionRollbackStartEvent);
                 /*
                     Return the event to the pool
                 */
@@ -4513,7 +4521,7 @@ RawDataService.addClassProperties({
 
                 this.registerPendingDataOperationWithContext(rollbackTransactionOperation, transaction);
                 rollbackTransactionDataOperationCompletionPromise = this.completionPromiseForPendingDataOperation(rollbackTransactionOperation);
-                this.dispatchEvent(rollbackTransactionOperation);
+                TransactionDescriptor.dispatchEvent(rollbackTransactionOperation);
 
 
                 /*
@@ -4540,7 +4548,7 @@ RawDataService.addClassProperties({
                         /*
                             Inform Main DataService: There shouldn't be an async involved here as this is meant to be handled by the local main dataService.
                         */
-                        self.dispatchEvent(transactionRollbackCompletionEvent);
+                        TransactionDescriptor.dispatchEvent(transactionRollbackCompletionEvent);
                         TransactionEvent.checkin(transactionRollbackCompletionEvent);
                     })
             }
@@ -4556,7 +4564,7 @@ RawDataService.addClassProperties({
                 rollbackTransaction = new DataOperation();
 
             rollbackTransaction.type = DataOperation.Type.RollbackTransactionOperation;
-            rollbackTransaction.target = this;
+            rollbackTransaction.target = TransactionDescriptor;
             rollbackTransaction.referrerId = createTransactionOperation.id;
             rollbackTransaction.data = {
                 rawTransactions: rawTransactions

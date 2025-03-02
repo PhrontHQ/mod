@@ -28,6 +28,7 @@ var Montage = require("../../core/core").Montage,
     ReadEvent = require("../model/read-event").ReadEvent,
     DataOperationErrorNames = require("./data-operation").DataOperationErrorNames,
     Transaction = require("../model/transaction").Transaction,
+    TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     TransactionEvent = require("../model/transaction-event").TransactionEvent,
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
     ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject;
@@ -345,6 +346,11 @@ DataService.addClassProperties({
             value = deserializer.getProperty("originIdKey");
             if (value) {
                 this.originIdKey = value;
+            }
+
+            value = deserializer.getProperty("autosaves");
+            if (typeof value === "boolean") {
+                this.autosaves = value;
             }
 
             return this;
@@ -3619,6 +3625,14 @@ DataService.addClassProperties({
                 return;
             }
 
+            if(this.autosaves && !this.isAutosaveScheduled) {
+                this.isAutosaveScheduled = true;
+                queueMicrotask(() => {
+                    this.isAutosaveScheduled = false;
+                    this.saveChanges();
+                });
+            }
+
 
             var inversePropertyName = propertyDescriptor.inversePropertyName,
                 inversePropertyDescriptor;
@@ -4262,6 +4276,15 @@ DataService.addClassProperties({
         }
     },
 
+    autosaves: {
+        value: false
+    },
+
+    isAutosaveScheduled: {
+        value: false
+    },
+
+
     saveChanges: {
         value: function () {
             //If nothing to do, we bail out as early as possible.
@@ -4415,7 +4438,7 @@ DataService.addClassProperties({
 
                         transactionCreateEvent.type = TransactionEvent.transactionCreate;
                         transactionCreateEvent.transaction = transaction;
-                        self.dispatchEvent(transactionCreateEvent);
+                        TransactionDescriptor.dispatchEvent(transactionCreateEvent);
 
                         return (transactionCreateEvent.propagationPromise || Promise.resolve());
                     })
@@ -4442,7 +4465,7 @@ DataService.addClassProperties({
 
                         //console.log("saveChanges: dispatchEvent transactionPrepareEvent transaction-"+this.identifier, transaction);
 
-                        self.dispatchEvent(transactionPrepareEvent);
+                        TransactionDescriptor.dispatchEvent(transactionPrepareEvent);
 
                         return (transactionPrepareEvent.propagationPromise || Promise.resolve());
                     })
@@ -4475,7 +4498,7 @@ DataService.addClassProperties({
 
                         //console.log("saveChanges: dispatchEvent transactionCommitEvent transaction-"+this.identifier, transaction);
 
-                        self.dispatchEvent(transactionCommitEvent);
+                        TransactionDescriptor.dispatchEvent(transactionCommitEvent);
 
                         return transactionCommitEvent.propagationPromise
                             ? transactionCommitEvent.propagationPromise
@@ -4557,7 +4580,7 @@ DataService.addClassProperties({
 
             transactionRollbackEvent.type = TransactionEvent.transactionRollback;
             transactionRollbackEvent.transaction = transaction;
-            this.dispatchEvent(transactionRollbackEvent);
+            TransactionDescriptor.dispatchEvent(transactionRollbackEvent);
 
             return (transactionRollbackEvent.propagationPromise || Promise.resolve())
             .then(function() {

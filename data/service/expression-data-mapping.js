@@ -944,6 +944,13 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     
                     r = 0;
                     while ((aRule = dataMatchingRules[r++])) {
+
+                        /*
+                            This shouldn't be happening, but just to be safe...
+                        */
+                        // if(this.isPrimaryKeyComponent(aRule.sourcePath)) {
+                        //     continue;
+                        // }
     
                         /*
                             If a rawData property led us to a Rule we've seen before, we don't want to process it twice
@@ -1022,7 +1029,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                             Tell our service: mappingWillMapRawDataToObjectProperty
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
-    
+
+                        // console.log("mapRawDataToObject "+object.dataIdentifier+" WILL MAP "+ aRule.targetPath);
+
                         result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope);
                         if(isObjectCreated) {
                             if (this._isAsync(result)) {
@@ -1031,18 +1040,20 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                 result = result.then((resultValue) => {
                                     this._registerMappedPropertyValueAsChangesForCreatedObject(targetPath, resultValue, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));      
                                     /*
-                                        Tell our service: mappingDidMapRawDataToObjectPropertyDescriptor
+                                        Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                     */
-                                    service.mappingDidMapRawDataToObjectPropertyDescriptor(this, data, object, propertyDescriptor, context, mappingScope);
-  
+                                    service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, propertyDescriptor.name, resultValue, context, mappingScope);
+                                    // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ targetPath +" with value: ",resultValue);
+
                                     return resultValue;
                                 });
                             } else {
                                 this._registerMappedPropertyValueAsChangesForCreatedObject(aRule.targetPath, result, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));
                                 /*
-                                    Tell our service: mappingDidMapRawDataToObjectPropertyDescriptor
+                                    Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                 */
-                                service.mappingDidMapRawDataToObjectPropertyDescriptor(this, data, object, aRule.propertyDescriptor, context, mappingScope);
+                                service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, aRule.propertyDescriptor, result, context, mappingScope);
+                                // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ aRule.targetPath +" with value: ",result);
 
                             }
                         }
@@ -1198,7 +1209,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //     }
             // }
 
-
+            console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
             return (promises && promises.length &&
                 ( promises.length === 1
                     ? promises[0].then(() => object)
