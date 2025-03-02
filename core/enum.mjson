@@ -1,0 +1,44 @@
+{
+    "date": {
+        "object": "./enum"
+    },
+    "MontageObjectDescriptor": {
+        "object": "core/montage.mjson"
+    },
+    "root": {
+        "prototype": "./meta/module-object-descriptor",
+        "values": {
+            "name": "Enum",
+            "propertyDescriptors": [
+                {"@": "members"},
+                {"@": "values"}
+            ],
+            "propertyDescriptorGroups": {
+                "all": [
+                ]
+            },
+            "propertyValidationRules": {},
+            "objectDescriptorModule": { "%": "./enum.mjson" },
+            "exportName": "Enum",
+            "module": { "%": "./enum" },
+            "parent":{"@": "MontageObjectDescriptor"}
+        }
+    },
+    "members": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "members",
+            "valueType": "array",
+            "cardinality": -1
+        }
+    },
+    "values": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "values",
+            "valueType": "array",
+            "cardinality": -1
+        }
+    }
+
+}
