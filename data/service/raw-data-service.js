@@ -3936,7 +3936,8 @@ RawDataService.addClassProperties({
      */
     _mapObjectChangesToOperationData: {
         value: function (object, dataObjectChanges, operationData, snapshot, dataSnapshot, isNewObject, isDeletedObject, objectDescriptor) {
-            var aProperty,
+            var aPropertyIteration,
+                aProperty,
                 aRawProperty,
                 // snapshotValue,
                 anObjectDescriptor = objectDescriptor || this.objectDescriptorForObject(object),
@@ -3970,7 +3971,8 @@ RawDataService.addClassProperties({
                 mapping = this.mappingForType(anObjectDescriptor),
                 rawDataPrimaryKeys = mapping.rawDataPrimaryKeys;
 
-            while (aProperty = propertyIterator.next().value) {
+            while (!(aPropertyIteration = propertyIterator.next()).done) {
+                aProperty = aPropertyIteration.value;
                 // aRawProperty = mapping.mapObjectPropertyNameToRawPropertyName(aProperty);
                 //aRawProperty = mapping.mapObjectPropertyToRawProperty(object, aProperty);
 
