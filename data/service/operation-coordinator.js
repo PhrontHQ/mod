@@ -114,7 +114,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
     _sendData: {
         value: function (previousPromise, clientId, data) {
-            //console.log("OperationCoordinator: _sendData to connection:", connection, clientId, data);
+            console.debug("OperationCoordinator: _sendData to clientId:"+ clientId, data);
 
             return (previousPromise || Promise.resolve(true))
                     .then(() => {
