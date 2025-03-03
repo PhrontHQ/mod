@@ -2715,7 +2715,7 @@ RawDataService.addClassProperties({
  */
     referrerContextForDataOperation: {
         value: function (dataOperation) {
-            var referrerDataOperationRegistration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            var referrerDataOperationRegistration = this._pendingDataOperationById.get(dataOperation.referrerId || dataOperation.referrer.id);
             return referrerDataOperationRegistration
                 ? referrerDataOperationRegistration.context
                 : undefined;
