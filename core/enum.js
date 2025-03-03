@@ -44,7 +44,7 @@ exports.Enum = Montage.specialize( /** @lends Enum# */ {
 
     memberWithIntValue: {
         value: function(intValue) {
-            return this[this._membersByValue[intValue]];
+            return this._membersByValue[intValue];
         }
     },
 
