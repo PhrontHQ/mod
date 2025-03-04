@@ -257,7 +257,7 @@ exports.RawValueToObjectConverter = ExpressionConverter.specialize( /** @lends R
     },
 
 
-        /**
+    /**
      * Uses foreignDescriptorMappings to find an ObjectDescriptor that matches
      * the passed raw data, delegating to iindividual RawDataTypeMappings
      * the job of assessing if their condition match the raw data or not.
