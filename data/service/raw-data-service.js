@@ -2481,7 +2481,7 @@ RawDataService.addClassProperties({
             return (
                 objectRule && (
                     !valueDescriptor ||
-                    (valueDescriptor && objectRuleConverter && !(objectRuleConverter instanceof RawForeignValueToObjectConverter))
+                    (valueDescriptor && !!objectRuleConverter && !(objectRuleConverter instanceof RawForeignValueToObjectConverter))
                 )
             );
         }
