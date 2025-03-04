@@ -2471,6 +2471,13 @@ RawDataService.addClassProperties({
                 console.warn("mapping for property '"+propertyName+"' doesn't have propertyDescriptor in model");
             }
 
+            /*
+                This might be overreaching? Let's see 
+            */
+            if(valueDescriptor && !objectRuleConverter) {
+                console.warn("won't map property '"+propertyName+"' as no comverter is specified for valueDescriptor " +valueDescriptor.name);
+            }
+
             return (
                 objectRule && (
                     !valueDescriptor ||
