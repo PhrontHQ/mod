@@ -30,7 +30,7 @@ exports.RadioButtonController = Montage.specialize(/** @lends RadioButtonControl
      */
     content: {
         get: function () {
-            return this.getPath("contentController.content");
+            return this.valueForExpression("contentController.content");
         },
         set: function (content) {
             this.contentController = new RangeController()

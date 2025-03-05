@@ -133,8 +133,8 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
 
     /**
      * @function
-     * @param {Collection} value - object expected to have a keys and a values properties, or an array in whcih case we expect pairs.
-     * @returns {array} The formatted currency value.
+     * @param {Collection} value - a collection where this._iterationConverter is applied on each value
+     * @returns {Collection} a collection of the same type as the input containing each value converted.
      */
     _convertElementIndexCollection: {
         value: function (value) {
@@ -143,15 +143,17 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
 
             var values = value.values(),
                 converter = this._iterationConverter,
+                iteration,
                 isConverterFunction = typeof converter === "function",
                 iValue,
                 index = 0,
                 result = new value.constructor;
 
-            while(iValue = values.next().value) {
+            while(!(iteration = values.next()).done) {
+                iValue = iteration.value;
                 result.add(
                     isConverterFunction
-                        ? converter(iValue,index,value)
+                        ? converter(iValue,index++,value)
                         : converter.convert(iValue)
                 );
                 index++;
@@ -162,11 +164,9 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
 
 
     /**
-     * Optionally, reverts values from the output range, back into the input
-     * range. This may not be possible with high fidelity depending on the
-     * relationship between these domains.
      * @function
-     * @default null
+     * @param {Collection} value - a collection where this._iterationReverter is applied on each value
+     * @returns {Collection} a collection of the same type as the input containing each value reverted.
      */
     _revertElementIndexCollection: {
         enumerable: false,
@@ -190,7 +190,7 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
                 iValue = iteration.value;
                 result.add(
                     isReverterFunction
-                        ? reverter(iValue,index,value)
+                        ? reverter(iValue,index++,value)
                         : reverter.revert(iValue)
                 );
                 index++;

@@ -48,9 +48,13 @@ function makeComponentObserver(label, syntax) {
         // TODO error if scope.components does not exist or components for
         // label does not exist
         var components = scope.components;
-        var method = components.getObjectByLabel || components.getComponentByLabel;
-        var component = method.call(components, label);
-        return emit(component);
+        if(components) {
+            var method = components.getObjectByLabel || components.getComponentByLabel;
+            return emit(method.call(components, label));
+        } else {
+            console.error("observeComponent error, no components found in scope");
+            return emit(null);
+        }
     };
 }
 

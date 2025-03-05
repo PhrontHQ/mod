@@ -25,8 +25,7 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
     convert: {
         value: function (v) {
             var self = this,
-                convertedValue,
-                result;
+                convertedValue;
 
             /*
                 besides returning a default value, or a shared "Missing value" singleton, a feature we don't have, there's not much we can do here:
@@ -42,15 +41,25 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
                 if(Array.isArray(v)) {
                     if(v.length) {
                         convertedValue = [];
-                        for(var i=0, countI=v.length, promises;(i<countI);i++) {
+                        for(var i=0, countI=v.length, result, promises;(i<countI);i++) {
                             result =  self._convertOneValue(v[i],typeToFetch, service, convertedValue, i);
                             if (Promise.is(result)) {
                                 (promises || (promises = [])).push(result);
+                            } else {
+                                convertedValue.push(result);
                             }
                         }
-                        return Promise.all(promises).then(function() {
-                            return convertedValue;
-                        });
+
+                        if(promises) {
+                            return ((promises.length > 1) 
+                                ? Promise.all(promises)
+                                : promises[0]). then(function(resolvedValue) {
+                                    console.debug("Embedded converter resolvedValue is ",resolvedValue);
+                                    return convertedValue;
+                                })
+                        } else {
+                            return Promise.resolve(convertedValue);
+                        }
                     }
                     else {
                         return Promise.resolve(v);

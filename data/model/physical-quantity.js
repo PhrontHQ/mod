@@ -85,6 +85,9 @@ exports.Length = Length = class Length extends PhysicalQuantity {
 // var nineMeters = new Length(9, meter);
 // console.log("nineMeters: ", nineMeters);
 // var twiceNineMeters = nineMeters * 2;
+//Symbols???
+// var twiceNineMeters = nineMeters.*(2);
+
 // console.log("twiceNineMeters: ", twiceNineMeters);
 
 

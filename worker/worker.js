@@ -41,6 +41,18 @@ exports.Worker = Target.specialize( /** @lends Worker.prototype */{
         value: undefined
     },
 
+    /**
+     * Sends data back to client via gateway
+     *
+     * @argument postData {ConnectionId: "id of the connection", Data: "data to send"}
+     * @returns {Promise} - a Promise that resolves when data is sent
+     */
+    postToConnection: {
+        value: function(postData) {
+            return this.apiGateway.postToConnection(postData);
+        }
+    },
+
     _require: {
         value: undefined
     },

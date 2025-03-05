@@ -302,12 +302,16 @@ exports.TreeController = Montage.specialize({
 
     _removeListener: {
         value: function (id) {
-            var expandedNode = this._listenersHash[id].node,
+            if(this._listenersHash[id]) {
+                var expandedNode = this._listenersHash[id].node,
                 expansionMetadata = this._expansionMap.get(expandedNode);
 
-            this._listenersHash[id].cancelListener();
-            if (expansionMetadata) {
-                delete expansionMetadata.listenerId;
+                this._listenersHash[id].cancelListener();
+                if (expansionMetadata) {
+                    delete expansionMetadata.listenerId;
+                }
+            } else {
+                console.warn("TreeController: _removeListener("+id+") no longer found in this._listenersHash");
             }
         }
     },

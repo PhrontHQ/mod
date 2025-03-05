@@ -1,0 +1,37 @@
+{
+    "RawValueToObjectConverterDescriptor": {
+        "object": "./raw-value-to-object-converter.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "NumberToEnumMemberConverter",
+            "customPrototype": false,
+            "parent": {"@": "RawValueToObjectConverterDescriptor"},
+            "propertyDescriptors": [],
+            "propertyDescriptorGroups": {},
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "./number-to-enum-member-converter.mjson"
+            },
+            "exportName": "NumberToEnumMemberConverter",
+            "module": {
+                "%": "./number-to-enum-member-converter"
+            }
+        }
+    },
+    "EnumDescriptor": {
+        "object": "core/enum.mjson"
+    },
+
+    "enum": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "enum",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "EnumDescriptor"}
+        }
+    }
+
+}

@@ -1,0 +1,21 @@
+{
+    "parentDescriptor": {
+        "object": "core/converter/collection-iteration-converter.mjson"
+    },
+    "root": {
+        "prototype": "../meta/module-object-descriptor",
+        "values": {
+            "name": "CollectionIterationConverter",
+            "customPrototype": false,
+            "parent": {"@": "parentDescriptor"},
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "./data-collection-iteration-converter.mjson"
+            },
+            "exportName": "DataCollectionIterationConverter",
+            "module": {
+                "%": "./data-collection-iteration-converter"
+            }
+        }
+    }
+}

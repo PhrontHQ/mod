@@ -58,6 +58,9 @@ exports.MappingRule = Montage.specialize(/** @lends MappingRule.prototype */ {
      * have all of the properties referenced in .expression before the
      * the MappingRule is used. This array is used at the time of mapping to
      * populate the raw data with any properties that are missing.
+     * 
+     * FIXME: This is currently returning a flattened list regardless of the shape / depth 
+     * where those property names might have been found
      *
      * @type {string[]}
      */
@@ -286,6 +289,12 @@ exports.MappingRule = Montage.specialize(/** @lends MappingRule.prototype */ {
             */
             if(this.converter) {
                 this.converter.currentRule = this;
+                /*
+                    Another direction to address the need of nested converters to know about the rule to do their work, and reducing the need to
+                    specialize a "composing" converter like a collection-iteration-converter to pass the currentRule they got set dowm, would be
+                    to pass the rule as a second argument: regular converters don't need to know and can ignore it, while those who do have it handy,
+                    in-scope which is more natural in a stateless / functional approach those convert()/revert() have been using.
+                */
                 value = this.converter.convert(value);
                 if(this._isAsync(value)) {
                     var self = this;

@@ -1,0 +1,22 @@
+{
+    "set": {
+        "object": "global[Set]"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Set",
+            "propertyDescriptors": [
+            ],
+            "propertyDescriptorGroups": {
+                "all": [
+                ]
+            },
+            "propertyValidationRules": {},
+            "objectDescriptorModule": { "%": "../collections/set.mjson" },
+            "exportName": "Set",
+            "module": { "%": "global" },
+            "object":{ "@": "set" }
+        }
+    }
+}

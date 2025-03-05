@@ -201,7 +201,7 @@ var Montage = require("../../core/core").Montage,
 
 exports.DataOperationType = DataOperationType = new Enum().initWithMembersAndValues(dataOperationTypes,dataOperationTypes);
 
-var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing"];
+var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing", "InvalidInput", "SyntaxError"];
 exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithMembersAndValues(dataOperationErrorNames,dataOperationErrorNames);
 
 // exports.DataOperationError.ObjectDescriptorStoreMissingError = Error.specialize({
@@ -321,6 +321,27 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             if(this._context) {
                 serializer.setProperty("context", this._context);
             }
+            if(this.hints) {
+                let serializationHints;
+                /*
+                    We do not want to send a rawDataService serialized to another process...
+                */
+                if(this.hints.rawDataService) {
+                    if(Object.keys(this.hints).length > 1) {
+                        serializationHints = {};
+                        Object.assign(serializationHints, this.hints);
+                        delete serializationHints.rawDataService;
+                    } else {
+                        serializationHints = null;
+                    }
+                } else {
+                    serializationHints = this.hints;
+                }
+                if(serializationHints) {
+                    serializer.setProperty("hints", serializationHints);
+                }
+            }
+
 
             if(this.hasOwnProperty("needsDataMapping")) {
                 serializer.setProperty("needsDataMapping", this.needsDataMapping);
@@ -430,6 +451,11 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             value = deserializer.getProperty("context");
             if (value !== void 0) {
                 this.context = value;
+            }
+
+            value = deserializer.getProperty("hints");
+            if (value !== void 0) {
+                this.hints = value;
             }
 
             value = deserializer.getProperty("needsDataMapping");
@@ -787,6 +813,19 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             }
         }
     },
+
+    /**
+     * An object other objects can use to alter or optimize fetch operations.
+     * It is used for example to carry an object's originDataSnapshot if present, 
+     * or to pass an object's snapshot to provide context needed to a stateless, serverless
+     * Mod worker processing DataOperations 
+     * @type {Object}
+     */
+
+    hints: {
+        value: undefined
+    },
+    
 
     /***************************************************************************
      * Data Properties

@@ -599,8 +599,13 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
             } else if (this._isPropertyWritable) {
 
                 if (isToMany) {
-                    if(isArray && value) {
-                        object[this._privatePropertyName].splice.apply(initialValue, [0, Infinity].concat(value));
+                    if(isArray) {
+                        /*
+                            this._getValue() sets object[this._privatePropertyName] to [] via calling this
+                        */
+                        if(value?.length) {
+                            object[this._privatePropertyName].splice.apply(initialValue, [0, Infinity].concat(value));
+                        }
                     } else if(isMap && value) {
                         //We want to maintain the same map,
                         var map = object[this._privatePropertyName],
@@ -644,7 +649,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
 //addRangeChangeListener
 
             //If we're not in the middle of a mapping...:
-            if(currentValue !== initialValue && dispatchChange && !this._service._objectsBeingMapped.has(object)) {
+            if(currentValue !== initialValue && dispatchChange && (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))) {
                 //Dispatch update event
                 var changeEvent = new ChangeEvent;
                 changeEvent.target = object;

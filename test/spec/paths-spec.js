@@ -273,7 +273,7 @@ describe("expressions-spec", function () {
             // so I'm setting it after the fact, here
             changeObserver.handleBeforeChange = function (value, path, object) {
                 expect(value).toBe(originalValue);
-                expect(object.getPath(path)).toBe(originalValue);
+                expect(object.valueForExpression(path)).toBe(originalValue);
             };
 
             spyOn(changeObserver, "handleBeforeChange").and.callThrough();
@@ -293,7 +293,7 @@ describe("expressions-spec", function () {
             // so I'm setting it after the fact, here
             changeObserver.handleChange = function (value, path, object) {
                 expect(value).toBe(newValue);
-                expect(object.getPath(path)).toBe(newValue);
+                expect(object.valueForExpression(path)).toBe(newValue);
             };
 
             spyOn(changeObserver, "handleChange").and.callThrough();

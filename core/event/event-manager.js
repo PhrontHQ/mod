@@ -3669,7 +3669,12 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             if (!target) {
                 return this._emptyComposedPath;
             } else if(target.composedPath) {
-                return target.composedPath;
+                /*
+                    If target has a commposedPath, it's likely cached.
+                    So in case it's mutated by a listner, we're making a copy
+                    to  guard against that.
+                */
+                return Array.from(target.composedPath);
             } else {
 
                 var targetCandidate = target,
