@@ -33,8 +33,8 @@ exports.DataCollectionIterationConverter = class DataCollectionIterationConverte
             this._currentRule = value;
 
             //Pass down
-            this._convert.currentRule = value;
-            this._revert.currentRule = value;
+            this._iterationConverter.currentRule = value;
+            this._iterationReverter.currentRule = value;
         }
     }
 }

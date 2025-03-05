@@ -17,6 +17,9 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
     static {
 
         Montage.defineProperties(this.prototype, {
+            _currentRule: {value: undefined}
+        });
+        Montage.defineProperties(this.prototype, {
             _enum: {value: undefined}
         });
 
@@ -45,10 +48,21 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
 
     }
 
+    get currentRule() {
+        return this._currentRule;
+    }
+
+    set currentRule(value) {
+        if(value !== this._currentRule) {
+            this._currentRule = value;
+            //Clear our enum cache:
+            this._enum = undefined;
+        }
+    }
+
+
     get enum() {
-        return this._enum !== undefined 
-            ? this._enum 
-            : this._enum = (this.currentRule?.propertyDescriptor?._valueDescriptorReference instanceof Enum) && this.currentRule.propertyDescriptor._valueDescriptorReference
+        return this._enum || (this._enum = (this.currentRule?.propertyDescriptor?._valueDescriptorReference instanceof Enum) && this.currentRule.propertyDescriptor._valueDescriptorReference)
     }
 
     convert(number) {
