@@ -1,11 +1,13 @@
 
 var Target = require("./target").Target;
 
-//Todo, to run in node, we'll need to bring in something like the ws npm package.
-
 /* A WebSocket that offers automatic reconnection and re-send of data that couldn't if closed. */
 
 var _WebSocket = global.WebSocket;
+// In a Node.js environment, we need to use the ws package for the websocket.
+if (typeof _WebSocket === 'undefined') {
+    _WebSocket = require('ws');
+}
 
 if(_WebSocket) {
     exports.WebSocket = Target.specialize({
