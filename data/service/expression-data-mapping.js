@@ -1533,17 +1533,15 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _resolveProperty: {
         value: function (object, propertyDescriptor, rule, scope) {
-            var result = rule.evaluate(scope),
-                propertyName = typeof propertyDescriptor === "object" ? propertyDescriptor.name : propertyDescriptor,
-                self = this;
+            const result = rule.evaluate(scope);
 
             if (this._isAsync(result)) {
-                result.then(function (value) {
-                    self._setObjectValueForPropertyDescriptor(object, value, propertyDescriptor);
+                result.then((value) => {
+                    this._setObjectValueForPropertyDescriptor(object, value, propertyDescriptor);
                     return null;
                 });
             } else {
-                object[propertyName] = result;
+                this._setObjectValueForPropertyDescriptor(object, result, propertyDescriptor);
             }
 
             return result;
@@ -2329,9 +2327,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         value: function (object, value, propertyDescriptor, shouldFlagObjectBeingMapped) {
             if (!object) return;
 
+            const hasPropertyDescriptor = typeof propertyDescriptor === "object" && propertyDescriptor !== null;
+            const propertyName = hasPropertyDescriptor ? propertyDescriptor.name : propertyDescriptor;
+            const isToMany = propertyDescriptor.cardinality !== 1;
 
-            var propertyName = propertyDescriptor.name,
-                isToMany = propertyDescriptor.cardinality !== 1;
             //Add checks to make sure that data matches expectations of propertyDescriptor.cardinality
             // console.debug(object.dataIdentifier.objectDescriptor.name+" - "+propertyDescriptor.name+" _setObjectValueForPropertyDescriptor on object id: "+object.dataIdentifier.primaryKey);
 
@@ -2380,7 +2379,13 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }
                     }
                 } else {
-                    object[propertyName] = value;
+                    const hasValue = typeof value !== "undefined" && value !== null;
+    
+                    if (!hasValue && propertyDescriptor.hasOwnProperty("defaultValue")) {
+                        object[propertyName] = propertyDescriptor.defaultValue;
+                    } else {
+                        object[propertyName] = value;
+                    }
                 }
             }
 
