@@ -1545,6 +1545,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             } else {
                 object[propertyName] = result;
             }
+
             return result;
         }
     },
@@ -2326,15 +2327,15 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _setObjectValueForPropertyDescriptor: {
         value: function (object, value, propertyDescriptor, shouldFlagObjectBeingMapped) {
+            if (!object) return;
 
-            if(!object) return;
 
             var propertyName = propertyDescriptor.name,
                 isToMany = propertyDescriptor.cardinality !== 1;
             //Add checks to make sure that data matches expectations of propertyDescriptor.cardinality
             // console.debug(object.dataIdentifier.objectDescriptor.name+" - "+propertyDescriptor.name+" _setObjectValueForPropertyDescriptor on object id: "+object.dataIdentifier.primaryKey);
 
-            if(shouldFlagObjectBeingMapped) {
+            if (shouldFlagObjectBeingMapped) {
                 this.service.rootService._objectsBeingMapped.add(object);
             }
 
@@ -2365,13 +2366,13 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                         or find a way to just access the local state without triggering the fetch and just update it.
                     */
-                   //We call the getter passing shouldFetch = false flag stating that it's an internal call
-                   var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
-                    if(!Array.isArray(objectPropertyValue)) {
+                    //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
+                    var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
+
+                    if (!Array.isArray(objectPropertyValue)) {
                         value = [value];
                         object[propertyName] = value;
-                    }
-                    else {
+                    } else {
                         if(objectPropertyValue.includes(value) && propertyDescriptor.hasUniqueValues) {
                             console.warn("Attempted to add duplicate value for property "+propertyName+" already contains it: ", value);
                         } else {
@@ -2383,10 +2384,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
             }
 
-            if(shouldFlagObjectBeingMapped) {
+            if (shouldFlagObjectBeingMapped) {
                 this.service.rootService._objectsBeingMapped.delete(object);
             }
-
         }
     },
 
