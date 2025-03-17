@@ -107,12 +107,12 @@ var DocumentResources = Montage.specialize({
     },
 
     _addResource: {
-        value: function (url, classListScope) {
-            this._resources[url] = classListScope || true;
+        value: function (url, classListScope, cssLayerName) {
+            this._resources[url] = {classListScope:classListScope, cssLayerName:cssLayerName} || true;
         }
     },
 
-    cssScopeForResource: {
+    cssContextForResource: {
         value: function (url) {
             return this._resources[url] !== true ? this._resources[url] : null;       
         }
@@ -236,6 +236,71 @@ var DocumentResources = Montage.specialize({
             return promise;
         }
     },
+    _cssRuleSelectorTextScopeReplacer: {
+        value: function(match, p1, p2, p3, offset, string, groups) {
+            console.log(match);
+            return ":scope";
+        }
+    },
+    _updateCSSRuleWithScope: {
+        value: function(cssRule, scopeName, scopeNameRegexp) {
+            //cssRule.selectorText = cssRule.selectorText.replaceAll(scopeNameRegexp, this._cssRuleSelectorTextScopeReplacer)
+            cssRule.selectorText = cssRule.selectorText.replaceAll(scopeNameRegexp, ":scope");
+        }
+    },
+
+    _scopeSelectorRegExp: {
+        // value: /\(([^)]+)\)/g
+        value: /\(([^()]*)\)/g
+
+    },
+
+    _scopeStylesheetRulesWithSelectorInCSSLayerName: {
+        value: function(stylesheet, classListScope, cssLayerName) {
+            if(classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function") {
+                let iStart = 0,
+                    cssRules = stylesheet.cssRules,
+                //classListScopeRegexp = new RegExp(/(.ModButton)+(?=[.,:,\s,>]|$)/, "dg");
+                //classListScopeRegexp = new RegExp(/(.ModButton)+(?=[\s]|$)/, "dg");
+                classListScopeRegexp = new RegExp(`(${classListScope})+(?=$)|(${classListScope})+(?= >)`, "dg"),
+                classListScopeContentRegexp = new RegExp(`(${classListScope})+(?=[.,:,\s,>]|$)`, "dg");
+
+                //Insert the scope rule, but after any CSSImportRule
+                while(cssRules[iStart] instanceof CSSImportRule) {
+                    iStart++;
+                }
+
+                stylesheet.insertRule(`@scope (.${cssLayerName}${classListScope}) {}`, iStart);
+                let scopeRule = cssRules[iStart];
+
+                //Now loop on rules to move - re-create them as there's no other way :-( 
+                for(let i = cssRules.length-1; (i>iStart) ; i--) {
+                    cssRules[i].selectorText = ((cssRules[i].selectorText.replaceAll(classListScopeRegexp, ":scope")).replaceAll(classListScopeContentRegexp,""))
+                    scopeRule.insertRule(cssRules[i].cssText);
+                    stylesheet.deleteRule(i);
+                }
+
+            }
+        }
+    },
+
+    /**
+     * #WARNING - EXPERIMENTAL if true, it will trigger the use of the _scopeStylesheetRulesWithSelectorInCSSLayerName() method 
+     * above to wrap an component's CSS into a @scope rule. modifying selectors such that they work within the new @scope, meaning 
+     * using pseudo selector :scope as necessary.
+     * 
+     * This works in some limited use cases and would need a lot more subtlety to be robust, reliable
+     * and useful
+     *
+     * @property {boolean}
+     */
+    automaticallyAddsCSSScope: { 
+        value: false
+    },
+
+    automaticallyAddsCSSLayerToUnscoppedCSS: { 
+        value: true
+    },
 
     handleEvent: {
         value: function (event) {
@@ -246,11 +311,15 @@ var DocumentResources = Montage.specialize({
                 index = this._expectedStyles.indexOf(target.href);
                 if (index >= 0) {
                     this._expectedStyles.splice(index, 1);
-                    let classListScope = this.cssScopeForResource(target.href),
-                        stylesheet = target.sheet;
+
+                    let cssContext = this.cssContextForResource(target.href),
+                        classListScope = cssContext.classListScope,
+                        cssLayerName = cssContext.cssLayerName,
+                        stylesheet = target.sheet,
+                        cssRules = stylesheet.cssRules;
 
                     /*
-                        Adding CSS Scoping for components in dev mode. When we mop, we'll add it in the CSS. 
+                        Adding CSS Layers, and Scoping for components in dev mode. When we mop, we'll add it in the CSS. 
                     
                         target.ownerDocument is the page's document. We captured
                         the Component's element's classes before we got here, in this._resources[target.href]
@@ -261,41 +330,67 @@ var DocumentResources = Montage.specialize({
                         target.ownerDocument.styleSheets, but we need the component's element's classList
                     */
                     
-                    if(classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function") {
-                        let cssRules = stylesheet.cssRules,
-                            iStart = 0,
-                            scopeRule;
+                    if(classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function" ) {
 
-                        // console.log("classListScope: ",classListScope);
+
+
+                        let iStart = 0;
+
                         //Insert the scope rule, after any CSSImportRule
                         while(cssRules[iStart] instanceof CSSImportRule) {
                             iStart++;
                         }
 
-                        /*
-                            This worked — creating one CSSScopeRule for the whole component's stylesheet
-                            and nest all other rules in it. But it started to fail in Chrome 132.
-                        */
-                        stylesheet.insertRule(`@scope (${classListScope}) to (${classListScope}) {}`, iStart);
-                        scopeRule = stylesheet.cssRules[iStart];
+                        //If it's not using CSS Layers
+                        if(!(cssRules[iStart] instanceof CSSLayerBlockRule) ) {
+                            
+                            //If it's not using CSSScope
+                            if(!(cssRules[iStart] instanceof CSSScopeRule) && this.automaticallyAddsCSSScope) {
+                                this._scopeStylesheetRulesWithSelectorInCSSLayerName(stylesheet, classListScope, cssLayerName);
+                            } else if(cssRules[iStart] instanceof CSSScopeRule) {
+                                //Add the layer name in scope
+                                let scopeRule = stylesheet.cssRules[iStart],
+                                    scopeRuleCSSText = scopeRule.cssText,
+                                    match, scopeSelectorRegExp = this._scopeSelectorRegExp,
+                                    scopeSelector;
 
+                                //delete current scopeRule
+                                stylesheet.deleteRule(iStart);
+    
+                                while ((match = scopeSelectorRegExp.exec(scopeRuleCSSText)) !== null) {
+                                    scopeSelector =`.${cssLayerName}${match[1]}`;
+                                    scopeRuleCSSText = scopeRuleCSSText.replace(match[1],scopeSelector);
+                                    // console.log(
+                                    //     `Found ${match[0]} start=${match.index} end=${scopeSelectorRegExp.lastIndex}.`,
+                                    // );
+                                }
+                                stylesheet.insertRule(scopeRuleCSSText);
+                            }
 
-                        /*
-                            So as a workaround, creating one CSSScopeRule for each of a component's stylesheet's rules
-                            works in Chrome 132, and WebKit. Firefox doesn't support it yet as of 1/27/2025
-                        */
+                            
+                            let scopeRule = stylesheet.cssRules[iStart];
 
-                        //Now loop on rules to move - re-create them as there's no other way :-( 
-                        // for(let i = cssRules.length-1; (i>iStart) ; i--) {
-                        //     //stylesheet.insertRule(`@scope (${classListScope}) to (${classListScope}) {}`, i);
-                        //     stylesheet.insertRule(`@scope (${classListScope}) {}`, i);
-                        //     scopeRule = stylesheet.cssRules[iStart];    
-                        //     scopeRule.insertRule(cssRules[i].cssText);
-                        //     stylesheet.deleteRule(i);
-                        // }
+                            //If the CSS is scopped, we move it into the CSSLayerBlockRule
+                            if(scopeRule && (scopeRule instanceof CSSScopeRule)) {
+                                stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
+                                let packageLayer = stylesheet.cssRules[iStart];
 
-                        //console.log("stylesheet: ",stylesheet.cssRules[0].cssText);
+                                scopeRule = stylesheet.cssRules[++iStart];
+    
+                                stylesheet.deleteRule(iStart);
+                                packageLayer.insertRule(scopeRule.cssText);
 
+                            } else if(this.automaticallyAddsCSSLayerToUnscoppedCSS) {
+                                stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
+                                let packageLayer = stylesheet.cssRules[iStart];
+    
+                                //We layer all rules
+                                for(let i = cssRules.length-1; (i>iStart) ; i--) {
+                                    packageLayer.insertRule(cssRules[i].cssText);
+                                    stylesheet.deleteRule(i);
+                                }
+                            }
+                        }
                     }
 
                 }
@@ -306,7 +401,7 @@ var DocumentResources = Montage.specialize({
     },
 
     addStyle: {
-        value: function (element, DOMParent, classListScope) {
+        value: function (element, DOMParent, classListScope, cssLayerName) {
             var url = element.getAttribute("href"),
                 documentHead;
 
@@ -315,7 +410,7 @@ var DocumentResources = Montage.specialize({
                 if (this.hasResource(url)) {
                     return;
                 }
-                this._addResource(url, classListScope);
+                this._addResource(url, classListScope, cssLayerName);
                 this._expectedStyles.push(url);
                 if (!this._isPollingDocumentStyleSheets) {
                     // fixme: Quick workaround for IE 11. Need a better patch.

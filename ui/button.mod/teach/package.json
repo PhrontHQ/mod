@@ -1,10 +1,10 @@
 {
-    "name": "teach-button-mod",
+    "name": "teach-button.mod",
     "version": "0.1.0",
     "private": true,
     "dependencies": {
         "mod": "*"
-    },
+    },  
     "mappings": {
         "mod": "../../../"
     }

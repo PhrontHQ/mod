@@ -267,6 +267,31 @@ var Template = Montage.specialize( /** @lends Template# */ {
                 self.document = _document;
                 self.setBaseUrl(baseUrl);
 
+
+                
+                //Verify that the element is flagged with the package name it belongs to:
+                let componentElementClassList = (_document.querySelector("body > [data-mod-id]"))?.classList,
+                    packageName = _require.packageDescription.name;
+
+                /*
+                    We could not do it if _require.isMainPackage() but that would hinder composition
+                    of top level mods
+
+                    If a mod's package name ends in .mod, we take that out.
+                */
+                if(packageName.endsWith(".mod")) {
+                    packageName = packageName.stringByRemovingSuffix(".mod");
+                }
+
+                if(!componentElementClassList.has(packageName)) {
+                    /*
+                        The order won't be pretty - packageName will appear after the component's class name, 
+                         but it doesn't matter functionally
+                    */
+                    componentElementClassList.add(packageName)
+                }
+
+
                 return self.getObjectsString(_document)
                 .then(function (objectsString) {
                     self.objectsString = objectsString;

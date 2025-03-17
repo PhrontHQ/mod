@@ -1,60 +1,64 @@
-.ModButton {
-    border: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    font-weight: 600;
-    position: relative;
+@scope (.Button) {
 
-    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-    transition: background-color .2s ease-in-out;
-    gap: 6px;
-}
+    :scope {
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        font-weight: 600;
+        position: relative;
 
-.ModButton:hover {
-    cursor: pointer;
-}
+        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+        transition: background-color .2s ease-in-out;
+        gap: 6px;
+    }
 
-/* Main Orientation */
+    :hover {
+        cursor: pointer;
+    }
 
-.ModButton.mod--vertical {
-    flex-direction: column;
-}
+    /* Main Orientation */
 
-.ModButton.mod--horizontal {
-    flex-direction: row;
-}
+    .mod--vertical {
+        flex-direction: column;
+    }
 
-/* Main Axis Direction */
+    .mod--horizontal {
+        flex-direction: row;
+    }
 
-.ModButton.mod--horizontal.mod--end {
-    flex-direction: row-reverse;
-}
+    /* Main Axis Direction */
 
-.ModButton.mod--vertical.mod--end {
-    flex-direction: column-reverse;
-}
+    .mod--horizontal.mod--end {
+        flex-direction: row-reverse;
+    }
 
-/* Hide Empty Elements */
-.ModButton>div:empty {
-    display: none;
-}
+    .mod--vertical.mod--end {
+        flex-direction: column-reverse;
+    }
 
-/* Image Specifications */
+    /* Hide Empty Elements */
+    > div:empty {
+        display: none;
+    }
 
-.ModButton>.ModButton-image {
-    position: relative;
-}
+    /* Visual Specifications */
 
-.ModButton>svg.ModButton-image {
-    fill: currentColor;
-}
+    > .Button-visual {
+        position: relative;
+    }
 
-/* Pending State */
+    > svg.Button-visual {
+        fill: currentColor;
+    }
 
-.ModButton.mod--pending {
-    pointer-events: none;
-    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-    opacity: 0.75;
+    /* Pending State */
+
+    .mod--pending {
+        pointer-events: none;
+        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+        opacity: 0.75;
+    }
+
 }

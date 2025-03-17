@@ -1215,6 +1215,12 @@ Component.addClassProperties(
         }
     },
 
+    packageName: {
+        get: function() {
+            return Montage.getInfoForObject(this).require.packageDescription.name
+        }
+    },
+
     /**
      * The template object of the component.
      *
@@ -2449,7 +2455,7 @@ Component.addClassProperties(
     _addTemplateStylesIfNeeded: {
         value: function () {
             if(this._templateDocumentPart) {
-                this.rootComponent.addStyleSheetsFromTemplate(this._templateDocumentPart.template);
+                this.rootComponent.addStyleSheetsFromTemplate(this._templateDocumentPart.template, this.packageName);
             }
         }
     },
@@ -4740,8 +4746,12 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
 
     /**
      * @private
+     * Those 3 arrays keep related data at the same index
      */
     _stylesheets: {
+        value: []
+    },
+    _cssLayerNames: {
         value: []
     },
     _stylesheetsclassListScopes: {
@@ -4751,10 +4761,11 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
     /**
      * @function
      */
-    addStylesheetWithClassListScope: {
-        value: function (style, classListScope) {
+    addStylesheetWithClassListScopeInCSSLayerName: {
+        value: function (style, classListScope, cssLayerName) {
             this._stylesheets.push(style);
             this._stylesheetsclassListScopes.push(classListScope ? `.${this._stylesheets.join.call(classListScope,".")}` : undefined);
+            this._cssLayerNames.push(cssLayerName);
             this._needsStylesheetsDraw = true;
         }
     },
@@ -4762,12 +4773,12 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
         value: null
     },
     addStyleSheetsFromTemplate: {
-        value: function(template) {
+        value: function(template, cssLayerName) {
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
                     ownerDocument = this.element.ownerDocument,
-                    styles = resources.createStylesForDocument(ownerDocument);
-
+                    styles = resources.createStylesForDocument(ownerDocument),
+                    componentElementClassList = (template.document.querySelector("body > [data-mod-id]"))?.classList;
 
                 /*  
                     What we need to scope is a selector made of all the classes of the template's root element
@@ -4781,7 +4792,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                             Flow is one component where the owner's element doesn't have data-mod-id="owner", but data-mod-id="montage-flow".
                             So to avoid that we'll consider the root element the first direct child of the body that has a data-mod-id attribute
                         */
-                        this.addStylesheetWithClassListScope(style, (template.document.querySelector("body > [data-mod-id]"))?.classList);
+                        this.addStylesheetWithClassListScopeInCSSLayerName(style, componentElementClassList, cssLayerName);
                     }
                 this._addedStyleSheetsByTemplate.set(template,true);
             }
@@ -4803,12 +4814,13 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 var documentResources = this._documentResources,
                 stylesheets = this._stylesheets,
                 stylesheetsclassListScopes = this._stylesheetsclassListScopes,
+                cssLayerNames = this._cssLayerNames,
                 stylesheet,
                 documentHead = documentResources._document.head,
                 bufferDocumentFragment = this._bufferDocumentFragment;
 
             while ((stylesheet = stylesheets.shift())) {
-                documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift());
+                documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift(), cssLayerNames.shift());
             }
 
             documentHead.insertBefore(bufferDocumentFragment, documentHead.firstChild);
