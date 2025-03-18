@@ -39,14 +39,7 @@ header {
     border-radius: 4px;
     margin-top: 40px;
     text-transform: capitalize;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
     user-select: none;
-}
-
-.button:hover {
-    cursor: pointer;
 }
 
 .button.mod--active {
