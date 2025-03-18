@@ -1,5 +1,4 @@
-@scope (.Button) {
-
+@scope (.ModButton) {
     :scope {
         border: none;
         display: inline-flex;
@@ -10,55 +9,57 @@
         position: relative;
 
         /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-        transition: background-color .2s ease-in-out;
+        transition: background-color 0.2s ease-in-out;
         gap: 6px;
     }
 
-    :hover {
+    &:hover {
         cursor: pointer;
     }
 
     /* Main Orientation */
 
-    .mod--vertical {
+    &.mod--vertical {
         flex-direction: column;
     }
 
-    .mod--horizontal {
+    &.mod--horizontal {
         flex-direction: row;
     }
 
     /* Main Axis Direction */
 
-    .mod--horizontal.mod--end {
+    &.mod--horizontal.mod--end {
         flex-direction: row-reverse;
     }
 
-    .mod--vertical.mod--end {
+    &.mod--vertical.mod--end {
         flex-direction: column-reverse;
     }
 
-    /* Hide Empty Elements */
+    /** 
+     * FIXME: Hide temporally empty elements wait for this pr to be merged: 
+     * https://github.com/PhrontHQ/mod/pull/37 
+     */
     > div:empty {
         display: none;
     }
 
     /* Visual Specifications */
 
-    > .Button-visual {
+    > .ModButton-visual {
         position: relative;
     }
 
-    > svg.Button-visual {
+    > svg.ModButton-visual {
         fill: currentColor;
     }
 
     /* Pending State */
 
-    .mod--pending {
+    &.mod--pending {
         pointer-events: none;
         /* FIXME: Temporary arbitrary values, waiting for Button Themes */
         opacity: 0.75;
     }
-
 }
