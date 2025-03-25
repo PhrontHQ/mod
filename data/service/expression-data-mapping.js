@@ -2346,7 +2346,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     if (value.length > 1) {
                         throw new Error("ExpressionDataMapping for property \""+ this.objectDescriptor.name + "." + propertyName+"\" expects a cardinality of 1 but data to map doesn't match: "+value);
                     }
-                    object[propertyName] = value[0];
+
+                    this._assignObjectValueOrDefault(object, propertyName, value[0], propertyDescriptor);
                 }
             } else {
                 /*
@@ -2379,13 +2380,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }
                     }
                 } else {
-                    const hasValue = typeof value !== "undefined" && value !== null;
-    
-                    if (!hasValue && propertyDescriptor.hasOwnProperty("defaultValue")) {
-                        object[propertyName] = propertyDescriptor.defaultValue;
-                    } else {
-                        object[propertyName] = value;
-                    }
+                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
                 }
             }
 
@@ -2395,6 +2390,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    _assignObjectValueOrDefault: {
+        value: function(object, propertyName, value, propertyDescriptor) {
+            const hasValue = typeof value !== "undefined" && value !== null;
+    
+            if (!hasValue && propertyDescriptor.hasOwnProperty("defaultValue")) {
+                object[propertyName] = propertyDescriptor.defaultValue;
+            } else {
+                object[propertyName] = value;
+            }
+        }
+    },
 
     /**
      * Prepares a rule's converter for the property being mapped. This allows
