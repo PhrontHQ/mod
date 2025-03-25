@@ -2340,7 +2340,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             if (Array.isArray(value)) {
                 if (isToMany) {
-                    object[propertyName] = value;
+                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
                 } else if (value.length) {
                     //Cardinality is 1, if data contains more than 1 item, we throw
                     if (value.length > 1) {
@@ -2371,7 +2371,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                     if (!Array.isArray(objectPropertyValue)) {
                         value = [value];
-                        object[propertyName] = value;
+                        this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
                     } else {
                         if(objectPropertyValue.includes(value) && propertyDescriptor.hasUniqueValues) {
                             console.warn("Attempted to add duplicate value for property "+propertyName+" already contains it: ", value);
@@ -2392,10 +2392,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _assignObjectValueOrDefault: {
         value: function(object, propertyName, value, propertyDescriptor) {
+            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue");
             const hasValue = typeof value !== "undefined" && value !== null;
+            const isToMany = propertyDescriptor.cardinality !== 1;
     
-            if (!hasValue && propertyDescriptor.hasOwnProperty("defaultValue")) {
-                object[propertyName] = propertyDescriptor.defaultValue;
+            if (!hasValue && hasDefaultValue) {
+                if (isToMany) {
+                    console.warn('Default value for to-many relationship is not supported yet');
+                    object[propertyName] = value;
+                } else {
+                    object[propertyName] = propertyDescriptor.defaultValue;
+                }
             } else {
                 object[propertyName] = value;
             }
