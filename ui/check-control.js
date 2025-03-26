@@ -140,8 +140,12 @@ exports.CheckControl = class CheckControl extends Control {
         // the draw loop, but it's what a click/touch would
         // actually have done
         this._element.checked = !this._element.checked;
-        changeEvent = document.createEvent("HTMLEvents");
-        changeEvent.initEvent("change", true, true);
+
+        const changeEvent = new Event("change", {
+            cancelable: true,
+            bubbles: true,
+        });
+
         this._element.dispatchEvent(changeEvent);
     }
 };
