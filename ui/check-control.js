@@ -33,19 +33,15 @@ exports.CheckControl = class CheckControl extends Control {
 
     constructor() {
         super();
-        this.defineBindings({
-            "classList.has('montage--checked')": {
-                "<-": "checked",
-            },
-        });
+        const bindings = {};
 
-        var leftExpression = "classList.has('",
-            bindings = {};
-        leftExpression += this.checkedClassName;
-        leftExpression += "')";
-        bindings[leftExpression] = {
-            "<-": "checked",
-        };
+        // Add default binding
+        this._addCheckedClassNameToBindings("montage--checked", bindings);
+
+        // Add custom binding if a custom class name is provided
+        if (this.checkedClassName) {
+            this._addCheckedClassNameToBindings(this.checkedClassName, bindings);
+        }
 
         this.defineBindings(bindings);
     }
@@ -125,7 +121,15 @@ exports.CheckControl = class CheckControl extends Control {
 
     // <---- Private Functions ---->
 
+    /**
+     * @private
+     */
+    _addCheckedClassNameToBindings(className, bindings = {}) {
+        const expression = `classList.has('${className}')`;
+        bindings[expression] = { "<-": "checked" };
 
+        return bindings;
+    }
 
     /**
      * Fake the checking of the element.
