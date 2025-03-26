@@ -1,95 +1,79 @@
 /**
-    @module "mod/ui/input-radio.mod"
-*/
-var CheckControl = require("ui/check-control").CheckControl,
-    PressComposer = require("../../composer/press-composer").PressComposer,
-    KeyComposer = require("../../composer/key-composer").KeyComposer;
+ *   @module "mod/ui/input-radio.mod"
+ */
+const { KeyComposer } = require("../../composer/key-composer");
+const { CheckControl } = require("ui/check-control");
+
 /**
  * Wraps the a &lt;input type="radio"> element with binding support for the element's standard attributes.
-   @class module:"mod/ui/native/input-radio.mod".InputRadio
-   @extends module:mod/ui/check-input.CheckInput
+ * @class module:"mod/ui/native/input-radio.mod".InputRadio
+ * @extends module:mod/ui/check-input.CheckInput
  */
-exports.Radio = CheckControl.specialize({
+exports.Radio = class Radio extends CheckControl {
+    // <---- Properties ---->
 
-    // constructor: {
-    //     value: function InputRadio() {
-    //         this.super();
-    //         return this;
-    //     }
-    // },
+    drawsFocusOnPointerActivation = true;
 
-    drawsFocusOnPointerActivation: {
-        value: true
-    },
+    _radioButtonController = null;
 
-    hasTemplate: {
-        value: false
-    },
+    _keyComposer = null;
 
-    _keyComposer: {
-        value: null
-    },
-
-    _radioButtonController: {
-        value: null
-    },
-
-    enterDocument: {
-        value: function (firstTime) {
-            if (firstTime) {
-                this.element.setAttribute("role", "radio");
-            }
-        }
-    },
-
-    prepareForActivationEvents: {
-        value: function() {
-
-            this.super();
-
-            this._keyComposer = new KeyComposer();
-            this._keyComposer.component = this;
-            this._keyComposer.keys = "space";
-            this.addComposer(this._keyComposer);
-
-            this._keyComposer.addEventListener("keyPress", this, false);
-            this._keyComposer.addEventListener("keyRelease", this, false);
-        }
-    },
-
-    handleKeyPress: {
-        value: function () {
-            this.active = true;
-        }
-    },
-
-    handleKeyRelease: {
-        value: function () {
-            this.active = false;
-            this.check();
-        }
-    },
+    hasTemplate = false;
 
     /**
      * The radio button controller that ensures that only one radio button in
      * its `content` is `checked` at any time.
      * @type {RadioButtonController}
      */
-    radioButtonController: {
-        set: function (value) {
-            if (this._radioButtonController) {
-                this._radioButtonController.unregisterRadioButton(this);
-            }
+    set radioButtonController(value) {
+        if (this._radioButtonController) {
+            this._radioButtonController.unregisterRadioButton(this);
+        }
 
-            this._radioButtonController = value;
+        this._radioButtonController = value;
 
-            if (value) {
-                value.registerRadioButton(this);
-            }
-        },
-        get: function () {
-            return this._radioButtonController;
+        if (value) {
+            value.registerRadioButton(this);
         }
     }
 
-});
+    get radioButtonController() {
+        return this._radioButtonController;
+    }
+
+    // <---- Event Handlers ---->
+
+    handleKeyPress() {
+        this.active = true;
+    }
+
+    handleKeyRelease() {
+        this.active = false;
+        this.check();
+    }
+
+    // <---- Lifecycle Functions ---->
+
+    enterDocument(firstTime) {
+        if (firstTime) {
+            this.element.setAttribute("role", "radio");
+        }
+    }
+
+    /**
+     * Prepares the component for activation events.
+     * @override
+     * @protected
+     */
+    prepareForActivationEvents() {
+        super.prepareForActivationEvents();
+
+        this._keyComposer = new KeyComposer();
+        this._keyComposer.component = this;
+        this._keyComposer.keys = "space";
+        this.addComposer(this._keyComposer);
+
+        this._keyComposer.addEventListener("keyPress", this, false);
+        this._keyComposer.addEventListener("keyRelease", this, false);
+    }
+};
