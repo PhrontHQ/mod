@@ -2392,7 +2392,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _assignObjectValueOrDefault: {
         value: function(object, propertyName, value, propertyDescriptor) {
-            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue");
+            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof propertyDescriptor.defaultValue !== "undefined";
             const hasValue = typeof value !== "undefined" && value !== null;
             const isToMany = propertyDescriptor.cardinality !== 1;
     
