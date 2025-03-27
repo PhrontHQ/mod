@@ -1383,8 +1383,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 /*
                     If a propertyDescriptor has a valueDescriptor, it is treated as a relationship. In the case of a Date for example, a converter isn't async so it returns a value that isn't a promise and there was no code to still assign the result to the object. This fixes it.
                 */
-                //object[propertyDescriptor.name] = data;
-                return (object[propertyDescriptor.name] = penultimateStep);
+                return this._assignObjectValueOrDefault(object, propertyDescriptor.name, penultimateStep, propertyDescriptor);
             }
 
         }
