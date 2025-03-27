@@ -574,20 +574,23 @@ RawDataService.addClassProperties({
                 //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
 
                 return DataService.mainService.fetchData(propertyNameQuery)
-                .then(function(object) {
-                    if(Array.isArray(object)) {
-                        if(propertyDescriptor.cardinality === 1) {
-                            return object[0] || null;
-                        } else {
-                            return object;
+                .then(function(fetchResult) {
+                    // console.debug("object === fetchResult[0]", object === fetchResult[0]);
+                    if(Array.isArray(fetchResult)) {
+                        if(fetchResult[0] !== object) {
+                            if(propertyDescriptor.cardinality === 1) {
+                                return fetchResult[0] || null;
+                            } else {
+                                return fetchResult;
+                            }    
                         }
                     } else {
                     /*
-                        Bug fix object should always be an arry resolving from fetchData(), but in case there's been an exception,
+                        Bug fix fetchResult should always be an arry resolving from fetchData(), but in case there's been an exception,
                         keeping 
                     */
                         console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
-                        return object[propertyName];
+                        return fetchResult[propertyName];
                     }
                 });
             }
