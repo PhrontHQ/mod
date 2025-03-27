@@ -2391,20 +2391,31 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _assignObjectValueOrDefault: {
         value: function(object, propertyName, value, propertyDescriptor) {
-            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof propertyDescriptor.defaultValue !== "undefined";
+            const defaultValue = propertyDescriptor.defaultValue;
+            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
             const hasValue = typeof value !== "undefined" && value !== null;
             const isToMany = propertyDescriptor.cardinality !== 1;
     
-            if (!hasValue && hasDefaultValue) {
-                if (isToMany) {
-                    console.warn('Default value for to-many relationship is not supported yet');
-                    object[propertyName] = value;
-                } else {
-                    object[propertyName] = propertyDescriptor.defaultValue;
+            if (!hasValue) { 
+                /*
+                    When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
+                    it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the object being mapped.
+
+                    But if there is a known default value, then we use it
+                */
+                if(hasDefaultValue) {
+                    if (isToMany) {
+                        console.warn('Default value for to-many relationship is not supported yet');
+                        object[propertyName] = value;
+                    } else {
+                        object[propertyName] = defaultValue;
+                    }
                 }
             } else {
                 object[propertyName] = value;
             }
+
+            return object[propertyName];
         }
     },
 
