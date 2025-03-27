@@ -67,11 +67,16 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
 
     convert(number) {
         if(this.enum) {
-            let _number = Number(number);
-            if(!Number.isNaN(_number)) {
-                return this.enum.memberWithIntValue(_number);
+            //null means no value
+            if(number === null) {
+                return null;
             } else {
-                throw "NumberToEnumMemberConverter convert(): "+number+" is not a number";
+                let _number = Number(number);
+                if(!Number.isNaN(_number)) {
+                    return this.enum.memberWithIntValue(_number);
+                } else {
+                    throw "NumberToEnumMemberConverter convert(): "+number+" is not a number";
+                }    
             }
         } else {
             throw "NumberToEnumMemberConverter convert(): No enum, can't convert " + number;
