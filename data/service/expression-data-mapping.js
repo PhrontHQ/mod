@@ -2407,16 +2407,16 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 if(hasDefaultValue) {
                     if (isToMany) {
                         console.warn('Default value for to-many relationship is not supported yet');
-                        object[propertyName] = value;
+                        return (object[propertyName] = value);
                     } else {
-                        object[propertyName] = defaultValue;
+                        return (object[propertyName] = defaultValue);
                     }
                 }
             } else {
-                object[propertyName] = value;
+                return (object[propertyName] = value);
             }
 
-            return object[propertyName];
+            return value;
         }
     },
 
