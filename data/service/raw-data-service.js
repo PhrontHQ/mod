@@ -1465,7 +1465,7 @@ RawDataService.addClassProperties({
                                         }
                                     }
                                 } else {
-                                    console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues:", iDiffValues);
+                                    //console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues:", iDiffValues);
                                     snapshot[rawDataKeys[i]] = iDiffValues;
                                 }
                             } else {
