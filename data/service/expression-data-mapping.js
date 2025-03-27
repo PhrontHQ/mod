@@ -1112,7 +1112,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             var promises,
                 requisitePropertyNames = this.requisitePropertyNames,
                 unmappedRequisitePropertyNames = new Set(requisitePropertyNames),
-                mappingScope;
+                mappingScope,
+                _rawData;
 
             if(context instanceof DataOperation) {
                 mappingScope = this._scope.nest(context);
@@ -1127,9 +1128,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 TODO: We may need to pass an additional 'mappedProperties' array argument to collect and communicate 
                 back to our service
             */
-            data = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
+            _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
 
-            promises = this._mapRawDataPropertiesToObject(rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties);
+            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties);
             
             /*
                 This is causing problems: as partial aspects of the object are filled-in, the attempts to run mapping rules for object properties on raw data that doesn't contain
@@ -1220,7 +1221,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 || 
                 (
                     //Tell our service we're done
-                    this.service.mappingDidMapRawDataToObject(this, rawData, object, context, mappedProperties)
+                    this.service.mappingDidMapRawDataToObject(this, _rawData, object, context, mappedProperties)
                     ||
                     Promise.resolve(object)
                 );
