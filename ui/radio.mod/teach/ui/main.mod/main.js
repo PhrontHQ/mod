@@ -1,6 +1,3 @@
-var Component = require("mod/ui/component").Component;
+const { Component } = require("mod/ui/component");
 
-exports.Main = Component.specialize(/** @lends Main# */ {
-
-
-});
+exports.Main = class Main extends Component {};
