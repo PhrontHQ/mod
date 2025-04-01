@@ -1052,7 +1052,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                 /*
                                     Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                 */
-                                service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, aRule.propertyDescriptor, result, context, mappingScope);
+                                service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, aRule.propertyDescriptor.name, result, context, mappingScope);
                                 // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ aRule.targetPath +" with value: ",result);
 
                             }
