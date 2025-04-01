@@ -188,7 +188,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 Prefix properties in criteria
             */
             let readOperationCriteria = readOperation.criteria,
-            originDataSnapshotCriteria = readOperationCriteria.criteriaPrefixedWithExpression(`originDataSnapshot.${originDataService.identifier}`);
+            originDataSnapshotCriteria = readOperationCriteria?.criteriaPrefixedWithExpression(`originDataSnapshot.${originDataService.identifier}`);
 
             //We need to create a new DataOperation()
             let originDataSnapshotReadOperation = new DataOperation();
