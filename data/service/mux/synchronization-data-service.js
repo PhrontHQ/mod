@@ -366,6 +366,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         
         if(this.isSyncingObject(dataObject)) {
             //Make sure we register the change
+            if(!this.mainService.isObjectCreated(dataObject)) {
+                this.mainService.registerChangedDataObject(dataObject);
+            }
             this.mainService.changesForDataObject(dataObject).set(propertyName, propertyValue);
         }
         //Here we need to make sure that this is registered by the main service as a change, 
