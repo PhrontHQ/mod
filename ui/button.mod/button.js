@@ -329,7 +329,7 @@ const Button = (exports.Button = class Button extends Control {
     // <---- Life Cycle ---->
 
     enterDocument(firstDraw) {
-        super.enterDocument?.call(firstDraw);
+        super.enterDocument?.call(this, firstDraw);
 
         if (firstDraw) {
             this.element.setAttribute("role", "button");
