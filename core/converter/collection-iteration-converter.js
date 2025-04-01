@@ -2,7 +2,7 @@
  * @module mod/core/converter/collection-iteration-converter
  * @requires mod/core/converter/converter
  */
-var Converter = require("./converter").Converter,
+const Converter = require("./converter").Converter,
     Promise = require("../promise").Promise;
 
 
@@ -146,19 +146,31 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
                 iteration,
                 isConverterFunction = typeof converter === "function",
                 iValue,
+                iConvertedValue,
                 index = 0,
-                result = new value.constructor;
+                promises,
+                result;
 
             while(!(iteration = values.next()).done) {
                 iValue = iteration.value;
-                result.add(
+                iConvertedValue = 
                     isConverterFunction
                         ? converter(iValue,index++,value)
-                        : converter.convert(iValue)
-                );
+                        : converter.convert(iValue);
+
+                if(Promise.is(iConvertedValue)) {
+                    (promises || (promises = [])).push(iConvertedValue);
+                } else {
+                    (result || (result = new value.constructor)).add(iConverctedValue);
+                }
                 index++;
             }
-            return result;
+
+            return !!promises
+            ? promises.length === 1
+                ?  promises[0].then((value) => value)
+                : Promise.all(promises).then((resolvedValues) => resolvedValues.constructor === value.constructor ? resolvedValues : value.constructor.from(resolvedValues))
+            : result;
         }
     },
 
@@ -179,8 +191,10 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
                 iteration,
                 isReverterFunction = typeof reverter === "function",
                 iValue,
+                iConvertedValue,
                 index = 0,
-                result = new value.constructor;
+                promises,
+                result;
 
             if(!isReverterFunction && typeof reverter.revert !== "function") {
                 return value;
@@ -188,14 +202,25 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
 
             while(!(iteration = values.next()).done) {
                 iValue = iteration.value;
-                result.add(
+                iConvertedValue = 
                     isReverterFunction
                         ? reverter(iValue,index++,value)
-                        : reverter.revert(iValue)
-                );
+                        : reverter.revert(iValue);
+
+                if(Promise.is(iConvertedValue)) {
+                    (promises || (promises = [])).push(iConvertedValue);
+                } else {
+                    (result || (result = new value.constructor)).add(iConverctedValue);
+                }
+        
                 index++;
             }
-            return result;
+            
+            return !!promises
+            ? promises.length === 1
+                ?  promises[0].then((value) => value)
+                : Promise.all(promises).then((resolvedValues) => resolvedValues.constructor === value.constructor ? resolvedValues : value.constructor.from(resolvedValues))
+            : result;
         }
     }
 

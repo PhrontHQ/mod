@@ -15,7 +15,8 @@ exports.DataCollectionIterationConverter = class DataCollectionIterationConverte
     static {
 
         Montage.defineProperties(this.prototype, {
-            _currentRule: {value: undefined}
+            _currentRule: {value: undefined},
+            _foreignDescriptor: {value: undefined}
         });
 
     }
@@ -35,6 +36,14 @@ exports.DataCollectionIterationConverter = class DataCollectionIterationConverte
             //Pass down
             this._iterationConverter.currentRule = value;
             this._iterationReverter.currentRule = value;
+        }
+    }
+
+    set foreignDescriptor(value) {
+        if(value !== this._foreignDescriptor) {
+            this._foreignDescriptor = value;
+            //Pass down
+            this._iterationConverter.foreignDescriptor = value;
         }
     }
 }
