@@ -1,26 +1,23 @@
 /**
-    @module "mod/ui/native/checkbox.mod"
-    @requires mod/core/core
-    @requires mod/ui/check-control
-*/
-var CheckControl = require("ui/check-control").CheckControl;
+ * @module "mod/ui/native/checkbox.mod"
+ * @requires mod/ui/check-control
+ */
+const { CheckControl } = require("ui/check-control");
 
 /**
+ *  @class module:"mod/ui/native/checkbox.mod".Checkbox
+ *  @extends module:mod/ui/check-control.CheckControl
+ */
+exports.Checkbox = class Checkbox extends CheckControl {
+    // <---- Properties ---->
 
-    @class module:"mod/ui/native/checkbox.mod".Checkbox
-    @extends module:mod/ui/check-control.CheckControl
-*/
-var Checkbox = exports.Checkbox = CheckControl.specialize({
-    enterDocument: {
-        value: function (firstTime) {
-            this.super(firstTime);
-            if (firstTime) {
-                this.element.setAttribute("role", "checkbox");
-            }
+    hasTemplate = false;
+
+    // <---- Lifecycle Functions ---->
+
+    enterDocument(firstTime) {
+        if (firstTime) {
+            this.element.setAttribute("role", "checkbox");
         }
-    },
-
-    hasTemplate: {
-        value: false
     }
-});
+};

@@ -1,7 +1,7 @@
-var CheckControl = require("../check-control").CheckControl;
+const { CheckControl} = require("../check-control");
 
 /**
  * @class Toggle
  * @extends CheckControl
  */
-var Toggle = exports.Toggle = CheckControl.specialize();
+exports.Toggle = class Toggle extends CheckControl {};
