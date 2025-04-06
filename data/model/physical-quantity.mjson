@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "PhysicalQuantity",
             "propertyDescriptors": [
@@ -23,10 +23,10 @@
         "object": "./physical-quantity"
     },
     "objectDescriptor": {
-        "object": "mod/data/model/data-object.mjson"
+        "object": "data/model/data-object.mjson"
     },
     "value": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "value",
             "valueType": "number"
@@ -36,7 +36,7 @@
         "object": "./unit.mjson"
     },
     "unit": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "unit",
             "cardinality": 1,
@@ -50,7 +50,7 @@
         "object": "./physical-dimension.mjson"
     },
      "dimension": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "dimension",
             "cardinality": 1,
