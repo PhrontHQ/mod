@@ -29,7 +29,15 @@ exports.DataObject = class DataObject extends Target {
     static {
 
         Montage.defineProperties(this.prototype, {
-            
+
+            /**
+             * The full moduleId of the object, starting by the name of the package it belongs to
+             *
+             * @property {Object}
+             * @default null
+             */
+            fullModuleId: { value: undefined},
+
             /**
              * Stores the latest known data snapshot from an origin service it was imported from. 
              * An entry per origin data service contains the data snapshot from that origin
@@ -53,10 +61,35 @@ exports.DataObject = class DataObject extends Target {
              * which is the equivalent of the role of the prototype in JavaScript: 
              * an object one derived from
              *
-             * @property {String}
-             * @default undefined
+             * @property {boolean}
+             * @default false
              */
             isType: { value: false},
+
+            /**
+             * The reference to what would be an object's prototype in JavaScript: 
+             * A unique instance of parent class that defines common characteristics for all objects of that type
+             *
+             * @property {Object}
+             * @default undefined
+             */
+            type: { value: false},
+
+            /**
+             * All instances of this class and/or subclasses that are also used as types
+             *
+             * @property {Array<Object>}
+             * @default undefined
+             */
+            subtypes: { value: false},
+
+            /**
+             * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
+             *
+             * @property {Array<Object>}
+             * @default undefined
+             */
+            typeInstances: { value: false},
 
             /**
              * If true, indicates that an instance is used by others as a source of default values
@@ -65,6 +98,23 @@ exports.DataObject = class DataObject extends Target {
              * @default undefined
              */
             isTemplate: { value: false},
+
+            /**
+             * The reference to another obect of the same class that acts as a template, 
+             * providing default values
+             *
+             * @property {Object}
+             * @default undefined
+             */
+            template: { value: false},
+
+            /**
+             * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
+             *
+             * @property {Array<Object>}
+             * @default undefined
+             */
+            templateInstances: { value: false},
 
             /**
              * The description of what a data object is

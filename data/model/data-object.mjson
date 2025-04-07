@@ -4,17 +4,20 @@
         "values": {
             "name": "DataObject",
             "propertyDescriptors": [
-                {"@": "type"},
-                {"@": "subtypes"},
+                {"@": "fullModuleId"},
                 {"@": "date"},
                 {"@": "originId"},
                 {"@": "originDataSnapshot"},
                 {"@": "description"},
                 {"@": "isType"},
-                {"@": "kinds"},
+                {"@": "type"},
+                {"@": "subtypes"},
+                {"@": "typeInstances"},
                 {"@": "isTemplate"},
+                {"@": "template"},
                 {"@": "templateName"},
                 {"@": "templateDescription"},
+                {"@": "templateInstances"},
                 {"@": "creationDate"},
                 {"@": "creatorIdentity"},
                 {"@": "modificationDate"},
@@ -38,11 +41,20 @@
         "object": "core/montage.mjson"
     },
 
+    "fullModuleId": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "fullModuleId",
+            "valueType": "string",
+            "description": "The moduleId of the object descriptor for that instance"
+        }
+    },
+
     "type": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "type",
-            "valueDescriptor": {"=": "@root.parent"},
+            "valueDescriptor": {"=": "@root"},
             "description": "The reference to what would be an object's prototype in JavaScript: A unique instance of parent class that defines common characteristics for all objects of that type"
         }
     },
@@ -58,10 +70,10 @@
         }
     },
 
-    "kinds": {
+    "typeInstances": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "kinds",
+            "name": "typeInstances",
             "valueType": "array",
             "cardinality": -1,
             "inversePropertyName": "type",
@@ -78,7 +90,8 @@
             "cardinality": -1,
             "inversePropertyName": "type",
             "valueDescriptor": {"@": "root"},
-            "description": "All instances of this class' subclasses that are also used as types, meaning the value of their property 'isType' is true"
+            "definition": "typeInstances.filter{isType == true}",
+            "description": "All instances of this class and or subclasses that are also used as types"
         }
     },
 
@@ -135,13 +148,23 @@
         }
     },
 
+    "template": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "template",
+            "valueDescriptor": {"=": "@root"},
+            "description": "The reference to another obect of the same class that acts as a template, providing default values"
+        }
+    },
+
     "templateName": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "templateName",
             "isLocalizable": true,
             "isUnique": true,
-            "valueType": "string"
+            "valueType": "string",
+            "description": "A name to be used when an object is created to be a template for others"
         }
     },
 
@@ -150,7 +173,20 @@
         "values": {
             "name": "templateDescription",
             "isLocalizable": true,
-            "valueType": "string"
+            "valueType": "string",
+            "description": "Explanations of the role, context, added value... a template has for others"
+        }
+    },
+
+    "templateInstances": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "templateInstances",
+            "valueType": "array",
+            "cardinality": -1,
+            "inversePropertyName": "template",
+            "valueDescriptor": {"@": "root"},
+            "description": "All instances of that class that use this object as their template"
         }
     },
 
