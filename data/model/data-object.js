@@ -151,41 +151,66 @@ exports.DataObject = class DataObject extends Target {
             super.deserializeSelf(deserializer);
         }
 
-        var value;
-        value = deserializer.getProperty("originId");
-        if (value !== void 0) {
-            this.originId = value;
-        }
-        value = deserializer.getProperty("originDataSnapshot");
-        if (value !== void 0) {
-            this.originDataSnapshot = value;
+
+        /*
+            Can't use this unless we know that this.objectDescriptor is available to us
+        */
+        if(this.objectDescriptor) {
+            let propertyDescriptors = this.objectDescriptor.propertyDescriptors;
+
+            //for (let i=0, iPropertyDescriptor = 0, iValue, countI = propertyDescriptors.length; i < countI; i++) {
+            for (let iPropertyDescriptor of propertyDescriptors) {
+                if(deserializer.hasProperty(iPropertyDescriptor.name)) {
+                    this[iPropertyDescriptor.name] = deserializer.getProperty(iPropertyDescriptor.name);
+                }
+                // let iValue = deserializer.getProperty(iPropertyDescriptor.name);
+                // if (iValue !== void 0) {
+                //     this[iPropertyDescriptor.name] = iValue;
+                // }
+            }    
+        } 
+        /*
+            Backward compatibility, only run if we don't have an objectDescriptor
+        */
+        else {
+            var value;
+            value = deserializer.getProperty("originId");
+            if (value !== void 0) {
+                this.originId = value;
+            }
+            value = deserializer.getProperty("originDataSnapshot");
+            if (value !== void 0) {
+                this.originDataSnapshot = value;
+            }
+    
+            value = deserializer.getProperty("isType");
+            if (value !== void 0) {
+                this.isType = value;
+            }
+            value = deserializer.getProperty("isTemplate");
+            if (value !== void 0) {
+                this.isTemplate = value;
+            }
+    
+            value = deserializer.getProperty("description");
+            if (value !== void 0) {
+                this.description = value;
+            }
+            value = deserializer.getProperty("creationDate");
+            if (value !== void 0) {
+                this.creationDate = value;
+            }
+            value = deserializer.getProperty("modificationDate");
+            if (value !== void 0) {
+                this.modificationDate = value;
+            }
+            value = deserializer.getProperty("publicationDate");
+            if (value !== void 0) {
+                this.publicationDate = value;
+            }
+    
         }
 
-        value = deserializer.getProperty("isType");
-        if (value !== void 0) {
-            this.isType = value;
-        }
-        value = deserializer.getProperty("isTemplate");
-        if (value !== void 0) {
-            this.isTemplate = value;
-        }
-
-        value = deserializer.getProperty("description");
-        if (value !== void 0) {
-            this.description = value;
-        }
-        value = deserializer.getProperty("creationDate");
-        if (value !== void 0) {
-            this.creationDate = value;
-        }
-        value = deserializer.getProperty("modificationDate");
-        if (value !== void 0) {
-            this.modificationDate = value;
-        }
-        value = deserializer.getProperty("publicationDate");
-        if (value !== void 0) {
-            this.publicationDate = value;
-        }
 
     }
 
