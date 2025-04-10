@@ -41,25 +41,34 @@
      * FIXME: Hide temporally empty elements wait for this pr to be merged: 
      * https://github.com/PhrontHQ/mod/pull/37 
      */
-    > div:empty {
+    >div:empty {
         display: none;
     }
 
     /* Visual Specifications */
 
-    > .ModButton-visual {
+    >.ModButton-visual {
         position: relative;
     }
 
-    > svg.ModButton-visual {
+    >svg.ModButton-visual {
         fill: currentColor;
     }
 
-    /* Pending State */
+    /* States */
 
+    &.mod--disabled,
     &.mod--pending {
         pointer-events: none;
+    }
+
+    &.mod--pending {
         /* FIXME: Temporary arbitrary values, waiting for Button Themes */
         opacity: 0.75;
+    }
+
+    &.mod--disabled {
+        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+        opacity: 0.5;
     }
 }
