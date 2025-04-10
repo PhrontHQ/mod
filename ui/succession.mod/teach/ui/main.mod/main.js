@@ -52,6 +52,37 @@ exports.Main = Component.specialize({
         }
     },
 
+    transitioningPromiseStatus: {
+        value: null
+    },
+
+    _transitioningPromise: {
+        value: null
+    },
+
+    transitioningPromise: {
+        set: function (value) {
+            if (this._transitioningPromise !== value) {
+                this._transitioningPromise = value;
+
+                if (value ) {
+                    const handlePromise =  () => {
+                        if (handlePromise.promise === value) {
+                            this.transitioningPromiseStatus = "resolved";
+                            this._transitioningPromise = null;
+                        }
+                    };
+
+                    this.transitioningPromiseStatus = "pending";
+                    handlePromise.promise = value;
+                    value.finally(handlePromise);
+                } else {
+                    this.transitioningPromiseStatus = null;
+                }
+            }
+        }
+    },
+
     barCount: {
         value: 0
     },
@@ -164,7 +195,7 @@ exports.Main = Component.specialize({
 
     handlePushx5Action: {
         value: function () {
-            var numberOfPushes = 10,
+            var numberOfPushes = 5,
                 self = this;
 
             var pushInterval = setInterval(function () {
@@ -192,7 +223,7 @@ exports.Main = Component.specialize({
                 if (numberOfPops === 0) {
                     clearInterval(popInterval);
                 }
-            }, 750);
+            }, 50);
 
         }
     },

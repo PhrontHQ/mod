@@ -7,7 +7,7 @@ var Component = require("ui/component").Component;
  * Subclasses Component for its `domContent` behavior.
  *
  * If passage properties are defined on the Succession, they will override children's.
- * See {@link Succession#_prepareForBuild}.
+ * See {@link Succession#_prepareComponentsForBuild}.
  *
  * @class Succession
  * @augments Component
@@ -90,16 +90,23 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * @private
      * @function
      */
-    _prepareForBuild: {
-        value: function (content) {
-            if (content) {
+    _prepareComponentForBuild: {
+        value: function (component) {
+            if (component) {
                 if (this.contentBuildInAnimation) {
-                    content.buildInAnimationOverride = this.contentBuildInAnimation;
+                    component.buildInAnimationOverride = this.contentBuildInAnimation;
                 }
+
                 if (this.contentBuildOutAnimation) {
-                    content.buildOutAnimationOverride = this.contentBuildOutAnimation;
+                    component.buildOutAnimationOverride = this.contentBuildOutAnimation;
                 }
             }
+        }
+    },
+
+    _prepareComponentsForBuild: {
+        value: function (components = []) {
+            components.forEach(this._prepareComponentForBuild, this);
         }
     },
 
@@ -130,6 +137,132 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
         }
     },
 
+    _isTransitioning: {
+        value: false
+    },
+
+    /**
+     * Whether the Succession is transitioning between history changes.
+     * @property {boolean}
+     * @default false
+     * @readonly
+     */
+    isTransitioning: {
+        get: function () {
+            return this._isTransitioning;
+        }
+    },
+
+    _transitioningPromise: {
+        value: null
+    },
+
+    /**
+     * A promise that resolves when the Succession is done transitioning.
+     * @property {Promise}
+     * @readonly
+     */
+    transitioningPromise: {
+        get: function () {
+            return this._transitioningPromise;
+        }
+    },
+
+    _transitioningPromiseResolver: {
+        value: null,
+        writable: true
+    },
+
+    /**
+     * Updates the transitioning status of the Succession.
+     * @param {boolean} value - The new transitioning status.
+     * @throws {TypeError} If the value is not a boolean.
+     * @private
+     */
+    _setTransitioningStatus: {
+        value: function (value) {
+            if (typeof value !== "boolean") {
+                throw new TypeError("Transitioning status must be a boolean.");
+            }
+
+            if (value !== this._isTransitioning) {
+                this.dispatchBeforeOwnPropertyChange("isTransitioning", this._isTransitioning);
+                this._isTransitioning = value;
+                this.dispatchOwnPropertyChange("isTransitioning", value);
+
+                // Update the transitioning promise.
+                this.dispatchBeforeOwnPropertyChange("transitioningPromise", this._transitioningPromise);
+
+                if (!value && this._transitioningPromise) {
+                    this._transitioningPromiseResolver();
+                    this._transitioningPromiseResolver = null;
+                    this._transitioningPromise = null;
+                } else {
+                    this._transitioningPromise = new Promise(resolve => {
+                        this._transitioningPromiseResolver = resolve;
+                    });
+                }
+
+                this.dispatchOwnPropertyChange("transitioningPromise", this._transitioningPromise);
+            }
+        }
+    },
+
+    /**
+     * Checks if any component in history is transitioning and updates the transitioning status.
+     * @private
+     */
+    _checkTransitioningStatus: {
+        value: function () {
+            if (this._isTransitioning) {
+                this._setTransitioningStatus(this._isAnyComponentInTransition());
+            }
+        }
+    },
+
+    /**
+     * Checks if any component in history is transitioning.
+     * @private
+     */
+    _isAnyComponentInTransition: {
+        value: function () {
+            return this.history.some(({ currentBuildAnimation }) => !!currentBuildAnimation);
+        }
+    },
+
+    /**
+     * Checks if any component in the given children has animations (build-in or build-out).
+     * @private
+     */
+    _hasComponentsWithAnimations: {
+        value: function (children = this.history) {
+            return children.some(({
+                buildOutAnimationOverride,
+                buildInAnimationOverride,
+                buildOutAnimation,
+                buildInAnimation,
+             }) => {
+                if (buildOutAnimationOverride) buildOutAnimation = buildOutAnimationOverride;
+                if (buildInAnimationOverride) buildInAnimation = buildInAnimationOverride;
+
+                return (
+                    this._isAnimationDefinedAndNonEmpty(buildOutAnimation) ||
+                    this._isAnimationDefinedAndNonEmpty(buildInAnimation)
+                );
+            });
+        }
+    },
+
+    /**
+     * Checks if an animation is defined and non-empty.
+     * @private
+     */
+    _isAnimationDefinedAndNonEmpty: {
+        value: function (animation) {
+            return !!(animation && Object.keys(animation).length > 0);
+        }
+    },
+
     // =============================================================================================
     // Event Handlers
     // =============================================================================================
@@ -140,9 +273,10 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      */
     handleRangeWillChange: {
         value: function (plus, minus, index) {
-            this._prepareForBuild(this.content);
+            this._prepareComponentForBuild(this.content);
         }
     },
+
     /**
      * Sets classes on Succession depending on how history was changed
      * Prepare incoming content
@@ -165,16 +299,33 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this.classList[isPop ? "add" : "remove"]("mod-Succession--pop");
                 this.classList[isReplace ? "add" : "remove"]("mod-Succession--replace");
                 this.classList[isClear ? "add" : "remove"]("mod-Succession--clear");
-                this._prepareForBuild(this.content);
+                this._prepareComponentForBuild(this.content);
+
+                // Update the Succession's content.
                 this.dispatchBeforeOwnPropertyChange("content", this.content);
                 this._updateDomContentWith(this.content);
                 this.dispatchOwnPropertyChange("content", this.content);
+
+                const affectedComponents = [...plus, ...minus];
+
+                // As we only prepare the incoming and outgoing components for build and if there are multiple affected
+                // components (e.g., during a complex history change, like a `clear()`), we need to ensure that all
+                // components in between are also prepared for build. This guarantees that animation overrides are
+                // applied consistently across all relevant components.
+                if (affectedComponents.length > 1) {
+                    this._prepareComponentsForBuild(affectedComponents);
+                }
+
+                // Let's determine if the Succession should be marked as transitioning.
+                let hasComponentsWithAnimations = this._hasComponentsWithAnimations(affectedComponents);
+                this._setTransitioningStatus(hasComponentsWithAnimations);
             }
         }
     },
 
     handleBuildInEnd: {
         value: function (event) {
+            this._checkTransitioningStatus();
             this.needsCssClassCleanup = true;
             this.needsDraw = true;
         }
@@ -182,6 +333,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
 
     handleBuildOutEnd: {
         value: function (event) {
+            this._checkTransitioningStatus();
             this.needsCssClassCleanup = true;
             this.needsDraw = true;
         }
