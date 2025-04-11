@@ -10,15 +10,14 @@ const { CheckControl } = require("ui/check-control");
  * @extends module:mod/ui/check-input.CheckInput
  */
 exports.Radio = class Radio extends CheckControl {
-    // <---- Properties ---->
-
-    drawsFocusOnPointerActivation = true;
-
-    _radioButtonController = null;
-
-    _keyComposer = null;
-
-    hasTemplate = false;
+    static {
+        Montage.defineProperties(this.prototype, {
+            drawsFocusOnPointerActivation: { value: true },
+            _radioButtonController: { value: null },
+            _keyComposer: { value: null },
+            hasTemplate: { value: false },
+        });
+    }
 
     /**
      * The radio button controller that ensures that only one radio button in

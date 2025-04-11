@@ -13,23 +13,23 @@ const { Control } = require("ui/control");
  * @extends module:mod/ui/control.Control
  */
 exports.CheckControl = class CheckControl extends Control {
-    // <---- Properties ---->
-
-    /**
-     * Stores if we need to "fake" checking of the input element.
-     *
-     * When preventDefault is called on touchstart and touchend events (e.g. by
-     * the scroller component) the checkbox doesn't check itself, so we need
-     * to fake it later.
-     *
-     * @default false
-     * @private
-     */
-    _shouldFakeCheck = false;
-
-    _pressComposer = null;
-
-    checkedClassName = null;
+    static {
+        Montage.defineProperties(this.prototype, {
+            /**
+             * Stores if we need to "fake" checking of the input element.
+             *
+             * When preventDefault is called on touchstart and touchend events (e.g. by
+             * the scroller component) the checkbox doesn't check itself, so we need
+             * to fake it later.
+             *
+             * @default false
+             * @private
+             */
+            _shouldFakeCheck: { value: false },
+            _pressComposer: { value: null },
+            checkedClassName: { value: null },
+        });
+    }
 
     constructor() {
         super();

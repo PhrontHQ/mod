@@ -9,9 +9,11 @@ const { CheckControl } = require("ui/check-control");
  *  @extends module:mod/ui/check-control.CheckControl
  */
 exports.Checkbox = class Checkbox extends CheckControl {
-    // <---- Properties ---->
-
-    hasTemplate = false;
+    static {
+        Montage.defineProperties(this.prototype, {
+            hasTemplate: { value: false }
+        });
+    }
 
     // <---- Lifecycle Functions ---->
 
