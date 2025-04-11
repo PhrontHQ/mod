@@ -2576,11 +2576,12 @@ Component.addClassProperties(
                 throw validation;
             }
 
-            for (var key in parameters) {
+            for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
 
                     parameterElement = parameters[key];
                     argument = templateArguments ? templateArguments[key] : void 0;
+
 
                     if ((key === "*") /** || (key === "each") */) {
                         if (this._element.childElementCount === 0 &&
@@ -2633,6 +2634,9 @@ Component.addClassProperties(
                         for (i = 0; (component = components[i]); i++) {
                             component.attachToParentComponent();
                         }
+                    } else {
+                        // Remove the parameter element if there is no argument for it.
+                        parameterElement.parentNode.removeChild(parameterElement);
                     }
                 }
             }
