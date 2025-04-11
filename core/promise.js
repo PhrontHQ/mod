@@ -127,17 +127,8 @@ if(!Promise.timeout) {
 }
 
 if (!Promise.hasOwnProperty("delay")) {
-
     Object.defineProperty(Promise, "delay", {
-        value: function PromiseDelay(delay) {
-            return new Promise(function(resolve, reject){
-                var timerId = setTimeout(function() {
-                    clearTimeout(timerId);
-                    resolve();
-                    timerId = null;
-                }, delay);
-            });
-        },
+        value: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
         enumerable: false
     });
 }
