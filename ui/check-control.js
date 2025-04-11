@@ -36,6 +36,9 @@ exports.CheckControl = class CheckControl extends Control {
         const bindings = {};
 
         // Add default binding
+        this._addCheckedClassNameToBindings("mod--checked", bindings);
+
+        // TODO: deprecated
         this._addCheckedClassNameToBindings("montage--checked", bindings);
 
         // Add custom binding if a custom class name is provided

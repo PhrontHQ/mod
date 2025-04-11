@@ -19,7 +19,8 @@
 
     /* States --------------------- */
 
-    &.montage--checked {
+    &.montage--checked,
+    &.mod--checked {
         background-color: #32db64;
         border-color: transparent;
 
