@@ -2576,7 +2576,7 @@ Component.addClassProperties(
                 throw validation;
             }
 
-            for (const key in parameters) {
+            for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
 
                     parameterElement = parameters[key];
