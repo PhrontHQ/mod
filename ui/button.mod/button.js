@@ -163,21 +163,18 @@ const Button = (exports.Button = class Button extends Control {
             // Set up pending state when promise is set
             this.classList.add("mod--pending");
 
-            // Create a closure to handle promise resolution
-            const handleResolution = () => {
-                // Only clear pending state if this is still the current promise
-                if (handleResolution.originalPromise === this._promise) {
+            // Store reference to track this specific promise
+            const currentTrackedPromise = promise;
+            
+            // Clear state when promise resolves/rejects
+            // TODO: we should propably add an error state?...
+            promise.finally(() => {
+                // Only clear if this is still the active promise
+                if (this._promise === currentTrackedPromise) {
                     this.classList.remove("mod--pending");
                     this._promise = undefined;
                 }
-            };
-
-            // Store reference to the original promise for comparison
-            handleResolution.originalPromise = promise;
-
-            // Ensure pending state is cleared even on rejection
-            // TODO: we should propably add an error state?...
-            promise.finally(handleResolution);
+            });
         } else if (shouldClearPendingState) {
             // Clear pending state when the current promise is set to null
             this.classList.remove("mod--pending");

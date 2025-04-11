@@ -30,18 +30,29 @@ exports.Main = class Main extends Component {
             await this.promise;
             this.message = "Third Promise resolved! This should not happen.";
         } catch (error) {
-            this.message = `Third Promise rejected! Wait 5 seconds, the fourth Promise will be cleared before resolving it.`;
+            this.message = `Third Promise rejected! Wait 2.5s before the fourth Promise begins...`;
         }
 
-        this.promiseButtonDisabled = true;
         await Promise.delay(2_500);
 
         this.promise = Promise.delay(5_000);
+        this.message = "Fourth Promise is pending resolution. Wait 2.5 seconds to be cleared before resolving it...";
 
-        setTimeout(() => {
+        setTimeout(async () => {
             this.promise = null;
-            this.promiseButtonDisabled = false;
-            this.message = `Fourth promise cleared before resolving it!`;
+            this.message = `Fourth promise cleared before resolving it! Wait 4 seconds for the fifth Promise to be replaced...`;
+
+            this.promise = Promise.delay(10_000).then(() => {
+                this.message = "Fifth Promise resolved! but had no effect on the button";
+                throw new Error("Promise rejected");
+            });
+
+            await Promise.delay(4_000);
+
+            this.promise = Promise.delay(2_000);
+            this.message = "Fifth Promise has been replaced! Wait 2 seconds for the sixth Promise to resolve...";
+            await this.promise;
+            this.message = "Sixth Promise resolved! Wait 4 seconds for the Fifth Promise to resolve...";
         }, 2_500);
     }
 };
