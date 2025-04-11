@@ -5,6 +5,7 @@
  */
 const { PressComposer } = require("composer/press-composer");
 const { Control } = require("ui/control");
+const { Montage } = require("core/core");
 
 /**
  * The base class for the Checkbox component. You will not typically create

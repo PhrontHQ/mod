@@ -3,6 +3,7 @@
  */
 const { KeyComposer } = require("../../composer/key-composer");
 const { CheckControl } = require("ui/check-control");
+const { Montage } = require("core/core");
 
 /**
  * Wraps the a &lt;input type="radio"> element with binding support for the element's standard attributes.

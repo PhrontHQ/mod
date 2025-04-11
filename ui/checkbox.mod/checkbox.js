@@ -3,6 +3,7 @@
  * @requires mod/ui/check-control
  */
 const { CheckControl } = require("ui/check-control");
+const { Montage } = require("core/core");
 
 /**
  *  @class module:"mod/ui/native/checkbox.mod".Checkbox
