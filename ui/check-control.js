@@ -1,188 +1,177 @@
 /*global require, exports */
 
 /**
-    @module mod/ui/check-control
-*/
-var Control = require("ui/control").Control,
-    PressComposer = require("composer/press-composer").PressComposer;
+ *   @module mod/ui/check-control
+ */
+const { PressComposer } = require("composer/press-composer");
+const { Control } = require("ui/control");
+const { Montage } = require("core/core");
 
 /**
-    The base class for the Checkbox component. You will not typically create this class directly but instead use the Checkbox component.
-    @class module:mod/ui/check-input.CheckControl
-    @extends module:mod/ui/control.Control
-*/
-exports.CheckControl =  Control.specialize({
-    constructor: {
-        value: function CheckControl() {
+ * The base class for the Checkbox component. You will not typically create
+ * this class directly but instead use the Checkbox component.
+ * @class module:mod/ui/check-input.CheckControl
+ * @extends module:mod/ui/control.Control
+ */
+exports.CheckControl = class CheckControl extends Control {
+    static {
+        Montage.defineProperties(this.prototype, {
+            /**
+             * Stores if we need to "fake" checking of the input element.
+             *
+             * When preventDefault is called on touchstart and touchend events (e.g. by
+             * the scroller component) the checkbox doesn't check itself, so we need
+             * to fake it later.
+             *
+             * @default false
+             * @private
+             */
+            _shouldFakeCheck: { value: false },
+            _pressComposer: { value: null },
+            checkedClassName: { value: null },
+        });
+    }
 
-            this.defineBindings({
-                "classList.has('montage--checked')": {
-                     "<-": "checked"
-                }
-            });
+    constructor() {
+        super();
+        const bindings = {};
 
-            var leftExpression = "classList.has('",
-                bindings = {};
-            leftExpression += this.checkedClassName;
-            leftExpression += "')";
-            bindings[leftExpression] = {
-                    "<-": "checked"
-            };
+        // Add default binding
+        this._addCheckedClassNameToBindings("mod--checked", bindings);
 
-            this.defineBindings(bindings);
+        // TODO: deprecated
+        this._addCheckedClassNameToBindings("montage--checked", bindings);
+
+        // Add custom binding if a custom class name is provided
+        if (this.checkedClassName) {
+            this._addCheckedClassNameToBindings(this.checkedClassName, bindings);
         }
-    },
 
-    // HTMLInputElement methods
+        this.defineBindings(bindings);
+    }
 
-    // click() deliberately omitted, use checked = instead
+    // <---- Public Functions ---->
 
-    // Callbacks
-    draw: {
-        value: function() {
-            this.super();
-            this._element.setAttribute("aria-checked", this._checked);
-        }
-    },
+    toggleChecked() {
+        if (this.disabled) return;
 
-    _pressComposer: {
-        enumerable: false,
-        value: null
-    },
+        this.checked = !this.checked;
+        this.dispatchActionEvent();
+    }
 
-    prepareForActivationEvents: {
-        value: function() {
-            var pressComposer = this._pressComposer = new PressComposer();
-            this.addComposer(pressComposer);
-            pressComposer.addEventListener("pressStart", this, false);
-            pressComposer.addEventListener("press", this, false);
-            pressComposer.addEventListener("cancel", this, false);
-            this._element.addEventListener('change', this);
-        }
-    },
+    // <---- Event Handlers ---->
 
-    toggleChecked: {
-        value: function () {
-            if (this.disabled) {
-                return;
-            }
-            this.checked = !this.checked;
-            this.dispatchActionEvent();
-        }
-    },
+    handlePressStart(event) {
+        if (this.hasStandardElement) {
+            this._shouldFakeCheck = event.defaultPrevented;
+        } else {
+            this.active = true;
 
-    /**
-    Fake the checking of the element.
-
-    Changes the checked property of the element and dispatches a change event.
-    Radio button overrides this.
-
-    @private
-    */
-    _fakeCheck: {
-        enumerable: false,
-        value: function() {
-            var changeEvent;
-            // NOTE: this may be BAD, modifying the element outside of
-            // the draw loop, but it's what a click/touch would
-            // actually have done
-            this._element.checked = !this._element.checked;
-            changeEvent = document.createEvent("HTMLEvents");
-            changeEvent.initEvent("change", true, true);
-            this._element.dispatchEvent(changeEvent);
-        }
-    },
-
-    /**
-    Stores if we need to "fake" checking of the input element.
-
-    When preventDefault is called on touchstart and touchend events (e.g. by
-    the scroller component) the checkbox doesn't check itself, so we need
-    to fake it later.
-
-    @default false
-    @private
-    */
-    _shouldFakeCheck: {
-        enumerable: false,
-        value: false
-    },
-
-    // Handlers
-
-    handlePressStart: {
-        value: function(event) {
-            if (this.hasStandardElement){
-                this._shouldFakeCheck = event.defaultPrevented;
-            }
-            else {
-                this.active = true;
-
-                if (event.touch) {
-                    // Prevent default on touchmove so that if we are inside a scroller,
-                    // it scrolls and not the webpage
-                    document.addEventListener("touchmove", this, false);
-                }
-            }
-
-        }
-    },
-
-
-    handlePress: {
-        value: function(event) {
-            if (this._shouldFakeCheck) {
-                this._shouldFakeCheck = false;
-                this._fakeCheck();
-            }
-
-            if (!this.hasStandardElement) {
-                this.active = false;
-                this.toggleChecked();
-
-            }
-
-        }
-    },
-
-    handlePressCancel: {
-        value: function (/* event */) {
-            if (!this.hasStandardElement) {
-                this.active = false;
-                document.removeEventListener("touchmove", this, false);
-            }
-        }
-    },
-
-    handleChange: {
-        enumerable: false,
-        value: function(event) {
-            if (!this._pressComposer || this._pressComposer.state !== PressComposer.CANCELLED) {
-                Object.getPropertyDescriptor(this, "checked").set.call(this,
-                    this.element.checked, true);
-                this.dispatchActionEvent();
+            if (event.touch) {
+                // Prevent default on touchmove so that if we are inside a scroller,
+                // it scrolls and not the webpage
+                document.addEventListener("touchmove", this, false);
             }
         }
     }
+
+    handlePress(_) {
+        if (this._shouldFakeCheck) {
+            this._shouldFakeCheck = false;
+            this._fakeCheck();
+        }
+
+        if (!this.hasStandardElement) {
+            this.active = false;
+            this.toggleChecked();
+        }
+    }
+
+    handlePressCancel(_) {
+        if (!this.hasStandardElement) {
+            this.active = false;
+            document.removeEventListener("touchmove", this, false);
+        }
+    }
+
+    handleChange(_) {
+        if (!this._pressComposer || this._pressComposer.state !== PressComposer.CANCELLED) {
+            Object.getPropertyDescriptor(this, "checked").set.call(this, this.element.checked, true);
+            this.dispatchActionEvent();
+        }
+    }
+
+    // <---- Lifecycle Functions ---->
+
+    /**
+     * Prepares the component for activation events.
+     * @override
+     * @protected
+     */
+    prepareForActivationEvents() {
+        this._pressComposer = new PressComposer();
+        this.addComposer(this._pressComposer);
+
+        this._pressComposer.addEventListener("pressStart", this, false);
+        this._pressComposer.addEventListener("press", this, false);
+        this._pressComposer.addEventListener("cancel", this, false);
+        this._element.addEventListener("change", this);
+    }
+
+    draw() {
+        super.draw();
+        this._element.setAttribute("aria-checked", this._checked);
+    }
+
+    // <---- Private Functions ---->
+
+    /**
+     * @private
+     */
+    _addCheckedClassNameToBindings(className, bindings = {}) {
+        const expression = `classList.has('${className}')`;
+        bindings[expression] = { "<-": "checked" };
+
+        return bindings;
+    }
+
+    /**
+     * Fake the checking of the element.
+     *
+     * Changes the checked property of the element and dispatches a change event.
+     * Radio button overrides this.
+     *
+     * @private
+     */
+    _fakeCheck() {
+        // NOTE: this may be BAD, modifying the element outside of
+        // the draw loop, but it's what a click/touch would
+        // actually have done
+        this._element.checked = !this._element.checked;
+
+        const changeEvent = new Event("change", {
+            cancelable: true,
+            bubbles: true,
+        });
+
+        this._element.dispatchEvent(changeEvent);
+    }
+};
+
+exports.CheckControl.addAttributes({
+    /** @lends module:"mod/ui/native/check-control".InputCheckbox# */
+
+    /**
+     * Specifies if the checkbox is in it checked state or not.
+     * @type {boolean}
+     * @default false
+     */
+    checked: { value: false, dataType: "boolean" },
+
+    /**
+     * The value associated with the element.
+     * @type {string}
+     * @default "on"
+     */
+    value: { value: "on" },
 });
-
-exports.CheckControl.addAttributes( /** @lends module:"mod/ui/native/check-control".InputCheckbox# */ {
-
-
-/**
-    Specifies if the checkbox is in it checked state or not.
-    @type {boolean}
-    @default false
-*/
-    checked: {value: false, dataType: 'boolean'},
-
-/**
-    The value associated with the element.
-    @type {string}
-    @default "on"
-*/
-    value: {value: 'on'}
-
-
-});
-
