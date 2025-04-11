@@ -27,14 +27,14 @@ h4 {
     margin: 40px 0;
 }
 
-.mod-toggle.montage--checked.blue {
+.mod-toggle.mod--checked.blue {
     background-color: #488aff;
 }
 
-.mod-toggle.montage--checked.red {
+.mod-toggle.mod--checked.red {
     background-color: #f53d3d;
 }
 
-.mod-toggle.montage--checked.yellow {
+.mod-toggle.mod--checked.yellow {
     background-color: #ffc527;
 }
