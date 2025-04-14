@@ -2636,7 +2636,7 @@ Component.addClassProperties(
                         }
                     } else {
                         // Remove the parameter element if there is no argument for it.
-                        parameterElement.parentNode.removeChild(parameterElement);
+                        parameterElement.parentNode?.removeChild(parameterElement);
                     }
                 }
             }
