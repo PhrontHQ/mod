@@ -137,6 +137,10 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
         }
     },
 
+    preventUserInteractionOnTransition: {
+        value: true
+    },
+
     _isTransitioning: {
         value: false
     },
@@ -364,6 +368,25 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
             if (isFirstTime) {
                 this.addEventListener("buildInEnd", this);
                 this.addEventListener("buildOutEnd", this);
+            }
+
+            this.element.addEventListener("pointerdown", this, { capture: true });
+        }
+    },
+
+    exitDocument: {
+        value: function () {
+            this.element.removeEventListener("pointerdown", this, { capture: true });
+        }
+    },
+
+    capturePointerdown: {
+        value: function (event) {
+            // Prevent default behavior if the Succession is transitioning.
+            // This is to avoid any unwanted interactions during the transition.
+            if (this.preventUserInteractionOnTransition && this.isTransitioning) {
+                event.stopImmediatePropagation();
+                event.preventDefault();
             }
         }
     },
