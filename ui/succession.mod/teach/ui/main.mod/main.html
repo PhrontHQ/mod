@@ -147,14 +147,14 @@
             "prototype": "mod/ui/text.mod",
             "values": {
                 "element": {"#": "buildInOverride"},
-                "value": {"<-": "@succession1.contentBuildInCssClass || 'none'"}
+                "value": {"<-": "!!@succession1.contentBuildInAnimation || 'none'"}
             }
         },
         "buildOutOverride": {
             "prototype": "mod/ui/text.mod",
             "values": {
                 "element": {"#": "buildOutOverride"},
-                "value": {"<-": "@succession1.contentBuildOutCssClass || 'none'"}
+                "value": {"<-": "!!@succession1.contentBuildOutAnimation || 'none'"}
             }
         },
         "displayTitle": {
