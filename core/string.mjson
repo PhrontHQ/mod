@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "String",
             "propertyDescriptors": [
@@ -20,7 +20,7 @@
     },
 
     "length": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "length",
             "valueType": "number"
