@@ -1677,6 +1677,9 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         get aliases() {
             return this._aliases || (this._aliases = [this.property]);
         },
+        get fullModuleId() {
+            return `${this.packageName}/${this.module}`
+        },
         _aliases: null,
         isInstance: false
     };
