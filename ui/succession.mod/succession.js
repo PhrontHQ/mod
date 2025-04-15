@@ -7,7 +7,7 @@ var Component = require("ui/component").Component;
  * Subclasses Component for its `domContent` behavior.
  *
  * If passage properties are defined on the Succession, they will override children's.
- * See {@link Succession#_prepareForBuild}.
+ * See {@link Succession#_prepareContentForBuild}.
  *
  * @class Succession
  * @augments Component
@@ -90,7 +90,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * @private
      * @function
      */
-    _prepareForBuild: {
+    _prepareContentForBuild: {
         value: function (content) {
             if (content) {
                 if (this.contentBuildInAnimation) {
@@ -100,6 +100,12 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                     content.buildOutAnimationOverride = this.contentBuildOutAnimation;
                 }
             }
+        }
+    },
+
+    _prepareContentsForBuild: {
+        value: function (contents = []) {
+            contents.forEach(this._prepareContentForBuild, this);
         }
     },
 
@@ -140,7 +146,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      */
     handleRangeWillChange: {
         value: function (plus, minus, index) {
-            this._prepareForBuild(this.content);
+            this._prepareContentForBuild(this.content);
         }
     },
     /**
@@ -165,10 +171,20 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this.classList[isPop ? "add" : "remove"]("mod-Succession--pop");
                 this.classList[isReplace ? "add" : "remove"]("mod-Succession--replace");
                 this.classList[isClear ? "add" : "remove"]("mod-Succession--clear");
-                this._prepareForBuild(this.content);
+                this._prepareContentForBuild(this.content);
                 this.dispatchBeforeOwnPropertyChange("content", this.content);
                 this._updateDomContentWith(this.content);
                 this.dispatchOwnPropertyChange("content", this.content);
+
+                const affectedComponents = [...plus, ...minus];
+
+                // As we only prepare the incoming and outgoing components for build and if there are multiple affected
+                // components (e.g., during a complex history change, like a `clear()`), we need to ensure that all
+                // components in between are also prepared for build. This guarantees that animation overrides are
+                // applied consistently across all relevant components.
+                if (affectedComponents.length > 1) {
+                    this._prepareComponentsForBuild(affectedComponents);
+                }
             }
         }
     },
