@@ -28,7 +28,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * @default false
      */
     preventEmptyContent: {
-        value: true
+        value: false
     },
 
     /**
