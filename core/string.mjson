@@ -1,0 +1,30 @@
+{
+    "root": {
+        "prototype": "mod/core/meta/module-object-descriptor",
+        "values": {
+            "name": "String",
+            "propertyDescriptors": [
+                {"@": "length"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./string.mjson"
+            },
+            "exportName": "String",
+            "module": { "%": "global" },
+            "object":{"@": "String"}
+        }
+    },
+
+    "String": {
+        "object": "global[String]"
+    },
+
+    "length": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "length",
+            "valueType": "number"
+        }
+    }
+
+}
