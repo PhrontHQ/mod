@@ -294,6 +294,14 @@
             "values": {
                 "element": {"#": "baz"}
             }
+        },
+        "avoidEmptyContent": {
+            "prototype": "mod/ui/checkbox.mod",
+            "values": {
+                "element": {"#": "avoidEmptyContent"},
+                "label": "Avoid empty content",
+                "checked": {"<->": "@succession1.preventEmptyContent"}
+            }
         }
     }
     </script>
@@ -336,6 +344,10 @@
             <button data-mod-id="setSuccessionBuildInOut"></button>
             <button data-mod-id="clearSuccessionBuildInOut"></button>
             <button data-mod-id="disableSuccessionBuildInOut"></button>
+            <div>
+                <span>Avoid empty content:</span>
+                <input type="checkbox" data-mod-id="avoidEmptyContent"/>
+            </div>
         </div>
 
         <div class="wrapper">
