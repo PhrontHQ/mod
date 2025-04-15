@@ -23,6 +23,15 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
     },
 
     /**
+     * When set to true, prevents the component from having empty content when history is popped.
+     * @property {boolean}
+     * @default false
+     */
+    preventEmptyContent: {
+        value: true
+    },
+
+    /**
      * Setting content to a component will add the component to `history`.
      * Setting content to null will clear `history`.
      */
@@ -155,9 +164,6 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      */
     handleRangeChange: {
         value: function (plus, minus, index) {
-            //console.log(this.content && this.content.title);
-            //console.log(plus[0] && plus[0].title);
-            //console.log(minus[0] && minus[0].title);
             var length = this.history ? this.history.length : 0,
                 isChanged = plus.length || minus.length,
                 isChangeVisible = isChanged && index + plus.length === length,
@@ -165,6 +171,16 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 isPop = isChangeVisible && !plus.length && length,
                 isReplace = isChangeVisible && !isPush && !isPop && length,
                 isClear = isChangeVisible && !length;
+            const lastRemovedComponent = minus[0];
+                
+            // If we are preventing empty content and the last removed component is not null,
+            // we push it back to the history stack.
+            if (isClear && this.preventEmptyContent && lastRemovedComponent) {
+                console.log('Preventing empty content by keeping the last component in the DOM.');
+                this._history.push(lastRemovedComponent);
+                return;
+            }
+            
             // Set appropriate classes and update the succession if necessary.
             if (isChangeVisible) {
                 this.classList[isPush ? "add" : "remove"]("mod-Succession--push");
