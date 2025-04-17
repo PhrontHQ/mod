@@ -7,7 +7,7 @@ var Component = require("ui/component").Component;
  * Subclasses Component for its `domContent` behavior.
  *
  * If passage properties are defined on the Succession, they will override children's.
- * See {@link Succession#_prepareContentForBuild}.
+ * See {@link Succession#_preparesContentForBuild}.
  *
  * @class Succession
  * @augments Component
@@ -27,7 +27,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * @property {boolean}
      * @default false
      */
-    preventEmptyContent: {
+    preventsEmptyContent: {
         value: false
     },
 
@@ -99,7 +99,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * @private
      * @function
      */
-    _prepareContentForBuild: {
+    _preparesContentForBuild: {
         value: function (content) {
             if (content) {
                 if (this.contentBuildInAnimation) {
@@ -114,7 +114,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
 
     _prepareContentsForBuild: {
         value: function (contents = []) {
-            contents.forEach(this._prepareContentForBuild, this);
+            contents.forEach(this._preparesContentForBuild, this);
         }
     },
 
@@ -155,7 +155,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      */
     handleRangeWillChange: {
         value: function (plus, minus, index) {
-            this._prepareContentForBuild(this.content);
+            this._preparesContentForBuild(this.content);
         }
     },
     /**
@@ -175,7 +175,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 
             // If we are preventing empty content and the last removed component is not null,
             // we push it back to the history stack.
-            if (isClear && this.preventEmptyContent && lastRemovedComponent) {
+            if (isClear && this.preventsEmptyContent && lastRemovedComponent) {
                 console.log('Preventing empty content by keeping the last component in the DOM.');
                 this._history.push(lastRemovedComponent);
                 return;
@@ -187,7 +187,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this.classList[isPop ? "add" : "remove"]("mod-Succession--pop");
                 this.classList[isReplace ? "add" : "remove"]("mod-Succession--replace");
                 this.classList[isClear ? "add" : "remove"]("mod-Succession--clear");
-                this._prepareContentForBuild(this.content);
+                this._preparesContentForBuild(this.content);
                 this.dispatchBeforeOwnPropertyChange("content", this.content);
                 this._updateDomContentWith(this.content);
                 this.dispatchOwnPropertyChange("content", this.content);
