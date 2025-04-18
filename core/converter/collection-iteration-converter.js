@@ -161,7 +161,7 @@ exports.CollectionIterationConverter = Converter.specialize( /** @lends Collecti
                 if(Promise.is(iConvertedValue)) {
                     (promises || (promises = [])).push(iConvertedValue);
                 } else {
-                    (result || (result = new value.constructor)).add(iConverctedValue);
+                    (result || (result = new value.constructor)).add(iConvertedValue);
                 }
                 index++;
             }
