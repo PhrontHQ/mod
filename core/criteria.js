@@ -354,7 +354,7 @@ var Criteria = exports.Criteria = Montage.specialize({
      *
      * @method
      *
-     * @returns {function} - boolean wether the criteri qualifies a value on propertyName.
+     * @returns {function} - boolean wether the criteria qualifies a value on propertyName.
      */
 
     _predicateFunction: {
