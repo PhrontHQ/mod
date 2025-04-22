@@ -109,18 +109,16 @@
             "prototype": "mod/ui/button.mod",
             "values": {
                 "element": {"#": "clearSuccessionBuildInOut"},
-                "label": "Clear builds (undefined)"
+                "label": "Clear overrides builds (Empty)"
             }
         },
         "disableSuccessionBuildInOut": {
             "prototype": "mod/ui/button.mod",
             "values": {
                 "element": {"#": "disableSuccessionBuildInOut"},
-                "label": "Disable builds (null)"
+                "label": "Disable overrides builds (null)"
             }
         },
-
-
         "stack": {
             "prototype": "mod/ui/repetition.mod",
             "values": {
@@ -146,14 +144,14 @@
             "prototype": "mod/ui/text.mod",
             "values": {
                 "element": {"#": "buildInOverride"},
-                "value": {"<-": "@succession1.contentBuildInCssClass || 'none'"}
+                "value": {"<-": "!!@succession1.contentBuildInAnimation || 'none'"}
             }
         },
         "buildOutOverride": {
             "prototype": "mod/ui/text.mod",
             "values": {
                 "element": {"#": "buildOutOverride"},
-                "value": {"<-": "@succession1.contentBuildOutCssClass || 'none'"}
+                "value": {"<-": "!!@succession1.contentBuildOutAnimation || 'none'"}
             }
         },
         "displayTitle": {
@@ -296,6 +294,14 @@
             "values": {
                 "element": {"#": "baz"}
             }
+        },
+        "avoidsEmptyContent": {
+            "prototype": "mod/ui/checkbox.mod",
+            "values": {
+                "element": {"#": "avoidsEmptyContent"},
+                "label": "Avoid empty content",
+                "checked": {"<->": "@succession1.preventsEmptyContent"}
+            }
         }
     }
     </script>
@@ -338,6 +344,10 @@
             <button data-mod-id="setSuccessionBuildInOut"></button>
             <button data-mod-id="clearSuccessionBuildInOut"></button>
             <button data-mod-id="disableSuccessionBuildInOut"></button>
+            <div>
+                <span>Avoid empty content:</span>
+                <input type="checkbox" data-mod-id="avoidsEmptyContent"/>
+            </div>
         </div>
 
         <div class="wrapper">
