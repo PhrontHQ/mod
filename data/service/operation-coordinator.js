@@ -541,8 +541,20 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                 // console.log("KeepAliveOperation received");
                 Promise.resolve(true);
             } else {
-                console.error("OperationCoordinator: not programmed to handle type of operation ",deserializedOperation);
-                resultOperationPromise = Promise.reject(null);
+                if(deserializedOperation.type == DataOperation.Type.NoOp) {
+                    //Just use the same no-op as "response"
+                    let completedOperation = new DataOperation();
+                    completedOperation.type = DataOperation.Type.NoOp;
+                    completedOperation.referrer = deserializedOperation;
+                    //Just carry over
+                    completedOperation.data = deserializedOperation.data;
+              
+                    resultOperationPromise = Promise.resolve(completedOperation);
+                }
+                else {
+                    console.error("OperationCoordinator: not programmed to handle unknown type of operation: ",deserializedOperation);
+                    resultOperationPromise = Promise.reject(null);
+                }
             }
 
             if(!resultOperationPromise) {
