@@ -7,6 +7,12 @@ var Placeholder = exports.Placeholder = Slot.specialize({
             if (!Placeholder.componentModulesMap) {
                 Placeholder.componentModulesMap = new Map();
             }
+
+            // FIXME: WORKAROUND: ensure the component data is not behind
+            // This is a quick fix.
+            this.defineBindings({
+                "component.data": { "<-": "data" },
+            });
         }
     },
 
