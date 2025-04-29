@@ -54,7 +54,7 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "type",
-            "valueDescriptor": {"=": "@root"},
+            "valueDescriptor": {"@": "root"},
             "description": "The reference to what would be an object's prototype in JavaScript: A unique instance of parent class that defines common characteristics for all objects of that type"
         }
     },
@@ -151,7 +151,7 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "template",
-            "valueDescriptor": {"=": "@root"},
+            "valueDescriptor": {"@": "root"},
             "description": "The reference to another object of the same class that acts as a template, providing default values"
         }
     },
