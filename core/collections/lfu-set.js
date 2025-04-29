@@ -3,7 +3,7 @@
 // Based on http://dhruvbird.com/lfu.pdf
 
 var Shim = require("./shim");
-var Set = require("./set").CollectionsSet;
+var CollectionsSet = require("./collection-set").CollectionsSet;
 var GenericCollection = require("./generic-collection");
 var GenericSet = require("./generic-set");
 var PropertyChanges = require("./listen/property-changes");
