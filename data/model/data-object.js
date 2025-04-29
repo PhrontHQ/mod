@@ -24,6 +24,11 @@ exports.DataObject = class DataObject extends Target {
 
     constructor() {
         super()
+
+        this.defineBinding("type.subtypes.has(this)", {
+            "<->": "isType == true"
+        });
+
     }
 
     static {
@@ -73,7 +78,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Object}
              * @default undefined
              */
-            type: { value: false},
+            type: { value: undefined},
 
             /**
              * All instances of this class and/or subclasses that are also used as types
@@ -81,7 +86,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            subtypes: { value: false},
+            subtypes: { value: undefined},
 
             /**
              * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
@@ -89,7 +94,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            typeInstances: { value: false},
+            typeInstances: { value: undefined},
 
             /**
              * If true, indicates that an instance is used by others as a source of default values
@@ -106,7 +111,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Object}
              * @default undefined
              */
-            template: { value: false},
+            template: { value: undefined},
 
             /**
              * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
@@ -114,7 +119,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            templateInstances: { value: false},
+            templateInstances: { value: undefined},
 
             /**
              * The description of what a data object is

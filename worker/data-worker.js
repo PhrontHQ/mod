@@ -601,7 +601,7 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
             self = this;
 
 
-            //console.log("message: ",message);
+            console.debug("handleMessage: ",message);
             this.deserializer.init(message, this.require, objectRequires, module, isSync);
             try {
                 var deserializedOperationPromise = this.deserializer.deserializeObject();

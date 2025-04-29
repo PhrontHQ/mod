@@ -1179,10 +1179,60 @@ DataService.addClassProperties({
         value: undefined
     },
 
+    /**
+     * Returns true if type is one of the types a data service has been configured to support.
+     * Which means at the minimum how to map a type from raw data.x
+     * 
+     * Note that to have a mmore fine-grained assessment of what a DataService can do with that type, 
+     * Use handlesDataOperationForType() / handlesDataOperationTypeForType()
+     *
+     * @method
+     * @argument {ObjectDescriptor} type
+     * @return {boolean}
+     */
     handlesType: {
         value: function(type) {
-            return this.types.indexOf(type) !== -1;
+            return (this.types.indexOf(type) !== -1)
+                /* || (this.childServicesForType(type)?.length > 0)*/;
             //return (this.rootService._childServicesByType.get(type).indexOf(this) !== -1);
+        }
+    },
+
+    /**
+     * Returns true if the data service knows how to handle the passed dataOperation
+     * 
+     * Note that to have a mmore fine-grained assessment of what a DataService can do with that type, 
+     * Use handlesDataOperationForType() / handlesDataOperationTypeForType()
+     *
+     * @method
+     * @argument {DataOperation} dataOperation
+     * @argument {ObjectDescriptor} type
+     * @return {boolean}
+     */
+    handlesDataOperation: {
+        value: function(dataOperation) {
+            return this.handlesDataOperationTypeForType(dataOperation.type, dataOperation.target);
+        }
+    },
+    
+    /**
+     * Returns true if the data service knows how to handle the passed dataOperation's type 
+     * for the passed type / objectDescriptor
+     * 
+     * By default it assumes a DataService handles all types of operation per data type
+     * 
+     * Would it be better named:
+     *  - handlesDataOperationTypeForDataType ?
+     *  - handlesDataOperationTypeForObjectDescriptor ?
+     *
+     * @method
+     * @argument {DataOperation} dataOperation
+     * @argument {ObjectDescriptor} type
+     * @return {boolean}
+     */
+    handlesDataOperationTypeForType: {
+        value: function(dataOperationType, type) {
+            return this.handlesType(type);
         }
     },
 
@@ -1238,13 +1288,12 @@ DataService.addClassProperties({
     },
 
     /**
-     * Get the first child service that can handle data of the specified type,
+     * Get all child services that handle data of the specified type argument,
      * or `null` if no such child service exists.
      *
-     * @private
      * @method
-     * @argument {DataObjectDescriptor} type
-     * @returns {Set.<DataService,number>}
+     * @argument {ObjectDescriptor} type
+     * @returns {Array<DataService>}
      */
     childServicesForType: {
         value: function (type) {
@@ -1252,6 +1301,38 @@ DataService.addClassProperties({
             type = type instanceof ObjectDescriptor ? type : this.objectDescriptorForType(type);
             services = this._childServicesByType.get(type) || this._childServicesByType.get(null);
             return services || null;
+        }
+    },
+
+    /**
+     * Get all child services that handle dataOperationtype of the specified type argument,
+     * or `null` if no such child service exists.
+     *
+     * @method
+     * @argument {DataOperationType} dataOperationtype
+     * @argument {ObjectDescriptor} type
+     * @returns {Array<DataService>}
+     */
+    childServicesHandlingDataOperation: {
+        value: function (dataOperation) {
+            return this.childServicesHandlingDataOperationTypeForType(dataOperation.type, dataOperation.target);
+        }
+    },
+    
+    /**
+     * Get all child services that handle dataOperationtype of the specified type argument,
+     * or `null` if no such child service exists.
+     * 
+     * TODO: ADD CACHING
+     *
+     * @method
+     * @argument {DataOperationType} dataOperationtype
+     * @argument {ObjectDescriptor} type
+     * @returns {Array<DataService>}
+     */
+    childServicesHandlingDataOperationTypeForType: {
+        value: function (dataOperationtype, type) {
+            return this.childServicesForType(type).filter((service) => service.handlesDataOperationTypeForType(dataOperationtype, type) === true)
         }
     },
 
@@ -1840,13 +1921,13 @@ DataService.addClassProperties({
      * @returns {Object}
      */
     _getPrototypeForType: {
-        value: function (type) {
+        value: function (type, _rawDataService) {
             var info, triggers, prototypeToExtend, prototype;
             type = this.objectDescriptorForType(type);
             prototype = this._dataObjectPrototypes.get(type);
             if (type && !prototype) {
 
-                return this.__makePrototypeForType(this.childServiceForType(type), type, type.object);
+                return this.__makePrototypeForType((_rawDataService || this.childServiceForType(type)), type, type.object);
 
 
                 // //type.objectPrototype is legacy and should be depreated over time
@@ -2510,7 +2591,7 @@ DataService.addClassProperties({
      */
     _getOrUpdateObjectProperties: {
         value: function (object, names, start, isUpdate) {
-            var triggers, trigger, promises, promise, i, n;
+            var triggers, trigger, promises, promise, i, n, iValue;
             // Request each data value separately, collecting unique resulting
             // promises into an array and a set, but avoid creating any array
             // or set unless that's necessary.
@@ -2668,12 +2749,12 @@ DataService.addClassProperties({
     },
 
     /**
-     * Returns a unique object for a DataIdentifier
+     * Returns a unique DataIdentifier for an object 
      * [fetchObjectProperty()]{@link DataService#fetchObjectProperty} instead
      * of this method. That method will be called by this method when needed.
      *
      * @method
-     * @argument {object} object         - The object whose property values are
+     * @argument {object} object         - The object for which a DataIdentifier is 
      *                                      being requested.
      *
      * @returns {DataIdentifier}        - An object's DataIdentifier
@@ -2681,7 +2762,18 @@ DataService.addClassProperties({
      dataIdentifierForObject: {
         value: function (object) {
             //If we don't have a local / native one, we return the one assigned by the main service
-            return this._dataIdentifierByObject.get(object) || object.dataIdentifier;
+            let dataIdentifier = this._dataIdentifierByObject.get(object) || object.dataIdentifier;
+            if(!dataIdentifier && this !== this.mainService) {
+                dataIdentifier = this.createDataIdentifierForObject(object);
+                this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
+            }
+            return dataIdentifier;
+        }
+    },
+
+    createDataIdentifierForObject: {
+        value: function (object) {
+            return this.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor);
         }
     },
 
@@ -2717,7 +2809,7 @@ DataService.addClassProperties({
      */
     removeDataIdentifierForObject: {
         value: function(object) {
-            console.log("removeDataIdentifierForObject(",object);
+            // console.log("removeDataIdentifierForObject(",object);
             this._dataIdentifierByObject.delete(object);
         }
     },
@@ -2729,6 +2821,13 @@ DataService.addClassProperties({
     _objectByDataIdentifier: {
         get: function() {
             return this.__objectByDataIdentifier || (this.__objectByDataIdentifier = new WeakMap());
+        }
+    },
+
+    clearObjectDataIdentifiers: {
+        value: function() {
+            this.__objectByDataIdentifier = null;
+            this.__dataIdentifierByObject = null;
         }
     },
     /**
@@ -2891,6 +2990,80 @@ DataService.addClassProperties({
     },
 
     /**
+     * A WeakMap where keys are ObjectDescriptors and values are all instances of data objects of that type
+     *
+     * @private
+     * @method
+     * @argument {DataObjectDescriptor} type - The type of object to create.
+     * @returns {Object}                     - The created object.
+     */
+
+    _objectsByObjectDescriptor: {
+        value: new WeakMap()
+    },
+
+    /**
+     * ObjectDescriptors' instances are held in an array so we can iterate on them. But this may hold them and prevent garbage collection, as ObjectDesc
+     *
+     * @private
+     * @method
+     * @argument {DataObjectDescriptor} type - The type of object to create.
+     * @returns {Object}                     - The created object.
+     */
+    registeredObjectsForObjectDescriptor: {
+        value: function(anObjectDescriptor) {
+            return this._objectsByObjectDescriptor.get(anObjectDescriptor) || (this._objectsByObjectDescriptor.set(anObjectDescriptor, []) && this._objectsByObjectDescriptor.get(anObjectDescriptor));
+        }
+    },
+
+    registeredObjectsForObjectDescriptorMatchingCriteria: {
+        value: function(anObjectDescriptor, aCriteria, _result) {
+
+            let result = _result || [],
+                anObjectDescriptorResult,
+                aCriteriaPredicateFunction,
+                registeredObjectsForObjectDescriptor = this.registeredObjectsForObjectDescriptor(anObjectDescriptor),
+                childObjectDescriptors = anObjectDescriptor.childObjectDescriptors;
+            
+
+            if(registeredObjectsForObjectDescriptor) {
+                aCriteriaPredicateFunction = aCriteria.predicateFunction;
+                anObjectDescriptorResult = registeredObjectsForObjectDescriptor.filter(aCriteriaPredicateFunction);
+                if(anObjectDescriptorResult && anObjectDescriptorResult.length) {
+                    result.push(...anObjectDescriptorResult);
+                }
+            }
+
+            if(childObjectDescriptors) {
+                //There could be childObjectDescriptors that we need to take care of as well.
+                for(let i = 0, countI = childObjectDescriptors.length; (i<countI); i++) {
+                    this.registeredObjectsForObjectDescriptorMatchingCriteria(childObjectDescriptors[i], aCriteria, result);
+                }
+            }
+
+            return result;
+        }
+    },
+
+    registerDataObject: {
+        value: function(aDataObject) {
+            this.registeredObjectsForObjectDescriptor(aDataObject.objectDescriptor).push(aDataObject)
+        }
+    },
+
+    unregisterDataObject: {
+        value: function(aDataObject) {
+            this.registeredObjectsForObjectDescriptor(aDataObject.objectDescriptor).delete(aDataObject)
+        }
+    },
+
+    unregisterDataObjectsWithObjectDescriptor: {
+        value: function(anObjectDescriptor) {
+            this._objectsByObjectDescriptor.delete(anObjectDescriptor);
+        }
+    },
+
+    /**
      * Create a data object without registering it in the new object map.
      *
      * @private
@@ -2934,6 +3107,9 @@ DataService.addClassProperties({
                 if (object) {
                     this._setObjectType(object, objectDescriptor);
                     this._objectDescriptorForObjectCache.set(object, objectDescriptor);
+
+                    //This is an in-memory cache of all objects with the same objectDescriptor, regarding of the fact that are new objects or fetched
+                    this.registerDataObject(object);
                 }
 
                 dataIdentifierDataService.callDelegateMethod("rawDataServiceDidCreateObject", dataIdentifierDataService, object);
@@ -3008,6 +3184,22 @@ DataService.addClassProperties({
         }
     },
 
+    _setCreatedObjectPropertyTriggerStatusToNull: {
+        value: function(dataObject) {
+            let dataObjectTriggers = this._getTriggersForObject(dataObject),
+                dataObjectTriggersPropertyNames = Object.keys(dataObjectTriggers);
+
+            for(let i=0, iPropertyName, iValue, countI = dataObjectTriggersPropertyNames.length; (i < countI); i++) {
+                iPropertyName = dataObjectTriggersPropertyNames[i];
+                //If values were set on the object and the property has a trigger, meaning it's handled by Mod data
+                if(!dataObject.hasOwnProperty(iPropertyName)) {
+                    dataObjectTriggers[iPropertyName]._setValueStatus(dataObject, null);
+                }
+            }
+        }
+    },
+
+
 
     registerCreatedDataObject: {
         value: function(dataObject) {
@@ -3017,6 +3209,13 @@ DataService.addClassProperties({
             if(!value) {
                 createdDataObjects.set(objectDescriptor, (value = new Set()));
             }
+
+            /*
+                This makes sure that properties' data triggers' valueStatus are set to null
+                ensuring there's no reference to it in a storage
+            */
+            //////////this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
+
             value.add(dataObject);
             this.objectDescriptorsWithChanges.add(objectDescriptor);
 
@@ -3039,7 +3238,7 @@ DataService.addClassProperties({
      * This method makes the mainService aware of a dataObject that wasn't fetched. So
      * beyond that we can't really know if it's new, as it doesn't exists in the a storage
      * the matching data services encapsulate, or if it does and this might be more of a merge
-     * / update. It might be necessary to flag it to rawDataServcices somehow. A DB like PostgreSQL
+     * / update. It might be necessary to flag it to rawDataServices somehow. A DB like PostgreSQL
      * can probably deal with it by using INSERT ... ON CONFLICT (key) DO UPDATE (and ON CONFLICT (key) DO NOTHING), 
      * i.e. upsert, or the more recent MERGE.
      *     *
@@ -3050,14 +3249,18 @@ DataService.addClassProperties({
      */
     mergeDataObject: {
         value: function(dataObject) {
+            if(dataObject === null || dataObject === undefined) {
+                return dataObject;
+            }
+            
             var objectDescriptor = this.objectDescriptorForObject(dataObject);
 
-            if(!objectDescriptor || (objectDescriptor && !this.handlesType(objectDescriptor))) {
-                return;
+            if(!objectDescriptor || (objectDescriptor && (!this.handlesType(objectDescriptor) && this.childServicesForType(objectDescriptor)?.filter((value) => value.handlesType(objectDescriptor))?.length == 0 ))) {
+                return dataObject;
             }
             //If we already know about the object, nothing to do
             else if((this.isObjectCreated(dataObject) || this.isObjectFetched(dataObject) || this.isObjectChanged(dataObject) || this.isObjectDeleted(dataObject))) {
-                return;
+                return dataObject;
             } else {
 
                 var createdDataObjects = this.createdDataObjects,
@@ -3074,31 +3277,69 @@ DataService.addClassProperties({
                     //     //
                     //     //primaryKey = service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject),
                     //     primaryKey = service.primaryKeyForTypeRawData(objectDescriptor, dataObject),
-                        prototype = this._getPrototypeForType(objectDescriptor),
-                    //     dataIdentifier = primaryKey 
-                    //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
-                    //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
+                        prototype = this._getPrototypeForType(objectDescriptor/*, service*/),
+                        //     dataIdentifier = primaryKey 
+                        //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
+                        //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
 
-                        dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
+                        dataIdentifier = this.dataIdentifierForObject(dataObject);
 
-                    this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                    /*
+                        for Anonymous identity object, it happens that no service is found, which is to be investigated.
+                        One unusual thing is that Identity extends Montage and not DataObject, relevant?
+                    */
+                   if(service) {
 
-                    value.add(dataObject);
+                        if(!dataIdentifier) {
+                            dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
+                            service.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);    
+                            this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                            this.recordDataIdentifierForObject(dataIdentifier, dataObject);
+                        }
 
-                    //Need to fix the prototype if needed
-                    if(Object.getPrototypeOf(dataObject) !== prototype) {
-                        Object.setPrototypeOf(dataObject, prototype);
-                    }    
+                        //Need to fix the prototype if needed
+                        if(Object.getPrototypeOf(dataObject) !== prototype) {
+                            // let valueShallowCopy = {};
+                            // Object.assign(valueShallowCopy, dataObject);
+                            Object.setPrototypeOf(dataObject, prototype);
 
-                    //This is done in _createDataObject, is it needed here?
-                    this._setObjectType(dataObject, objectDescriptor);
-                    this._objectDescriptorForObjectCache.set(dataObject,objectDescriptor);
+                            let objectKeys = Object.keys(dataObject);
+                            for(let iKey of objectKeys) {
 
-                    //Build the changes we'll want to upsert
-                    this.registerMergedDataObjectChanges(dataObject);
+                                //Let's make sure the values are now handled by DataTriggers
+                                let iValue = dataObject[iKey];
+                                delete dataObject[iKey];
+                                dataObject[iKey] = iValue;
 
-                    this.dispatchDataEventTypeForObject(DataEvent.merge, dataObject);
+                                this.mergeDataObject(iValue);
+                            }
+                        }
+
+                        value.add(dataObject);
+
+
+                        //This is done in _createDataObject, is it needed here?
+                        this._setObjectType(dataObject, objectDescriptor);
+                        this._objectDescriptorForObjectCache.set(dataObject,objectDescriptor);
+
+                        //Make sure we won't fetch properties missing
+                        this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
+
+                        //Build the changes we'll want to upsert
+                        this.registerMergedDataObjectChanges(dataObject);
+
+                        this.dispatchDataEventTypeForObject(DataEvent.merge, dataObject);
+
+                        return dataObject;
+
+                    } else {
+                        console.warn("WARNING: Object NOT MERGED: No RawDataService found that can save data type "+objectDescriptor);
+
+                    }
+
                 }
+
+                return dataObject;
             }
 
         }
@@ -3144,7 +3385,7 @@ DataService.addClassProperties({
                 }
             }
 
-            if(!isObjectCreated) {
+            if(!isObjectCreated && this.isMainService) {
                 var pendingTransactions = this._pendingTransactions;
 
                 if(pendingTransactions && pendingTransactions.length) {
@@ -3348,6 +3589,10 @@ DataService.addClassProperties({
     _setDataObjectPropertyDescriptorValueForInversePropertyDescriptor: {
         value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, previousValue) {
             if(!inversePropertyDescriptor) {
+                return;
+            }
+
+            if(this._objectsBeingMapped.has(dataObject) && this._objectsBeingMapped.has(value)) {
                 return;
             }
 
@@ -3989,7 +4234,7 @@ DataService.addClassProperties({
             (this._pendingTransactions || (this._pendingTransactions = [])).push(aCreateTransactionOperation);
         }
     },
-    deletePendingTransaction: {
+    removePendingTransaction: {
         value: function(aCreateTransactionOperation) {
             if(this._pendingTransactions) {
                 this._pendingTransactions.delete(aCreateTransactionOperation);
@@ -4538,7 +4783,7 @@ DataService.addClassProperties({
                         */
 
                             //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-
+                        self.removePendingTransaction(transaction);
                        resolve(transaction);
 
                     })

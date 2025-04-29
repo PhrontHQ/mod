@@ -131,8 +131,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     localPartialResult;
 
                 /*
-
-                    Leaving a trace of localPartialResult here. Unless I'm missing something, the problem with a partial result is that we don't really have an easy way to return a partial result with the promise-based API, and we still need to get the rest, and that will brinf all values back, the mapping will be faster for the objects that already are in memnory thoygh
+                    Leaving a trace of localPartialResult here. Unless I'm missing something, the problem with a partial result 
+                    is that we don't really have an easy way to return a partial result with the promise-based API, 
+                    and we still need to get the rest, and that will brinf all values back, 
+                    the mapping will be faster for the objects that already are in memnory though
                 */
                 if(localResult) {
                     if(Array.isArray(localResult)) {
@@ -453,8 +455,38 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
             query.hints = {rawDataService: service};
 
 
+
             if(queryParts.readExpressions && queryParts.readExpressions.length > 0) {
                 query.readExpressions = queryParts.readExpressions;
+
+                /* 
+                    Borrowed from raw-data-service.js fetchRawObjectProperty()
+                    -> REFACTOR TO HAVE IT ONCE
+                */
+                /*
+                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+                */
+                // let mapping = service.mappingForType(objectDescriptor),
+                //     hintSnapshot = (query.hints = {snapshot:{}}).snapshot,
+                //     iReadExpression;
+
+                // for(iReadExpression of queryParts.readExpressions) {
+                //     rule = mapping.objectMappingRuleForPropertyName(iReadExpression);
+
+                //     // if(!rule) {
+                //     //     console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+iReadExpression);
+                //     //     return Promise.resolveNull;
+                //     // }
+                    
+                //     let requirements = rule.requirements;
+
+                //     if(objectSnpashot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                //         for(let i=0, countI = requirements.length; (i<countI); i++) {
+                //             hintSnapshot[requirements[i]] = objectSnpashot[requirements[i]];
+                //         }
+                //     }
+                // }
+
             }
 
             //console.log("_combineFetchDataMicrotaskFunctionForTypeQueryParts query:",query);
@@ -486,14 +518,16 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             if(!jSnapshot) {
                                 //Now in a multi-origin world, we have to use where the current object actually came from:
                                 // jSnapshot = service.snapshotForObject(jValue);
-                                jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
+                                jSnapshot = service.dataIdentifierForObject(jValue).dataService.snapshotForObject(jValue);
+                                //jSnapshot = service.mainService.dataIdentifierForObject(jValue).dataService.snapshotForObject(jValue);
+                                //jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
                                 (combinedFetchedValuesSnapshots || (combinedFetchedValuesSnapshots = []))[j] = jSnapshot;
                             }
 
                             iFetchPromise = (iFetchPromise || (iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)));
 
                             if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
-                                console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
+                                //console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
                                 (iFetchPromise.result || (iFetchPromise.result = [])).push(jValue);
 
                             }
@@ -514,6 +548,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             // ??
                             // self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
 
+                        } else {
+                            throw "RawForeignValueToObjectConverter._combineFetchDataMicrotaskFunctionForTypeQueryParts() shouldn't be here"
                         }
 
                         self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
@@ -722,9 +758,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 } else {
                     criteria = this.convertCriteriaForValue(v);
 
-                    // console.log("RawForeignValueToObjectConverter fetching for value:",v);
 
                     return this._descriptorToFetch.then(function (typeToFetch) {
+                        
+                        //console.log("RawForeignValueToObjectConverter fetching "+typeToFetch.name+" property "+currentRule.targetPath+" for value:",v);
 
                         return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule);
 

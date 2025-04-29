@@ -217,10 +217,12 @@ RangeChanges.prototype.dispatchRangeChange = function (plus, minus, index, befor
         //Optimization and correctness: turn range changes with no actual net changes into a no-op
         //Optimization because we dispatch and process fewer events
         //Correctness because dispatching events like [remove(x,y,z), add(x,y,z)] can cause problems for listeners who care about both deletions and additions
+        if (!(plus) && !(minus)) {
+            return;
+        }
+
         if ((plus) && (minus) && plus.equals(minus)) {
-            if (plus.equals(minus)) {
-                return;
-            }
+            return;
         }
 
         // else {

@@ -886,6 +886,135 @@ module.exports = [
         input: {foo: ["a", "b"]},
         parameters: {path: ["c", "d"]},
         output: [ true, true ]
+    },
+
+    {
+        path: "$toManyProp.filter{otherToManyProp.filter{a == $.a && nestedToManyProp.filter{type.code == ^^type.code && code == ^^code}}}",
+        input: {foo: ["a", "b"]},
+        parameters: {
+            a: 3,
+            toManyProp: [
+                {
+                    type: {code: "A"},
+                    otherToManyProp: [
+                        {
+                            a: 1,
+                            nestedToManyProp: [
+                                {type: {code: "A"}},
+                                {type: {code: "B"}}
+                            ]
+                        },
+                        {
+                            a: 2,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        },
+                        {
+                            a: 3,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        }
+                    ]
+
+                }, 
+                {
+                    otherToManyProp: [
+                        {
+                            a: 2,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        },
+                        {
+                            a: 3,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        },
+                        {
+                            a: 4,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        }
+                    ]
+
+                },
+                {
+                    otherToManyProp: [
+                        {
+                            a: 3,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        },
+                        {
+                            a: 4,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        },
+                        {
+                            a: 5,
+                            nestedToManyProp: [                                
+                                {
+
+                                },
+                                {
+                                    
+                                }
+                            ]
+
+                        }
+                    ]
+                }
+            ]
+        },
+        output: [ true, true ]
     }
 
 ];

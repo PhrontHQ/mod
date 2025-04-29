@@ -6,13 +6,14 @@ const RawDataService = require("./raw-data-service").RawDataService,
     DataQuery = require("../model/data-query").DataQuery,
     Criteria = require("../../core/criteria").Criteria,
     Enumeration = require("../model/enumeration").Enumeration,
-    Map = require("../../core/collections/map"),
-    Montage = require("../../core/core").Montage,
-    parse = require("../../core/frb/parse"),
-    compile = require("../../core/frb/compile-evaluator"),
-    evaluate = require("../../core/frb/evaluate"),
-    Scope = require("../../core/frb/scope"),
-    Promise = require("../../core/promise").Promise,
+    Map = require("core/collections/map"),
+    Montage = require("core/core").Montage,
+    parse = require("core/frb/parse"),
+    compile = require("core/frb/compile-evaluator"),
+    evaluate = require("core/frb/evaluate"),
+    Scope = require("core/frb/scope"),
+    Promise = require("core/promise").Promise,
+    Deque = require("core/collections/deque"),
     RawEmbeddedValueToObjectConverter = require("../converter/raw-embedded-value-to-object-converter").RawEmbeddedValueToObjectConverter,
     RawEmbeddedHierarchyValueToObjectConverter = require("../converter/raw-embedded-hierarchy-value-to-object-converter").RawEmbeddedHierarchyValueToObjectConverter,
     DataOperation = require("./data-operation").DataOperation;
@@ -89,11 +90,43 @@ var HttpError = exports.HttpError = Montage.specialize({
  *
  * @extends RawDataService
  */
-var HttpService = exports.HttpService = class HttpService extends RawDataService {/** @lends DataService */
+var HttpService = exports.HttpService = class HttpService extends RawDataService {/** @lends HttpService */
+
+    static {
+
+        Montage.defineProperties(this.prototype, {
+            /**
+             * Provides a way to limit the number of concurrent requests
+             *
+             * @property {Number} value
+             * @default null
+             */
+            maximumConcurrentRequestCount: { value:  Number.POSITIVE_INFINITY},
+            concurrentRequestCount: { value: 0},
+            __pendingFetchPromises: { value: undefined},
+            __waitingPromisesWithResolvers: { value: undefined}
+        });
+    }
+
+
     constructor() {
         super();
     }
 
+    deserializeSelf(deserializer) {
+        
+        super.deserializeSelf(deserializer);
+
+        var value = deserializer.getProperty("maximumConcurrentRequestCount");
+        if (value) {
+            if(Number.isNaN(value)) {
+                console.warn("deserialized value '"+value+"' for maximumConcurrentRequestCount property is not a number, ignoring");
+            } else {
+                this.maximumConcurrentRequestCount = Number.parseInt(value);
+            }
+        }
+    
+    }
 
     /**
      * Fetch an identity using an identityQuery expected to be set on the data service
@@ -112,39 +145,43 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             throw "Can't perform fetchIdentity() because this.identityQuery isn't available";
         }
 
-        return this.mainService.fetchData(this.identityQuery)
-        .then(result => {
-            if(result.length === 1) {
-                /*
-                    It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
-                    and equip SecretManager data services with the ability to handle Identity, and give them a mapping
-                    to how the raw data is stored in the secret. Let's get this working and clean it up later. 
-                */
-                let applicationIdentifier = result[0].value.applicationIdentifier,
-                    applicationCredentials =  result[0].value.applicationCredentials;
+        if(!this._fetchIdentityPromise) {
 
-                if(applicationIdentifier && applicationCredentials) {
-                    let identity = new Identity();
 
-                    identity.applicationIdentifier = applicationIdentifier;
-                    identity.applicationCredentials = applicationCredentials;
+            this._fetchIdentityPromise =  this.mainService.fetchData(this.identityQuery)
+            .then(result => {
+                if(result.length === 1) {
+                    /*
+                        It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
+                        and equip SecretManager data services with the ability to handle Identity, and give them a mapping
+                        to how the raw data is stored in the secret. Let's get this working and clean it up later. 
+                    */
+                    let applicationIdentifier = result[0].value.applicationIdentifier,
+                        applicationCredentials =  result[0].value.applicationCredentials;
 
-                    this.identity = identity; 
-                    return this.identity;                          
+                    if(applicationIdentifier && applicationCredentials) {
+                        let identity = new Identity();
+
+                        identity.applicationIdentifier = applicationIdentifier;
+                        identity.applicationCredentials = applicationCredentials;
+
+                        this.identity = identity; 
+                        return this.identity;                          
+                    } else {
+                        throw ("Unnable to ceate an idendity from fetched secret: "+ result);
+                    }
                 } else {
-                    throw ("Unnable to ceate an idendity from fetched secret: "+ result);
+                    throw ("Unnable to find a secret matching query " + this.identityQuery);
+
                 }
-            } else {
-                throw ("Unnable to find a secret matching query " + this.identityQuery);
+            })
+            .catch(error => {
+                console.warn("fetchIdentity failed:", error);
+                return null;
+            })
+        }
 
-            }
-        })
-        .catch(error => {
-            console.warn("fetchIdentity failed:", error);
-            return null;
-        })
-
-
+        return this._fetchIdentityPromise;
     }
 
 
@@ -261,6 +298,14 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
             this.mapDataOperationToRawDataOperations(readOperation, readOperations)
             .then(() => {
+                if(readOperations.length === 0) {
+                    console.warn(this.identifier+" unable to map readOperation to rawDataOperations", readOperation);
+
+                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, []);
+                    responseOperation.target.dispatchEvent(responseOperation);
+                    return;
+                }
+
                 for(let i=0, iReadOperation; (iReadOperation = readOperations[i]); i++) {
 
                     if(iReadOperation.type === DataOperation.Type.ReadCompletedOperation) {
@@ -533,12 +578,72 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         }
     }
 
-    _fetchReadOperationRequest(readOperation, iRequest, readOperationCompletionPromiseResolve) {
+    get _pendingFetchPromises() {
+        return this.__pendingFetchPromises || (this.__pendingFetchPromises = []);
+    }
 
-        fetch(iRequest)
+    get _waitingPromisesWithResolvers() {
+        return this.__waitingPromisesWithResolvers || (this.__waitingPromisesWithResolvers = new Deque([],this.maximumConcurrentRequestCount));
+    }
+
+    _scheduleNextFetchAfterSettledPromise(settledPromise) {
+        this._pendingFetchPromises.delete(settledPromise);
+        if(this.maximumConcurrentRequestCount !== Number.POSITIVE_INFINITY && this._waitingPromisesWithResolvers.length) {
+            let nextFetchPromise = this._waitingPromisesWithResolvers.pop().resolve();
+        }
+    }
+
+    _resourceFetchPromise(...args) {
+        let pendingPromiseWithResolver,
+            resourceFetchPromise;
+        if(this.maximumConcurrentRequestCount !== Number.POSITIVE_INFINITY && this._pendingFetchPromises.length === this.maximumConcurrentRequestCount) {
+            pendingPromiseWithResolver = Promise.withResolvers();
+            /* 
+                we're at capacity, concurrency limit, we have to go when any current one is done.
+                We store it at the beginning of the FIFO queue.
+            */
+            this._waitingPromisesWithResolvers.unshift(pendingPromiseWithResolver);
+
+        }
+
+        let promiseExecutor = (resolve, reject) => {
+
+            fetch(args[0]/*resource*/, args[1]/*options*/)
+            .then((response) => {
+                this._scheduleNextFetchAfterSettledPromise(resourceFetchPromise);
+                resolve(response);
+            })
+            .catch((error) => {
+                this._scheduleNextFetchAfterSettledPromise(resourceFetchPromise);
+                reject(error);
+            })
+        };
+
+        if(pendingPromiseWithResolver) {
+             resourceFetchPromise = pendingPromiseWithResolver.promise.then(() => {
+                return new Promise(promiseExecutor);
+            });
+        } else {
+            resourceFetchPromise = new Promise(promiseExecutor);
+            this._pendingFetchPromises.add(resourceFetchPromise);
+        }
+
+        return resourceFetchPromise;
+
+    }
+
+    constrainedFetch(...args) {
+        /* we're bellow concurrency limitm, we just go */
+        let resourceFetchPromise = this._resourceFetchPromise(args[0], args[1]);
+        return resourceFetchPromise;
+    }
+
+    _fetchReadOperationRequest(readOperation, iRequest, readOperationCompletionPromiseResolve) {
+        Promise.delay(0)
+        .then(()=> this.constrainedFetch(iRequest))
         .then((response) => {
             if (response.status === 200) {
-                console.debug("200: "+response.url);
+                //console.debug("200: "+response.url);
 
                 //console.log("Cache-Control: " + response.headers.get('Cache-Control') || response.headers.get('cache-control'));
                 if(response.headers.get('content-type').includes("json")) {
@@ -572,11 +677,14 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             }
         })
         .then((responseContent) => {
-            //console.debug(iRequest.url+": ",JSON.stringify(responseContent));
+            //console.debug("\t\t"+this.identifier+" "+iRequest.url+"  <---  ",JSON.stringify(responseContent));
             let mapping = this.mappingForObjectDescriptor(readOperation.target);
             let rawData = [];
 
             mapping.mapFetchResponseToRawData(responseContent, rawData);
+
+            rawData = mapping.filterReadOperationRawData(readOperation, rawData);
+
             //console.debug("rawData: ",rawData);
             let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, false /*isNotLast*/, readOperation.target/*responseOperationTarget*/);
             console.log("\t"+this.identifier+" handleReadOperation dispatch "+ responseOperation.type+" id " +responseOperation.id+" for read referrer id "+responseOperation.referrer.id+" for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
@@ -588,13 +696,16 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 readOperationCompletionPromiseResolve?.(responseOperation);
             });
 
+            responseOperation = null;
+            rawData = null;
+
             //return responseOperation;
         })
         .catch((error) => {
-            console.log(this.name+" Fetch Request:", iRequest+", error: ", error);
+             console.error(this.name+" Fetch Request:", iRequest.url+" failed with error: ", error);
             let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
             console.error(error);
-            console.log(this.identifier+" handleReadOperation dispatch ERROR responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+            console.error(this.identifier+" handleReadOperation dispatch ERROR responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
 
             responseOperation.target.dispatchEvent(responseOperation);
 

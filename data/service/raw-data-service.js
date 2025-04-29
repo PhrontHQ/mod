@@ -279,7 +279,7 @@ RawDataService.addClassProperties({
 
     connectionForIdentifier: {
         value: function (connectionIdentifier) {
-            return this._registeredConnectionsByIdentifier[connectionIdentifier];
+            return this._registeredConnectionsByIdentifier?.[connectionIdentifier];
             //return this._registeredConnectionsByIdentifier.get(connectionIdentifier);
         }
     },
@@ -352,10 +352,22 @@ RawDataService.addClassProperties({
                     this.connection = this.connectionForIdentifier(this.connectionIdentifer);
                 }
                 else if(!this.currentEnvironment.isCloud) {
-                    this.connection = this.connectionForIdentifier(`local-${this.currentEnvironment.stage}`);
+                    let connection = this.connectionForIdentifier(`local-${this.currentEnvironment.stage}`);
+
+                    //If we can't find a local specific one, we'll look for the one for this.currentEnvironment.stage
+                    if(!connection) {
+                        connection = this.connectionForIdentifier(this.currentEnvironment.stage);
+                    }
+                    this.connection = connection;
+                    
                 } else {
                     this.connection = this.connectionForIdentifier(this.currentEnvironment.stage);
                 }
+
+                if(!this._connection) {
+                    throw "RawDataService "+ (this.name || this.identifier) + "could not find a connection for "+this.currentEnvironment.stage+" environment";
+                }
+
             }
             return this._connection;
         },
@@ -509,7 +521,7 @@ RawDataService.addClassProperties({
     fetchRawObjectProperty: {
         value: function (object, propertyName) {
 
-            console.warn("\t~~~~~~~~~~~~~~~~~~~ "+this.identifier+" fetchRawObject: "+object.dataIdentifier+", property: "+propertyName);
+            console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+object.dataIdentifier+", property: "+propertyName);
 
             var self = this,
                 objectDescriptor = this.objectDescriptorForObject(object),
@@ -1852,22 +1864,23 @@ RawDataService.addClassProperties({
      * the raw mapped data to data objects:
      *
      * @method
-     * @argument {Object} mapping - A DataMapping object handing the mapping.
-     * @argument {Object} rawData - An object whose properties' values hold
-     *                             the raw data.
-     * @argument {Object} dataObject - An object whose properties must be set or
-     *                             modified to represent the raw data.
-     * @argument {?} context     - The value that was passed in to the
-     *                             [addRawData()]{@link RawDataService#addRawData}
-     *                             call that invoked this method.
+     * @argument {Object} mapping           - A DataMapping object handing the mapping.
+     * @argument {Object} rawData           - An object whose properties' values hold
+     *                                      the raw data.
+     * @argument {Object} dataObject        - An object whose properties must be set or
+     *                                      modified to represent the raw data.
+     * @argument {?} context                - The value that was passed in to the
+     *                                      [addRawData()]{@link RawDataService#addRawData}
+     *                                      call that invoked this method.
+     * @argument {Array} readExpressions    - The list of properties to map on dataObject.
      */
     mappingWillMapRawDataToObject: {
         value: function (mapping, rawData, dataObject, context, readExpressions) {
-            let delegateRawData;
-            if((delegateRawData = this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, rawData, dataObject, context, readExpressions))) {
-                return delegateRawData;
+            let delegateReadExpressions;
+            if((delegateReadExpressions = this.callDelegateMethod("rawDataServiceMappingWillUseReadExpressionsToMapRawDataToObject", this, mapping, readExpressions, rawData, dataObject, context))) {
+                return delegateReadExpressions;
             } else {
-                return rawData;
+                return readExpressions;
             }
         }
     },
@@ -2566,9 +2579,33 @@ RawDataService.addClassProperties({
                         criteria.parameters = Array.empty;
                     }
                 }
+
+                return existingObject;
+
+            } 
+            else {
+                let snapshot = this._snapshot,
+                    snapshotDataIdentifierKeys = this._snapshot.keysArray(),
+                    mainService = this.mainService,
+                    result;
+                for(let i=0, countI = snapshotDataIdentifierKeys.length, iSnapshotDataIdentifierKey, iSnapshot, iObject; (i < countI); i++) {
+                    iSnapshotDataIdentifierKey = snapshotDataIdentifierKeys[i];
+                    //TODO: we should also tests iObject.objectDescriptor any of childObjectDescriptors
+                    if(iSnapshotDataIdentifierKey.objectDescriptor === typeToFetch) {
+                        iSnapshot = snapshot.get(iSnapshotDataIdentifierKey);
+                        if(criteria.evaluate(iSnapshot)) {
+                            iObject = mainService.objectForDataIdentifier(iSnapshotDataIdentifierKey);
+                            if(iObject) {
+                                (result || (result = [])).push(iObject);
+                            } else {
+                                console.warn(this.name+": No object found for dataIdentifier in snapshot:" + iSnapshotDataIdentifierKey);
+                            }
+                        }
+                    }
+                }
+                return result;
             }
 
-            return existingObject;
         }
     },
 
@@ -4044,7 +4081,6 @@ RawDataService.addClassProperties({
         value: function (object, operationType, dataObjectChangesMap, dataOperationsByObject, commitTransactionOperation) {
             try {
 
-                console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id)
                 //TODO
                 //First thing we should be doing here is run validation
                 //on the object, which should be done one level up
@@ -4089,6 +4125,9 @@ RawDataService.addClassProperties({
 
                 operation.type = localOperationType;
 
+                //console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ "changes: ",dataObjectChanges," in commitTransactionOperation "+commitTransactionOperation.id)
+
+
                 if (dataIdentifier) {
                     if (!isNewObject) {
                         criteria = this.rawCriteriaForObject(object, objectDescriptor);
@@ -4130,10 +4169,10 @@ RawDataService.addClassProperties({
                     operation.snapshot = dataSnapshot;
                 } 
 
-                console.log("_save ("+operationType+") for "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
+                //console.log("_save ("+operationType+") dataObjectChanges:", dataObjectChanges, " for "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
                 return this._mapObjectChangesToOperationData(object, dataObjectChanges, operationData, snapshot, dataSnapshot, isNewObject, isDeletedObject, objectDescriptor)
                     .then(function (resolvedOperationData) {
-                        console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping ends")
+                        //console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping ends")
 
                         if (!isDeletedObject) {
 
@@ -4387,9 +4426,13 @@ RawDataService.addClassProperties({
                             iObjectDescriptor = iOperation.target;
 
                             if (iOperation.type === CreateOperation) {
-                                iDataIdentifier = self.dataIdentifierForTypeRawData(iObjectDescriptor, iOperation.data);
+                                iDataIdentifier = self.dataIdentifierForObject(iObject);
+                                if(!iDataIdentifier) {
+                                    iDataIdentifier = self.dataIdentifierForTypeRawData(iObjectDescriptor, iOperation.data);
+                                    self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);    
+                                }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data);
-                                self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);
+
                             } else if (iOperation.type === UpdateOperation || iOperation.type === NoOpOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
                                 self.recordSnapshot(iDataIdentifier, iOperation.data, true);

@@ -3296,6 +3296,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             */
             i = eventPath.length;
             while (i>1 && !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[--i])) {
+                if(mutableEvent.currentTarget === iTarget) {
+                    //eventPath was modified
+                    while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
+                }
                 mutableEvent.currentTarget = iTarget;
 
                 promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise);

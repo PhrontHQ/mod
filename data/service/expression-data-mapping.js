@@ -1030,9 +1030,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
 
-                        // console.log("mapRawDataToObject "+object.dataIdentifier+" WILL MAP "+ aRule.targetPath);
+                        //console.log("mapRawDataToObject "+object.dataIdentifier+" WILL MAP "+ aRule.targetPath);
 
-                        result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope);
+                            result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope);
                         if(isObjectCreated) {
                             if (this._isAsync(result)) {
                                 const targetPath = aRule.targetPath,
@@ -1043,11 +1043,14 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                         Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                     */
                                     service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, propertyDescriptor.name, resultValue, context, mappingScope);
-                                    // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ targetPath +" with value: ",resultValue);
+                                    //console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ targetPath +" (ASYNC) with value: ",resultValue);
+                                    //console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ targetPath +" (ASYNC) value: ", object[targetPath]);
 
                                     return resultValue;
                                 });
                             } else {
+                                //console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ aRule.targetPath +" with value: ",result);
+
                                 this._registerMappedPropertyValueAsChangesForCreatedObject(aRule.targetPath, result, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));
                                 /*
                                     Tell our service: mappingDidMapRawDataToObjectPropertyValue
@@ -1113,7 +1116,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 requisitePropertyNames = this.requisitePropertyNames,
                 unmappedRequisitePropertyNames = new Set(requisitePropertyNames),
                 mappingScope,
-                _rawData;
+                _readExpressions;
 
             if(context instanceof DataOperation) {
                 mappingScope = this._scope.nest(context);
@@ -1128,9 +1131,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 TODO: We may need to pass an additional 'mappedProperties' array argument to collect and communicate 
                 back to our service
             */
-            _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
+                _readExpressions = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
 
-            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties);
+            promises = this._mapRawDataPropertiesToObject(rawData, object, context, _readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties);
             
             /*
                 This is causing problems: as partial aspects of the object are filled-in, the attempts to run mapping rules for object properties on raw data that doesn't contain
@@ -1210,7 +1213,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //     }
             // }
 
-            console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
+            //console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
             return (promises && promises.length &&
                 ( promises.length === 1
                     ? promises[0].then(() => object)
@@ -1221,7 +1224,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 || 
                 (
                     //Tell our service we're done
-                    this.service.mappingDidMapRawDataToObject(this, _rawData, object, context, mappedProperties)
+                    this.service.mappingDidMapRawDataToObject(this, rawData, object, context, mappedProperties)
                     ||
                     Promise.resolve(object)
                 );
@@ -1756,6 +1759,23 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     result = this._revertPropertyToRawData(data, propertyName, rule, propertyScope, lastReadSnapshot, rawDataSnapshot);
                 } else /*if (propertyDescriptor)*/ { //relaxing this for now
                     value = rule.expression(propertyScope);
+
+                    /*
+                        If propertyName is the primary key and somehow we don't have a value for it, it's time to act
+                    */
+                    if(value === undefined && (this.rawDataPrimaryKeys && this.rawDataPrimaryKeys.indexOf(propertyName) !== -1)) {
+                        this.service.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor);
+                        let dataIdentifier = this.service.dataIdentifierForObject(object);
+                        if(!dataIdentifier) {
+                            /*
+                                This is stopping short of registering object as a created object
+                            */
+                            this.service.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor);
+                            // this.service.mainService.recordObjectForDataIdentifier(object, dataIdentifier);
+                            this.service.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);    
+                        }
+                        value = dataIdentifier.primaryKey;
+                    }
                     /*
                         We assume there shouldn't be more than one rule tha produces a value for the same property.
                     */
@@ -1862,7 +1882,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
                 return;
             }
-            else if(object.propertySerializability(propertyName) /* if the value returned is undefined or false, we don't care */) {
+            else if(object.propertySerializability(propertyName) /* if the value returned is undefined or false, we don't care */ && !object.objectDescriptor.propertyDescriptorNamed(propertyName).isDerived) {
                 console.warn("ExpressionDataMapping.mapObjectPropertyToRawData(): No objectMappingRules found to map property '"+propertyName+"' of " + object.objectDescriptor.name);
             }
         }
@@ -2353,6 +2373,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 /*
                     Benoit: adding  && value to the condition as we don't want arrays with null in it
                 */
+                //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
+                var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
                 if(isToMany && value) {
                     /*
                         When we arrive here coming from _assignInversePropertyValue()
@@ -2366,8 +2388,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                         or find a way to just access the local state without triggering the fetch and just update it.
                     */
-                    //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
-                    var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
 
                     if (!Array.isArray(objectPropertyValue)) {
                         value = [value];
@@ -2380,7 +2400,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }
                     }
                 } else {
-                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
+                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor, objectPropertyValue);
                 }
             }
 
@@ -2391,7 +2411,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     _assignObjectValueOrDefault: {
-        value: function(object, propertyName, value, propertyDescriptor) {
+        value: function(object, propertyName, value, propertyDescriptor, currentObjectPropertyValue) {
+            // const _currentObjectPropertyValue = currentObjectPropertyValue || Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
+
             const defaultValue = propertyDescriptor.defaultValue;
             const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
             const hasValue = typeof value !== "undefined" && value !== null;
@@ -2411,6 +2433,15 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     } else {
                         return (object[propertyName] = defaultValue);
                     }
+                } else if(value === null && !isToMany) {
+                   /*
+                        We used an empty array for relationships, so we don't want to trash it with null
+                   */
+                    /*
+                        null means we know it's not there in storage/rawData. Undefined is we don't know
+                        So we need to make sure that null is properly set on the object
+                    */
+                    return (object[propertyName] = value);
                 }
             } else {
                 return (object[propertyName] = value);
