@@ -34,7 +34,7 @@
     },
 
     "Identity": {
-        "object": "data/model/app/user-identity.mjson"
+        "object": "data/model/app/identity.mjson"
     },
 
     "UserIdentity": {
