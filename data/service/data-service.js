@@ -973,6 +973,19 @@ DataService.addClassProperties({
 
     __makePrototypeForType: {
         value: function (childService, objectDescriptor, constructor) {
+
+            /* to handle things like native types passing by */
+            if(!childService) {
+
+                return constructor
+                    ? constructor.prototype
+                    : objectDescriptor?.object 
+                        ? objectDescriptor.object.prototype
+                        : typeof objectDescriptor === "function"
+                            ? objectDescriptor
+                            : null;
+            }
+
             var prototype = Object.create(
                 constructor?.prototype
                     ?  constructor.prototype
@@ -1004,7 +1017,7 @@ DataService.addClassProperties({
 
                         So we might want to keep an eye on this, even though all should be in-sync if they handle the same properties.
                     */
-                    return mainService._getChildServiceForObject(this).snapshotForObject(this);
+                    return mainService._getChildServiceForObject(this)?.snapshotForObject(this);
                 }
             });
             Object.defineProperty(prototype,"nextTarget", {
@@ -1260,7 +1273,7 @@ DataService.addClassProperties({
     */
     childServicesThatCanSaveDataType: {
         value: function (type) {
-            return this.childServicesForType(type).filter((service) => service.canSaveData === true)
+            return this.childServicesForType(type)?.filter((service) => service.canSaveData === true)
         }
     },
 
@@ -1315,6 +1328,8 @@ DataService.addClassProperties({
                     }
                     while (i < countI);
     
+                } else if(this.handlesType(type)) {
+                    descendantServicesForType = this;
                 } else {
                     descendantServicesForType = null;
                 }
@@ -3035,6 +3050,22 @@ DataService.addClassProperties({
         }
     },
 
+    _setCreatedObjectPropertyTriggerStatusToNull: {
+        value: function(dataObject) {
+            let dataObjectTriggers = this._getTriggersForObject(dataObject),
+                dataObjectTriggersPropertyNames = Object.keys(dataObjectTriggers);
+
+            for(let i=0, iPropertyName, iValue, countI = dataObjectTriggersPropertyNames.length; (i < countI); i++) {
+                iPropertyName = dataObjectTriggersPropertyNames[i];
+                //If values were set on the object and the property has a trigger, meaning it's handled by Mod data
+                if(!dataObject.hasOwnProperty(iPropertyName)) {
+                    dataObjectTriggers[iPropertyName]._setValueStatus(dataObject, null);
+                }
+            }
+        }
+    },
+
+
     /**
      * This method makes the mainService aware of a dataObject that wasn't fetched. So
      * beyond that we can't really know if it's new, as it doesn't exists in the a storage
@@ -3050,14 +3081,18 @@ DataService.addClassProperties({
      */
     mergeDataObject: {
         value: function(dataObject) {
+            if(dataObject === null || dataObject === undefined) {
+                return dataObject;
+            }
+            
             var objectDescriptor = this.objectDescriptorForObject(dataObject);
 
-            if(!objectDescriptor || (objectDescriptor && !this.handlesType(objectDescriptor))) {
-                return;
+            if(!objectDescriptor || (objectDescriptor && (!this.handlesType(objectDescriptor) && this.childServicesForType(objectDescriptor)?.filter((value) => value.handlesType(objectDescriptor))?.length == 0 ))) {
+                return dataObject;
             }
             //If we already know about the object, nothing to do
             else if((this.isObjectCreated(dataObject) || this.isObjectFetched(dataObject) || this.isObjectChanged(dataObject) || this.isObjectDeleted(dataObject))) {
-                return;
+                return dataObject;
             } else {
 
                 var createdDataObjects = this.createdDataObjects,
@@ -3069,36 +3104,85 @@ DataService.addClassProperties({
                 }
 
                 if(!value.has(dataObject)) {
-                    let service = this.childServicesThatCanSaveDataType(objectDescriptor)[0],
+                    let service = this.childServicesThatCanSaveDataType(objectDescriptor)?.[0],
                     //     //In case the object's primarykey is a public property 
                     //     //
                     //     //primaryKey = service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject),
                     //     primaryKey = service.primaryKeyForTypeRawData(objectDescriptor, dataObject),
-                        prototype = this._getPrototypeForType(objectDescriptor),
-                    //     dataIdentifier = primaryKey 
-                    //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
-                    //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
+                        prototype = this._getPrototypeForType(objectDescriptor/*, service*/),
+                        //     dataIdentifier = primaryKey 
+                        //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
+                        //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
 
-                        dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
+                        dataIdentifier = this.dataIdentifierForObject(dataObject);
 
-                    this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                    /*
+                        for Anonymous identity object, it happens that no service is found, which is to be investigated.
+                        One unusual thing is that Identity extends Montage and not DataObject, relevant?
+                    */
+                   if(service) {
 
-                    value.add(dataObject);
+                        if(!dataIdentifier) {
+                            dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
+                            service.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);    
+                            this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                            this.recordDataIdentifierForObject(dataIdentifier, dataObject);
+                        }
 
-                    //Need to fix the prototype if needed
-                    if(Object.getPrototypeOf(dataObject) !== prototype) {
-                        Object.setPrototypeOf(dataObject, prototype);
-                    }    
+                        //Need to fix the prototype if needed
+                        if(Object.getPrototypeOf(dataObject) !== prototype) {
+                            // let valueShallowCopy = {};
+                            // Object.assign(valueShallowCopy, dataObject);
+                            Object.setPrototypeOf(dataObject, prototype);
+                        }
 
-                    //This is done in _createDataObject, is it needed here?
-                    this._setObjectType(dataObject, objectDescriptor);
-                    this._objectDescriptorForObjectCache.set(dataObject,objectDescriptor);
+                        value.add(dataObject);
 
-                    //Build the changes we'll want to upsert
-                    this.registerMergedDataObjectChanges(dataObject);
 
-                    this.dispatchDataEventTypeForObject(DataEvent.merge, dataObject);
+                        //This is done in _createDataObject, is it needed here?
+                        this._setObjectType(dataObject, objectDescriptor);
+                        this._objectDescriptorForObjectCache.set(dataObject,objectDescriptor);
+
+                        //Make sure we won't fetch properties missing
+                        this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
+
+                        //Let's make sure the values are now handled by DataTriggers
+                        let objectKeys = Object.keys(dataObject);
+                        for(let iKey of objectKeys) {
+
+                            let iValue = dataObject[iKey];
+                            console.log("merging "+iKey+", iValue ",iValue, "for ",dataObject);
+
+                            delete dataObject[iKey];
+                            dataObject[iKey] = iValue;
+
+                            if(Array.isArray(iValue)) {
+                                for(let i=0, countI = iValue.length; (i<countI); i++) {
+                                    this.mergeDataObject(iValue[i]);
+                                }
+                            } else if(iValue && typeof iValue === "object") {
+                                this.mergeDataObject(iValue);
+                            }
+
+                            console.log("merged "+iKey+" for:",dataObject);
+                        }
+
+
+                        //Build the changes we'll want to upsert
+                        this.registerMergedDataObjectChanges(dataObject);
+
+                        this.dispatchDataEventTypeForObject(DataEvent.merge, dataObject);
+
+                        return dataObject;
+
+                    } else {
+                        console.warn("WARNING: Object NOT MERGED: No RawDataService found that can save data type "+objectDescriptor);
+
+                    }
+
                 }
+
+                return dataObject;
             }
 
         }
@@ -3107,20 +3191,37 @@ DataService.addClassProperties({
     registerMergedDataObjectChanges: {
         value: function(dataObject) {
             let dataObjectTriggers = this._getTriggersForObject(dataObject),
+                dataObjectTriggerNames = Object.keys(dataObjectTriggers),
                 dataObjectPropertyNames = Object.keys(dataObject),
                 // propertyNames = Object.keys(dataObjectTriggers),
                 changesForDataObject = this.changesForDataObject(dataObject);
 
-            for(let i=0, iPropertyName, iValue, countI = dataObjectPropertyNames.length; (i < countI); i++) {
-                iPropertyName = dataObjectPropertyNames[i];
+
+            for(let i=0, iDataObjectTrigger, iPropertyName, iValue, countI = dataObjectTriggerNames.length; (i < countI); i++) {
+                iDataObjectTrigger = dataObjectTriggers[dataObjectTriggerNames[i]];
                 //If values were set on the object and the property has a trigger, meaning it's handled by Mod data
-                if(dataObject.hasOwnProperty(iPropertyName) && dataObjectTriggers[iPropertyName]) {
-                    changesForDataObject.set(iPropertyName, (iValue = dataObject[iPropertyName]));
-                    if(iValue) {
-                        this.mergeDataObject(iValue);
-                    }
+                if(dataObject.hasOwnProperty((iPropertyName = iDataObjectTrigger._privatePropertyName))) {
+                    changesForDataObject.set(iDataObjectTrigger._propertyName, (iValue = dataObject[iPropertyName]));
+                } else if(dataObject.hasOwnProperty((iPropertyName = iDataObjectTrigger._propertyName))) {
+                    changesForDataObject.set(iDataObjectTrigger._propertyName, (iValue = dataObject[iPropertyName]));
                 }
+                
+                if(iValue) {
+                    this.mergeDataObject(iValue);
+                }
+
             }
+    
+            // for(let i=0, iPropertyName, iValue, countI = dataObjectPropertyNames.length; (i < countI); i++) {
+            //     iPropertyName = dataObjectPropertyNames[i];
+            //     //If values were set on the object and the property has a trigger, meaning it's handled by Mod data
+            //     if(dataObject.hasOwnProperty(iPropertyName) && dataObjectTriggers[iPropertyName]) {
+            //         changesForDataObject.set(iPropertyName, (iValue = dataObject[iPropertyName]));
+            //         if(iValue) {
+            //             this.mergeDataObject(iValue);
+            //         }
+            //     }
+            // }
 
         }
     },
