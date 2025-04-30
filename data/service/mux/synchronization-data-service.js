@@ -1059,7 +1059,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
     didAllChildServicesCompletedReadOperation(aReadOperation) {
-        return  this.readCompletionOperationByChildDataServiceForReadOperation(aReadOperation).size === this.childServicesForType(aReadOperation.target).length
+        let childServicesForType = this.childServicesForType(aReadOperation.target);
+        if(!childServicesForType) {
+            return true;
+        } else {
+            return this.readCompletionOperationByChildDataServiceForReadOperation(aReadOperation).size === childServicesForType.length;
+        }
     }
 
     get _childDataServiceReadCompletionOperationByReadOperation() {
