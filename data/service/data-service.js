@@ -1263,7 +1263,14 @@ DataService.addClassProperties({
         value: function (type) {
             var services;
             type = type instanceof ObjectDescriptor ? type : this.objectDescriptorForType(type);
-            services = this._childServicesByType.get(type) || this._childServicesByType.get(null);
+            //services = this._childServicesByType.get(type) || this._childServicesByType.get(null);
+            services = this._childServicesByType.get(type);
+            if(services) {
+                let catchAllServices = this._childServicesByType.get(null);
+                if(catchAllServices) services.push(...catchAllServices);
+            } else {
+                services = this._childServicesByType.get(null);
+            }
             return services || null;
         }
     },
