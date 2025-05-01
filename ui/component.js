@@ -2562,26 +2562,25 @@ Component.addClassProperties(
 
     _bindTemplateParametersToArguments: {
         value: function () {
-            var parameters = this._templateDocumentPart ? this._templateDocumentPart.parameters : null,
-                templateArguments = this._domArguments,
-                parameterElement,
-                argument,
-                validation,
-                contents,
-                components,
-                range,
-                component;
+            let parameters = this._templateDocumentPart ? this._templateDocumentPart.parameters : null;
+            let templateArguments = this._domArguments;
+            let validation;
 
             if ((validation = this._validateTemplateArguments(templateArguments, parameters))) {
                 throw validation;
             }
 
             for (let key in parameters) {
-                if (parameters.hasOwnProperty(key)) {
+                let parameterElement;
+                let components;
+                let component;
+                let argument;
+                let contents;
+                let range;
 
+                if (parameters.hasOwnProperty(key)) {
                     parameterElement = parameters[key];
                     argument = templateArguments ? templateArguments[key] : void 0;
-
 
                     if ((key === "*") /** || (key === "each") */) {
                         if (this._element.childElementCount === 0 &&
