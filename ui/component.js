@@ -2571,16 +2571,10 @@ Component.addClassProperties(
             }
 
             for (let key in parameters) {
-                let parameterElement;
-                let components;
-                let component;
-                let argument;
-                let contents;
-                let range;
-
                 if (parameters.hasOwnProperty(key)) {
-                    parameterElement = parameters[key];
-                    argument = templateArguments ? templateArguments[key] : void 0;
+                    let parameterElement = parameters[key];
+                    let argument = templateArguments ? templateArguments[key] : void 0;
+                    let contents;
 
                     if ((key === "*") /** || (key === "each") */) {
                         if (this._element.childElementCount === 0 &&
@@ -2590,7 +2584,7 @@ Component.addClassProperties(
                         ) {
                          //We're missing an argument, we're going to check if we have a default
                             if (parameterElement && parameterElement.childElementCount > 0) {
-                                range = this._element.ownerDocument.createRange();
+                                let range = this._element.ownerDocument.createRange();
                                 range.selectNodeContents(parameterElement);
                                 parameterElement.parentNode.replaceChild(range.extractContents(), parameterElement);
 
@@ -2607,7 +2601,7 @@ Component.addClassProperties(
                                 parameterElement.parentNode.removeChild(parameterElement);
                             }
                         } else {
-                            range = this._element.ownerDocument.createRange();
+                            let range = this._element.ownerDocument.createRange();
                             range.selectNodeContents(this._element);
                             contents = range.extractContents();
                         }
@@ -2616,21 +2610,19 @@ Component.addClassProperties(
                     }
 
                     if (contents) {
-                        var i, length;
-
                         if (contents instanceof Element) {
-                            var classList = parameterElement.classList,
-                                contentsClassList = contents.component ? contents.component.classList : contents.classList;
+                            let { classList } = parameterElement;
+                            let  contentsClassList = contents.component ? contents.component.classList : contents.classList;
 
-                            for (i = 0, length = classList.length; i < length; i++) {
+                            for (let i = 0, length = classList.length; i < length; i++) {
                                 contentsClassList.add(classList[i]);
                             }
                         }
 
-                        components = this._findAndDetachComponentsFromNode(contents, (components = []));
+                        const components = this._findAndDetachComponentsFromNode(contents, []);
                         parameterElement.parentNode.replaceChild(contents, parameterElement);
 
-                        for (i = 0; (component = components[i]); i++) {
+                        for (let component of components) {
                             component.attachToParentComponent();
                         }
                     } else {
