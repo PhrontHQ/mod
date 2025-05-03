@@ -4,11 +4,8 @@
  */
 var Converter = require("./converter").Converter,
     deprecate = require("../deprecate"),
-    uuid = require("core/uuid"),
     shouldMuteWarning = false,
     singleton;
-
-console.log("uuid: "+uuid.generate(undefined, true));
 
 /**
  * @class UUIDStringTo16CharacterStringConverter
