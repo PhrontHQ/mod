@@ -1,0 +1,25 @@
+{
+    "converter_descriptor": {
+        "object": "core/converter/converter.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "UpperCaseConverter",
+            "customPrototype": false,
+            "parent": {
+                "@": "converter_descriptor"
+            },
+            "propertyDescriptors": [],
+            "propertyDescriptorGroups": {},
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "core/converter/u-u-i-d-string-to-16-character-string-converter.mjson"
+            },
+            "exportName": "UUIDStringTo16CharacterStringConverter",
+            "module": {
+                "%": "core/converter/u-u-i-d-string-to-16-character-string-converter"
+            }
+        }
+    }
+}
