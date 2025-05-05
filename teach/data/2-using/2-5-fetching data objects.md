@@ -60,3 +60,29 @@ DataService.mainService.fetchData(activeUserSessionDataQuery)
 console.log("activeUserSessions:", activeUserSessions);
 
 });
+
+### Accessing Data Object Properties
+
+When an object is fetched, if no readExpressions are specified on the data query, all properties, except relationships, will be fetched. If readExpressions are set, only those will be fetched. If readExpressions contain relationships, those will be fetched such that when the Promise-like DataStream resolves, the values corresponding to those readExpressions will be available on the returned object.
+
+If one access a property on an object that wasn't already fetched, it will return undefined immediately and trigger an internal fetch of that property of that object. Which is working well with bindings that observe properties involved and will automatically react when the fetched value is back and assigned by the framework to that object's property.
+
+If one needs to control when one or more property's value are fetched, you can use:
+
+DataService.mainService.getObjectProperty(aUserSession, "identity")
+
+.then(() => {
+
+console.log("aUserSession.identity is fetched: ", aUserSession.identity);
+
+})
+
+or to do so with multiple properties in one shot:
+
+DataService.mainService.getObjectProperty(aUserSession, ["identity", "connectionTimeRange", "environment"] )
+
+.then(() => {
+
+console.log("aUserSession properties are fetched: ", aUserSession.identity);
+
+})
