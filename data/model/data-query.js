@@ -1,8 +1,8 @@
 var ObjectSpecification = require("./object-specification").ObjectSpecification;
 
 /**
- * Defines the criteria that objects must satisfy to be included in a set of
- * data as well as other characteristics that data must possess.
+ * Describes the kind of objects one want to fetch. A DataQuery is passed to the mainService using
+ * DataService.mainService.fetchData(aDataQuery)
  *
  * @class
  * @extends external:ObjectSpecification
