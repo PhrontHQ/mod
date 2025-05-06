@@ -390,7 +390,7 @@ WebSocketDataOperationService.addClassProperties({
             //console.log("received socket message ",event);
                 serializedOperation = event.data;
 
-            console.log("handleMessage: ",serializedOperation);
+            //console.log("handleMessage: ",serializedOperation);
 
             if(serializedOperation) {
                 var deserializedOperation,
