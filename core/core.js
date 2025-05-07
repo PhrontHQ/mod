@@ -1162,6 +1162,20 @@ Object.defineProperty(Montage.prototype, "metadata", {
     }
 });
 
+Object.defineProperty(Montage.prototype, "moduleId", {
+    enumerable: false,
+    get: function() {
+        return Montage.getInfoForObject(this).moduleId;
+    }
+});
+
+Object.defineProperty(Montage.prototype, "fullModuleId", {
+    enumerable: false,
+    get: function() {
+        return Montage.getInfoForObject(this).fullModuleId;
+    }
+});
+
 /**
  * Get the metadata Montage has on the given object.
  * @function Montage.getInfoForObject
