@@ -3080,29 +3080,134 @@ DataService.addClassProperties({
      * / update. It might be necessary to flag it to rawDataServcices somehow. A DB like PostgreSQL
      * can probably deal with it by using INSERT ... ON CONFLICT (key) DO UPDATE (and ON CONFLICT (key) DO NOTHING), 
      * i.e. upsert, or the more recent MERGE.
-     *     *
+     * 
+     * TODO: refactor to use isObjectCreated() and registerCreatedDataObject() methods if possible
+     * 
      * @method {Set.<Object>}
      * @argument {DataObject} dataObject
-     * @returns {void}
+     * @argument {Object} delegate - an object that gets a chance to substitute an existing object instead of merging the one at end, for example to avoid duplicates
+     * @returns {void || Promise} - if a delegate is used, the method will return a promise otherwise it returns the dataObject passed in
 
      */
-    mergeDataObject: {
-        value: function(dataObject) {
-            if(dataObject === null || dataObject === undefined) {
-                return dataObject;
-            }
-            
-            var objectDescriptor = this.objectDescriptorForObject(dataObject);
 
-            if(!objectDescriptor || (objectDescriptor && (!this.handlesType(objectDescriptor) && this.childServicesForType(objectDescriptor)?.filter((value) => value.handlesType(objectDescriptor))?.length == 0 ))) {
-                return dataObject;
-            }
-            //If we already know about the object, nothing to do
-            else if((this.isObjectCreated(dataObject) || this.isObjectFetched(dataObject) || this.isObjectChanged(dataObject) || this.isObjectDeleted(dataObject))) {
-                return dataObject;
-            } else {
+    _invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject: {
+        value: function(delegate, dataObject, propertyName, valueToMerge, existingDataObject, propertyArray, propertyIndex, _promises, isRoot ) {
+            let delegatePromise = delegate.willMergeDataObjectPropertyValueIntoExistingDataObject(dataObject, propertyName,  valueToMerge, existingDataObject, propertyArray, propertyIndex )
+                .then((delegateValueToMerge) => {
+                    /*
+                        If null is returned by the delegate, nothing to do
+                        But if an object is returned that is known, then the 
+                        next mergeDataObject() will punt as needed
+                    */
+                    if(delegateValueToMerge) {
+                        this.mergeDataObject(delegateValueToMerge, delegate, _promises, isRoot);
 
-                var createdDataObjects = this.createdDataObjects,
+                        /*
+                            Update the property
+                            DOES NOT HANDLE ANYTHING BUT to-one and array-based to-many...
+                            Shall we leave this to the delegate to do?
+                        */
+                        if(propertyArray) {
+                            if(!existingDataObject) {
+                                if(propertyArray[propertyIndex] !== delegateValueToMerge) {
+                                    propertyArray.set(propertyIndex, delegateValueToMerge);
+                                }
+                            } else {
+                                return this.getObjectProperties(existingDataObject, [propertyName])
+                                .then(()=>{
+                                    let existingDataObjectArray = existingDataObject[propertyName];
+                                    if(!existingDataObjectArray.includes(delegateValueToMerge)) {
+                                        existingDataObjectArray.push(delegateValueToMerge);
+                                    }    
+                                })
+                            }
+                        } else {
+                            if(existingDataObject) {
+                                return this.getObjectProperties(existingDataObject, [propertyName])
+                                .then(()=>{
+                                    let existingDataObjectValue = existingDataObject[propertyName];
+                                    if(existingDataObjectValue !== delegateValueToMerge) {
+                                        existingDataObjectValue[propertyName] = delegateValueToMerge;
+                                    }
+                                });
+                            } else if(dataObject[propertyName] !== delegateValueToMerge) {
+                                dataObject[propertyName] = delegateValueToMerge;
+                            }
+                        }
+                    } 
+
+                    return delegateValueToMerge;
+                });
+
+            _promises.push(delegatePromise);
+            return delegatePromise;
+        }
+    },
+
+    _invokeDelegateWillMergeDataObject: {
+        value: function(delegate, dataObject, _promises, isRoot) {
+            let delegatePromise = delegate.willMergeDataObject(dataObject);
+            _promises.push(delegatePromise);
+            return delegatePromise;
+        }
+    },
+
+
+    _mergeDataObjectProperties: {
+        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot) {
+
+            //Sanity check
+            if(delegateObjectToMerge === dataObject) {
+                delegateObjectToMerge = null;
+            }
+
+            let objectKeys = Object.keys(dataObject);
+            for(let iKey of objectKeys) {
+
+                let iValue = dataObject[iKey];
+                console.log("merging "+iKey+", iValue ",iValue, "for ",dataObject);
+
+                //If it's a new object, we need to make sure things are square like if dataObject had been created by the data service
+                if(!delegateObjectToMerge) {
+                    delete dataObject[iKey];
+                    dataObject[iKey] = iValue;  
+                    
+                    //The array on dataObject is its owm, so we need to grab it as it's not iValue anymore
+                    iValue = dataObject[iKey];
+                }
+
+                //If we have delegateObjectToMerge, we need to make sure that we move the values of dataObject on to delegateObjectToMerge
+                if(Array.isArray(iValue)) {
+                    for(let i=0, countI = iValue.length; (i<countI); i++) {
+                        if(delegate) {
+                            this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue[i], delegateObjectToMerge, iValue, i, _promises, _isRoot)
+                        } else {
+                            //We don't change the structure, we just blend in values off dataObject
+                            this.mergeDataObject(iValue[i], delegate, _promises, _isRoot);
+                        }
+                    }
+                } else if(iValue && typeof iValue === "object") {
+                    if(delegate) {
+                        this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue, delegateObjectToMerge, undefined, undefined, _promises, _isRoot)
+                    } else {
+                        //We don't change the structure, we just blend in values off dataObject
+                        this.mergeDataObject(iValue, delegate, _promises, _isRoot);
+                    }
+                }
+
+                console.log("merged "+iKey+" for:",dataObject);
+            }
+
+        }
+    },
+
+    _mergeDataObject: {
+        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot) {
+
+            if(!delegateObjectToMerge || (delegateObjectToMerge && dataObject === delegateObjectToMerge)) {
+
+                let objectDescriptor = this.objectDescriptorForObject(dataObject),
+                    createdDataObjects = this.createdDataObjects,
                     value = createdDataObjects.get(objectDescriptor);
 
                 if(!value) {
@@ -3127,7 +3232,7 @@ DataService.addClassProperties({
                         for Anonymous identity object, it happens that no service is found, which is to be investigated.
                         One unusual thing is that Identity extends Montage and not DataObject, relevant?
                     */
-                   if(service) {
+                    if(service) {
 
                         if(!dataIdentifier) {
                             dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
@@ -3154,42 +3259,73 @@ DataService.addClassProperties({
                         this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
 
                         //Let's make sure the values are now handled by DataTriggers
-                        let objectKeys = Object.keys(dataObject);
-                        for(let iKey of objectKeys) {
-
-                            let iValue = dataObject[iKey];
-                            console.log("merging "+iKey+", iValue ",iValue, "for ",dataObject);
-
-                            delete dataObject[iKey];
-                            dataObject[iKey] = iValue;
-
-                            if(Array.isArray(iValue)) {
-                                for(let i=0, countI = iValue.length; (i<countI); i++) {
-                                    this.mergeDataObject(iValue[i]);
-                                }
-                            } else if(iValue && typeof iValue === "object") {
-                                this.mergeDataObject(iValue);
-                            }
-
-                            console.log("merged "+iKey+" for:",dataObject);
-                        }
-
+                        this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot);
 
                         //Build the changes we'll want to upsert
-                        this.registerMergedDataObjectChanges(dataObject);
+                        //this.registerMergedDataObjectChanges(dataObject);
 
-                        this.dispatchDataEventTypeForObject(DataEvent.merge, dataObject);
+                        this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
 
+                        if(delegate && _isRoot && _promises) {
+                            return Promise.all(_promises).then(() => dataObject);
+                        }
                         return dataObject;
 
                     } else {
                         console.warn("WARNING: Object NOT MERGED: No RawDataService found that can save data type "+objectDescriptor);
 
                     }
-
                 }
+            } else {
+                //An existing object was found, but we still want to eventually move properties from dataObject to delegateObjectToMerge
+                this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot);
+            }
 
-                return dataObject;
+            if(delegate && _isRoot && _promises) {
+                return Promise.all(_promises).then(() => dataObject);
+            }
+            return dataObject;
+            
+        }
+    },
+
+    mergeDataObject: {
+        value: function(dataObject, delegate, _promises) {
+            let isRoot = (_promises === undefined),
+                promises;
+
+            if(dataObject === null || dataObject === undefined) {
+                return (delegate && isRoot)? Promise.resolve(dataObject) : dataObject;
+            }
+            
+            let objectDescriptor = this.objectDescriptorForObject(dataObject);
+            let childServicesForType = this.childServicesForType(objectDescriptor);
+
+            if(!objectDescriptor || (objectDescriptor && (!this.handlesType(objectDescriptor) || !childServicesForType || (childServicesForType && childServicesForType?.filter((value) => value.handlesType(objectDescriptor))?.length == 0 )))) {
+                return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+            }
+            //If we already know about the object, nothing to do
+            else if((this.isObjectCreated(dataObject) || this.isObjectFetched(dataObject) || this.isObjectChanged(dataObject) || this.isObjectDeleted(dataObject))) {
+                return (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+            } else {
+                let rootPromise;
+                
+                if(isRoot && delegate) {
+                    return this._invokeDelegateWillMergeDataObject(delegate, dataObject, (promises || (promises = [])), isRoot)
+                    .then((delegateObjectToMerge) => {
+                        return this._mergeDataObject(dataObject, delegate, delegateObjectToMerge, (promises || (promises = [])), isRoot)
+                    })
+                    
+                } else {
+                    this._mergeDataObject(dataObject, delegate, undefined, (promises || (promises = [])), isRoot);
+                    
+                    if(delegate && isRoot && promises) {
+                        return Promise.all(promises).then(() => dataObject);
+                    }
+                    else {
+                        return dataObject;
+                    }
+                }
             }
 
         }
