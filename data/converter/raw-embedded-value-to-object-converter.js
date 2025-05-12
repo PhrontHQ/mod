@@ -53,8 +53,8 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
                         if(promises) {
                             return ((promises.length > 1) 
                                 ? Promise.all(promises)
-                                : promises[0]). then(function(resolvedValue) {
-                                    console.debug("Embedded converter resolvedValue is ",resolvedValue);
+                                : promises[0]).then(function(resolvedValue) {
+                                    //console.debug("Embedded converter resolvedValue is ",resolvedValue);
                                     return convertedValue;
                                 })
                         } else {
