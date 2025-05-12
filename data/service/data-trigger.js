@@ -439,32 +439,40 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                 if(currentValue) {
                     if(Array.isArray(currentValue)) {
                         var self = this,
-                            listener = function _triggerArrayCollectionListener(plus, minus, index) {
-                                //If we're not in the middle of a mapping...:
-                                if(!self._service._objectsBeingMapped.has(object)) {
-                                    //Dispatch update event
-                                    var changeEvent = new ChangeEvent;
-                                    changeEvent.target = object;
-                                    changeEvent.key = self._propertyName;
+                            listener = this._collectionListener.get(object);
 
-                                    //This
-                                    changeEvent.index = index;
-                                    changeEvent.addedValues = plus;
-                                    changeEvent.removedValues = minus;
+                            if(!listener) {
 
-                                    //Or this?
-                                    //changeEvent.rangeChange = [plus, minus, index];
+                                listener = function _triggerArrayCollectionListener(plus, minus, index) {
+                                    //If we're not in the middle of a mapping...:
+                                    if(!self._service._objectsBeingMapped.has(object)) {
+                                        //Dispatch update event
+                                        var changeEvent = new ChangeEvent;
+                                        changeEvent.target = object;
+                                        changeEvent.key = self._propertyName;
 
-                                    //Or both with a getter/setter for index, addedValues and removedValues on top of rangeChange?
+                                        //This
+                                        changeEvent.index = index;
+                                        changeEvent.addedValues = plus;
+                                        changeEvent.removedValues = minus;
 
-                                    //To deal with changes happening to an array value of that property,
-                                    //we'll need to add/cancel observing on the array itself
-                                    //and dispatch added/removed change in the array's change handler.
+                                        //Or this?
+                                        //changeEvent.rangeChange = [plus, minus, index];
 
-                                    //Bypass EventManager for now
-                                    self._service.rootService.handleChange(changeEvent);
+                                        //Or both with a getter/setter for index, addedValues and removedValues on top of rangeChange?
+
+                                        //To deal with changes happening to an array value of that property,
+                                        //we'll need to add/cancel observing on the array itself
+                                        //and dispatch added/removed change in the array's change handler.
+
+                                        //Bypass EventManager for now
+                                        self._service.rootService.handleChange(changeEvent);
+                                    }
                                 }
-                            };
+
+                            } else {
+                                console.debug("previously created listener found for "+object.objectDescriptor.name+"."+self._propertyName)
+                            }
 
                         this._collectionListener.set(object,listener);
                         currentValue.addRangeChangeListener(listener);
