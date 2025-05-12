@@ -71,6 +71,7 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
 
         this.fetchRequestMappingByOperationType = deserializer.getProperty("fetchRequestMappingByOperationType");
         this.fetchResponseRawDataMappingExpressionByCriteria = deserializer.getProperty("fetchResponseRawDataMappingExpressionByCriteria");
+        this.rawDataCriteriaValuesByCriteria = deserializer.getProperty("rawDataCriteriaValuesByCriteria");
 
     }
 
@@ -382,5 +383,52 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
             }
         }
     }
-    
+
+    filterReadOperationRawData(readOperation, rawData) {
+        let rawDataCriteriaValuesByCriteria = this.rawDataCriteriaValuesByCriteria;
+
+        if(!rawDataCriteriaValuesByCriteria) {
+            return rawData;
+        }
+
+        let criteriaIterator = rawDataCriteriaValuesByCriteria.keys(),
+        dataOperationScope = this._scope.nest(readOperation),
+        iCriteria, iRawDataCriteria;
+
+        while ((iCriteria = criteriaIterator.next().value)) {
+
+            if(iCriteria.evaluate(readOperation)) {
+                /*
+                    We have a match, we need to evaluate the rules to fully form the criteria
+                    we'll use to filter rawData
+                */
+                let criteriaValuesRules = rawDataCriteriaValuesByCriteria.get(iCriteria),
+                    j, jRule, jRuleEvaluationResult;
+
+                /*
+                    Current serialization is an object to simplify manual authoring, 
+                    but our API should be an array of mapping rules. So if we don't
+                    have an array, we do the work
+                */
+                if(!Array.isArray(criteriaValuesRules)) {
+                    rawDataCriteriaValuesByCriteria.set(iCriteria, (criteriaValuesRules = this._buildFetchRequestMappingRulesFromRawRules(criteriaValuesRules)))
+                }
+
+                /*
+                    Now we build the criteria we'll setup evaluating the rules
+                */
+                    iRawDataCriteria = new Criteria();
+
+                for(j=0;(jRule = criteriaValuesRules[j]); j++) {
+                    jRuleEvaluationResult = jRule.evaluate(dataOperationScope);
+                    assign( iRawDataCriteria, jRule.targetPath, jRuleEvaluationResult, undefined /*parameters*/, undefined /*document*/, undefined /*components*/);
+                }
+
+                //Now filter:
+                rawData = rawData.filter(iRawDataCriteria.predicateFunction);
+            }
+        }
+
+        return rawData;
+    }
 }
