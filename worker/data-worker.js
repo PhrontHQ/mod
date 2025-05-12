@@ -625,7 +625,8 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                 }    
             })
             .catch((error) => {
-                if(this.delegate) {
+                console.error("DataWorker handleMessage() error:", event, error );
+                if(this.delegate?.respondsToWorkerFailureToHandleMessageWithError) {
                     let responsePromise = this.delegate.respondsToWorkerFailureToHandleMessageWithError(this, message, error);
                     if(responsePromise) {
                         responsePromise.then((responseMessage) => {
