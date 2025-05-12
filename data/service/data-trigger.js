@@ -1,6 +1,6 @@
 var Montage = require("core/core").Montage,
     DataObjectDescriptor = require("../model/data-object-descriptor").DataObjectDescriptor,
-    ObjectDescriptor = require("../model/object-descriptor").ObjectDescriptor,
+    ModelObjectDescriptor = require("../model/object-descriptor").ObjectDescriptor,
     Map = require("core/collections/map"),
     Range = require("core/range").Range,
     //DataService requires DataTrigger before it sets itself on the exports object...
@@ -897,7 +897,7 @@ Object.defineProperties(exports.DataTrigger, /** @lends DataTrigger */ (DataTrig
             // to existing Montage data projects.  Future montage data projects
             // should base their object descriptors on Montage's version of object
             // descriptor.
-            var isMontageDataType = type instanceof DataObjectDescriptor || type instanceof ObjectDescriptor;
+            var isMontageDataType = type instanceof DataObjectDescriptor || type instanceof ModelObjectDescriptor;
             return isMontageDataType ?  this._addTriggersForMontageDataType(service, type, prototype, name) :
                                         this._addTriggers(service, type, prototype, requisitePropertyDescriptors);
         }
@@ -963,7 +963,7 @@ Object.defineProperties(exports.DataTrigger, /** @lends DataTrigger */ (DataTrig
             // to existing Montage data projects.  Future montage data projects
             // should base their object descriptors on Montage's version of object
             // descriptor.
-            var isMontageDataType = type instanceof DataObjectDescriptor || type instanceof ObjectDescriptor;
+            var isMontageDataType = type instanceof DataObjectDescriptor || type instanceof ModelObjectDescriptor;
             return isMontageDataType ?  this._addTriggerForMontageDataType(service, type, prototype, propertyDescriptor.name) :
                                         this._addTrigger(service, type, prototype, propertyDescriptor);
         }
