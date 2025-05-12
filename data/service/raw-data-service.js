@@ -279,7 +279,7 @@ RawDataService.addClassProperties({
 
     connectionForIdentifier: {
         value: function (connectionIdentifier) {
-            return this._registeredConnectionsByIdentifier[connectionIdentifier];
+            return this._registeredConnectionsByIdentifier?.[connectionIdentifier];
             //return this._registeredConnectionsByIdentifier.get(connectionIdentifier);
         }
     },
@@ -352,10 +352,22 @@ RawDataService.addClassProperties({
                     this.connection = this.connectionForIdentifier(this.connectionIdentifer);
                 }
                 else if(!this.currentEnvironment.isCloud) {
-                    this.connection = this.connectionForIdentifier(`local-${this.currentEnvironment.stage}`);
+                    let connection = this.connectionForIdentifier(`local-${this.currentEnvironment.stage}`);
+
+                    //If we can't find a local specific one, we'll look for the one for this.currentEnvironment.stage
+                    if(!connection) {
+                        connection = this.connectionForIdentifier(this.currentEnvironment.stage);
+                    }
+                    this.connection = connection;
+                    
                 } else {
                     this.connection = this.connectionForIdentifier(this.currentEnvironment.stage);
                 }
+
+                if(!this._connection) {
+                    throw "RawDataService "+ (this.name || this.identifier) + "could not find a connection for "+this.currentEnvironment.stage+" environment";
+                }
+
             }
             return this._connection;
         },
@@ -509,7 +521,7 @@ RawDataService.addClassProperties({
     fetchRawObjectProperty: {
         value: function (object, propertyName) {
 
-            console.warn("\t~~~~~~~~~~~~~~~~~~~ "+this.identifier+" fetchRawObject: "+object.dataIdentifier+", property: "+propertyName);
+            console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+object.dataIdentifier+", property: "+propertyName);
 
             var self = this,
                 objectDescriptor = this.objectDescriptorForObject(object),
@@ -1050,6 +1062,23 @@ RawDataService.addClassProperties({
             else {
                 type = streamQueryType;
             }
+
+            mapping = this.mappingForType(type);
+            /*
+                Now, that type could be stored in a collection / object store /endoint that 
+                 hosts multiple subtypes of type. So rawData could be one of those.
+
+                We now have on ExpressionDataMapping a rawDataTypeIdentificationCriteriaForDataOperation()
+
+                We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
+                We'll need to find a way to optimize down to a single lookup if we can
+            */
+            if(mapping.needsRawDataTypeIdentificationCriteria) {
+                type = mapping.objectTypeForRawData(rawData);
+            }
+
+         
+            
                 
             if(readExpressions && readExpressions.length > 0 && rawData === null) {
                 //We need to find the object matching stream.query.criteria
@@ -1060,7 +1089,6 @@ RawDataService.addClassProperties({
                     if we have an object, we have a snapshot. We might be able to create a rawData that contains readExpressions' matching raw property set to null 
                 */
                 if(object) {
-                    let mapping = this.mappingForType(type);
 
                     for(let iReadExpression of readExpressions) {
                         let iRule = mapping.objectMappingRuleForPropertyName(iReadExpression);
@@ -1430,27 +1458,38 @@ RawDataService.addClassProperties({
      * @private
      * @argument  {DataIdentifier} dataIdentifier
      * @argument  {Object} rawData
+     * @argument  {Boolean} isFromUpate                 - expected to be true when a transaction is completed and a value is recorded 
+     *                                                  in the snapshot as the confirmed value of record
+     * 
+     * @returns {Object}                                - An object containing the recorded snapshot if any:
+     *                                                      - Will be null if rawData has no change from the current snapshot
+     *                                                      - Will be rawData if there wasn't a known snapshot
+     *                                                      - an object containig the subset of data that is different from the known snapshot 
      */
     recordSnapshot: {
         value: function (dataIdentifier, rawData, isFromUpdate) {
             if (!dataIdentifier) {
-                return;
+                return null;
             }
 
             var snapshot = this._snapshot.get(dataIdentifier);
             if (!snapshot) {
                 this._snapshot.set(dataIdentifier, rawData);
+                return rawData
             }
             else {
                 var rawDataKeys = Object.keys(rawData),
                     i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues, iRemovedValues,
                     iHasAddedValues, iHasRemovedValues,
-                    j, countJ, jDiffValue, jDiffValueIndex;
+                    j, countJ, jDiffValue, jDiffValueIndex,
+                    canRemoveRawDataKey;
 
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
+
                     iUpdatedRawDataValue = rawData[rawDataKeys[i]];
                     if (isFromUpdate && iUpdatedRawDataValue && ((iHasAddedValues = iUpdatedRawDataValue.hasOwnProperty("addedValues")) || (iHasRemovedValues = iUpdatedRawDataValue.hasOwnProperty("removedValues")))) {
-
+                        
+                        canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
 
                         if (iHasAddedValues) {
@@ -1461,27 +1500,42 @@ RawDataService.addClassProperties({
                                     for (j = 0, countJ = iDiffValues.length; (j < countJ); j++) {
                                         jDiffValue = iDiffValues[j];
                                         /*
-                                            We shouldn't have to worry about the value alredy being in iCurrentRawDataValue, but we're going to safe and check
+                                            We shouldn't have to worry about the value already being in iCurrentRawDataValue, but we're going to safe and check
                                         */
                                         if (iCurrentRawDataValue.indexOf(jDiffValue) === -1) {
                                             iCurrentRawDataValue.push(jDiffValue);
+                                            canRemoveRawDataKey = false;
                                         }
                                     }
                                 } else {
-                                    //console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues:", iDiffValues);
+                                    console.warn("recordSnapshot when one exists: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues is:", iDiffValues);
+                                    /* there's a current value that is not an array.. Which is weird... */
                                     snapshot[rawDataKeys[i]] = iDiffValues;
+                                    canRemoveRawDataKey = false;
                                 }
                             } else {
-                                console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but addedValues:", iDiffValues);
+                                //console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but addedValues:", iDiffValues);
                                 /*
-                                    We could reconstruct from the object value, but we should relly not be here.
+                                    We could reconstruct from the object value, but we should really not be here.
                                 */
                                 snapshot[rawDataKeys[i]] = iDiffValues;
+                                canRemoveRawDataKey = false;
                             }
                         }
 
                         if (iHasRemovedValues) {
                             iDiffValues = iUpdatedRawDataValue.removedValues;
+
+                            /* 
+                                WARNING
+                                iCurrentRawDataValue was cached early in the loop and there's a use-case where 
+                                iCurrentRawDataValue would not be equal to rawData[rawDataKeys[i]] because
+                                it might have changed in the block above, which is when there was no value at all.
+
+                                So the only use case where not refreshing it would be if somehow the data service
+                                received a value in .addedValues array that is also in the .removedValues, which would 
+                                be strange
+                            */
 
                             if (iCurrentRawDataValue) {
                                 if (Array.isArray(iCurrentRawDataValue)) {
@@ -1492,6 +1546,7 @@ RawDataService.addClassProperties({
                                         */
                                         if ((jDiffValueIndex = iCurrentRawDataValue.indexOf(jDiffValue)) !== -1) {
                                             iCurrentRawDataValue.splice(jDiffValueIndex, 1);
+                                            canRemoveRawDataKey = false;
                                         }
                                     }
                                 } else {
@@ -1504,10 +1559,22 @@ RawDataService.addClassProperties({
                             }
                         }
 
-                    } else {
+                        if(canRemoveRawDataKey) {
+                            delete rawData[rawDataKeys[i]];
+                        }
+
+                    } 
+                    /* if the value in rawData is different, we move it on the snapshot */
+                    else if(snapshot[rawDataKeys[i]] !== iUpdatedRawDataValue) {
                         snapshot[rawDataKeys[i]] = iUpdatedRawDataValue;
+                    } 
+                    /* otherwise there's nothing to do, so let's take it out from rawData */
+                    else {
+                        delete rawData[rawDataKeys[i]];
                     }
                 }
+
+                return rawData;
             }
         }
     },
@@ -2137,6 +2204,30 @@ RawDataService.addClassProperties({
         }
     },
 
+
+    /**
+     * Public method invoked by the framework during the conversion from
+     * an object to a raw data when a created object is saved.
+     * 
+     * This is optional except when objects of multiple subclasses end up
+     * stored in the same container, something needs to tell their type apart
+     * so they can be re-instantiated corretly.
+     *
+     * @method
+     * @argument {Object} object - An object whose type must be set or
+     *                             modified to represent the raw data.
+     * @argument {Object} rawData - An object whose properties' values hold
+     *                             the raw data.
+     * @argument {?} context     - The value that was passed in to the
+     *                             [addRawData()]{@link RawDataService#addRawData}
+     *                             call that invoked this method. Typically a DataOperation so far
+     */
+    mapObjectTypeToRawData: {
+        value: function (object, rawData, context) {
+            return this.mappingForObject(object)?.mapObjectTypeToRawData(object, rawData, context);
+        }
+    },
+
     /**
      * Public method invoked by the framework during the conversion from
      * an object to a raw data.
@@ -2389,6 +2480,12 @@ RawDataService.addClassProperties({
         }
     },
 
+    mappingsIterator: {
+        get: function() {
+            return this._mappingByType.values();
+        }
+    },  
+
     _objectDescriptorMappings: {
         get: function () {
             if (!this.__objectDescriptorMappings) {
@@ -2566,9 +2663,33 @@ RawDataService.addClassProperties({
                         criteria.parameters = Array.empty;
                     }
                 }
+
+                return existingObject;
+
+            } 
+            else {
+                let snapshot = this._snapshot,
+                    snapshotDataIdentifierKeys = this._snapshot.keysArray(),
+                    mainService = this.mainService,
+                    result;
+                for(let i=0, countI = snapshotDataIdentifierKeys.length, iSnapshotDataIdentifierKey, iSnapshot, iObject; (i < countI); i++) {
+                    iSnapshotDataIdentifierKey = snapshotDataIdentifierKeys[i];
+                    //TODO: we should also tests iObject.objectDescriptor any of childObjectDescriptors
+                    if(iSnapshotDataIdentifierKey.objectDescriptor === typeToFetch) {
+                        iSnapshot = snapshot.get(iSnapshotDataIdentifierKey);
+                        if(criteria.evaluate(iSnapshot)) {
+                            iObject = mainService.objectForDataIdentifier(iSnapshotDataIdentifierKey);
+                            if(iObject) {
+                                (result || (result = [])).push(iObject);
+                            } else {
+                                console.warn(this.name+": No object found for dataIdentifier in snapshot:" + iSnapshotDataIdentifierKey);
+                            }
+                        }
+                    }
+                }
+                return result;
             }
 
-            return existingObject;
         }
     },
 
@@ -3951,11 +4072,21 @@ RawDataService.addClassProperties({
                 aRawProperty,
                 // snapshotValue,
                 anObjectDescriptor = objectDescriptor || this.objectDescriptorForObject(object),
+                mapping = this.mappingForType(anObjectDescriptor),
+                rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
                 aPropertyChanges,
                 aPropertyDescriptor,
                 result,
                 mappingPromise,
                 mappingPromises,
+                propertyIterator;
+
+
+                /* 
+                    check if wr need to set/add fullModuleId to the iteration here!
+                */
+
+
                 /*
                     There's a risk here for a deletedObject that it's values have been changed and therefore wouldn't match what was fetched. We need to test that.
 
@@ -3975,11 +4106,12 @@ RawDataService.addClassProperties({
 
                     But for created objects, it seems safer to look at the state of the object, rather than changes?
                 */
-                propertyIterator = (isDeletedObject || !dataObjectChanges)
+            propertyIterator = (isDeletedObject || !dataObjectChanges)
                     ? Object.keys(object).values()
-                    : dataObjectChanges.keys(),
-                mapping = this.mappingForType(anObjectDescriptor),
-                rawDataPrimaryKeys = mapping.rawDataPrimaryKeys;
+                    : dataObjectChanges.keys();
+
+
+            
 
             while (!(aPropertyIteration = propertyIterator.next()).done) {
                 aProperty = aPropertyIteration.value;
@@ -4128,7 +4260,9 @@ RawDataService.addClassProperties({
                 */
                 if (!isNewObject) {
                     operation.snapshot = dataSnapshot;
-                } 
+                } else {
+                    this.mapObjectTypeToRawData(object, operationData, operation);
+                }
 
                 console.log("_save ("+operationType+") for "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
                 return this._mapObjectChangesToOperationData(object, dataObjectChanges, operationData, snapshot, dataSnapshot, isNewObject, isDeletedObject, objectDescriptor)
@@ -4387,9 +4521,13 @@ RawDataService.addClassProperties({
                             iObjectDescriptor = iOperation.target;
 
                             if (iOperation.type === CreateOperation) {
-                                iDataIdentifier = self.dataIdentifierForTypeRawData(iObjectDescriptor, iOperation.data);
+                                iDataIdentifier = self.dataIdentifierForObject(iObject);
+                                if(!iDataIdentifier) {
+                                    iDataIdentifier = self.dataIdentifierForTypeRawData(iObjectDescriptor, iOperation.data);
+                                    self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);    
+                                }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data);
-                                self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);
+
                             } else if (iOperation.type === UpdateOperation || iOperation.type === NoOpOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
                                 self.recordSnapshot(iDataIdentifier, iOperation.data, true);
