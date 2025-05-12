@@ -54,10 +54,16 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
                 this.fetchLimit = value;
             }
 
+            value = deserializer.getProperty("includesChildObjectDescriptors");
+            if (value !== void 0) {
+                this.includesChildObjectDescriptors = value;
+            }
+
             value = deserializer.getProperty("hints");
             if (value !== void 0) {
                 this.hints = value;
             }
+            
 
 
             return result ? Promise.resolve(this) : this;
@@ -83,6 +89,10 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             }
             if(this.fetchLimit) {
                 serializer.setProperty("fetchLimit", this.fetchLimit);
+            }
+            //true is the default on the prototype
+            if(this.includesChildObjectDescriptors === false) {
+                serializer.setProperty("includesChildObjectDescriptors", this.includesChildObjectDescriptors);
             }
             if(this.hints) {
                 serializer.setProperty("hints", this.hints);
@@ -111,6 +121,7 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             if(
                 this.super(otherQuery) &&
                 (this.fetchLimit === otherQuery.fetchLimit) &&
+                (this.includesChildObjectDescriptors === otherQuery.includesChildObjectDescriptors) &&
                 (this.readExpressions && this.readExpressions.equals(otherQuery.readExpressions)) &&
                 (this.orderings && this.orderings.equals(otherQuery.orderings)) &&
                 (this.hints && this.hints.equals(otherQuery.hints))
@@ -274,6 +285,20 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
         value: null
     },
 
+    /**
+     * Returns true if fetch using a DataQuery should include sub-types of the receiver’s type, false if it shouldn’t.
+     * DataQuery includes objects from ChildObjectDescriptors by default.
+     * For example, if you have a Person ObjectDescriptor with two child ObjectDescriptors, Employee and Customer, 
+     * fetching Persons with a DataQuery whose includesChildObjectDescriptors is set to true also fetches 
+     * all Employees and Customers matching the criteria. 
+     * Fetching Persons with a DataQuery's includesChildObjectDescriptors set to false fetches only Persons matching the criteria.
+     * 
+     * @type {Boolean}
+     * @default true
+     */
+    includesChildObjectDescriptors: {
+        value: true
+    },
 
     /**
      * An object other objects can use to alter or optimize fetch operations.
