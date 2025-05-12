@@ -131,8 +131,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     localPartialResult;
 
                 /*
-
-                    Leaving a trace of localPartialResult here. Unless I'm missing something, the problem with a partial result is that we don't really have an easy way to return a partial result with the promise-based API, and we still need to get the rest, and that will brinf all values back, the mapping will be faster for the objects that already are in memnory thoygh
+                    Leaving a trace of localPartialResult here. Unless I'm missing something, the problem with a partial result 
+                    is that we don't really have an easy way to return a partial result with the promise-based API, 
+                    and we still need to get the rest, and that will brinf all values back, 
+                    the mapping will be faster for the objects that already are in memnory though
                 */
                 if(localResult) {
                     if(Array.isArray(localResult)) {
@@ -486,22 +488,28 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             if(!jSnapshot) {
                                 //Now in a multi-origin world, we have to use where the current object actually came from:
                                 // jSnapshot = service.snapshotForObject(jValue);
-                                jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
+                                //From bugfix/data branch
+                                jSnapshot = service.dataIdentifierForObject(jValue).dataService.snapshotForObject(jValue);
+                                //commented line bellow from main
+                                //jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
                                 (combinedFetchedValuesSnapshots || (combinedFetchedValuesSnapshots = []))[j] = jSnapshot;
                             }
 
                             iFetchPromise = (iFetchPromise || (iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)));
 
                             if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
-                                console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
+                                //console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
                                 (iFetchPromise.result || (iFetchPromise.result = [])).push(jValue);
 
                             }
                         }
 
                         if(countJ == 0) {
-                            iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria);
-                            iFetchPromise.resolve(combinedFetchedValues);
+                            if(iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)) {
+                                iFetchPromise.resolve(combinedFetchedValues);
+                            } else {
+                                iFetchPromise.resolve(null);
+                            }
 
                         } else if(iFetchPromise) {
                             if(iFetchPromise.result) {
@@ -514,6 +522,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             // ??
                             // self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
 
+                        } else {
+                            throw "RawForeignValueToObjectConverter._combineFetchDataMicrotaskFunctionForTypeQueryParts() shouldn't be here"
                         }
 
                         self._unregisterFetchPromiseForObjectDescriptorCriteria(type, iCriteria);
