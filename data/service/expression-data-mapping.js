@@ -296,7 +296,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     /**
      * A Criteria that should be added to any criteria when reading/writing data
      * for the ObjectDescriptor in the rawDataTypeName. This is necessary
-     * to add this criteria to any fetch's criteria to get instances
+     * to add this criteria to any fetch's criteria to only get instances
      * of a type that is stored in the same table as others, or fetching a super class
      * and getting instances of any possible subclass.
      *
@@ -313,9 +313,192 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      * @property {Criteria}
      * @default undefined
      */
-    rawDataTypeIdentificationCriteria: {
+    _rawDataTypeIdentificationCriteria: {
         value: undefined
     },
+    rawDataTypeIdentificationCriteria: {
+        get: function() {
+            return this._rawDataTypeIdentificationCriteria || this._defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
+        },
+        set: function(value) {
+            if(this._rawDataTypeIdentificationCriteria !== value) {
+                this._rawDataTypeIdentificationCriteria = value;
+            }
+        }
+    },
+
+    _defaultRawDataTypeIdentificationCriteria: {
+        value: undefined
+    },
+    
+    _defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor: {
+        value: function(objectDescriptor) {
+            return new Criteria().initWithExpression("fullModuleId == $.fullModuleId", {fullModuleId: objectDescriptor.fullModuleId});
+        }
+    },
+
+    _defaultRawDataTypeIdentificationCriteriaForObjectDescriptor: {
+        value: function(objectDescriptor, includesChildObjectDescriptors, array) {
+            let isRoot = (array === undefined),
+                _array = (array || []);
+
+            _array.push(this.rawDataTypeIdentificationCriteria);
+
+            if(includesChildObjectDescriptors) {
+                let childObjectDescriptors = objectDescriptor.childObjectDescriptors,
+                    i=0, countI = childObjectDescriptors.length,
+                    iChildObjectDescriptor;
+
+                for(i=0; (i<countI); i++) {
+                    iChildObjectDescriptor = childObjectDescriptors[i];
+                    this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array);
+                }
+            }
+
+            if(isRoot) {
+                if(_array.length ===0) {
+                    return _array[0]
+                } else {
+                    return Criteria.or(..._array);
+                }    
+            }
+        }
+    },
+    /**
+     * TODO: Modify API to be able to not includesChildObjectDescriptors  
+     * @type {ObjectDescriptor}
+     */
+    defaultRawDataTypeIdentificationCriteria: {
+        value: function(includesChildObjectDescriptors = true) {
+            if(!this._defaultRawDataTypeIdentificationCriteria) {
+                let criteria;
+
+                if(!this.rawDataTypeName || (this.rawDataTypeName && this.rawDataTypeName === this.objectDescriptor.name)) {
+                    /*
+                        If we're the root of the hieararchy stored in the ObjectStore, we're going to not have a fullModuleId value.
+                        That way if subclasses are added after instnced of the root class have beem added, we don't need to update exising rows. 
+                        Because initially there would be no reason to use fullModuleId in teh first place and that column would be empty
+                    */
+                    if(!includesChildObjectDescriptors) {
+                        criteria = new Criteria().initWithExpression("fullModuleId == null");
+                    } else {
+                        criteria = null;
+                    }
+                } else {
+                    /*
+                        TODO: Tweak the API to be able to get includesChildObjectDescriptors passed in from a read operation
+                    */
+                    criteria = this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor, /*includesChildObjectDescriptors*/true);
+                }
+                this._defaultRawDataTypeIdentificationCriteria = criteria;
+            }
+            return this._defaultRawDataTypeIdentificationCriteria;
+        }
+    },
+
+    rawDataTypeIdentificationCriteriaForDataOperation: {
+        value: function(aDataOperation) {
+            if(aDataOperation.type === DataOperation.Type.ReadOperation) {
+                return this.defaultRawDataTypeIdentificationCriteria(aDataOperation.data.includesChildObjectDescriptors);
+            } else {
+                return this.rawDataTypeIdentificationCriteria;
+            }
+        }
+    },
+
+    /**
+     * Returns the correct subtype for rawData if found, using rawDataTypeIdentificationCriteria.
+     * 
+     * @method
+     * @argument {ObjectDescriptor} type  - An array of objects whose properties' values
+     *                               hold the raw data.
+     * @argument {Object} rawData
+     *                             - Describes how the raw data was selected.
+     * @returns {ObjectDescriptor} - The subtype of type if found.
+     */
+    objectTypeForRawData: {
+        value: function(rawData, _rootMapping = this) {
+            //No way to tell...
+            if(!rawData || !this.needsRawDataTypeIdentificationCriteria) return this.objectDescriptor;
+
+            if(this.rawDataTypeIdentificationCriteria.evaluate(rawData)) {
+                return this.objectDescriptor;
+            }
+
+            /*
+                We need to look into type descendants. We have ObjectDescriptor.prototype.descendantDescriptors
+                but it would force us to loop one, when there should be only one match.
+                Ideally we need to create a descendantDescriptorIterator to solve that. Meanwhile...
+            */
+            let currentChildDescriptors = this.objectDescriptor.childObjectDescriptors;
+            
+            if(currentChildDescriptors) {
+                let service = this.service,
+                    result,
+                    i, countI, iChildDescriptor, iMapping;
+
+                for(i=0, countI = currentChildDescriptors.length; (iChildDescriptor = currentChildDescriptors[i]);i++) {
+                    iMapping = service.mappingForType(iChildDescriptor);
+
+                    /* if a mapping is missing for a subclass, this can happen */
+                    if((iMapping === _rootMapping) || (iMapping === this)) {
+                        console.warn("No mapping found for "+iChildDescriptor.name+" ObjectDescriptor");
+                    } else {
+                        if(result = iMapping.objectTypeForRawData(rawData, _rootMapping)) { 
+                            return iChildDescriptor;
+                        }    
+                    }
+                }
+                if(_rootMapping === this) {
+                    console.warn("Defaulting to "+this.objectDescriptor.name+", no (sub)type was found for rawData ",rawData);
+                }
+                return _rootMapping === this ? this.objectDescriptor : null;
+            } else {
+                //There are no childObjectDescriptors, no point to check further
+                return _rootMapping === this ? this.objectDescriptor : null;
+            }
+        }
+    },
+
+    /**
+     * Returns true if there's more than one ExpressionDataMapping with the same value for rawDataTypeName,
+     * which means mutliple subclasses are stored together.
+     * 
+     * @property {Boolean}
+     */
+    _needsRawDataTypeIdentificationCriteria: {
+        value: undefined
+    },
+    needsRawDataTypeIdentificationCriteria: {
+        get: function() {
+            if(this._needsRawDataTypeIdentificationCriteria === undefined) {
+
+                if(typeof this.rawDataTypeName !== "string") {
+                    this._needsRawDataTypeIdentificationCriteria = false;
+                } else {
+                    
+                    /*
+                        TODOL: It will be faster to iterate on the descendant descriptors of the mapping that has 
+                        its rawDataTypeName === its.objectDescriptor.name
+                    */
+                    let serviceMappingIterator = this.service.mappingsIterator,
+                        myRawDataTypeName = this.rawDataTypeName,
+                        iteration;
+
+                    this._needsRawDataTypeIdentificationCriteria = false;
+                    //It just take one other
+                    while(!(iteration = serviceMappingIterator.next()).done ) {
+                        if(/*mapping*/iteration.value !== this && iteration.value.rawDataTypeName === myRawDataTypeName) {
+                            this._needsRawDataTypeIdentificationCriteria = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return this._needsRawDataTypeIdentificationCriteria;
+        }
+    },
+
     /**
      * The id of the raw type mapped to the mapping's objectDescriptor.
      * Could be statically generated by a tool, or dynamicallay fetched in the case
@@ -1210,7 +1393,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //     }
             // }
 
-            console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
+            //console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
             return (promises && promises.length &&
                 ( promises.length === 1
                     ? promises[0].then(() => object)
@@ -1548,6 +1731,39 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+
+     /**
+     * Public method invoked by the framework during the conversion from
+     * an object to a raw data when a created object is saved.
+     * 
+     * This is optional except when objects of multiple subclasses end up
+     * stored in the same container, something needs to tell their type apart
+     * so they can be re-instantiated corretly.
+     *
+     * @method
+     * @argument {Object} object - An object whose type must be set or
+     *                             modified to represent the raw data.
+     * @argument {Object} rawData - An object whose properties' values hold
+     *                             the raw data.
+     * @argument {?} context     - The value that was passed in to the
+     *                             [addRawData()]{@link RawDataService#addRawData}
+     *                             call that invoked this method. Typically a DataOperation so far
+     */
+     mapObjectTypeToRawData: {
+        value: function (object, rawData, context) {
+            let type = object.objectDescriptor;
+
+            if(this.needsRawDataTypeIdentificationCriteria && context.type === DataOperation.Type.CreateOperation) {
+                // let criteria = this._defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
+                let criteria = this.rawDataTypeIdentificationCriteriaForDataOperation(context);
+                
+                
+                assign(rawData, criteria.expression, true, criteria.parameters);
+            }
+        }
+    },
+
+
     /**
      * Convert model objects to raw data objects of an appropriate type.
      *
@@ -1756,6 +1972,23 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     result = this._revertPropertyToRawData(data, propertyName, rule, propertyScope, lastReadSnapshot, rawDataSnapshot);
                 } else /*if (propertyDescriptor)*/ { //relaxing this for now
                     value = rule.expression(propertyScope);
+
+                    /*
+                        If propertyName is the primary key and somehow we don't have a value for it, it's time to act
+                    */
+                    if(value === undefined && (this.rawDataPrimaryKeys && this.rawDataPrimaryKeys.indexOf(propertyName) !== -1)) {
+                        this.service.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor);
+                        let dataIdentifier = this.service.dataIdentifierForObject(object);
+                        if(!dataIdentifier) {
+                            /*
+                                This is stopping short of registering object as a created object
+                            */
+                            this.service.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor);
+                            // this.service.mainService.recordObjectForDataIdentifier(object, dataIdentifier);
+                            this.service.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);    
+                        }
+                        value = dataIdentifier.primaryKey;
+                    }
                     /*
                         We assume there shouldn't be more than one rule tha produces a value for the same property.
                     */
@@ -1862,7 +2095,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
                 return;
             }
-            else if(object.propertySerializability(propertyName) /* if the value returned is undefined or false, we don't care */) {
+            else if(object.propertySerializability(propertyName) /* if the value returned is undefined or false, we don't care */ && !object.objectDescriptor.propertyDescriptorNamed(propertyName).isDerived) {
                 console.warn("ExpressionDataMapping.mapObjectPropertyToRawData(): No objectMappingRules found to map property '"+propertyName+"' of " + object.objectDescriptor.name);
             }
         }
@@ -2353,6 +2586,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 /*
                     Benoit: adding  && value to the condition as we don't want arrays with null in it
                 */
+                //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
+                var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
                 if(isToMany && value) {
                     /*
                         When we arrive here coming from _assignInversePropertyValue()
@@ -2366,8 +2601,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                         or find a way to just access the local state without triggering the fetch and just update it.
                     */
-                    //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
-                    var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
 
                     if (!Array.isArray(objectPropertyValue)) {
                         value = [value];
@@ -2380,7 +2613,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }
                     }
                 } else {
-                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
+                    this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor, objectPropertyValue);
                 }
             }
 
@@ -2390,14 +2623,71 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
-    _assignObjectValueOrDefault: {
-        value: function(object, propertyName, value, propertyDescriptor) {
-            const defaultValue = propertyDescriptor.defaultValue;
-            const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+    /**
+     * Determines if a default rawData value needs to be applied to a raw data being passed
+     * 
+     * If there's a converter needed, then a default value would have to be converted before being assigned.
+     *
+     * @method
+     * @argument {Object} data           - An object whose properties' values
+     *                                     hold the raw data.
+     * @argument {Object} object         - The object on which to assign the property
+     * @argument {string} propertyName   - The name of the model property to which
+     *                                     to assign the value(s).
+     * @returns {DataStream|Promise|?}   - Either the value or a "promise" for it
+     *
+     */
+
+    _assignRawDataDefaultValueIfNeededForPropertyDescriptor: {
+        value: function(rawData, propertyDescriptor) {
+
+            const value = rawData[propertyDescriptor.name];
             const hasValue = typeof value !== "undefined" && value !== null;
-            const isToMany = propertyDescriptor.cardinality !== 1;
     
             if (!hasValue) { 
+
+                const defaultValue = propertyDescriptor.defaultValue;
+                const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+                const isToMany = propertyDescriptor.cardinality !== 1;
+
+                /*
+                    When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
+                    it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the rawData being mapped.
+
+                    But if there is a known default value, then we use it
+                */
+                if(hasDefaultValue) {
+                    if (isToMany) {
+                        //console.warn('Default value for to-many relationship is not supported yet');
+                        //This should move the values into the mutable collection on the rawData.
+                        return rawData[propertyName] = defaultValue;
+                    } else {
+                        return rawData[propertyName] = defaultValue;
+                    }
+                }
+            } else {
+                rawData[propertyName] = value;
+            }
+        }
+    },
+
+
+    /**
+     * This is assigning the final value to the object. So if defaultValue 
+     * had to be converted first, it would be too late
+     * 
+     *
+     */
+    _assignObjectValueOrDefault: {
+        value: function(object, propertyName, value, propertyDescriptor) {
+            const hasValue = typeof value !== "undefined" && value !== null;
+    
+            if (!hasValue) { 
+
+                const defaultValue = propertyDescriptor.defaultValue;
+                const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+                const isToMany = propertyDescriptor.cardinality !== 1;
+
                 /*
                     When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
                     it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the object being mapped.
@@ -2406,11 +2696,21 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 */
                 if(hasDefaultValue) {
                     if (isToMany) {
-                        console.warn('Default value for to-many relationship is not supported yet');
-                        return (object[propertyName] = value);
+                        //console.warn('Default value for to-many relationship is not supported yet');
+                        //This should move the values into the mutable collection on the object.
+                        return (object[propertyName] = defaultValue);
                     } else {
                         return (object[propertyName] = defaultValue);
                     }
+                } else if(value === null && !isToMany) {
+                   /*
+                        We used an empty array for relationships, so we don't want to trash it with null
+                   */
+                    /*
+                        null means we know it's not there in storage/rawData. Undefined is we don't know
+                        So we need to make sure that null is properly set on the object
+                    */
+                    return (object[propertyName] = value);
                 }
             } else {
                 return (object[propertyName] = value);
