@@ -3295,7 +3295,12 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                  As eventPath now includes the target, we need to stop at index 1 in capture, and start from in bubble
             */
             i = eventPath.length;
+            let countI = i;
             while (i>1 && !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[--i])) {
+                if(eventPath.length !== countI || mutableEvent.currentTarget === iTarget) {
+                    //eventPath was modified
+                    while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
+                }
                 mutableEvent.currentTarget = iTarget;
 
                 promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise);
