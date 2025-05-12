@@ -69,7 +69,7 @@ If one access a property on an object that wasn't already fetched, it will retur
 
 If one needs to control when one or more property's value are fetched, you can use:
 
-DataService.mainService.getObjectProperty(aUserSession, "identity")
+DataService.mainService.getObjectProperties(aUserSession,["identity"])
 
 .then(() => {
 
@@ -79,7 +79,7 @@ console.log("aUserSession.identity is fetched: ", aUserSession.identity);
 
 or to do so with multiple properties in one shot:
 
-DataService.mainService.getObjectProperty(aUserSession, ["identity", "connectionTimeRange", "environment"] )
+DataService.mainService.getObjectsProperties([aUserSession1, aUserSession2], ["identity", "connectionTimeRange", "environment"] )
 
 .then(() => {
 
