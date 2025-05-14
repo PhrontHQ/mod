@@ -3826,10 +3826,18 @@ DataService.addClassProperties({
                     } else {
                         /*
                             A 1-1 then. Let's not set if it's the same...
+                            
+                            CAVEAT: if inversePropertyName has not been fetched so far, we don't really know what the value is.
+                            If the "join" is made on value's primary key, checking the snapshot wouldn't tell us anything.
+                            If we do value[inversePropertyName], it does trigger a fetch anyway and the value returned may or may not
+                            end up overriding value[inversePropertyName] = dataObject done here, which isn't what the user intended.
                         */
-                        if(value[inversePropertyName] !== dataObject) {
-                            value[inversePropertyName] = dataObject;
-                        }
+                       this.getObjectProperties(value, [inversePropertyName])
+                       .then(() => {
+                            if(value[inversePropertyName] !== dataObject) {
+                                value[inversePropertyName] = dataObject;
+                            }
+                       })
                     }
                 }
 
