@@ -110,3 +110,14 @@ if (Object.hasOwnProperty('deepFreeze') === false) {
         configurable: true
     });
 }
+
+if (Object.hasOwnProperty('isEmpty') === false) {
+    Object.defineProperty(Object.prototype, "isEmpty", {
+        get: function () {
+            for(let prop in this) return false;
+            return true;
+        },
+        configurable: true,
+        enumerable: false
+    });
+}
