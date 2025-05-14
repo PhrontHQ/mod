@@ -1568,8 +1568,11 @@ RawDataService.addClassProperties({
                     else if(snapshot[rawDataKeys[i]] !== iUpdatedRawDataValue) {
                         snapshot[rawDataKeys[i]] = iUpdatedRawDataValue;
                     } 
-                    /* otherwise there's nothing to do, so let's take it out from rawData */
-                    else {
+                    /* 
+                        otherwise there's nothing to do, so let's take it out from rawData 
+                        unless it's the primary key...
+                    */
+                    else if(rawData[rawDataKeys[i]] !== dataIdentifier.primaryKey) {
                         delete rawData[rawDataKeys[i]];
                     }
                 }
