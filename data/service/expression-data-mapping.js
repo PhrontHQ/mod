@@ -1122,7 +1122,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             /*
                 If data is null and we have readExpressions, which are object-level, we go on and set those.
             */
-            if(data === null && rawDataPropertyIterationCount === 0 && readExpressions.length > 0) {
+            if((data === null || data?.isEmpty) && rawDataPropertyIterationCount === 0 && readExpressions.length > 0) {
                 for(let iReadExpression of readExpressions) {
                     object[iReadExpression] = null;
                 }
