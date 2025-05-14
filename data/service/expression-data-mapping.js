@@ -338,8 +338,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     _defaultRawDataTypeIdentificationCriteriaForObjectDescriptor: {
-        value: function(objectDescriptor, includesChildObjectDescriptors, array) {
+        value: function(objectDescriptor, includesChildObjectDescriptors, array, rawDataTypeName) {
             let isRoot = (array === undefined),
+                _rawDataTypeName = isRoot ? this.rawDataTypeName : rawDataTypeName,
                 _array = (array || []);
 
             _array.push(this.rawDataTypeIdentificationCriteria);
@@ -347,11 +348,18 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if(includesChildObjectDescriptors) {
                 let childObjectDescriptors = objectDescriptor.childObjectDescriptors,
                     i=0, countI = childObjectDescriptors.length,
-                    iChildObjectDescriptor;
+                    service = this.service,
+                    iChildObjectDescriptor, iChildObjectDescriptorMapping;
 
                 for(i=0; (i<countI); i++) {
                     iChildObjectDescriptor = childObjectDescriptors[i];
-                    this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array);
+                    iChildObjectDescriptorMapping = service.mappingForType(iChildObjectDescriptor);
+                    /*
+                        Just because it's a subclass, doesn't mean it's persisted in the same object store, so got to check
+                    */
+                    if(iChildObjectDescriptorMapping.rawDataTypeName === _rawDataTypeName) {
+                        iChildObjectDescriptorMapping._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array, _rawDataTypeName);
+                    }
                 }
             }
 
@@ -430,7 +438,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 but it would force us to loop one, when there should be only one match.
                 Ideally we need to create a descendantDescriptorIterator to solve that. Meanwhile...
             */
-            let currentChildDescriptors = this.objectDescriptor.childObjectDescriptors;
+            let currentChildDescriptors = this.objectDescriptor.childObjectDescriptors,
+                thisRawDataTypeName = this.rawDataTypeName;
             
             if(currentChildDescriptors) {
                 let service = this.service,
@@ -443,9 +452,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     /* if a mapping is missing for a subclass, this can happen */
                     if((iMapping === _rootMapping) || (iMapping === this)) {
                         console.warn("No mapping found for "+iChildDescriptor.name+" ObjectDescriptor");
-                    } else {
+                    } else if(thisRawDataTypeName === iMapping.rawDataTypeName) {
                         if(result = iMapping.objectTypeForRawData(rawData, _rootMapping)) { 
-                            return iChildDescriptor;
+                            return result;
                         }    
                     }
                 }
