@@ -350,8 +350,9 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
+                            added check to avoid duplicates
                         */
-                        if(currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) {
+                        if((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) {
                             queryParts.readExpressions.push(currentRule.targetPath);
                         }
 
