@@ -3842,11 +3842,11 @@ DataService.addClassProperties({
                 }
 
                 if(previousValue) {
+                    inverseValue = previousValue[inversePropertyName];
                     if(inversePropertyCardinality > 1) {
                         /*
                             previousValue needs to be removed from the other's side:
                         */
-                        inverseValue = previousValue[inversePropertyName];
                         if(inverseValue) {
                             /*
                                 Assuming it only exists once in the array as it should...
@@ -3856,7 +3856,12 @@ DataService.addClassProperties({
                         // else {
                         //     //No existing array so nothing to do....
                         // }
-                    } else {
+                    } 
+                    /* 
+                        only if previousValue still points back to dataObject, do we sever the relationship
+                        This checks allows to break a cycle of 1-1 updatimg each other one side moves on
+                    */
+                    else if(inverseValue === dataObject) {
                         //A 1-1 then
                         previousValue[inversePropertyName] = null;
                     }
