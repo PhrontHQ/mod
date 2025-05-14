@@ -160,6 +160,12 @@ exports.contains = function (a, b) {
     // return expression.test(a);
 };
 
+exports.includes = function (a, b) {
+    return (typeof a === "string" && typeof b === "string")
+    ? a.includes(b)
+    : undefined;
+}
+
 exports.join = function (a, b) {
     return a && a.join(b || "");
 };
