@@ -114,7 +114,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
     _sendData: {
         value: function (previousPromise, clientId, data) {
-            console.debug("OperationCoordinator: _sendData to clientId:"+ clientId, data);
+            //console.debug("OperationCoordinator: _sendData to clientId:"+ clientId, data);
 
             return (previousPromise || Promise.resolve(true))
                     .then(() => {
@@ -342,7 +342,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
             if(operation.clientId) {
                 var self = this;
-                console.log("\n<<<<<<< operationCoordinator dispatch "+ operation.type+ " " +operation.id+" from "+operation.rawDataService?.identifier+", referrer "+ (operation.referrer?.id || operation.referrerId) +", for ["+operation.referrer?.target?.name + (operation?.referrer?.data?.readExpressions? (" "+operation?.referrer?.data?.readExpressions) : "") + "] like "+ operation.referrer?.criteria+"\n");
+                //                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      console.log("\n<<<<<<< operationCoordinator dispatch "+ operation.type+ " " +operation.id+" from "+operation.rawDataService?.identifier+", referrer "+ (operation.referrer?.id || operation.referrerId) +", for ["+operation.referrer?.target?.name + (operation?.referrer?.data?.readExpressions? (" "+operation?.referrer?.data?.readExpressions) : "") + "] like "+ operation.referrer?.criteria+"\n");
 
                 this.dispatchOperationToConnectionClientId(operation,this.gateway,operation.clientId)
                 .then(function(operation) {
