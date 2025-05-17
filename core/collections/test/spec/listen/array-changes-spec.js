@@ -363,6 +363,27 @@ describe("Array change dispatch", function () {
         ]);
     });
 
+    it("splice with shared value", function () {
+        spy = jasmine.createSpy();
+        expect(array).toEqual([10, 30]);
+        expect(array.splice(0, 2, 10, 30, 50)).toEqual([]);
+        expect(array).toEqual([10, 30, 50]);
+
+        var argsForCall = spy.calls.all().map(function (call) { return call.args });
+        expect(argsForCall).toEqual([
+            ["length change from", 2],
+            ["before content change at", 2, "to add", [50], "to remove", []],
+            ["change at", 2, "from", undefined],
+            ["change at", 2, "to", 50],
+            ["content change at", 2, "added", [50], "removed", []],
+            ["length change to", 3]
+        ]);
+
+        //For next test, and post spy
+        array.pop();
+
+    });
+
     it("sets a value outside the existing range", function () {
         expect(array).toEqual([10, 30]);
         spy = jasmine.createSpy();
@@ -541,7 +562,7 @@ describe("Array change dispatch", function () {
     });
 
     // Disabled because it takes far too long
-    xdescribe("swap", function () {
+    describe("swap", function () {
         var otherArray;
         beforeEach(function () {
             array.makeObservable();
