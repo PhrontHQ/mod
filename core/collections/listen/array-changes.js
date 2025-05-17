@@ -133,7 +133,7 @@ var observableArrayProperties = {
 
     swap: {
         value: function swap(start, length, plus) {
-            var hasOwnPropertyChangeDescriptor, i, j, plusLength;
+            var hasOwnPropertyChangeDescriptor, plusLength;
             if (plus) {
                 if (!Array.isArray(plus)) {
                     plus = array_slice.call(plus);
@@ -148,7 +148,7 @@ var observableArrayProperties = {
             } else if (start > this.length) {
                 var holes = start - this.length;
                 var newPlus = Array(holes + plusLength);
-                for (i = 0, j = holes; i < plusLength; i++, j++) {
+                for (let i = 0, j = holes; i < plusLength; i++, j++) {
                     if (i in plus) {
                         newPlus[j] = plus[i];
                     }
