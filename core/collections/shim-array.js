@@ -382,10 +382,6 @@ define("compare", function (that, compare) {
 
 define("equals", function (that, equals) {
     equals = equals || Object.equals;
-    var i = 0;
-    var length = this.length;
-    var left;
-    var right;
 
     if (this === that) {
         return true;
@@ -394,9 +390,11 @@ define("equals", function (that, equals) {
         return GenericOrder.prototype.equals.call(this, that);
     }
 
+    let length = this.length;
     if (length !== that.length) {
         return false;
     } else {
+        let left, right, i=0;
         for (; i < length; ++i) {
             if (i in this) {
                 if (!(i in that)) {
