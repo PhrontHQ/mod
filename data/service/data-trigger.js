@@ -612,7 +612,8 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                             this._getValue() sets object[this._privatePropertyName] to [] via calling this
                         */
                         if(value?.length) {
-                            object[this._privatePropertyName].splice.apply(initialValue, [0, Infinity].concat(value));
+                            //object[this._privatePropertyName].splice.apply(initialValue, [0, initialValue.length].concat(value));
+                            object[this._privatePropertyName].splice.call(initialValue, 0, initialValue.length, ...value);
                         }
                     } else if(isMap && value) {
                         //We want to maintain the same map,
@@ -729,6 +730,23 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                 return  status ?             status.promise :
                         status === null ?   this._service.nullPromise :
                                             this.updateObjectProperty(object);
+
+
+                //Attempt to avoid fetching if there's a local value, but if it's a toMany
+                //It's an empty array and that _setValueStatus to null which means we won't fetch it ever 
+                //     var status = this._getValueStatus(object),
+                //     value;
+                // return  status 
+                //             ? status.promise 
+                //             : status === null 
+                //                 ? this._service.nullPromise 
+                //                 : (value = this._getValue(object, false)) !== undefined
+                //                     ? this._setValueStatus(object, null) && value
+                //                     : this.updateObjectProperty(object);
+                    
+
+
+
             // } else {
             //     /*
             //         else the object is just created, not saved, no point fetching
