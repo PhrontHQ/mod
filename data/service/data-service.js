@@ -4184,7 +4184,7 @@ DataService.addClassProperties({
 
             //A change event could carry both a key/value change and addedValues/remove, like a splice, where the key would be "length"
 
-            if(addedValues || removedValues) {
+            if((addedValues && addedValues.length > 0) || (removedValues && removedValues.length > 0)) {
                 //For key that can have add/remove the value of they key is an object
                 //that itself has two keys: addedValues and removedValues
                 //which value will be a set;
