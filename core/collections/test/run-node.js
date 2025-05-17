@@ -5,6 +5,13 @@ var JasmineConsoleReporter = require('jasmine-console-reporter');
 // Init
 var jasmine = jasmineRequire.core(jasmineRequire);
 var jasmineEnv = jasmine.getEnv();
+var jasmineConfiguration = jasmineEnv.configuration();
+
+//See https://jasmine.github.io/setup/nodejs.html to modernize
+//Set synchronous as all tests were written expecting it
+jasmineConfiguration.random = false;
+jasmineEnv.configure(jasmineConfiguration);
+
 
 // Export interface
 var jasmineInterface = jasmineRequire.interface(jasmine, jasmineEnv);
