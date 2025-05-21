@@ -385,6 +385,15 @@ Object.is = function (x, y) {
     return x !== x && y !== y;
 };
 
+Object.operatorEquals = function (left, right) {
+    return left == right;
+}
+
+Object.operatorStrictEquals = function (left, right) {
+    return left === right;
+}
+
+
 /**
     Performs a polymorphic, type-sensitive deep equivalence comparison of any
     two values.
