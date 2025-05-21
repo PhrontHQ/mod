@@ -1610,7 +1610,11 @@ function makeComputerObserver(observeArgs, compute, thisp) {
     return function (emit, scope) {
         emit = makeUniq(emit);
         return observeArgs(function replaceArgs(args) {
-            if (!args || !args.every(Operators.defined)) return;
+            //OG: but that prevents use-cases where we don't absolutely need all arguments defined
+            //if (!args || !args.every(Operators.defined)) return;
+            //So  limiting test to just having arguments
+            if (!args) return;
+
             if(args.length === 1) {
                 return emit(compute.call(thisp, args[0]));
             }
