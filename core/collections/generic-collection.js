@@ -97,6 +97,21 @@ GenericCollection.prototype.map = function (callback /*, thisp*/) {
     return result;
 };
 
+GenericCollection.prototype.mapUnique = function (callback /*, thisp*/ /*equals*/) {
+    let thisp = arguments[1],
+        equals = arguments[2] || Object.equals,
+        result = [],
+        iResult;
+    this.reduce(function (undefined, value, key, object, depth) {
+        iResult = callback.call(thisp, value, key, object, depth);
+        if(!result.has(iResult, equals)) {
+            result.push(iResult);
+        }
+    }, undefined);
+    return result;
+};
+
+
 GenericCollection.prototype.enumerate = function (start) {
     if (start == null) {
         start = 0;

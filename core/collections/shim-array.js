@@ -486,3 +486,17 @@ define("randomItem", function () {
     return  this[Math.floor(Math.random() * this.length)];
 });
 
+
+define("mapUnique", function (callback /*, thisp*/ /*equals*/) {
+    let thisp = arguments[1],
+        equals = arguments[2] || Object.equals,
+        result = [],
+        iResult;
+    this.reduce( (undefined, value, currentIndex, array) => {
+        iResult = callback.call(thisp, this[currentIndex], array);
+        if(!result.has(iResult, equals)) {
+            result.push(iResult);
+        }
+    }, undefined);
+    return result;
+});
