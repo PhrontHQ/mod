@@ -565,6 +565,7 @@ DataService.addClassProperties({
      */
     rootService: {
         get: function () {
+            return DataService.mainService;
             return this.parentService ? this.parentService.rootService : this;
         }
     },
