@@ -88,6 +88,8 @@ const NumberToEnumMemberConverter = exports.NumberToEnumMemberConverter = class 
         if(this.enum) {
             if(typeof enumMemberString === "string") {
                 return this.enum.intValueForMember(enumMemberString);
+            } else if(typeof enumMemberString === "number") {
+                return enumMemberString;
             } else {
                 throw "NumberToEnumMemberConverter convert(): "+number+" is not a number";
             }
