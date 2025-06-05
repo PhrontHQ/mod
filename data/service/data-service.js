@@ -2207,10 +2207,13 @@ DataService.addClassProperties({
             if(!objects || objects.length === 0) {
                 return Promise.resolve(null);
             } else {
-                var promises = [], i, countI;
+                let promises = [], i, countI,
+                    names = Array.isArray(propertyNames) ? propertyNames : arguments,
+                    start = names === propertyNames ? 0 : 1;
+
 
                 for(i=0, countI = objects.length; (i<countI); i++) {
-                    promises.push(this.getObjectProperties(objects[i],propertyNames));
+                    promises.push(this._getOrUpdateObjectProperties(objects[i], names, start, false));
                 }
 
                 return Promise.all(promises);
