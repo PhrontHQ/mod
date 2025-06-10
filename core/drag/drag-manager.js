@@ -1096,7 +1096,7 @@ var DragManager = exports.DragManager = Montage.specialize({
                     this._shouldRemovePlaceholder = true;
                     this._rootComponent.needsDraw = true;
                     // Wait for the next draw cycle to remove the placeholder,
-                    // or in order to be synchronised with the draw cyle when
+                    // or in order to be synchronized with the draw cyle when
                     // the draggable component will become visible again.
                     // Plus it allows the receiver to perform any necessary clean-up.
                     return void 0;
