@@ -148,11 +148,35 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
     }
 
-
-
     handleReadOperation(readOperation) {
+        let readOperationCompletionPromise;
+
+        /*
+            Wonky, WIP: needs to work without a delegate actually implementing it.
+            And a RawDataService shouldn't know about all that boilerplate
+
+            Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
+            it might be simpler, but probably a bit less efficient
+        */
+        readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
+        if(readOperationCompletionPromise) {
+            readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
+                if(!readOperation.defaultPrevented) {
+                    this._handleReadOperation(readOperation);
+                }
+            });
+        } else {
+            this._handleReadOperation(readOperation);
+        }
+
+        if(this.promisesReadOperationCompletion) {
+            return readOperationCompletionPromise;
+        }
+
+    }
+    _handleReadOperation(readOperation) {
         // if(readOperation.target.name === "Workstation" && readOperation.data.readExpressions[0] === "parent") {
-            console.log("\t"+this.identifier+" handle readOperation id " + readOperation.id + " for "+readOperation.target.name+ (readOperation?.data?.readExpressions? (" "+readOperation?.data?.readExpressions) : "") + " like "+ readOperation.criteria);
+            //console.log("\t"+this.identifier+" handle readOperation id " + readOperation.id + " for "+readOperation.target.name+ (readOperation?.data?.readExpressions? (" "+readOperation?.data?.readExpressions) : "") + " like "+ readOperation.criteria);
         // }
 
         /*
