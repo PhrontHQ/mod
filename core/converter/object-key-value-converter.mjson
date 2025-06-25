@@ -1,0 +1,25 @@
+{
+    "converter_descriptor": {
+        "object": "core/converter/converter.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "StringToSubstringConverter",
+            "customPrototype": false,
+            "parent": {
+                "@": "converter_descriptor"
+            },
+            "propertyDescriptors": [],
+            "propertyDescriptorGroups": {},
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "core/converter/string-to-substring-converter.mjson"
+            },
+            "exportName": "StringToSubstringConverter",
+            "module": {
+                "%": "core/converter/string-to-substring-converter"
+            }
+        }
+    }
+}
