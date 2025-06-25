@@ -5,7 +5,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
 
 /**
 * MutualExclusionDataService 
-* A DataServie that allows data of the same type / object descriptor that cam come from mutually exclusive 
+* A DataService that allows data of the same type / object descriptor that cam come from mutually exclusive 
 * individual Data Services to be fetched.
 * 
 * By default, each DataService acts fullfill a DataStream matching the readOpereration they handled,
