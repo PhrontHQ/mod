@@ -887,7 +887,7 @@ WebSocketDataOperationService.addClassProperties({
 
                  var operationDataKBSize = sizeof(serializedOperation) / 1024;
 
-                console.debug("----> send "+operationDataKBSize+" KB operation "+serializedOperation);
+                //console.debug("----> send "+operationDataKBSize+" KB operation "+serializedOperation);
 
                 // if(operation.type === "batch") {
                 //     var deserializer = new Deserializer();
@@ -899,7 +899,7 @@ WebSocketDataOperationService.addClassProperties({
                 // if(isMod) {
                 //     console.log("send message size: "+ this._bytesConverter.convert(this._textEncoder.encode(serializedOperation).length));
                 // }
-                console.log("_socketSendOperation: ",serializedOperation);
+                //console.log("_socketSendOperation: ",serializedOperation);
 
                 this._socket.send(serializedOperation);
             });
