@@ -960,6 +960,10 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
      * //If data is muted, and observed, it could be dynamically processed by RawDataServices.
      * //The referrer property, which is a pointer to another DatOperaiton would be used by an update/addition
      * //to the transaction
+     * 
+     * For a read operation, data can have the following properties:
+     *  - includesChildObjectDescriptors
+     *  - readExpressions
      *
      *
      * @type {Object}
