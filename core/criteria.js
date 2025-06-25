@@ -614,7 +614,7 @@ var Criteria = exports.Criteria = Montage.specialize({
                 //We replace $ syntax by the $key/$.key syntax:
                 aliasedSyntaxparameterArg = {};
                 aliasedSyntaxparameterArg.type = "property";
-                aliasedParameter = "parameter"+(++parameterCounter.value);
+                aliasedParameter = "p"+(++parameterCounter.value);
                 aliasedSyntaxparameterArg.args = [
                     {
                         "type":"parameters"
@@ -662,7 +662,7 @@ var Criteria = exports.Criteria = Montage.specialize({
                 //We replace $ syntax by the $key/$.key syntax:
                 aliasedSyntaxparameterArg = {};
                 aliasedSyntaxparameterArg.type = "property";
-                aliasedParameter = "parameter"+(++parameterCounter.value);
+                aliasedParameter = "p"+(++parameterCounter.value);
                 aliasedSyntaxparameterArg.args = [
                     {
                         "type":"parameters"
