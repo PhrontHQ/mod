@@ -111,7 +111,7 @@ if (Object.hasOwnProperty('deepFreeze') === false) {
     });
 }
 
-if (Object.hasOwnProperty('isEmpty') === false) {
+if (Object.prototype.hasOwnProperty('isEmpty') === false) {
     Object.defineProperty(Object.prototype, "isEmpty", {
         get: function () {
             for(let prop in this) return false;
