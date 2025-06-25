@@ -25,7 +25,7 @@ function SyntaxIterator(syntax, type){
 };
 
 function SyntaxInOrderIterator(syntax, type) {
-    return SyntaxIterator.call(this,syntax, type);
+    return SyntaxIterator.call(this, syntax, type);
 }
 SyntaxInOrderIterator.prototype = new SyntaxIterator();
 SyntaxInOrderIterator.prototype.constructor = SyntaxInOrderIterator;
