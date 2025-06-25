@@ -160,6 +160,7 @@ exports.contains = function (a, b) {
     // return expression.test(a);
 };
 
+//This could/should be extended to cover arrays
 exports.includes = function (a, b) {
     return (typeof a === "string" && typeof b === "string")
     ? a.includes(b)
