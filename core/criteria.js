@@ -491,6 +491,14 @@ var Criteria = exports.Criteria = Montage.specialize({
      * leading to: 
      * 
      * proA.propB.propC == $propC && proA.propB.propD == $propD
+     * 
+     * FIXME: prefixing "A.name == 'Blah' && name == 'Bleh'"
+     * with "originDataSnapshot.OriginDataServiceName"
+     * ends up as:
+     * "originDataSnapshot.OriginDataServiceName[originDataSnapshot.OriginDataServiceName.A.name] == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
+     * 
+     * instead of 
+     * "originDataSnapshot.OriginDataServiceName.A.name == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
      *
      * @method
      * @argument {string} prefixExpression - an frb expression.
