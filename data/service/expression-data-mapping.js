@@ -404,8 +404,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 if(!this.rawDataTypeName || (this.rawDataTypeName && this.rawDataTypeName === this.objectDescriptor.name)) {
                     /*
                         If we're the root of the hieararchy stored in the ObjectStore, we're going to not have a fullModuleId value.
-                        That way if subclasses are added after instnced of the root class have beem added, we don't need to update exising rows. 
-                        Because initially there would be no reason to use fullModuleId in teh first place and that column would be empty
+                        That way if subclasses are added after instances of the root class have beem added, we don't need to update exising rows. 
+                        Because initially there would be no reason to use fullModuleId in the first place and that column would be empty
+
+                        TODO: expose the fullModuleId as a criteria / API so it's less hard coded
                     */
                     if(!includesChildObjectDescriptors) {
                         criteria = new Criteria().initWithExpression("fullModuleId == null");
@@ -421,6 +423,33 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 this._defaultRawDataTypeIdentificationCriteria = criteria;
             }
             return this._defaultRawDataTypeIdentificationCriteria;
+        }
+    },
+
+    _isObjectStoreShared: {
+        value: undefined
+    },
+    isObjectStoreShared: {
+        get: function() {
+            //If the recipient's object descriptor descend from an objectDescriptor's and share the same rawDataTypeName, we need to bothe look up to know that
+            //If the recipient has descendant using its rawDataTypeName, then we have to check down as well.
+            //One of those is enough to return true
+            if(this._isObjectStoreShared === undefined) {
+
+                //Looking up
+                // let parentObjectStore = this.objectStore.parent;
+                // while() {
+                    
+                // }
+                //Looking down
+                // while() {}
+
+                //This is taking a wider approach but is done, optimization later
+                this._isObjectStoreShared = this.needsRawDataTypeIdentificationCriteria
+
+            }
+
+            return this._isObjectStoreShared;
         }
     },
 
@@ -478,9 +507,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }    
                     }
                 }
-                if(_rootMapping === this) {
-                    console.warn("Defaulting to "+this.objectDescriptor.name+", no (sub)type was found for rawData ",rawData);
-                }
+                // if(_rootMapping === this) {
+                //     console.warn("Defaulting to "+this.objectDescriptor.name+", no (sub)type was found for rawData ",rawData);
+                // }
                 return _rootMapping === this ? this.objectDescriptor : null;
             } else {
                 //There are no childObjectDescriptors, no point to check further
@@ -512,12 +541,15 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     */
                     let serviceMappingIterator = this.service.mappingsIterator,
                         myRawDataTypeName = this.rawDataTypeName,
+                        myObjectDescriptorName = this.objectDescriptor.name,
+                        // parentMappings = this.parentMappings,
                         iteration;
 
                     this._needsRawDataTypeIdentificationCriteria = false;
                     //It just take one other
                     while(!(iteration = serviceMappingIterator.next()).done ) {
-                        if(/*mapping*/iteration.value !== this && iteration.value.rawDataTypeName === myRawDataTypeName) {
+                        let iterationValue = iteration.value;
+                        if(/*mapping*/iterationValue !== this && iterationValue.rawDataTypeName === myRawDataTypeName/* && iterationValue.objectDescriptor.name !== myObjectDescriptorName*/) {
                             this._needsRawDataTypeIdentificationCriteria = true;
                             break;
                         }
@@ -528,6 +560,113 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    _objectPropertyNames: {
+        value: undefined
+    },
+    objectPropertyNames: {
+        get: function() {
+            if(!this._objectPropertyNames) {
+
+                this._objectPropertyNames = Object.keys(this.objectMappingRules);
+                // let objectMappingRules = this.objectMappingRules,
+                // i, countI,
+                // _objectPropertyNames = [];
+
+                // for(i=0, countI = objectMappingRules.length; (i<countI); i++ ) {
+                //     _objectPropertyNames.push(objectMappingRules[i].targetPath);
+                // }    
+            }
+            return this._objectPropertyNames;
+        }
+    },
+    /**
+     * Returns the name of object properties mapped for this mapping's object descriptor
+     * and its descendants stores in the same object store
+     * 
+     * @returns {Array<String>}
+     * @default undefined
+     */
+
+    _objectPropertyNamesIncludingStoredDescendants: {
+        value: undefined
+    },
+    objectPropertyNamesIncludingStoredDescendants: {
+        get: function() {
+
+            if(this._objectPropertyNamesIncludingStoredDescendants === undefined) {
+
+                if(!this.isObjectStoreShared) {
+                    this._objectPropertyNamesIncludingStoredDescendants = this.objectPropertyNames;
+                } else {
+                    let descendantObjectPropertyNames = Array.from(this.objectPropertyNames), //need to fill in ours first
+                        objectDescriptorDescendants = this.objectDescriptor.descendantDescriptors;
+
+                    if(objectDescriptorDescendants) {
+                        let objectStoreName = this.rawDataTypeName,
+                            // objectMappingRules = this.objectMappingRules,
+                            service = this.service,
+                            i, countI,
+                            iDescendant, iDescendantMapping;
+                                            
+                        for(i=0, countI = objectDescriptorDescendants.length; (i<countI); i++ ) {
+                            iDescendant = objectDescriptorDescendants[i];
+                            iDescendantMapping = service.mappingForType(iDescendant);
+                            //We only want to add those that are actualy stored in the same objectStore
+                            if(iDescendantMapping.isObjectStoreShared && iDescendantMapping.rawDataTypeName === objectStoreName && iDescendantMapping.objectPropertyNames) {
+                                descendantObjectPropertyNames.push(...iDescendantMapping.objectPropertyNames);
+                            }
+                        }    
+                    }
+                    this._objectPropertyNamesIncludingStoredDescendants = descendantObjectPropertyNames;
+                }
+            }
+
+            return this._objectPropertyNamesIncludingStoredDescendants
+        }
+    },
+
+    _rawDataMappingRulesIncludingStoredDescendants: {
+        value: undefined
+    },
+    rawDataMappingRulesIncludingStoredDescendants: {
+        get: function() {
+            if(this._rawDataMappingRulesIncludingStoredDescendants === undefined) {
+                if(!this.isObjectStoreShared) {
+                    this._objectPropertyNamesIncludingStoredDescendants = this.rawDataMappingRules;
+                } else {
+                        let descendantRawDataMappingRules = {}, //need to fill in ours first
+                        rawDataMappingRules = this.rawDataMappingRules,
+                        objectDescriptorDescendants = this.objectDescriptor.descendantDescriptors;
+
+                    //We need to loop on all keys, included inherited ones:
+                    for(let iPropertyName in rawDataMappingRules) {
+                        descendantRawDataMappingRules[iPropertyName] = rawDataMappingRules[iPropertyName];
+                    }
+
+                    if(objectDescriptorDescendants) {
+                        let objectStoreName = this.rawDataTypeName,
+                            service = this.service,
+                            i, countI,
+                            iDescendant, iDescendantMapping;
+                                            
+                        for(i=0, countI = objectDescriptorDescendants.length; (i<countI); i++ ) {
+                            iDescendant = objectDescriptorDescendants[i];
+                            iDescendantMapping = service.mappingForType(iDescendant);
+                            //We only want to add those that are actualy stored in the same objectStore
+                            if(iDescendantMapping.isObjectStoreShared && iDescendantMapping.rawDataTypeName === objectStoreName && iDescendantMapping.rawDataMappingRules) {
+                                //Here we want only the local ones
+                                Object.assign(descendantRawDataMappingRules, iDescendantMapping.rawDataMappingRules);
+                            }
+                        }    
+                    }
+                    this._rawDataMappingRulesIncludingStoredDescendants = descendantRawDataMappingRules;
+
+                }
+            }
+            return this._rawDataMappingRulesIncludingStoredDescendants;
+        }
+    },
+    
     /**
      * The id of the raw type mapped to the mapping's objectDescriptor.
      * Could be statically generated by a tool, or dynamicallay fetched in the case
@@ -1121,7 +1260,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     _mapRawDataPropertiesToObject: {
-        value: function(data, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties) {
+        value: function(data, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged) {
             var rawDataProperties = data ? Object.keys(data) : null,
                 result,
                 rawDataPropertyIteration = 0, rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
@@ -1142,7 +1281,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             /*
                 If data is null and we have readExpressions, which are object-level, we go on and set those.
             */
-            if((data === null || data?.isEmpty) && rawDataPropertyIterationCount === 0 && readExpressions.length > 0) {
+            if((data === null || data?.isEmpty) && rawDataPropertyIterationCount === 0 && readExpressions?.length > 0) {
                 for(let iReadExpression of readExpressions) {
                     object[iReadExpression] = null;
                 }
@@ -1242,9 +1381,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
 
-                        // console.log("mapRawDataToObject "+object.dataIdentifier+" WILL MAP "+ aRule.targetPath);
+                        // console.log("mapRawDataToObject "+ this.service.dataIdentifierForObject(object)+" WILL MAP "+ aRule.targetPath);
 
-                        result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope);
+                        result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope, registerMappedPropertiesAsChanged);
                         if(isObjectCreated) {
                             if (this._isAsync(result)) {
                                 const targetPath = aRule.targetPath,
@@ -1255,7 +1394,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                         Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                     */
                                     service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, propertyDescriptor.name, resultValue, context, mappingScope);
-                                    // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ targetPath +" with value: ",resultValue);
+                                    // console.log("mapRawDataToObject "+ this.service.dataIdentifierForObject(object)+" DID MAP "+ targetPath +" with value: ",resultValue);
 
                                     return resultValue;
                                 });
@@ -1265,7 +1404,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                     Tell our service: mappingDidMapRawDataToObjectPropertyValue
                                 */
                                 service.mappingDidMapRawDataToObjectPropertyValue(this, data, object, aRule.propertyDescriptor.name, result, context, mappingScope);
-                                // console.log("mapRawDataToObject "+object.dataIdentifier+" DID MAP "+ aRule.targetPath +" with value: ",result);
+                                // console.log("mapRawDataToObject "+ this.service.dataIdentifierForObject(object)+" DID MAP "+ aRule.targetPath +" with value: ",result);
 
                             }
                         }
@@ -1342,7 +1481,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             */
             _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
 
-            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties);
+            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged);
             
             /*
                 This is causing problems: as partial aspects of the object are filled-in, the attempts to run mapping rules for object properties on raw data that doesn't contain
@@ -1422,7 +1561,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //     }
             // }
 
-            //console.log("mapRawDataToObject "+object.dataIdentifier+" has "+ promises?.length+" promises");
+            //console.log("mapRawDataToObject "+ this.service.dataIdentifierForObject(object)+" has "+ promises?.length+" promises");
             return (promises && promises.length &&
                 ( promises.length === 1
                     ? promises[0].then(() => object)
@@ -1495,7 +1634,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
     mapRawDataToObjectProperty: {
-        value: function (data, object, propertyName, context, scope = this._scope.nest(data)) {
+        value: function (data, object, propertyName, context, scope = this._scope.nest(data), registerMappedPropertiesAsChanged) {
             var rule = this.objectMappingRuleForPropertyName(propertyName),
                 propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName),
                 isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptor.valueDescriptor,
@@ -1531,14 +1670,14 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             this._prepareRawDataToObjectRule(rule, propertyDescriptor, locales);
 
 
-            return  isRelationship ?                                this._resolveRelationship(object, propertyDescriptor, rule, scope) :
-                    propertyDescriptor && !isDerived ?              this._resolveProperty(object, propertyDescriptor, rule, scope) :
+            return  isRelationship ?                                this._resolveRelationship(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
+                    propertyDescriptor && !isDerived ?              this._resolveProperty(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
                                                                     null;
         }
     },
     _resolveRelationship: {
-        value: function (object, propertyDescriptor, rule, scope) {
-            //console.debug(object.dataIdentifier.objectDescriptor.name+" - "+propertyDescriptor.name+" _resolveRelationship on object id: "+object.dataIdentifier.primaryKey);
+        value: function (object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) {
+            //console.debug( this.service.dataIdentifierForObject(object).objectDescriptor.name+" - "+propertyDescriptor.name+" _resolveRelationship on object id: "+ this.service.dataIdentifierForObject(object).primaryKey);
             var self = this,
                 hasInverse = !!propertyDescriptor.inversePropertyName,
                 ruleEvaluationResult = rule.evaluate(scope),
@@ -1547,7 +1686,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             function ruleEvaluated(result) {
 
-                // console.debug(object.dataIdentifier.objectDescriptor.name+" - "+propertyDescriptor.name+" _resolveRelationship on object id: "+object.dataIdentifier.primaryKey +" resolved to ",result);
+                // console.debug( this.service.dataIdentifierForObject(object).objectDescriptor.name+" - "+propertyDescriptor.name+" _resolveRelationship on object id: "+ this.service.dataIdentifierForObject(object).primaryKey +" resolved to ",result);
                 var data;
                 if(propertyDescriptor.cardinality === 1 &&
                     result instanceof Array
@@ -1566,7 +1705,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
 
                 return hasInverse 
-                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule).then(function() {
+                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
                         return data;
                     }) 
                     : data;
@@ -1636,7 +1775,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     // },
 
     _assignInversePropertyValue: {
-        value: function (data, object, propertyDescriptor, rule) {
+        value: function (data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged) {
             var self = this,
                 inversePropertyName = propertyDescriptor.inversePropertyName;
 
@@ -1649,9 +1788,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 if (data) {
                     //Adding shouldFlagObjectBeingMapped argument to true.
                     if(Array.isArray(data)) {
-                        self._setObjectsValueForPropertyDescriptor(data, object, inversePropertyDescriptor, true);
+                        self._setObjectsValueForPropertyDescriptor(data, object, inversePropertyDescriptor, !registerMappedPropertiesAsChanged);
                     } else {
-                        self._setObjectValueForPropertyDescriptor(data, object, inversePropertyDescriptor, true);
+                        self._setObjectValueForPropertyDescriptor(data, object, inversePropertyDescriptor, !registerMappedPropertiesAsChanged);
                     }
 
                 }
@@ -1744,16 +1883,16 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
 
     _resolveProperty: {
-        value: function (object, propertyDescriptor, rule, scope) {
+        value: function (object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) {
             const result = rule.evaluate(scope);
 
             if (this._isAsync(result)) {
                 result.then((value) => {
-                    this._setObjectValueForPropertyDescriptor(object, value, propertyDescriptor);
+                    this._setObjectValueForPropertyDescriptor(object, value, propertyDescriptor, !registerMappedPropertiesAsChanged);
                     return null;
                 });
             } else {
-                this._setObjectValueForPropertyDescriptor(object, result, propertyDescriptor);
+                this._setObjectValueForPropertyDescriptor(object, result, propertyDescriptor, /*shouldFlagObjectBeingMapped*/ !registerMappedPropertiesAsChanged);
             }
 
             return result;
@@ -2594,7 +2733,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             const isToMany = propertyDescriptor.cardinality !== 1;
 
             //Add checks to make sure that data matches expectations of propertyDescriptor.cardinality
-            // console.debug(object.dataIdentifier.objectDescriptor.name+" - "+propertyDescriptor.name+" _setObjectValueForPropertyDescriptor on object id: "+object.dataIdentifier.primaryKey);
+            // console.debug( this.service.dataIdentifierForObject(object).objectDescriptor.name+" - "+propertyDescriptor.name+" _setObjectValueForPropertyDescriptor on object id: "+ this.service.dataIdentifierForObject(object).primaryKey);
 
             if (shouldFlagObjectBeingMapped) {
                 this.service.rootService._objectsBeingMapped.add(object);
@@ -3382,8 +3521,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     (criteriaParameters || (criteriaParameters = {}))[rawDataPrimaryKeyExpressions[i]] = iCompiledExpression(propertyScope);
 
                 } else {
-                    if(countI === 1 && object.dataIdentifier) {
-                        assign((criteriaParameters || (criteriaParameters = {})), rawDataPrimaryKeyExpressions[i], object.dataIdentifier.primaryKey);
+                    let dataIdentifier = this.service.dataIdentifierForObject(object);
+                    if(countI === 1 && dataIdentifier) {
+                        assign((criteriaParameters || (criteriaParameters = {})), rawDataPrimaryKeyExpressions[i], dataIdentifier.primaryKey);
                     } else {
                         iKeyRawRule = this.rawDataMappingRuleForPropertyName(rawDataPrimaryKeyExpressions[i]);
                         if(iKeyRawRule) {
@@ -3420,8 +3560,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 if(!isObjectCreated && snapshot) {
                     (criteriaParameters || (criteriaParameters = {}))[iKey] = snapshot[iKey];
                 } else {
-                    if(countI === 1 && object.dataIdentifier) {
-                        (criteriaParameters || (criteriaParameters = {}))[iKey] = object.dataIdentifier.primaryKey;
+                    let dataIdentifier = this.service.dataIdentifierForObject(object);
+                    if(countI === 1 && dataIdentifier) {
+                        (criteriaParameters || (criteriaParameters = {}))[iKey] = dataIdentifier.primaryKey;
                     } else {
                         iKeyRawRule = this.rawDataMappingRuleForPropertyName(iKey);
                         if(iKeyRawRule) {
