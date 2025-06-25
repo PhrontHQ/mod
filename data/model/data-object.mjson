@@ -55,6 +55,7 @@
         "values": {
             "name": "type",
             "valueDescriptor": {"@": "root"},
+            "inversePropertyName": "typeInstances",
             "description": "The reference to what would be an object's prototype in JavaScript: A unique instance of parent class that defines common characteristics for all objects of that type"
         }
     },
@@ -88,8 +89,8 @@
             "name": "subtypes",
             "valueType": "array",
             "cardinality": -1,
-            "inversePropertyName": "type",
             "valueDescriptor": {"@": "root"},
+            "definition": "typeInstances.filter{isType==true}",
             "description": "All instances of this class and or subclasses that are also used as types"
         }
     },
@@ -121,8 +122,8 @@
             "name": "originDataSnapshot",
             "valueType": "object",
             "isUnique": true,
-            "isSearchable": true,
-            "description": "Stores the latest known data snapshot from an origin service it was imported from. An entry per origin data service contains the data snapshot from that origin"
+            "isSearchable": false,
+            "description": "Stores the latest known data snapshot from an origin service it was imported from. An entry per origin data service contains the data snapshot from that origin. originDataSnapshot can eventually be on the larger side, and as we typically won't search through it, we're not making it searcheable"
         }
     },
 
