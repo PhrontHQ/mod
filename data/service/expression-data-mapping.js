@@ -257,6 +257,26 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    _parentMappings: {
+        value: undefined
+    },
+    parentMappings: {
+        get: function() {
+
+            if(this._parentMappings === undefined) {
+                let current = this,
+                    parent,
+                    parents = [];
+                 while( parent = current.parent) {
+                    parents.push(parent);
+                    current = parent;
+                 };
+
+                 this._parentMappings = parents;
+            }
+            return this._parentMappings;
+        }
+    },
 
     /**
      * The name of the raw type mapped to the mapping's objectDescriptor.
