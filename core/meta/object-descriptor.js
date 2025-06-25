@@ -507,6 +507,26 @@ ObjectDescriptor.addClassProperties({
 
         }
     },
+
+    _parentDescriptors: {
+        value: undefined
+    },
+    parentDescriptors: {
+        get: function() {
+
+            if(this._parentDescriptors === undefined) {
+                let current = this,
+                    parent,
+                    parents = [];
+                 while( parent = current.parent) {
+                    parents.push(parent);
+                 };
+
+                 this._parentDescriptors = parents;
+            }
+            return this._parentDescriptors;
+        }
+    },
     _descendantDescriptors: {
         value: undefined
     },
@@ -544,6 +564,66 @@ ObjectDescriptor.addClassProperties({
             if(value !== this._descendantDescriptors) {
                 this._descendantDescriptors = value;
             }
+        }
+    },
+
+    _descendantPropertyDescriptors: {
+        value: undefined
+    },
+    _descendantPropertyDescriptorsByName: {
+        value: undefined
+    },
+    descendantPropertyDescriptors: {
+        get: function() {
+            if(this._descendantPropertyDescriptors === undefined) {
+                let propertyDescriptors = [],
+                    descendantPropertyDescriptorsByName = new Map(),
+                    descendantDescriptors = this.descendantDescriptors;
+
+                for(let i = 0, countI = descendantDescriptors?.length; (i <countI); i++) {
+                    /*
+                        It's possible, but unfortunate, for 2 subclasses to independently have a property descriptor with the same name, but different type.
+                        The only way to solve that would be to alias the columns, like `${objectDescriptorName}_${aPropertyDescriptor.name}`
+                        But we would have to dynamically change the mappings... If we were creating it, then it would be fine, but as long as we, humans, do,
+                        it's on us.
+                    */
+                    for(let iiPropertyDescriptor of descendantDescriptors[i].ownPropertyDescriptors) {
+                        propertyDescriptors.push(iiPropertyDescriptor);
+                        descendantPropertyDescriptorsByName.set(iiPropertyDescriptor.name, iiPropertyDescriptor);
+                    }
+                }
+
+                this._descendantPropertyDescriptors = propertyDescriptors;
+                this._descendantPropertyDescriptorsByName = descendantPropertyDescriptorsByName;
+            }
+            return this._descendantPropertyDescriptors;
+        }
+    },
+
+    descendantPropertyDescriptorsByName: {
+        get: function () {
+            if (!this._descendantPropertyDescriptorsByName) {
+                this.descendantPropertyDescriptors();
+            }
+            return this._descendantPropertyDescriptorsByName;
+        }
+    },
+    _descendantPropertyDescriptorNames: {
+        value: undefined
+    },
+    descendantPropertyDescriptorNames: {
+        get: function() {
+            return this._descendantPropertyDescriptorNames || (this._descendantPropertyDescriptorNames = Array.from(this.descendantPropertyDescriptorsByName.keys()));
+        }
+    },
+
+    descendantPropertyDescriptorNamed: {
+        value: function(aPropertyDescriptorName) {
+            if(this._descendantPropertyDescriptorsByName === undefined) {
+                //Trigger the fill of this._descendantPropertyDescriptorsByName by descendantPropertyDescriptors's getter
+                this.descendantPropertyDescriptors;
+            }
+            return this._descendantPropertyDescriptorsByName.get(aPropertyDescriptorName);
         }
     },
 
@@ -679,10 +759,10 @@ ObjectDescriptor.addClassProperties({
 
     _preparePropertyDescriptorsCache: {
         value: function () {
-            var ownDescriptors = this._ownPropertyDescriptors,
-                isReady = true,
-                descriptor, i, n;
             if (!this._propertyDescriptorsAreCached)  {
+                var ownDescriptors = this._ownPropertyDescriptors,
+                    isReady = true,
+                    descriptor, i, n;
 
                 for (i = 0, n = ownDescriptors.length; i < n && isReady; ++i) {
                     descriptor = ownDescriptors[i];
@@ -724,6 +804,12 @@ ObjectDescriptor.addClassProperties({
      */
     _ownPropertyDescriptors: {
         value: null
+    },
+    ownPropertyDescriptors: {
+        get: function() {
+            this._preparePropertyDescriptorsCache();
+            return this._ownPropertyDescriptors;
+        }
     },
 
     _propertyDescriptors: {
