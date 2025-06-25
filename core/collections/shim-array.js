@@ -500,3 +500,54 @@ define("mapUnique", function (callback /*, thisp*/ /*equals*/) {
     }, undefined);
     return result;
 });
+
+/*
+    Should we support inlime values and not jsut an array containing values?
+*/
+define("includesSome", function (values) {
+    let thisLength = this.length,
+       valuesLength = values.length,
+        set = thisLength > valuesLength
+            ? new Set(this)
+            : new Set(values),
+        array = thisLength > valuesLength
+            ? new Set(values)
+            : new Set(this);
+
+    for(let i=0, countI = array.length; (i<countI); i++) {
+        if((set.has(array[i]))) {
+            return true;
+        }
+    }
+
+    return false;
+});
+
+
+/*
+    Should we support inlime values and not jsut an array containing values?
+*/
+define("includesAll", function (values) {
+    let thisLength = this.length,
+       valuesLength = values.length;
+
+    if(valuesLength <= thisLength) {
+        let valuesSet = new Set(this);
+        for(let i=0; (i<valuesLength); i++) {
+            if(!(valuesSet.has(values[i]))) {
+                return false;
+            }
+        }
+    }
+    else {
+        return false;
+    }
+    return true;
+});
+
+//TODO: 
+/*
+    //Same as includesAll, but the last argument is expected to be an equal function
+    define("includesAllEqual", function (values) {
+
+*/
