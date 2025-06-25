@@ -231,6 +231,37 @@ function generateUUIDv7(aDate, isFull) {
 //exports.generate = generateCryptoRandomUUID;
 exports.generate = generateUUIDv7;
 
+/*
+    Adapted from https://github.com/validatorjs/validator.js/blob/3847c6f90192bf9eec1aabc1bcb33e33d5810881/src/lib/isUUID.js,
+            itself leveraging https://github.com/uuidjs/uuid/blob/main/src/regex.js
+
+
+*/
+const uuid_format_by_version = {
+  1: /^[0-9A-F]{8}-[0-9A-F]{4}-1[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  2: /^[0-9A-F]{8}-[0-9A-F]{4}-2[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  3: /^[0-9A-F]{8}-[0-9A-F]{4}-3[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  4: /^[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  5: /^[0-9A-F]{8}-[0-9A-F]{4}-5[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  6: /^[0-9A-F]{8}-[0-9A-F]{4}-6[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  7: /^[0-9A-F]{8}-[0-9A-F]{4}-7[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+  8: /^[0-9A-F]{8}-[0-9A-F]{4}-8[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i,
+
+  nil: /^00000000-0000-0000-0000-000000000000$/i,
+  max: /^ffffffff-ffff-ffff-ffff-ffffffffffff$/i,
+  loose: /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/i,
+
+  // From https://github.com/uuidjs/uuid/blob/main/src/regex.js
+  all: /^(?:[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/i,
+};
+
+exports.isUUID = function(str, version) {
+        if (version === undefined || version === null) {
+            version = 'all';
+        }
+
+        return version in uuid_format_by_version ? uuid_format_by_version[version].test(str) : false;
+    }
 
 var Uuid = exports.Uuid = Object.create(Object.prototype, /** @lends Uuid# */ {
     /**
@@ -241,6 +272,10 @@ var Uuid = exports.Uuid = Object.create(Object.prototype, /** @lends Uuid# */ {
     generate: {
         enumerable: false,
         value: generateUUIDv7
+    },
+    isUUID: {
+        enumerable: false,
+        value: exports.isUUID
     }
 });
 
