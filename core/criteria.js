@@ -382,7 +382,7 @@ var Criteria = exports.Criteria = Montage.specialize({
      */
     qualifiedProperties: {
         get: function() {
-            return this._qualifiedProperties || (this._qualifiedProperties = syntaxProperties(this.syntax));
+            return this._qualifiedProperties || (this._qualifiedProperties = syntaxProperties(this.syntax).flatten());
         }
     },
 
