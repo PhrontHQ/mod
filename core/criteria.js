@@ -279,6 +279,67 @@ var Criteria = exports.Criteria = Montage.specialize({
         }
     },
 
+    /**
+     * Returns true if otherCriteria matches a subset of the receiver's syntax.
+     * This needs to be smart enough to account for inline values vs parameters, 
+     * which when evaluated would lead to the same result
+     * 
+     * This is tested with this like 'isType == true && $.has(code)' and otherCriteria like 'isType == true'
+     * But this case should also return true if otherCriteria is like 'isType == $.blah' with parameters {blah: true}
+     * So the simple logic 
+     * 
+     *      equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)
+     * 
+     * Is going to have to be more involved I think
+     *
+     * @method
+     * @returns {Boolean} - true if the equivalent of otherCriteria is found within the receiver's syntax, false otherwise
+     */
+    includes: {
+        value: function (otherCriteria) {
+            let isIncluded = false,
+                syntaxIterator = new SyntaxInOrderIterator(this.syntax),
+                otherCriteriaSyntaxIterator,
+                otherCriteriaCurrentIteration,
+                equals = Object.equals,
+                otherCriteriaCurrentSyntax,
+                currentIteration,
+                currentSyntax = this.syntax,
+                innerCurrentIteration,
+                innerCurrentSyntax;
+
+
+            while ((currentIteration = syntaxIterator.next(undefined,currentSyntax)) && currentIteration.done !== true) {
+                currentSyntax = currentIteration.value;
+                //console.log(JSON.stringify(currentSyntax));
+
+                otherCriteriaSyntaxIterator = new SyntaxInOrderIterator(otherCriteria.syntax);
+                innerCurrentSyntax = currentSyntax;
+                while((otherCriteriaCurrentIteration = otherCriteriaSyntaxIterator.next()) && otherCriteriaCurrentIteration.done !== true) {
+                    if(!equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)) {
+                        break;
+                    } else {
+                        innerCurrentIteration = syntaxIterator.next(undefined, currentSyntax);
+                        innerCurrentSyntax = innerCurrentIteration.value;
+                    }
+                }
+
+                if(otherCriteriaCurrentIteration.done === true) {
+                    isIncluded = true;
+                    break;
+                }
+            }
+
+            return isIncluded;
+        }
+    },
+
+    contains: {
+        value: function (otherCriteria) {
+            return this.includes(otherCriteria);
+        }   
+    },
+
     equals: {
         value: function (otherCriteria) {
             if(this._expression && otherCriteria._expression) {
