@@ -3806,6 +3806,8 @@ DataService.addClassProperties({
     /**
      * handles the propagation of a value set to a property's inverse property, fka "addToBothSidesOfRelationship..."
      * This doesn't handle range changes, which is done in another method.
+     * 
+     * WARNING: It doesn't look like this is called anywhere, but _setDataObjectPropertyDescriptorValueForInversePropertyDescriptor() is
      *
      * @private
      * @method
@@ -3832,14 +3834,27 @@ DataService.addClassProperties({
     },
 
     _setDataObjectPropertyDescriptorValueForInversePropertyDescriptor: {
-        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, previousValue) {
+        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, previousValue, isDataObjectBeingMapped) {
             if(!inversePropertyDescriptor) {
                 return;
             }
 
-            if(this._objectsBeingMapped.has(dataObject) && this._objectsBeingMapped.has(value)) {
-                return;
+            // if(this._objectsBeingMapped.has(dataObject) && this._objectsBeingMapped.has(value)) {
+            //     return;
+            // }
+
+            let addedValueAsObjectsBeingMapped = false,
+                setInversePromise;
+
+            if(this._objectsBeingMapped.has(dataObject)) {
+                if(this._objectsBeingMapped.has(value)) {
+                    return;
+                } else {
+                    addedValueAsObjectsBeingMapped = true;
+                    this._objectsBeingMapped.add(value);
+                }
             }
+
 
             var inversePropertyName = inversePropertyDescriptor.name,
                 inversePropertyCardinality = inversePropertyDescriptor.cardinality,
@@ -3891,7 +3906,7 @@ DataService.addClassProperties({
                             If we do value[inversePropertyName], it does trigger a fetch anyway and the value returned may or may not
                             end up overriding value[inversePropertyName] = dataObject done here, which isn't what the user intended.
                         */
-                       this.getObjectProperties(value, [inversePropertyName])
+                       setInversePromise = this.getObjectProperties(value, [inversePropertyName])
                        .then(() => {
                             if(value[inversePropertyName] !== dataObject) {
                                 value[inversePropertyName] = dataObject;
@@ -3960,6 +3975,19 @@ DataService.addClassProperties({
                 // }
 
             }
+
+
+            //Cleanup: 
+            if(addedValueAsObjectsBeingMapped) {
+                if(setInversePromise) {
+                    setInversePromise.then(() => {
+                        this._objectsBeingMapped.delete(value);
+                    })
+                } else {
+                    this._objectsBeingMapped.delete(value);
+                }
+            }
+
         }
     },
 
