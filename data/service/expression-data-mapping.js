@@ -3202,6 +3202,15 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 var mappingRule = this.rawDataMappingRuleForPropertyName(rawPropertyName),
                     propertyName = mappingRule ? mappingRule.sourcePath : rawPropertyName;
 
+                /*
+                    FIXME: if a mapping is one way only from rawData to object and not the referse as well
+                    intentionally or by error...
+
+                    Then rawDataMappingRuleForPropertyName() won't find it. We need to tap into object rules
+                    to find the one whose sourcePath is rawPropertyName, which will give us propertyName and 
+                    therefore the propertyDescriptor via propertyDescriptorForName()
+                */
+
                 return this.objectDescriptor.propertyDescriptorForName(propertyName);
             } else {
                 return null;
