@@ -4441,7 +4441,7 @@ RawDataService.addClassProperties({
                                 /*
                                     resolvedOperations could contains some null if changed objects don't have anything to solve in their own row because it's stored on the other side of a relationship, which is why we keep track of the other array ourselves to avoid looping over again and modify the array after, or send noop operation through the wire for nothing. Cost time an money!
                                 */
-                                resolve(operations);
+                                resolve(resolvedOperations);
                             }, function (rejectedValue) {
                                 reject(rejectedValue);
                             });
