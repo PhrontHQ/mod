@@ -263,7 +263,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             every property in the readOperation.criteria by "originDataSnapshot.${rawDataService.identifier}."" 
         */
         if(rawDataService && this.originDataServices.has(rawDataService) && rawDataService.handlesType(readOperation.target)) {
-            console.log("<-> Service originDataSnapshotLookUp capture ReadOperation "+readOperation.id+" from "+rawDataService.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
+            console.log("Sync Service originDataSnapshot LookUp capture ReadOperation "+readOperation.id+" from "+rawDataService.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
             /*
                 composedPath is unique to the read operation, so we can mod it without side effects.
@@ -1177,7 +1177,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             let readCompletionOperationByChildDataService = this.readCompletionOperationByChildDataServiceForReadOperation(aReadCompletionOperation.referrer);
             readCompletionOperationByChildDataService.set(aReadCompletionOperation.rawDataService, aReadCompletionOperation);    
         } else {
-            console.warn("ReadCompletionOperation could not be registered as its rawDataService ("+rawDataService.name+") doesn't handle the operation's target "+aReadCompletionOperation.target.name);
+            console.warn("ReadCompletionOperation could not be registered as its rawDataService ("+aReadCompletionOperation.rawDataService.name+") doesn't handle the operation's target "+aReadCompletionOperation.target.name);
         }
     }
 
