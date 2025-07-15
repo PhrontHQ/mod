@@ -166,24 +166,28 @@ var observableArrayProperties = {
                     return []; // [], but spare us an instantiation
                 }
                 minus = Array.empty;
+            } else if(this.length === 0) {
+                minus = [];
             } else {
                 //minus = array_slice.call(this, start, start + length);
                 /*
                     There could be the same values at the same slot in plus
                     as in this. In which case they shouldn't be considered as minus
                 */
-                let i, countI, newPlus = plus.slice(), newStart = start, newLength = length;
-                for(i = 0, countI = length; (i<countI); i++ ) {
+                let i, countI, newPlus = plus.slice(), newStart = start, myLength = this.length, iterationLength = (length > myLength ? myLength : length), newLength = iterationLength;
+                for(i = 0, countI = iterationLength; (i<countI); i++ ) {
                     /*
-                        (plusLength > 0) is to make the difference between this[i+start] actually containing the valye undefined
+                        (plusLength > 0) is to make the difference between this[i+start] actually containing the value undefined
                         vs plus being empty in which case plus[i] also returns undefined...
                     */
                     if(plusLength > 0 && this[i+start] === plus[i] && !minus) {
                         newPlus.shift();
                         newStart++;
                         newLength--;
-                    } else {
+                    } else if(i+start < myLength) {
                         (minus || (minus = [])).push(this[i+start]);
+                    } else {
+                        break;
                     }
                 }
 
