@@ -1331,7 +1331,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             }
             readCompletionOperations.push(aReadCompletionOperation);    
         } else {
-            console.warn("ReadCompletionOperation could not be registered as its rawDataService ("+rawDataService.name+") doesn't handle the operation's target "+aReadCompletionOperation.target.name);
+            console.warn("ReadCompletionOperation could not be registered as its rawDataService ("+aReadCompletionOperation.rawDataService.name+") doesn't handle the operation's target "+aReadCompletionOperation.target.name);
         }
     }
 
