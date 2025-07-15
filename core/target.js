@@ -112,13 +112,39 @@ exports.Target = class Target extends Montage {
              * https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
              * @property {Array<Target>}
              */
-            composedPath: {value: undefined} 
+            composedPath: { value: undefined },
 
+            /**
+             * Map storing the last timestamp when each interaction type was processed
+             * @type {Map<string, number>}
+             * @private
+             */
+            __debouncedInteractionTimestamps: { value: null },
+
+            /**
+             * Map of threshold durations (in milliseconds) for each interaction type
+             * @type {Map<string, number>}
+             * @private
+             */
+            __debouncedInteractionThresholds: { value: null },
         });
-
     }
 
+    get _debouncedInteractionTimestamps() {
+        if (!this.__debouncedInteractionTimestamps) {
+            this.__debouncedInteractionTimestamps = new Map();
+        }
+        
+        return this.__debouncedInteractionTimestamps;
+    }
 
+    get _debouncedInteractionThresholds() {
+        if (!this.__debouncedInteractionThresholds) {
+            this.__debouncedInteractionThresholds = new Map();
+        }
+
+        return this.__debouncedInteractionThresholds;
+    }
 
     /**
      * Whether or not this is the activeTarget
@@ -133,7 +159,31 @@ exports.Target = class Target extends Montage {
         return this === defaultEventManager.activeTarget;
     }
 
+    registerInteractionForDebounce(interactionKey, threshold) {
+        this._debouncedInteractionThresholds.set(interactionKey, threshold);
+    }
 
+    unregisterInteractionForDebounce(interactionKey) {
+        this._debouncedInteractionThresholds.delete(interactionKey);
+        this._debouncedInteractionTimestamps.delete(interactionKey);
+    }
+
+    shouldPreventInteraction(interactionKey) {
+        if (!this._debouncedInteractionThresholds.has(interactionKey)) return false;
+
+        const currentTime = Date.now();
+        const lastTime = this._debouncedInteractionTimestamps.get(interactionKey) || 0;
+        const threshold = this._debouncedInteractionThresholds.get(interactionKey) || 0;
+        const delta = currentTime - lastTime;
+
+        // Check if we need to debounce
+        if (lastTime > 0 && delta < threshold) return true;
+
+        // Update timestamp for this interaction type
+        this._debouncedInteractionTimestamps.set(interactionKey, currentTime);
+
+        return false;
+    }
 
     /**
      * Ask this target to surrender its activeTarget status.
