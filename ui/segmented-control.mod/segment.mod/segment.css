@@ -1,0 +1,106 @@
+:root {
+    /* Segment */
+    --mod-segment-text: rgba(0, 0, 0, 0.65);
+    --mod-segment-transition: color 0.25s ease-out, background-color 0.25s ease-out;
+
+    /* Segment heights */
+    --mod-segment-height-small: 32px;
+    --mod-segment-height-medium: 36px;
+    --mod-segment-height-large: 44px;
+
+    /* Segment Hover State */
+    --mod-segment-hover-background: rgba(0, 0, 0, 0.02);
+    --mod-segment-hover-text: rgba(0, 0, 0, 1);
+
+    /* Segment Active State */
+    --mod-segment-active-background: rgba(0, 0, 0, 0.04);
+    --mod-segment-active-text: rgba(0, 0, 0, 1);
+
+    /* Segment Border Sizes */
+    --mod-segment-border-radius-small: 6px;
+    --mod-segment-border-radius-medium: 8px;
+    --mod-segment-border-radius-large: 12px;
+
+    /* Segment sizes */
+    --mod-segment-padding-small: 4px 8px;
+    --mod-segment-padding-medium: 8px 12px;
+    --mod-segment-padding-large: 12px 20px;
+    --mod-segment-font-size-small: 12px;
+    --mod-segment-font-size-medium: 13px;
+    --mod-segment-font-size-large: 16px;
+}
+
+/* Dark Theme Variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Segment - Dark Theme */
+        --mod-segment-text: rgba(160, 160, 160, 0.65);
+
+        /* Segment Hover State - Dark Theme */
+        --mod-segment-hover-background: rgba(255, 255, 255, 0.08);
+        --mod-segment-hover-text: rgba(255, 255, 255, 0.9);
+
+        /* Segment Active State - Dark Theme */
+        --mod-segment-active-background: rgba(255, 255, 255, 0.12);
+        --mod-segment-active-text: rgba(255, 255, 255, 1);
+    }
+}
+
+@scope (.ModSegment) {
+    :scope {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--mod-segment-text);
+        cursor: pointer;
+        transition: var(--mod-segment-transition);
+        z-index: 2;
+        box-sizing: border-box;
+        white-space: nowrap;
+        user-select: none;
+        -webkit-user-select: none;
+        outline: none;
+        border: none;
+        background: transparent;
+        font-family: inherit;
+        font-size: inherit;
+        gap: 8px;
+
+        &:hover:not(.mod--selected):not(.mod--disabled) {
+            background-color: var(--mod-segment-hover-background);
+            color: var(--mod-segment-hover-text);
+        }
+
+        &:active:not(.mod--selected):not(.mod--disabled) {
+            background-color: var(--mod-segment-active-background);
+            color: var(--mod-segment-active-text);
+        }
+
+        &.mod--selected {
+            color: var(--mod-segmented-control-thumb-text);
+        }
+
+        &.mod--disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        /* TESTING */
+
+        .ModSegment-leading,
+        .ModSegment-trailing,
+        .ModSegment-label {
+            &:is(:empty) {
+                display: none;
+            }
+        }
+
+        .ModSegment-leading,
+        .ModSegment-trailing {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    }
+}

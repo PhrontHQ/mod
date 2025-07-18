@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="segmented-control.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "_selectedOption": {"<->": "@optionsController.selection.0"},
+                        "element": {"#": "SegmentedControl"},
+                        "thumbElement": {"#": "thumb"}
+                    }
+                },
+                "optionsController": {
+                    "prototype": "core/range-controller",
+                    "values": {
+                        "selection.0": {"<-": "@owner._normalizedOptions.filter{value == @owner.selection}.0"},
+                        "content": {"<-": "@owner._normalizedOptions"}
+                    }
+                },
+                "segments": {
+                    "prototype": "ui/repetition.mod",
+                    "values": {
+                        "contentController": {"<-": "@optionsController"},
+                        "element": {"#": "segments"},
+                        "isSelectionEnabled": true
+                    }
+                },
+                "segment": {
+                    "prototype": "ui/segmented-control.mod/segment.mod",
+                    "values": {
+                        "selected": {"<-": "@segments:iteration.object == @owner._selectedOption"},
+                        "option": {"<-": "@segments:iteration.object"},
+                        "element": {"#": "segment"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="SegmentedControl" class="ModSegmentedControl">
+            <div class="ModSegmentedControl-container">
+                <div class="ModSegmentedControl-thumb" data-mod-id="thumb"></div>
+                <div class="ModSegmentedControl-segments" data-mod-id="segments">
+                    <div class="ModSegmentedControl-segment" data-mod-id="segment"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

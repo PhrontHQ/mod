@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="segment.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "segment"}
+                    }
+                },
+                "leading": {
+                    "prototype": "ui/placeholder.mod",
+                    "values": {
+                        "componentModule": {"<-": "@owner.option.leadingComponentModule"},
+                        "componentValues": {"<-": "@owner.option.leadingComponentValues"},
+                        "element": {"#": "leading"}
+                    }
+                },
+                "label": {
+                    "prototype": "ui/text.mod",
+                    "values": {
+                        "value": {"<-": "@owner.label"},
+                        "element": {"#": "label"}
+                    }
+                },
+                "trailing": {
+                    "prototype": "ui/placeholder.mod",
+                    "values": {
+                        "componentModule": {"<-": "@owner.option.trailingComponentModule"},
+                        "componentValues": {"<-": "@owner.option.trailingComponentValues"},
+                        "element": {"#": "trailing"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="segment" class="ModSegment">
+            <div data-mod-id="leading" class="ModSegment-leading"></div>
+            <div data-mod-id="label" class="ModSegment-label"></div>
+            <div data-mod-id="trailing" class="ModSegment-trailing"></div>
+        </div>
+    </body>
+</html>
