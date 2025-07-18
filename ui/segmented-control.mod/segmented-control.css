@@ -1,0 +1,212 @@
+:root {
+    --mod-segmented-control-background: rgba(0, 0, 0, 0.06);
+    --mod-segmented-control-padding: 2px;
+
+    /* Thumb */
+    --mod-segmented-control-thumb-background: rgba(255, 255, 255, 0.85);
+    --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 0.975);
+    --mod-segmented-control-thumb-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.04);
+    --mod-segmented-control-thumb-text: rgba(0, 0, 0, 0.85);
+    --mod-segmented-control-thumb-transition: all 0.35s cubic-bezier(0.375, 0.075, 0, 1.125);
+}
+
+/* Dark Theme Variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        /* Segmented Control Background */
+        --mod-segmented-control-background: rgba(0, 0, 0, 0.8);
+
+        /* Thumb - Dark Theme */
+        --mod-segmented-control-thumb-background: rgba(255, 255, 255, 0.08);
+        --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 0.04);
+        --mod-segmented-control-thumb-shadow: 0px 0px 4px 1px rgba(0, 0, 0, 0.3);
+        --mod-segmented-control-thumb-text: rgba(255, 255, 255, 0.95);
+    }
+}
+
+@scope (.ModSegmentedControl) {
+    :scope {
+        display: inline-block;
+        -webkit-tap-highlight-color: transparent;
+
+        &.mod--disabled {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        &.mod--ready {
+            /* This class is added after the first draw */
+            /* FIXME: @benoit: maybe a better way of doing that, draw gates maybe ? */
+            .ModSegmentedControl-container {
+                .ModSegmentedControl-thumb {
+                    transition: var(--mod-segmented-control-thumb-transition);
+                }
+            }
+        }
+
+        .ModSegmentedControl-container {
+            display: flex;
+            background-color: var(--mod-segmented-control-background);
+            padding: var(--mod-segmented-control-padding);
+            position: relative;
+
+            .ModSegmentedControl-thumb {
+                position: absolute;
+                top: var(--mod-segmented-control-padding);
+                left: var(--mod-segmented-control-padding);
+                background-color: var(--mod-segmented-control-thumb-background);
+                backdrop-filter: blur(10px);
+                border: 2px solid var(--mod-segmented-control-thumb-border-color);
+                box-sizing: border-box;
+                box-shadow: var(--mod-segmented-control-thumb-shadow);
+                z-index: 1;
+                pointer-events: none;
+            }
+
+            .ModSegmentedControl-segments {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow: hidden;
+                position: relative;
+            }
+        }
+    }
+
+    /* Orientation */
+
+    &.mod--horizontal {
+        .ModSegmentedControl-container {
+            .ModSegmentedControl-thumb {
+                height: calc(100% - var(--mod-segmented-control-padding) * 2);
+            }
+
+            .ModSegmentedControl-segments {
+                flex-direction: row;
+            }
+        }
+    }
+
+    &.mod--vertical {
+        .ModSegmentedControl-container {
+            .ModSegmentedControl-thumb {
+                width: calc(100% - var(--mod-segmented-control-padding) * 2);
+            }
+
+            .ModSegmentedControl-segments {
+                flex-direction: column;
+                width: 100%;
+
+                .ModSegmentedControl-segment {
+                    width: 100%;
+                    text-align: left;
+                }
+            }
+        }
+    }
+
+    /* Size */
+
+    &.mod--size-small {
+        .ModSegmentedControl-container {
+            .ModSegmentedControl-segment {
+                padding: var(--mod-segment-padding-small);
+                min-height: var(--mod-segment-height-small);
+                font-size: var(--mod-segment-font-size-small);
+            }
+        }
+    }
+
+    &.mod--size-medium {
+        .ModSegmentedControl-container {
+            .ModSegmentedControl-segment {
+                padding: var(--mod-segment-padding-medium);
+                min-height: var(--mod-segment-height-medium);
+                font-size: var(--mod-segment-font-size-medium);
+            }
+        }
+    }
+
+    &.mod--size-large {
+        .ModSegmentedControl-container {
+            .ModSegmentedControl-segment {
+                padding: var(--mod-segment-padding-large);
+                min-height: var(--mod-segment-height-large);
+                font-size: var(--mod-segment-font-size-large);
+            }
+        }
+    }
+
+    /* Shapes */
+
+    &.mod--shape-pill {
+        &.mod--vertical {
+            /* TODO: Consider handling this logic in JavaScript for greater resilience and flexibility */
+            &.mod--size-small {
+                .ModSegmentedControl-container {
+                    border-radius: calc(var(--mod-segment-height-small) / 2 + var(--mod-segmented-control-padding));
+                }
+            }
+
+            &.mod--size-medium {
+                .ModSegmentedControl-container {
+                    border-radius: calc(var(--mod-segment-height-medium) / 2 + var(--mod-segmented-control-padding));
+                }
+            }
+
+            &.mod--size-large {
+                .ModSegmentedControl-container {
+                    border-radius: calc(var(--mod-segment-height-large) / 2 + var(--mod-segmented-control-padding));
+                }
+            }
+        }
+
+        &.mod--size-small,
+        &.mod--size-medium,
+        &.mod--size-large {
+            .ModSegmentedControl-container {
+                /* 50% doesn't work for rectangle shape */
+                border-radius: 99999px;
+
+                .ModSegmentedControl-thumb,
+                .ModSegmentedControl-segment {
+                    border-radius: 99999px;
+                }
+            }
+        }
+    }
+
+    &.mod--shape-rounded {
+        &.mod--size-small {
+            .ModSegmentedControl-container {
+                border-radius: var(--mod-segment-border-radius-small);
+
+                .ModSegmentedControl-thumb,
+                .ModSegmentedControl-segment {
+                    border-radius: calc(var(--mod-segment-border-radius-small) - var(--mod-segmented-control-padding));
+                }
+            }
+        }
+
+        &.mod--size-medium {
+            .ModSegmentedControl-container {
+                border-radius: var(--mod-segment-border-radius-medium);
+
+                .ModSegmentedControl-thumb,
+                .ModSegmentedControl-segment {
+                    border-radius: calc(var(--mod-segment-border-radius-medium) - var(--mod-segmented-control-padding));
+                }
+            }
+        }
+
+        &.mod--size-large {
+            .ModSegmentedControl-container {
+                border-radius: var(--mod-segment-border-radius-large);
+
+                .ModSegmentedControl-thumb,
+                .ModSegmentedControl-segment {
+                    border-radius: calc(var(--mod-segment-border-radius-large) - var(--mod-segmented-control-padding));
+                }
+            }
+        }
+    }
+}

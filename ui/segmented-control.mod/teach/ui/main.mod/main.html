@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach SegmentedBar Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "defaultSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "defaultSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Apple",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "defaultWithObjectSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "defaultWithObjectSegmentedControl"},
+                        "options": {"<-": "@owner.objectOptions"},
+                        "orientation": "horizontal",
+                        "selection": "weekly",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "smallSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "smallSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Banana",
+                        "size": "small",
+                        "shape": "rounded"
+                    }
+                },
+                "mediumSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "mediumSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Cherry",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "largeSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "largeSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Orange",
+                        "size": "large",
+                        "shape": "rounded"
+                    }
+                },
+                "rectangleSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "rectangleSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Banana",
+                        "size": "medium",
+                        "shape": "rectangle"
+                    }
+                },
+                "roundedSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "roundedSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Apple",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "pillSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "pillSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Cherry",
+                        "size": "medium",
+                        "shape": "pill"
+                    }
+                },
+                "verticalRectangleSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "verticalRectangleSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "vertical",
+                        "selection": "Orange",
+                        "size": "medium",
+                        "shape": "rectangle"
+                    }
+                },
+                "verticalRoundedSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "verticalRoundedSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "vertical",
+                        "selection": "Orange",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "verticalPillSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "verticalPillSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "vertical",
+                        "selection": "Orange",
+                        "size": "medium",
+                        "shape": "pill"
+                    }
+                },
+                "disabledSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "disabledSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "size": "medium",
+                        "shape": "rounded",
+                        "disabled": true
+                    }
+                },
+                "mixedDisabledSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "mixedDisabledSegmentedControl"},
+                        "options": {"<-": "@owner.mixedDisabledOptions"},
+                        "orientation": "horizontal",
+                        "selection": "option1",
+                        "size": "medium",
+                        "shape": "rounded"
+                    }
+                },
+                "customStyleSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "customStyleSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "orientation": "horizontal",
+                        "selection": "Apple",
+                        "size": "small",
+                        "shape": "pill"
+                    }
+                },
+                "iconSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "iconSegmentedControl"},
+                        "options": [
+                            {
+                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
+                                "leadingComponentValues": {
+                                    "src": {"=": "assets/apple.svg"}
+                                },
+                                "value": "apple"
+                            },
+                            {
+                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
+                                "leadingComponentValues": {
+                                    "src": {"=": "assets/banana.svg"}
+                                },
+                                "value": "banana"
+                            },
+                            {
+                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
+                                "leadingComponentValues": {
+                                    "src": {"=": "assets/grappe.svg"}
+                                },
+                                "value": "grappe"
+                            }
+                        ],
+                        "orientation": "horizontal",
+                        "selection": "apple",
+                        "size": "small",
+                        "shape": "pill"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1>Segmented Control</h1>
+
+            <!-- Default Cases -->
+            <div class="card column">
+                <h2>Basic Usage</h2>
+                <div class="row">
+                    <label>Default (Strings):</label>
+                    <div data-mod-id="defaultSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Default (Objects):</label>
+                    <div data-mod-id="defaultWithObjectSegmentedControl"></div>
+                </div>
+            </div>
+
+            <!-- Sizes -->
+            <div class="card column">
+                <h2>Sizes</h2>
+                <div class="row">
+                    <label>Small:</label>
+                    <div data-mod-id="smallSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Medium:</label>
+                    <div data-mod-id="mediumSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Large:</label>
+                    <div data-mod-id="largeSegmentedControl"></div>
+                </div>
+            </div>
+
+            <!-- Shape -->
+            <div class="card column">
+                <h2>Shape</h2>
+                <div class="row">
+                    <label>Rectangle:</label>
+                    <div data-mod-id="rectangleSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Rounded:</label>
+                    <div data-mod-id="roundedSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Pill:</label>
+                    <div data-mod-id="pillSegmentedControl"></div>
+                </div>
+            </div>
+
+            <!-- Orientation -->
+            <div class="card column">
+                <h2>Vertical Orientation</h2>
+                <div class="grid">
+                    <div class="column">
+                        <label>Rectangle:</label>
+                        <div data-mod-id="verticalRectangleSegmentedControl"></div>
+                    </div>
+                    <div class="column">
+                        <label>Rounded:</label>
+                        <div data-mod-id="verticalRoundedSegmentedControl"></div>
+                    </div>
+                    <div class="column">
+                        <label>Pill:</label>
+                        <div data-mod-id="verticalPillSegmentedControl"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disabled -->
+            <div class="card column">
+                <h2>Disabled Segments</h2>
+                <div class="row">
+                    <label>Disabled:</label>
+                    <div data-mod-id="disabledSegmentedControl"></div>
+                </div>
+                <div class="row">
+                    <label>Mixed:</label>
+                    <div data-mod-id="mixedDisabledSegmentedControl"></div>
+                </div>
+            </div>
+
+            <!-- Custom Style -->
+            <div class="card column customStyleSegmentedControl">
+                <h2>Custom Style</h2>
+                <div class="row">
+                    <label>Custom Style:</label>
+                    <div data-mod-id="customStyleSegmentedControl"></div>
+                </div>
+            </div>
+
+            <!-- Icon Segmented Control -->
+            <div class="card column iconSegmentedControl">
+                <h2>Icon Segmented Control</h2>
+                <div class="row">
+                    <label>With Icons:</label>
+                    <div data-mod-id="iconSegmentedControl"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
