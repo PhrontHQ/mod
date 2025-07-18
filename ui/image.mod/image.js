@@ -14,6 +14,7 @@ const Image = class Image extends Component {
     hasTemplate = true;
 
     draw() {
+        // FIXME: @Benoit workaround: until addAttributes -> src is fixed
         if (this.src) {
             this.element.src = this.src;
         }
