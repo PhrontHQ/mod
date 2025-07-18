@@ -12,6 +12,12 @@ const { Component } = require("ui/component");
  */
 const Image = class Image extends Component {
     hasTemplate = true;
+
+    draw() {
+        if (this.src) {
+            this.element.src = this.src;
+        }
+    }
 };
 
 /** @lends module:"mod/ui/native/image.mod".Image */
