@@ -111,6 +111,13 @@ var Placeholder = exports.Placeholder = Slot.specialize({
                             oldExitDocument = component.exitDocument;
 
                         component.data = self.data;
+
+                        // @Benoit FIXME: remove this when the component is properly bound
+                        // START TESTING
+                        component.defineBindings(self.componentValues);
+                        component.src = self.componentValues.src['='];
+                        // END TESTING
+
                         component.exitDocument = function () {
                             if (oldExitDocument) {
                                 oldExitDocument.call(component);
