@@ -22,8 +22,8 @@
                     "prototype": "ui/repetition.mod",
                     "values": {
                         "contentController": {"<-": "@optionsController"},
-                        "element": {"#": "segments"},
-                        "isSelectionEnabled": true
+                        "isSelectionEnabled": {"<-": "!@owner.disabled"},
+                        "element": {"#": "segments"}
                     }
                 },
                 "segment": {
