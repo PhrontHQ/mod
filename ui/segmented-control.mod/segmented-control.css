@@ -26,12 +26,13 @@
 
 @scope (.ModSegmentedControl) {
     :scope {
-        display: inline-block;
+        display: inline-flex;
         -webkit-tap-highlight-color: transparent;
 
         &.mod--disabled {
             opacity: 0.6;
             pointer-events: none;
+            cursor: not-allowed;
         }
 
         &.mod--ready {
@@ -49,6 +50,7 @@
             background-color: var(--mod-segmented-control-background);
             padding: var(--mod-segmented-control-padding);
             position: relative;
+            flex: 1;
 
             .ModSegmentedControl-thumb {
                 position: absolute;
@@ -68,6 +70,12 @@
                 flex-wrap: nowrap;
                 overflow: hidden;
                 position: relative;
+                flex: 1;
+                justify-content: space-around;
+
+                .ModSegmentedControl-segment {
+                    flex: 1;
+                }
             }
         }
     }

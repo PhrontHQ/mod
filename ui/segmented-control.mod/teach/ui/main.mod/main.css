@@ -37,6 +37,10 @@ body {
         flex-direction: column;
         gap: 24px;
         align-items: flex-start;
+
+        &.stretch {
+            align-items: stretch;
+        }
     }
 
     .grid {
@@ -67,5 +71,9 @@ body {
         --mod-segment-active-text: rgba(71, 85, 105, 1);
 
         --mod-segment-height-small: 28px;
+
+        .ModSegmentedControl {
+            flex: 1;
+        }
     }
 }
