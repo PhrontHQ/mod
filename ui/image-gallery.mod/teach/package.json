@@ -5,7 +5,10 @@
         "postinstall": "npm link ../../.."
     },
     "dependencies": {
-        "mod": "../../.."
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../../"
     },
     "private": true,
     "bundle": [ "ui/main.mod" ]
