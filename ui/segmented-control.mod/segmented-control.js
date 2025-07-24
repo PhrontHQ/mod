@@ -133,13 +133,15 @@ const SegmentedControl = class SegmentedControl extends Component {
     enterDocument() {
         this._cancelHandleOptionsChange = this.addRangeAtPathChangeListener("_options", this, "handleOptionsChange");
         this.addPathChangeListener("_selectedOption", this, "handleSelectionChange");
-        this._watchForDOMChanges();
     }
 
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
         this._cancelHandleOptionsChange?.();
-        this._mutationObserver.disconnect();
+    }
+
+    slotContentDidFirstDraw(slot) {
+        this.needsDraw = true;
     }
 
     /**
@@ -191,34 +193,6 @@ const SegmentedControl = class SegmentedControl extends Component {
         if (this._completedFirstDraw) {
             this.element.classList.add("mod--ready");
         }
-    }
-
-    // FIXME: See with @Benoit if we can avoid to render the segments when nested placeholders are not ready
-    // Draw Gates Maybe?
-    // Meanwhile, we need to watch for DOM changes
-    _watchForDOMChanges() {
-        this._mutationObserver = new MutationObserver((mutations) => {
-            mutations.some((mutation) => {
-                if (mutation.type === "childList") {
-                    this.needsDraw = true;
-                    return true; // Stop observing further mutations
-                }
-
-                return false; // Continue observing
-            });
-        });
-
-        // Configure what to observe
-        const config = {
-            characterDataOldValue: false,
-            attributeOldValue: false,
-            characterData: false,
-            attributes: false,
-            childList: true,
-            subtree: true,
-        };
-
-        this._mutationObserver.observe(this.element, config);
     }
 
     /**
