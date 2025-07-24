@@ -41,6 +41,22 @@ exports.Slot = Component.specialize( /** @lends Slot.prototype # */ {
             if (firstTime) {
                 this.element.classList.add("slot-mod");
             }
+
+            this.addEventListener("firstDraw", this, false);
+        }
+    },
+
+    exitDocument: {
+        value: function () {
+            this.removeEventListener("firstDraw", this, false);
+        }
+    },
+
+    handleFirstDraw: {
+        value: function () {
+            if (this.delegate && typeof this.delegate.slotContentDidFirstDraw === "function") {
+                this.delegate.slotContentDidFirstDraw(this);
+            }
         }
     },
 
