@@ -52,6 +52,7 @@ exports.Slot = class Slot extends Component {
                 if (this.respondsToDelegateMethod("slotElementForComponent")) {
                     element = this.callDelegateMethod("slotElementForComponent", this, value, element);
                 }
+
                 value.element = element;
             } else {
                 element = value.element;

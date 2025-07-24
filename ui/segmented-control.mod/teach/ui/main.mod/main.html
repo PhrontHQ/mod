@@ -171,24 +171,15 @@
                         "element": {"#": "iconSegmentedControl"},
                         "options": [
                             {
-                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
-                                "leadingComponentValues": {
-                                    "src": {"=": "assets/apple.svg"}
-                                },
+                                "leadingComponent": {"@": "appleIcon"},
                                 "value": "apple"
                             },
                             {
-                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
-                                "leadingComponentValues": {
-                                    "src": {"=": "assets/banana.svg"}
-                                },
+                                "leadingComponent": {"@": "bananaIcon"},
                                 "value": "banana"
                             },
                             {
-                                "leadingComponentModule": {"%": "mod/ui/image.mod"},
-                                "leadingComponentValues": {
-                                    "src": {"=": "assets/grappe.svg"}
-                                },
+                                "leadingComponent": {"@": "grappeIcon"},
                                 "value": "grappe"
                             }
                         ],
@@ -196,6 +187,24 @@
                         "selection": "apple",
                         "size": "medium",
                         "shape": "pill"
+                    }
+                },
+                "appleIcon": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "src": "assets/apple.svg"
+                    }
+                },
+                "bananaIcon": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "src": "assets/banana.svg"
+                    }
+                },
+                "grappeIcon": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "src": "assets/grappe.svg"
                     }
                 }
             }

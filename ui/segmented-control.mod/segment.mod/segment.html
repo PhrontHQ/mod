@@ -10,10 +10,10 @@
                     }
                 },
                 "leading": {
-                    "prototype": "ui/placeholder.mod",
+                    "prototype": "ui/slot.mod",
                     "values": {
-                        "componentModule": {"<-": "@owner.option.leadingComponentModule"},
-                        "componentValues": {"<-": "@owner.option.leadingComponentValues"},
+                        "content": {"<-": "@owner.option.leadingComponent"},
+                        "delegate": {"<-": "@owner.delegate"},
                         "element": {"#": "leading"}
                     }
                 },
@@ -25,10 +25,10 @@
                     }
                 },
                 "trailing": {
-                    "prototype": "ui/placeholder.mod",
+                    "prototype": "ui/slot.mod",
                     "values": {
-                        "componentModule": {"<-": "@owner.option.trailingComponentModule"},
-                        "componentValues": {"<-": "@owner.option.trailingComponentValues"},
+                        "content": {"<-": "@owner.option.trailingComponent"},
+                        "delegate": {"<-": "@owner.delegate"},
                         "element": {"#": "trailing"}
                     }
                 }
