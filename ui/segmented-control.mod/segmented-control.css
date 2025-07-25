@@ -70,7 +70,7 @@
         cursor: not-allowed;
     }
 
-    &.mod--ready {
+    &.mod--animate {
         /* This class is added after the first draw */
         /* FIXME: @benoit: maybe a better way of doing that, draw gates maybe ? */
         > .ModSegmentedControl-container {
