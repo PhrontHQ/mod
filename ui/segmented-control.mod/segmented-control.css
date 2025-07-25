@@ -28,54 +28,54 @@
     :scope {
         display: inline-flex;
         -webkit-tap-highlight-color: transparent;
+    }
 
-        &.mod--disabled {
-            opacity: 0.6;
+    > .ModSegmentedControl-container {
+        display: flex;
+        background-color: var(--mod-segmented-control-background);
+        padding: var(--mod-segmented-control-padding);
+        position: relative;
+        flex: 1;
+
+        > .ModSegmentedControl-thumb {
+            position: absolute;
+            top: var(--mod-segmented-control-padding);
+            left: var(--mod-segmented-control-padding);
+            background-color: var(--mod-segmented-control-thumb-background);
+            backdrop-filter: blur(10px);
+            border: 2px solid var(--mod-segmented-control-thumb-border-color);
+            box-sizing: border-box;
+            box-shadow: var(--mod-segmented-control-thumb-shadow);
+            z-index: 1;
             pointer-events: none;
-            cursor: not-allowed;
         }
 
-        &.mod--ready {
-            /* This class is added after the first draw */
-            /* FIXME: @benoit: maybe a better way of doing that, draw gates maybe ? */
-            .ModSegmentedControl-container {
-                .ModSegmentedControl-thumb {
-                    transition: var(--mod-segmented-control-thumb-transition);
-                }
-            }
-        }
-
-        .ModSegmentedControl-container {
+        > .ModSegmentedControl-segments {
             display: flex;
-            background-color: var(--mod-segmented-control-background);
-            padding: var(--mod-segmented-control-padding);
+            flex-wrap: nowrap;
+            overflow: hidden;
             position: relative;
             flex: 1;
+            justify-content: space-around;
 
-            .ModSegmentedControl-thumb {
-                position: absolute;
-                top: var(--mod-segmented-control-padding);
-                left: var(--mod-segmented-control-padding);
-                background-color: var(--mod-segmented-control-thumb-background);
-                backdrop-filter: blur(10px);
-                border: 2px solid var(--mod-segmented-control-thumb-border-color);
-                box-sizing: border-box;
-                box-shadow: var(--mod-segmented-control-thumb-shadow);
-                z-index: 1;
-                pointer-events: none;
-            }
-
-            .ModSegmentedControl-segments {
-                display: flex;
-                flex-wrap: nowrap;
-                overflow: hidden;
-                position: relative;
+            > .ModSegmentedControl-segment {
                 flex: 1;
-                justify-content: space-around;
+            }
+        }
+    }
 
-                .ModSegmentedControl-segment {
-                    flex: 1;
-                }
+    &.mod--disabled {
+        opacity: 0.6;
+        pointer-events: none;
+        cursor: not-allowed;
+    }
+
+    &.mod--ready {
+        /* This class is added after the first draw */
+        /* FIXME: @benoit: maybe a better way of doing that, draw gates maybe ? */
+        > .ModSegmentedControl-container {
+            > .ModSegmentedControl-thumb {
+                transition: var(--mod-segmented-control-thumb-transition);
             }
         }
     }
@@ -83,28 +83,28 @@
     /* Orientation */
 
     &.mod--horizontal {
-        .ModSegmentedControl-container {
-            .ModSegmentedControl-thumb {
+        > .ModSegmentedControl-container {
+            > .ModSegmentedControl-thumb {
                 height: calc(100% - var(--mod-segmented-control-padding) * 2);
             }
 
-            .ModSegmentedControl-segments {
+            > .ModSegmentedControl-segments {
                 flex-direction: row;
             }
         }
     }
 
     &.mod--vertical {
-        .ModSegmentedControl-container {
-            .ModSegmentedControl-thumb {
+        > .ModSegmentedControl-container {
+            > .ModSegmentedControl-thumb {
                 width: calc(100% - var(--mod-segmented-control-padding) * 2);
             }
 
-            .ModSegmentedControl-segments {
+            > .ModSegmentedControl-segments {
                 flex-direction: column;
                 width: 100%;
 
-                .ModSegmentedControl-segment {
+                > .ModSegmentedControl-segment {
                     width: 100%;
                     text-align: left;
                 }
@@ -115,7 +115,7 @@
     /* Size */
 
     &.mod--size-small {
-        .ModSegmentedControl-container {
+        > .ModSegmentedControl-container {
             .ModSegmentedControl-segment {
                 padding: var(--mod-segment-padding-small);
                 min-height: var(--mod-segment-height-small);
@@ -125,7 +125,7 @@
     }
 
     &.mod--size-medium {
-        .ModSegmentedControl-container {
+        > .ModSegmentedControl-container {
             .ModSegmentedControl-segment {
                 padding: var(--mod-segment-padding-medium);
                 min-height: var(--mod-segment-height-medium);
@@ -135,7 +135,7 @@
     }
 
     &.mod--size-large {
-        .ModSegmentedControl-container {
+        > .ModSegmentedControl-container {
             .ModSegmentedControl-segment {
                 padding: var(--mod-segment-padding-large);
                 min-height: var(--mod-segment-height-large);
@@ -150,19 +150,19 @@
         &.mod--vertical {
             /* TODO: Consider handling this logic in JavaScript for greater resilience and flexibility */
             &.mod--size-small {
-                .ModSegmentedControl-container {
+                > .ModSegmentedControl-container {
                     border-radius: calc(var(--mod-segment-height-small) / 2 + var(--mod-segmented-control-padding));
                 }
             }
 
             &.mod--size-medium {
-                .ModSegmentedControl-container {
+                > .ModSegmentedControl-container {
                     border-radius: calc(var(--mod-segment-height-medium) / 2 + var(--mod-segmented-control-padding));
                 }
             }
 
             &.mod--size-large {
-                .ModSegmentedControl-container {
+                > .ModSegmentedControl-container {
                     border-radius: calc(var(--mod-segment-height-large) / 2 + var(--mod-segmented-control-padding));
                 }
             }
@@ -171,12 +171,12 @@
         &.mod--size-small,
         &.mod--size-medium,
         &.mod--size-large {
-            .ModSegmentedControl-container {
+            > .ModSegmentedControl-container {
                 /* 50% doesn't work for rectangle shape */
                 border-radius: 99999px;
 
-                .ModSegmentedControl-thumb,
-                .ModSegmentedControl-segment {
+                > .ModSegmentedControl-thumb,
+                > .ModSegmentedControl-segments > .ModSegmentedControl-segment {
                     border-radius: 99999px;
                 }
             }
@@ -185,33 +185,33 @@
 
     &.mod--shape-rounded {
         &.mod--size-small {
-            .ModSegmentedControl-container {
+            > .ModSegmentedControl-container {
                 border-radius: var(--mod-segment-border-radius-small);
 
-                .ModSegmentedControl-thumb,
-                .ModSegmentedControl-segment {
+                > .ModSegmentedControl-thumb,
+                > .ModSegmentedControl-segments > .ModSegmentedControl-segment {
                     border-radius: calc(var(--mod-segment-border-radius-small) - var(--mod-segmented-control-padding));
                 }
             }
         }
 
         &.mod--size-medium {
-            .ModSegmentedControl-container {
+            > .ModSegmentedControl-container {
                 border-radius: var(--mod-segment-border-radius-medium);
 
-                .ModSegmentedControl-thumb,
-                .ModSegmentedControl-segment {
+                > .ModSegmentedControl-thumb,
+                > .ModSegmentedControl-segments > .ModSegmentedControl-segment {
                     border-radius: calc(var(--mod-segment-border-radius-medium) - var(--mod-segmented-control-padding));
                 }
             }
         }
 
         &.mod--size-large {
-            .ModSegmentedControl-container {
+            > .ModSegmentedControl-container {
                 border-radius: var(--mod-segment-border-radius-large);
 
-                .ModSegmentedControl-thumb,
-                .ModSegmentedControl-segment {
+                > .ModSegmentedControl-thumb,
+                > .ModSegmentedControl-segments > .ModSegmentedControl-segment {
                     border-radius: calc(var(--mod-segment-border-radius-large) - var(--mod-segmented-control-padding));
                 }
             }
