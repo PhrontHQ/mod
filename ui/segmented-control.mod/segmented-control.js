@@ -190,8 +190,9 @@ const SegmentedControl = class SegmentedControl extends Component {
     }
 
     didDraw() {
-        if (this._completedFirstDraw) {
-            this.element.classList.add("mod--ready");
+        if (!this._completedFirstDraw) {
+            // Allow animations after first draw
+            requestAnimationFrame(() => this.element?.classList.add("mod--animate"));
         }
     }
 
