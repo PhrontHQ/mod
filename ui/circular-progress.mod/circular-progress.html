@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="circular-progress.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "CircularProgress"},
+                        "graphic": {"#": "graphic"},
+                        "trail": {"#": "trail"},
+                        "progress": {"#": "progress"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="CircularProgress" class="ModCircularProgress">
+            <svg data-mod-id="graphic" class="ModCircularProgress-graphic">
+                <circle class="ModCircularProgress-trail" data-mod-id="trail" />
+                <circle class="ModCircularProgress-progress" data-mod-id="progress" />
+            </svg>
+        </div>
+    </body>
+</html>

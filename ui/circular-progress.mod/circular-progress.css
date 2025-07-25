@@ -1,0 +1,35 @@
+:root {
+    --mod-circular-progress-color: #1890ff;
+    --mod-circular-progress-trail-color: #f0f0f0;
+
+    --mod-circular-progress-size-small: 48px;
+    --mod-circular-progress-size-medium: 64px;
+    --mod-circular-progress-size-large: 92px;
+    --mod-circular-progress-size-xlarge: 120px;
+
+    --mod-circular-progress-stroke-width-small: 4px;
+    --mod-circular-progress-stroke-width-medium: 6px;
+    --mod-circular-progress-stroke-width-large: 8px;
+    --mod-circular-progress-stroke-width-xlarge: 10px;
+}
+
+@scope (.ModCircularProgress) {
+    :scope {
+        position: relative;
+        display: inline-block;
+    }
+
+    > .ModCircularProgress-graphic {
+        display: block;
+        transform-origin: center;
+        transform: rotate(-90deg);
+    }
+
+    &.mod--animate {
+        > .ModCircularProgress-graphic {
+            > .ModCircularProgress-progress {
+                transition: stroke-dashoffset 0.3s ease-in-out;
+            }
+        }
+    }
+}
