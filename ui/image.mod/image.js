@@ -43,6 +43,17 @@ Image.addAttributes({
      * @default null
      */
     width: null,
+
+    /**
+     * The loading strategy for the image.
+     * @type {string}
+     * @default "eager"
+     * @values ["eager", "lazy"]
+     */
+    loading: {
+        dataType: "string",
+        value: "eager",
+    },
 });
 
 exports.Image = Image;
