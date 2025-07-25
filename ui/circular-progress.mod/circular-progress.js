@@ -101,6 +101,8 @@ class CircularProgress extends Control {
     }
 
     // Get stroke width based on size
+    // TODO: explore Size object with value and unit?
+    // TODO: method could be used in other components
     _getStrokeWidth() {
         const typeOfSize = typeof this.strokeWidth;
         let strokeWidth;
@@ -131,6 +133,8 @@ class CircularProgress extends Control {
     }
 
     // Get progress tail color with CSS fallback support
+    // TODO: explore Color object ?
+    // TODO: method could be used in other components
     _getProgressTailColor() {
         const typeOfColor = typeof this.progressTailColor;
         const color = this.progressTailColor;
@@ -154,6 +158,8 @@ class CircularProgress extends Control {
     }
 
     // Get progress color with CSS fallback support
+    // TODO: explore Color object ?
+    // TODO: method could be used in other components
     _getProgressColor() {
         const typeOfColor = typeof this.progressColor;
         const color = this.progressColor;
@@ -176,6 +182,8 @@ class CircularProgress extends Control {
     }
 
     // Get circle dimensions
+    // TODO: explore Size object with value and unit?
+    // TODO: method could be used in other components
     _getCircleSize() {
         const typeOfSize = typeof this.size;
         const size = this.size;
@@ -206,6 +214,7 @@ class CircularProgress extends Control {
         );
     }
 
+    // TODO: method could be used in other components
     getCSSPropertyValue(name) {
         const elementStyles = getComputedStyle(this.element);
         const kebabName = toKebabCase(this.constructor.name);
@@ -220,6 +229,7 @@ class CircularProgress extends Control {
         return cssPropertyValue?.trim() || null;
     }
 
+    // TODO: method could be used in other components
     parseCssValue(cssValue) {
         const match = cssValue.match(/^(-?\d*\.?\d+)([a-z%]*)$/i);
 
