@@ -226,6 +226,11 @@ const SegmentedControl = class SegmentedControl extends Component {
         const height = segmentElement.offsetHeight;
         const width = segmentElement.offsetWidth;
 
+        if (width === 0 || height === 0) {
+            console.warn("Segment element has zero width or height, cannot position thumb.");
+            return;
+        }
+
         this.thumbElement.style.height = `${height}px`;
         this.thumbElement.style.width = `${width}px`;
 
