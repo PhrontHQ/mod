@@ -28,18 +28,34 @@ body {
 
     .row {
         display: flex;
-        align-items: center;
         gap: 24px;
+
+        &.center {
+            align-items: center;
+            justify-content: center;
+        }
+
+        &.justify {
+            justify-content: space-between;
+        }
+
+        &.space-around {
+            justify-content: space-around;
+        }
     }
 
     .column {
         display: flex;
         flex-direction: column;
-        gap: 24px;
         align-items: flex-start;
+        gap: 24px;
 
         &.stretch {
             align-items: stretch;
+        }
+
+        &.center {
+            align-items: center;
         }
     }
 
