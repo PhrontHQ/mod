@@ -70,7 +70,8 @@ body {
         --mod-segmented-control-background: rgba(71, 85, 105, 0.12);
 
         /* Thumb */
-        --mod-segmented-control-thumb-background: rgba(71, 85, 105, 0.85);
+        --mod-segmented-control-thumb-background-color: rgba(71, 85, 105, 0.85);
+        --mod-segmented-control-thumb-background-gradient: none;
         --mod-segmented-control-thumb-border-color: rgba(71, 85, 105, 0.15);
         --mod-segmented-control-thumb-shadow: 0px 0px 5px 1px rgba(71, 85, 105, 0.2);
         --mod-segmented-control-thumb-text: rgba(255, 255, 255, 0.95);

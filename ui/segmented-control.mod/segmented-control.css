@@ -1,13 +1,14 @@
 :root {
-    --mod-segmented-control-background: rgba(0, 0, 0, 0.06);
+    --mod-segmented-control-background: rgb(243, 244, 246);
     --mod-segmented-control-padding: 2px;
 
     /* Thumb */
-    --mod-segmented-control-thumb-background: rgba(255, 255, 255, 0.85);
-    --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 0.975);
+    --mod-segmented-control-thumb-background-color: none;
+    --mod-segmented-control-thumb-background-gradient: linear-gradient(356deg,rgba(253, 253, 253, 1) 0%, rgba(255, 255, 255, 1) 100%);
+    --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 1);
     --mod-segmented-control-thumb-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.04);
     --mod-segmented-control-thumb-text: rgba(0, 0, 0, 0.85);
-    --mod-segmented-control-thumb-transition: all 0.35s cubic-bezier(0.375, 0.075, 0, 1.125);
+    --mod-segmented-control-thumb-transition: all 0.35s cubic-bezier(0.375, 0.075, 0, 1.115);
 }
 
 /* Dark Theme Variables */
@@ -41,7 +42,8 @@
             position: absolute;
             top: var(--mod-segmented-control-padding);
             left: var(--mod-segmented-control-padding);
-            background-color: var(--mod-segmented-control-thumb-background);
+            background-color: var(--mod-segmented-control-thumb-background-color);
+            background-image: var(--mod-segmented-control-thumb-background-gradient);
             backdrop-filter: blur(10px);
             border: 2px solid var(--mod-segmented-control-thumb-border-color);
             box-sizing: border-box;
