@@ -1,0 +1,10 @@
+{
+	"name": "teach-progress-bar-mod",
+	"private": true,
+    "dependencies": {
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../../"
+    }
+}

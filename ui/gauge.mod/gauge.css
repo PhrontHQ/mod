@@ -1,0 +1,43 @@
+:root {
+    --mod-gauge-color: rgb(21, 112, 239);
+    --mod-gauge-trail-color: rgb(243, 244, 246);
+
+    --mod-gauge-size-small: 48px;
+    --mod-gauge-size-medium: 64px;
+    --mod-gauge-size-large: 92px;
+    --mod-gauge-size-xlarge: 120px;
+
+    --mod-gauge-text-color: rgb(56, 66, 80);
+
+    --mod-gauge-stroke-width-small: 4px;
+    --mod-gauge-stroke-width-medium: 6px;
+    --mod-gauge-stroke-width-large: 8px;
+    --mod-gauge-stroke-width-xlarge: 10px;
+}
+
+@scope (.ModGauge) {
+    :scope {
+        position: relative;
+        display: inline-block;
+    }
+
+    > .ModGauge-graphic {
+        display: block;
+        transform-origin: center;
+
+        > .ModGauge-trail {
+            /* Enable this when safari will support it... */
+            /* &.mod-shadow {
+                filter: drop-shadow(0px 0px 1px rgba(13, 18, 28, 0.25));
+            } */
+        }
+    }
+
+    &.mod--animate {
+        > .ModGauge-graphic {
+            > .ModGauge-progress {
+                transition: stroke-dashoffset 0.3s ease-in-out;
+            }
+        }
+    }
+}

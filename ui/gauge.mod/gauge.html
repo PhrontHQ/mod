@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="gauge.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "progressElement": {"#": "progress"},
+                        "graphicElement": {"#": "graphic"},
+                        "shadowElement": {"#": "shadow"},
+                        "trailElement": {"#": "trail"},
+                        "element": {"#": "Gauge"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="Gauge" class="ModGauge">
+            <svg data-mod-id="graphic" class="ModGauge-graphic" overflow="visible">
+                <defs>
+                    <filter data-mod-id="shadow">
+                        <feDropShadow
+                            flood-color="rgb(13, 18, 28)"
+                            flood-opacity="0.25"
+                            stdDeviation="1"
+                            dx="0"
+                            dy="0"
+                        />
+                    </filter>
+                </defs>
+                <circle class="ModGauge-trail" data-mod-id="trail" />
+                <circle class="ModGauge-progress" data-mod-id="progress" />
+            </svg>
+        </div>
+    </body>
+</html>
