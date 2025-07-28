@@ -9,11 +9,11 @@
     --mod-segment-height-large: 44px;
 
     /* Segment Hover State */
-    --mod-segment-hover-background: rgba(0, 0, 0, 0.02);
+    --mod-segment-hover-background: rgba(229, 231, 235, 0.55);
     --mod-segment-hover-text: rgba(0, 0, 0, 1);
 
     /* Segment Active State */
-    --mod-segment-active-background: rgba(0, 0, 0, 0.04);
+    --mod-segment-active-background: rgba(229, 231, 235, 1);
     --mod-segment-active-text: rgba(0, 0, 0, 1);
 
     /* Segment Border Sizes */
