@@ -1,6 +1,6 @@
+const { VisualShape, VisualShapeClassNames } = require("core/enums/visual-shape");
+const { VisualSize, VisualSizeClassNames } = require("core/enums/visual-size");
 const { VisualOrientation } = require("core/enums/visual-orientation");
-const { VisualShape } = require("core/enums/visual-shape");
-const { VisualSize } = require("core/enums/visual-size");
 const { Component } = require("ui/component");
 
 /**
@@ -258,8 +258,8 @@ const SegmentedControl = class SegmentedControl extends Component {
      * @private
      */
     _applyShapeClasses() {
-        this.element.classList.remove(...Object.values(VisualShape.values));
-        this.element.classList.add(this._shape);
+        this.element.classList.remove(...Object.values(VisualShapeClassNames.values));
+        this.element.classList.add(VisualShapeClassNames[this._shape]);
     }
 
     /**
@@ -267,8 +267,8 @@ const SegmentedControl = class SegmentedControl extends Component {
      * @private
      */
     _applySizeClasses() {
-        this.element.classList.remove(...Object.values(VisualSize.values));
-        this.element.classList.add(this._size);
+        this.element.classList.remove(...Object.values(VisualSizeClassNames.values));
+        this.element.classList.add(VisualSizeClassNames[this._size]);
     }
 
     /**

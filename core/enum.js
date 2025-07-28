@@ -223,7 +223,7 @@ exports.Enum = Montage.specialize( /** @lends Enum# */ {
 
     values: {
         get: function () {
-            return this._members.map( (member) => this[member]);
+            return this._members.map((member) => this[member]);
         }
     }
 });
