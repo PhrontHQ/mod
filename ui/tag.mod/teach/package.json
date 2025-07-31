@@ -1,0 +1,10 @@
+{
+	"name": "teach-tag-mod",
+	"private": true,
+    "dependencies": {
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../../"
+    }
+}
