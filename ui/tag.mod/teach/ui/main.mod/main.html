@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach Tag Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "defaultTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "defaultTag"},
+                        "label": "Default Tag"
+                    }
+                },
+                "plainTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "plainTag"},
+                        "label": "Plain Tag",
+                        "variant": "plain"
+                    }
+                },
+                "outlinedTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "outlinedTag"},
+                        "label": "Outlined Tag",
+                        "variant": "outlined"
+                    }
+                },
+                "rectangleTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "rectangleTag"},
+                        "label": "Rectangle",
+                        "shape": "rectangle"
+                    }
+                },
+                "roundedTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "roundedTag"},
+                        "label": "Rounded",
+                        "shape": "rounded"
+                    }
+                },
+                "pillTag": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "pillTag"},
+                        "label": "Pill",
+                        "shape": "pill"
+                    }
+                },
+                "coloredTag1": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "coloredTag1"},
+                        "label": "Blue Tag",
+                        "color": "#3b82f6"
+                    }
+                },
+                "coloredTag2": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "coloredTag2"},
+                        "label": "Green Tag",
+                        "color": "#10b981",
+                        "variant": "outlined"
+                    }
+                },
+                "coloredTag3": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "coloredTag3"},
+                        "label": "Red Tag",
+                        "backgroundColor": "#ef4444",
+                        "textColor": "#ffffff",
+                        "shape": "pill"
+                    }
+                },
+                "dismissibleTag1": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "dismissibleTag1"},
+                        "label": "Dismissible",
+                        "dismissable": true
+                    }
+                },
+                "dismissibleTag2": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "dismissibleTag2"},
+                        "label": "Remove Me",
+                        "dismissable": true,
+                        "variant": "outlined",
+                        "color": "#f59e0b"
+                    }
+                },
+                "dismissibleTag3": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "dismissibleTag3"},
+                        "label": "Close",
+                        "dismissable": true,
+                        "shape": "pill",
+                        "color": "#8b5cf6"
+                    }
+                },
+                "combinedTag1": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "combinedTag1"},
+                        "label": "Success",
+                        "color": "#10b981",
+                        "shape": "rounded",
+                        "variant": "plain",
+                        "dismissable": true
+                    }
+                },
+                "combinedTag2": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "combinedTag2"},
+                        "label": "Warning",
+                        "color": "#f59e0b",
+                        "shape": "pill",
+                        "variant": "outlined",
+                        "dismissable": true
+                    }
+                },
+                "combinedTag3": {
+                    "prototype": "mod/ui/tag.mod",
+                    "values": {
+                        "element": {"#": "combinedTag3"},
+                        "label": "Error",
+                        "color": "#ef4444",
+                        "shape": "rectangle",
+                        "variant": "plain",
+                        "dismissable": true
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1>Tag</h1>
+
+            <!-- Basic Usage -->
+            <div class="card column">
+                <h2>Basic Usage</h2>
+                <div class="row">
+                    <label>Default:</label>
+                    <div data-mod-id="defaultTag"></div>
+                </div>
+            </div>
+
+            <!-- Variants -->
+            <div class="card column">
+                <h2>Variants</h2>
+                <div class="row">
+                    <label>Plain:</label>
+                    <div data-mod-id="plainTag"></div>
+                </div>
+                <div class="row">
+                    <label>Outlined:</label>
+                    <div data-mod-id="outlinedTag"></div>
+                </div>
+            </div>
+
+            <!-- Shapes -->
+            <div class="card column">
+                <h2>Shapes</h2>
+                <div class="row">
+                    <label>Rectangle:</label>
+                    <div data-mod-id="rectangleTag"></div>
+                </div>
+                <div class="row">
+                    <label>Rounded:</label>
+                    <div data-mod-id="roundedTag"></div>
+                </div>
+                <div class="row">
+                    <label>Pill:</label>
+                    <div data-mod-id="pillTag"></div>
+                </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="card column">
+                <h2>Colors</h2>
+                <div class="row">
+                    <label>Blue:</label>
+                    <div data-mod-id="coloredTag1"></div>
+                </div>
+                <div class="row">
+                    <label>Green Outlined:</label>
+                    <div data-mod-id="coloredTag2"></div>
+                </div>
+                <div class="row">
+                    <label>Red Pill:</label>
+                    <div data-mod-id="coloredTag3"></div>
+                </div>
+            </div>
+
+            <!-- Dismissible -->
+            <div class="card column">
+                <h2>Dismissible Tags</h2>
+                <div class="row">
+                    <label>Basic Dismissible:</label>
+                    <div data-mod-id="dismissibleTag1"></div>
+                </div>
+                <div class="row">
+                    <label>Outlined Dismissible:</label>
+                    <div data-mod-id="dismissibleTag2"></div>
+                </div>
+                <div class="row">
+                    <label>Pill Dismissible:</label>
+                    <div data-mod-id="dismissibleTag3"></div>
+                </div>
+            </div>
+
+            <!-- Combined Properties -->
+            <div class="card column">
+                <h2>Combined Properties</h2>
+                <div class="row">
+                    <label>Success Tag:</label>
+                    <div data-mod-id="combinedTag1"></div>
+                </div>
+                <div class="row">
+                    <label>Warning Tag:</label>
+                    <div data-mod-id="combinedTag2"></div>
+                </div>
+                <div class="row">
+                    <label>Error Tag:</label>
+                    <div data-mod-id="combinedTag3"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

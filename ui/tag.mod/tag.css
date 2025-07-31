@@ -1,0 +1,105 @@
+:root {
+    --mod-tag-color: rgb(55, 65, 81);
+    --mod-tag-padding: 0.25rem 0.5rem;
+    --mod-tag-font-size: 0.875rem;
+    --mod-tag-font-weight: 500;
+    --mod-tag-border-radius: 0.25rem;
+    --mod-tag-border-color: transparent;
+    --mod-tag-border-width: 1px;
+    --mod-tag-gap: 0.25rem;
+}
+
+/* Dark Theme Variables */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --mod-tag-background: rgba(55, 65, 81, 0.8);
+        --mod-tag-color: rgb(229, 231, 235);
+    }
+}
+
+@scope (.ModTag) {
+    :scope {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--mod-tag-gap);
+        padding: var(--mod-tag-padding);
+        background-color: var(--mod-tag-background);
+        color: var(--mod-tag-color);
+        font-size: var(--mod-tag-font-size);
+        font-weight: var(--mod-tag-font-weight);
+        border: var(--mod-tag-border-width) solid var(--mod-tag-border-color);
+        border-radius: var(--mod-tag-border-radius);
+        max-width: fit-content;
+        line-height: 1.25;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .ModTag-label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ModTag-dismiss {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 1rem;
+        height: 1rem;
+        padding: 0;
+        margin: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+        color: currentColor;
+        opacity: 0.7;
+        transition: opacity 0.15s ease;
+        border-radius: 50%;
+    }
+
+    .ModTag-dismiss:hover {
+        opacity: 1;
+    }
+
+    .ModTag-dismiss:focus {
+        outline: 2px solid currentColor;
+        outline-offset: 1px;
+        opacity: 1;
+    }
+
+    .ModTag-dismiss-icon {
+        width: 0.75rem;
+        height: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    /* Shape variants */
+    &.mod--shape-rectangle {
+        border-radius: 0;
+    }
+
+    &.mod--shape-rounded {
+        border-radius: var(--mod-tag-border-radius);
+    }
+
+    &.mod--shape-pill {
+        border-radius: 9999px;
+    }
+
+    /* Visual variants */
+    &.mod--variant-plain {
+        border-color: var(--mod-tag-border-color);
+    }
+
+    &.mod--variant-outlined {
+        background-color: transparent;
+        border-color: currentColor;
+    }
+
+    /* Dismissible state */
+    &.mod--dismissable {
+        .ModTag-dismiss {
+            display: flex;
+        }
+    }
+}
