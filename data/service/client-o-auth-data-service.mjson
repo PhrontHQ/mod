@@ -1,0 +1,28 @@
+{
+    "root": {
+        "prototype": "data/service/client-o-auth-data-service.mod/client-o-auth-data-service",
+        "values": {
+            "identifier": "ClientOAuthDataService",
+            "name": "ClientOAuthDataService",
+            "mappings": [
+                {"@": "UserIdentityMapping"}
+            ],
+            "types": [
+                {"@": "UserIdentityDescriptor"}
+            ]
+        }    
+    },
+    "AuthenticationPolicy": {
+        "object": "./authentication-policy"
+    },
+    "UserIdentityMapping": {
+        "object": "./client-o-auth-data-service.mod/mappings/user-identity-mapping.mjson"
+    },
+
+    "UserIdentityDescriptor": {
+        "object": "../model/app/user-identity.mjson"
+    },
+    "Model": {
+        "object": "../../core/meta/model.mjson"
+    }
+}

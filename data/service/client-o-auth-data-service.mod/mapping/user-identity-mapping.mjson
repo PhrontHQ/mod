@@ -1,0 +1,45 @@
+{
+    "root": {
+        "prototype": "../../../service/fetch-resource-data-mapping",
+        "values": {
+            "objectDescriptor": {"@": "UserIdentityDescriptor"},
+            "rawDataPrimaryKeys":["username"],
+            "objectMapping": {
+                "rules": {
+                    "username": {"<->": "username"},
+                    "password": {"<->": "password"},
+                    "session": {"<->": "session"},
+                    "accountConfirmationCode": {"<->": "accountConfirmationCode"},
+                    "isAccountConfirmed": {"<->": "isAccountConfirmed"},
+                    "needsNewConfirmationCode": {"<->": "needsNewConfirmationCode"},
+                    "isAuthenticated": {"<->": "isAuthenticated"},
+                    "isMfaEnabled": {"<->": "isMfaEnabled"},
+                    "firstName": {"<->": "firstName"},
+                    "lastName": {"<->": "lastName"},
+                    "email": {"<->": "email"},
+                    "phone": {"<->": "phone"},
+                    "tags": {"<->": "tags"},
+                    "mfaCode": {"<->": "mfaCode"},
+                    "locale": {"<->": "locale"},
+                    "timeZone": {"<->": "timeZone"},
+                }
+            }
+        }
+    },
+
+    "Criteria": {
+        "object": "../../../../core/criteria"
+    },
+
+    "UserIdentityDescriptor": {
+        "object": "../../../data/model/app/user-identity.mjson",
+        "values": {
+            "mutabilityCriteria": "@Criteria.thatEvaluatesToFalse"
+          }
+    },
+
+    "DataOperation": {
+        "object": "../../../service/data-operation"
+    }
+   
+}
