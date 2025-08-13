@@ -95,6 +95,7 @@ exports.Color = class Color {
      * Create Color from HSL values - Hue, Saturation, Lightness, Alpha
      * @param {HslaColor} hsl - HSL object with h, s, l, and optionally a properties
      * @returns {Color} New Color instance
+     * https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
      */
     static fromHslColor(hsl) {
         const h = hsl.h / 360;
