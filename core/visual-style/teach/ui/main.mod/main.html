@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach Visual Style Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "darkTheme": {
+                    "prototype": "mod/ui/toggle.mod",
+                    "values": {
+                        "element": {"#": "darkTheme"},
+                        "label": "Toggle Theme"
+                    }
+                },
+                "visualStyle": {
+                    "prototype": "mod/core/visual-style/visual-style",
+                    "values": {
+                        "primaryBackgroundColor": {"<-": "@darkTheme.checked ? '#0F172A' : '#e0e0e0'"},
+                        "primaryTextColor": {"<-": "@darkTheme.checked ? '#E2E8F0' : '#111927'"},
+                        "secondaryBackgroundColor": {"<-": "@darkTheme.checked ? '#1E293B' : '#fff'"},
+                        "secondaryTextColor": {"<-": "@darkTheme.checked ? '#94A3B8' : '#374151'"},
+                        "typography": {"@": "typography"},
+                        "card": {"@": "cardVisualStyle"},
+                        "element": {"#": "main"}
+                    }
+                },
+                "cardVisualStyle": {
+                    "prototype": "mod/core/visual-style/visual-style",
+                    "values": {
+                        "prefix": "mod-card",
+                        "titleTextColor": {"<-": "@darkTheme.checked ? '#E2E8F0' : @visualStyle.primaryTextColor"},
+                        "backgroundColor": {"<-":  "@visualStyle.secondaryBackgroundColor"},
+                        "textColor": {"<-": "@visualStyle.primaryTextColor"}
+                    }
+                },
+                "typography": {
+                    "prototype": "mod/core/visual-style/visual-style",
+                    "values": {
+                        "heading1": {"@": "heading1"},
+                        "heading2": {"@": "heading2"},
+                        "prefix": "mod-typography"
+                    }
+                },
+                "heading1": {
+                    "prototype": "mod/core/visual-style/visual-style",
+                    "values": {
+                        "prefix": "mod-typography-heading1",
+                        "textColor": {"<-": "@visualStyle.primaryTextColor"},
+                        "fontWeight": "bold",
+                        "fontSize": "2em"
+                    }
+                },
+                "heading2": {
+                    "prototype": "mod/core/visual-style/visual-style",
+                    "values": {
+                        "prefix": "mod-typography-heading2",
+                        "textColor": {"<-": "@visualStyle.primaryTextColor"},
+                        "fontWeight": "400",
+                        "fontSize": "1.5em"
+                    }
+                },
+                "appleTitle": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "appleTitle"},
+                        "value": "AAPL"
+                    }
+                },
+                "applePrice": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "applePrice"},
+                        "value": "$200.34"
+                    }
+                },
+                "microsoftTitle": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "microsoftTitle"},
+                        "value": "MSFT"
+                    }
+                },
+                "microsoftPrice": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "microsoftPrice"},
+                        "value": "$513.34"
+                    }
+                },
+                "visaTitle": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "visaTitle"},
+                        "value": "VISA"
+                    }
+                },
+                "visaPrice": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "visaPrice"},
+                        "value": "$180.34"
+                    }
+                },
+                "nikeTitle": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "nikeTitle"},
+                        "value": "NIKE"
+                    }
+                },
+                "nikePrice": {
+                    "prototype": "mod/ui/typography.mod",
+                    "values": {
+                        "element": {"#": "nikePrice"},
+                        "value": "$312.45"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1 class="heading1">Visual Style</h1>
+
+            <div class="card">
+                <label for="darkThemeToggle">Dark Theme:</label>
+                <div id="darkThemeToggle" data-mod-id="darkTheme"></div>
+            </div>
+
+            <!-- Default Cases -->
+            <div class="card column">
+                <h2 data-mod-id="appleTitle" class="heading2 card-title"></h2>
+                <div data-mod-id="applePrice"></div>
+            </div>
+
+            <div class="card column red">
+                <div>
+                    <h2
+                        data-mod-id="microsoftTitle"
+                        class="heading2 card-title"
+                    ></h2>
+                    <div data-mod-id="microsoftPrice"></div>
+                </div>
+            </div>
+
+            <div class="card column yellow">
+                <h2 data-mod-id="visaTitle" class="heading2 card-title"></h2>
+                <div data-mod-id="visaPrice"></div>
+            </div>
+
+            <div class="card column black">
+                <h2 data-mod-id="nikeTitle" class="heading2 card-title"></h2>
+                <div data-mod-id="nikePrice"></div>
+            </div>
+        </div>
+    </body>
+</html>

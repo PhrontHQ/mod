@@ -121,3 +121,17 @@ if (Object.prototype.hasOwnProperty('isEmpty') === false) {
         enumerable: false
     });
 }
+
+if (Object.prototype.hasOwnProperty('isObject') === false) {
+    Object.defineProperty(Object.prototype, "isObject", {
+        value: function (value) {
+            return (
+                typeof value === "object" &&
+                !Array.isArray(value) &&
+                value !== null
+            );
+        },
+        configurable: true,
+        writable: true,
+    });
+}

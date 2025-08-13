@@ -290,7 +290,7 @@ if(typeof String.prototype.substringWithinRange !== "function") {
         value: function substringWithinRange (aRange) {
             /*  substring:
                 indexStart: The index of the first character to include in the returned substring.
-                
+
                 indexEnd: The index of the first character to exclude from the returned substring.
             */
             return this.substring(aRange.includesBegin ? aRange.begin : (aRange.begin + 1), aRange.includesEnd ? (aRange.end + 1) : aRange.end)
@@ -301,3 +301,18 @@ if(typeof String.prototype.substringWithinRange !== "function") {
 
 }
 
+if (typeof String.prototype.toKebabCase !== "function") {
+    Object.defineProperty(String.prototype, "toKebabCase", {
+        value: function toKebabCase() {
+            if (!this) return "";
+
+            return this.trim()
+                .split(/[_\s-]+|(?<=[a-z])(?=[A-Z])/)
+                .filter(Boolean)
+                .map((word) => word.toLowerCase())
+                .join("-");
+        },
+        writable: true,
+        configurable: true,
+    });
+}
