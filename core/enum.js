@@ -32,6 +32,16 @@ exports.Enum = Montage.specialize( /** @lends Enum# */ {
         }
     },
 
+    _values: {
+        value: null
+    },
+
+    values: {
+        get: function () {
+            return this._values || (this._values = Object.values(this));
+        }
+    },
+
     __membersByValue: {
         value: null
     },
