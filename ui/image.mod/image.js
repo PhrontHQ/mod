@@ -3,7 +3,7 @@
  * @requires mod/ui/component
  * @requires mod/ui/native-control
  */
-const { Component } = require("ui/component");
+const Component = require("ui/component").Component;
 
 /**
  * Wraps the a &lt;img> element with binding support for its standard attributes.
@@ -11,7 +11,11 @@ const { Component } = require("ui/component");
  * @extends module:mod/ui/control.Control
  */
 const Image = class Image extends Component {
-    hasTemplate = true;
+    static {
+        Montage.defineProperties(this.prototype, {
+            hasTemplate: { value: true },
+        });
+    }
 };
 
 /** @lends module:"mod/ui/native/image.mod".Image */
