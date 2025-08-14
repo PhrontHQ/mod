@@ -2,7 +2,7 @@
  * @module "mod/ui/slot.mod"
  * @requires mod/ui/component
  */
-const { Component } = require("../component");
+const Component = require("../component").Component;
 
 /**
  * @class Slot
@@ -11,20 +11,29 @@ const { Component } = require("../component");
  * @extends Component
  */
 exports.Slot = class Slot extends Component {
-    /**
-     * An optional helper object.  The slot consults
-     * `delegate.slotElementForComponent(component):Element` if available for
-     * the element it should use when placing a particular component on the
-     * document.  The slot informs `delegate.slotDidSwitchContent(slot,
-     * newContent, newComponent, oldContent, oldComponent)` if the content has
-     * finished changing.  The component arguments are the `component`
-     * properties of the corresponding content, or fall back to `null`.
-     * @type {?Object}
-     * @default null
-     */
-    delegate = null;
+    static {
+        Montage.defineProperties(this.prototype, {
+            /**
+             * An optional helper object.  The slot consults
+             * `delegate.slotElementForComponent(component):Element` if available for
+             * the element it should use when placing a particular component on the
+             * document.  The slot informs `delegate.slotDidSwitchContent(slot,
+             * newContent, newComponent, oldContent, oldComponent)` if the content has
+             * finished changing.  The component arguments are the `component`
+             * properties of the corresponding content, or fall back to `null`.
+             * @type {?Object}
+             * @default null
+             */
+            delegate: { value: null },
 
-    _content = null;
+            _content: { value: null },
+
+            hasTemplate: {
+                enumerable: false,
+                value: false,
+            },
+        });
+    }
 
     get hasTemplate() {
         return false;
@@ -52,6 +61,7 @@ exports.Slot = class Slot extends Component {
                 if (this.respondsToDelegateMethod("slotElementForComponent")) {
                     element = this.callDelegateMethod("slotElementForComponent", this, value, element);
                 }
+
                 value.element = element;
             } else {
                 element = value.element;
