@@ -4,6 +4,7 @@
  * @requires mod/ui/native-control
  */
 const Component = require("ui/component").Component;
+const Montage = require("core/core").Montage;
 
 /**
  * Wraps the a &lt;img> element with binding support for its standard attributes.
