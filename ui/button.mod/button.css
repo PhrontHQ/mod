@@ -19,27 +19,27 @@
 
     /* Main Orientation */
 
-    &.mod--vertical {
+    &.mod--orientation-vertical {
         flex-direction: column;
     }
 
-    &.mod--horizontal {
+    &.mod--orientation-horizontal {
         flex-direction: row;
     }
 
     /* Main Axis Direction */
 
-    &.mod--horizontal.mod--end {
+    &.mod--orientation-horizontal.mod--position-end {
         flex-direction: row-reverse;
     }
 
-    &.mod--vertical.mod--end {
+    &.mod--orientation-vertical.mod--position-end {
         flex-direction: column-reverse;
     }
 
-    /** 
-     * FIXME: Hide temporally empty elements wait for this pr to be merged: 
-     * https://github.com/PhrontHQ/mod/pull/37 
+    /**
+     * FIXME: Hide temporally empty elements wait for this pr to be merged:
+     * https://github.com/PhrontHQ/mod/pull/37
      */
     >div:empty {
         display: none;
