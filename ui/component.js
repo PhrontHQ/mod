@@ -4340,7 +4340,7 @@ Component.addClassProperties(
 
     getCSSPropertyValue: {
         value: function getCSSPropertyValue(propertyName, useCustomProperties = true, prefix = "mod") {
-            if (!String.isString(propertyName)) {
+            if (!String.isString(propertyName) || propertyName.length === 0) {
                 throw new Error('Property name must be a non-empty string');
             }
 
@@ -4359,7 +4359,7 @@ Component.addClassProperties(
             let propertyValue = null;
 
             // 1. Prefixed property
-            if (String.isString(prefix)) {
+            if (String.isString(prefix) && prefix.length > 0) {
                 const prefixedProperty = `--${prefix}-${unprefixedProperty}`;
                 propertyValue = this._elementStyles.getPropertyValue(prefixedProperty);
             }
