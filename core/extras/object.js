@@ -165,3 +165,31 @@ if (typeof Object.isObject === "undefined") {
         return true;
     };
 }
+
+if (typeof Object.isPureObject === "undefined") {
+    /**
+     * Object.isPureObject() - Objects without custom prototype pollution
+     *
+     * Determines whether the passed value is a pure object by checking its prototype.
+     * Only accepts objects with Object.prototype or null as their direct prototype.
+     * This excludes objects created with custom constructors or Object.create() with
+     * custom prototypes.
+     *
+     * @function external:Object.isPureObject
+     * @param {*} value - The value to test. Can be any JavaScript value.
+     * @returns {boolean} Returns `true` if the value is a pure object, `false` otherwise
+     *
+     * @example
+     * Object.isPureObject({});                      // true
+     * Object.isPureObject(new Object());            // true
+     * Object.isPureObject(Object.create(null));     // true
+     * Object.isPureObject(Object.create({}));       // false
+     * Object.isPureObject(new Date());              // false
+     */
+    Object.isPureObject = function (value) {
+        if (!Object.isObject(value)) return false;
+
+        return Object.getPrototypeOf(value) === Object.prototype ||
+            Object.getPrototypeOf(value) === null;
+    };
+}
