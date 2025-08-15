@@ -1,48 +1,63 @@
 /**
-    @module "mod/ui/native/image.mod"
-    @requires mod/ui/component
-    @requires mod/ui/native-control
-*/
-var Component = require("ui/component").Component;
+ * @module "mod/ui/native/image.mod"
+ * @requires mod/ui/component
+ * @requires mod/ui/native-control
+ */
+const Component = require("ui/component").Component;
 
 /**
  * Wraps the a &lt;img> element with binding support for its standard attributes.
-   @class module:"mod/ui/native/image.mod".Image
-   @extends module:mod/ui/control.Control
+ * @class module:"mod/ui/native/image.mod".Image
+ * @extends module:mod/ui/control.Control
  */
-exports.Image = Component.specialize({
-    hasTemplate: {value: true }
+const Image = class Image extends Component {
+    static {
+        Montage.defineProperties(this.prototype, {
+            hasTemplate: { value: true },
+        });
+    }
+};
+
+/** @lends module:"mod/ui/native/image.mod".Image */
+Image.addAttributes({
+    /**
+     * A text description to display in place of the image.
+     * @type {string}
+     * @default null
+     */
+    alt: null,
+
+    /**
+     * The height of the image in CSS pixels.
+     * @type {number}
+     * @default null
+     */
+    height: null,
+
+    /**
+     * The URL where the image is located.
+     * @type {string}
+     * @default null
+     */
+    src: null,
+
+    /**
+     * The width of the image in CSS pixels.
+     * @type {number}
+     * @default null
+     */
+    width: null,
+
+    /**
+     * The loading strategy for the image.
+     * @type {string}
+     * @default "eager"
+     * @values ["eager", "lazy"]
+     */
+    loading: {
+        dataType: "string",
+        value: "eager",
+    },
 });
 
-exports.Image.addAttributes(/** @lends module:"mod/ui/native/image.mod".Image */{
-
-/**
-    A text description to display in place of the image.
-    @type {string}
-    @default null
-*/
-        alt: null,
-
-/**
-    The height of the image in CSS pixels.
-    @type {number}
-    @default null
-*/
-        height: null,
-
-/**
-    The URL where the image is located.
-    @type {string}
-    @default null
-*/
-        src: null,
-
-/**
-    The width of the image in CSS pixels.
-    @type {number}
-    @default null
-*/
-        width: null
-
-
-});
+exports.Image = Image;
