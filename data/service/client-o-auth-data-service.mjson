@@ -16,7 +16,7 @@
         "object": "./authentication-policy"
     },
     "UserIdentityMapping": {
-        "object": "./client-o-auth-data-service.mod/mappings/user-identity-mapping.mjson"
+        "object": "./client-o-auth-data-service.mod/mapping/user-identity-mapping.mjson"
     },
 
     "UserIdentityDescriptor": {

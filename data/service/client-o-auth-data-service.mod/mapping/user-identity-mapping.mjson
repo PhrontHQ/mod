@@ -7,21 +7,12 @@
             "objectMapping": {
                 "rules": {
                     "username": {"<->": "username"},
-                    "password": {"<->": "password"},
                     "session": {"<->": "session"},
-                    "accountConfirmationCode": {"<->": "accountConfirmationCode"},
-                    "isAccountConfirmed": {"<->": "isAccountConfirmed"},
-                    "needsNewConfirmationCode": {"<->": "needsNewConfirmationCode"},
-                    "isAuthenticated": {"<->": "isAuthenticated"},
-                    "isMfaEnabled": {"<->": "isMfaEnabled"},
                     "firstName": {"<->": "firstName"},
                     "lastName": {"<->": "lastName"},
-                    "email": {"<->": "email"},
-                    "phone": {"<->": "phone"},
+                    "email": {"<->": "username"},
                     "tags": {"<->": "tags"},
-                    "mfaCode": {"<->": "mfaCode"},
-                    "locale": {"<->": "locale"},
-                    "timeZone": {"<->": "timeZone"},
+                    "scope": {"<->": "scopes"}
                 }
             }
         }
@@ -32,7 +23,7 @@
     },
 
     "UserIdentityDescriptor": {
-        "object": "../../../data/model/app/user-identity.mjson",
+        "object": "../../../model/app/user-identity.mjson",
         "values": {
             "mutabilityCriteria": "@Criteria.thatEvaluatesToFalse"
           }

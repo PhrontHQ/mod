@@ -1,8 +1,5 @@
 const HttpService = require("../http-service").HttpService,
-    Montage = require('../../../core/core').Montage,
-    //SyntaxInOrderIterator = (require)("mod/core/frb/syntax-iterator").SyntaxInOrderIterator,
-    DataOperation = require("../data-operation").DataOperation,
-    secretObjectDescriptor = require("../../model/app/secret.mjson").montageObject;
+    Montage = require('../../../core/core').Montage;
 
 /**
 * 
