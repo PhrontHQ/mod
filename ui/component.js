@@ -4336,9 +4336,47 @@ Component.addClassProperties(
                 this.needsDraw = true;
             }
         }
-    }
+    },
 
+    getCSSPropertyValue: {
+        value: function getCSSPropertyValue(propertyName, useCustomProperties = true, prefix = "mod") {
+            if (!String.isString(propertyName)) {
+                throw new Error('Property name must be a non-empty string');
+            }
 
+            // A live CSSStyleDeclaration object, which updates automatically
+            // when the element's styles are changed.
+            this._elementStyles = this._elementStyles || (this._elementStyles = getComputedStyle(this.element));
+
+            // If custom properties are disabled, just return the raw property
+            if (!useCustomProperties) {
+                return this._elementStyles.getPropertyValue(propertyName)?.trim() || null;
+            }
+
+            // Build component-specific names
+            const componentName = this.constructor.name.toKebabCase();
+            const unprefixedProperty = `${componentName}-${propertyName}`;
+            let propertyValue = null;
+
+            // 1. Prefixed property
+            if (String.isString(prefix)) {
+                const prefixedProperty = `--${prefix}-${unprefixedProperty}`;
+                propertyValue = this._elementStyles.getPropertyValue(prefixedProperty);
+            }
+
+            // 2. Unprefixed property
+            if (!propertyValue) {
+                propertyValue = this._elementStyles.getPropertyValue(`--${unprefixedProperty}`);
+            }
+
+            // 3. Fallback to the raw property name
+            if (!propertyValue) {
+                propertyValue = this._elementStyles.getPropertyValue(propertyName);
+            }
+
+            return propertyValue?.trim() || null;
+        }
+    },
 });
 
 /**
@@ -4775,7 +4813,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                     styles = resources.createStylesForDocument(ownerDocument),
                     componentElementClassList = (template.document.querySelector("body > [data-mod-id]"))?.classList;
 
-                /*  
+                /*
                     What we need to scope is a selector made of all the classes of the template's root element
 
                     template.document.querySelector("[data-mod-id=owner]").classList
