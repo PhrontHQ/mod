@@ -181,13 +181,8 @@ function isNullOrUndefined(value) {
     return value === null || value === undefined;
 }
 
-
-function isObject(obj) {
-    return typeof obj === 'object';
-}
-
 function urlParse(url, parseQueryString, slashesDenoteHost) {
-    if (url && isObject(url) && url instanceof Url) {
+    if (url && Object.isObject(url) && url instanceof Url) {
         return url;
     }
 
@@ -505,7 +500,7 @@ Url.prototype.format = function() {
     }
 
     if (this.query &&
-        isObject(this.query) &&
+        Object.isObject(this.query) &&
         Object.keys(this.query).length) {
         query = encodeQuerystring(this.query);
     }

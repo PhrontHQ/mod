@@ -1,5 +1,6 @@
 "use strict";
 
+require("/core/extras/object");
 require("./shim-function");
 
 module.exports = Object;
@@ -23,19 +24,6 @@ module.exports = Object;
     @object external:Object.empty
 */
 Object.empty = Object.freeze(Object.create(null));
-
-/**
-    Returns whether the given value is an object, as opposed to a value.
-    Unboxed numbers, strings, true, false, undefined, and null are not
-    objects.  Arrays are objects.
-
-    @function external:Object.isObject
-    @param {Any} value
-    @returns {Boolean} whether the given value is an object
-*/
-Object.isObject = function (object) {
-    return Object(object) === object;
-};
 
 /**
     Returns the value of an any value, particularly objects that

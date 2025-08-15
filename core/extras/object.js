@@ -121,3 +121,47 @@ if (Object.prototype.hasOwnProperty('isEmpty') === false) {
         enumerable: false
     });
 }
+
+if (typeof Object.isObject === "undefined") {
+    /**
+     * Object.isObject() - General plain object check with optional strict mode
+     *
+     * Determines whether the passed value is an object, with two modes of checking:
+     * - Default mode: Returns true for any non-null object (including arrays, dates, etc.)
+     * - Strict mode: Returns true only for plain objects using toString() method
+     *
+     * In strict mode, this matches objects created with {}, new Object(),
+     * Object.create(Object.prototype), and similar plain object patterns.
+     *
+     * @function external:Object.isObject
+     * @param {*} value - The value to test. Can be any JavaScript value.
+     * @param {boolean} [strict=false] - If true, performs strict plain object check using toString()
+     * @returns {boolean} Returns `true` if the value passes the object check, `false` otherwise
+     *
+     * @example
+     * // Default mode - any non-null object
+     * Object.isObject({});                           // true
+     * Object.isObject([]);                           // true
+     * Object.isObject(new Date());                   // true
+     * Object.isObject(null);                         // false
+     * Object.isObject("string");                     // false
+     *
+     * @example
+     * // Strict mode - plain objects only
+     * Object.isObject({}, true);                     // true
+     * Object.isObject(new Object(), true);           // true
+     * Object.isObject(Object.create(Object.prototype), true); // true
+     * Object.isObject([], true);                     // false
+     * Object.isObject(new Date(), true);             // false
+     * Object.isObject(null, true);                   // false
+     */
+    Object.isObject = function (value, strict = false) {
+        if (value === null || typeof value !== "object") return false;
+
+        if (strict) {
+            return Object.prototype.toString.call(value) === "[object Object]";
+        }
+
+        return true;
+    };
+}
