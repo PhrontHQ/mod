@@ -3,6 +3,7 @@
  * @requires mod/ui/component
  */
 const Component = require("../component").Component;
+const Montage = require("core/core").Montage;
 
 /**
  * @class Slot
