@@ -162,19 +162,14 @@ if (typeof String.prototype.toKebabCase !== "function") {
     Object.defineProperty(String.prototype, "toKebabCase", {
         value: function toKebabCase() {
             if (!this) return "";
+            if (kebabCaseCache[this]) return kebabCaseCache[this];
 
-            if (kebabCaseCache.hasOwnProperty(this)) {
-                return kebabCaseCache[this];
-            }
-
-            const transformed = this.trim()
+            kebabCaseCache[this] = this.trim()
                 .split(/[_\s-]+|(?<=[a-z])(?=[A-Z])/)
                 .map((word) => word.toLowerCase())
                 .join("-");
 
-            kebabCaseCache[this] = transformed;
-
-            return transformed;
+            return kebabCaseCache[this];
         },
         writable: true,
         configurable: true,
