@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach SegmentedBar Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "default": {
+                    "prototype": "mod/ui/gauge.mod",
+                    "values": {
+                        "element": {"#": "progress"},
+                        "value": 50,
+                        "showText": true
+                    }
+                },
+                "redProgress": {
+                    "prototype": "mod/ui/gauge.mod",
+                    "values": {
+                        "element": {"#": "redProgress"},
+                        "progressColor": "#f44336",
+                        "value": 20
+                    }
+                },
+                "orangeProgress": {
+                    "prototype": "mod/ui/gauge.mod",
+                    "values": {
+                        "element": {"#": "orangeProgress"},
+                        "progressColor": "#ff9800",
+                        "value": 42
+                    }
+                },
+                 "greenProgress": {
+                    "prototype": "mod/ui/gauge.mod",
+                    "values": {
+                        "element": {"#": "greenProgress"},
+                        "progressColor": "#4caf50",
+                        "value": 77
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1>Gauge</h1>
+
+            <!-- Default Cases -->
+            <div class="card column stretch">
+                <h2>Basic Usage</h2>
+                <div class="row">
+                    <label>Default:</label>
+                    <div data-mod-id="progress"></div>
+                </div>
+            </div>
+
+            <div class="card colum stretch">
+                <h2>Custom Color</h2>
+                <div class="row space-around">
+                    <div class="column center">
+                        <label>Red Progress:</label>
+                        <div data-mod-id="redProgress"></div>
+                    </div>
+                    <div class="column center">
+                        <label>Orange Progress:</label>
+                        <div data-mod-id="orangeProgress"></div>
+                    </div>
+                    <div class="column center">
+                        <label>Green Progress:</label>
+                        <div data-mod-id="greenProgress" class="biggerMedium"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
