@@ -301,3 +301,21 @@ if(typeof String.prototype.substringWithinRange !== "function") {
 
 }
 
+if (typeof String.isString === "undefined") {
+    /**
+     * String.isString() - Determines if a value is a string primitive or String object.
+     *
+     * Adds a static method to the String constructor that determines whether the passed
+     * value is a string primitive or String object instance. This method provides
+     * functionality similar to `Array.isArray()` but specifically for string types.
+     *
+     * Only adds the method if it doesn't already exist, ensuring
+     * compatibility with environments that may implement this method natively in the future.
+     * @function external:String.isString
+     * @param {*} value - The value to test. Can be any JavaScript value.
+     * @returns {boolean} Returns `true` if the value is a string primitive or String object
+     */
+    String.isString = function (value) {
+        return typeof value === "string" || value instanceof String;
+    };
+}
