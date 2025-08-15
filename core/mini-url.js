@@ -181,27 +181,19 @@ function isNullOrUndefined(value) {
     return value === null || value === undefined;
 }
 
-function isString(str) {
-    return typeof str === 'string';
-}
-
-function isObject(obj) {
-    return typeof obj === 'object';
-}
-
 function urlParse(url, parseQueryString, slashesDenoteHost) {
-    if (url && isObject(url) && url instanceof Url) {
+    if (url && Object.isObject(url) && url instanceof Url) {
         return url;
     }
 
     var u = new Url;
     u.parse(url, parseQueryString, slashesDenoteHost);
-    
+
     return u;
 }
 
 Url.prototype.parse = function(url, parseQueryString, slashesDenoteHost) {
-    if (!isString(url)) {
+    if (!String.isString(url)) {
         throw new TypeError("Parameter 'url' must be a string, not " + typeof url);
     }
 
@@ -471,14 +463,14 @@ function urlFormat(obj) {
     // If it's an obj, this is a no-op.
     // this way, you can call url_format() on strings
     // to clean up potentially wonky urls.
-    if (isString(obj)) {
+    if (String.isString(obj)) {
         obj = urlParse(obj);
     }
 
     if (!(obj instanceof Url)) {
         return Url.prototype.format.call(obj);
     } else {
-        return obj.format();    
+        return obj.format();
     }
 }
 
@@ -508,7 +500,7 @@ Url.prototype.format = function() {
     }
 
     if (this.query &&
-        isObject(this.query) &&
+        Object.isObject(this.query) &&
         Object.keys(this.query).length) {
         query = encodeQuerystring(this.query);
     }
@@ -563,7 +555,7 @@ function urlResolveObject(source, relative) {
 }
 
 Url.prototype.resolveObject = function(relative) {
-    if (isString(relative)) {
+    if (String.isString(relative)) {
         var rel = new Url();
         rel.parse(relative, false, true);
         relative = rel;
