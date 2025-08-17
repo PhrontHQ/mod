@@ -1,7 +1,7 @@
 /*global require, exports*/
 
-const { VisualOrientation } = require("core/enums/visual-orientation");
-const { VisualPosition } = require("core/enums/visual-position");
+const { VisualOrientation, VisualOrientationClassNames } = require("core/enums/visual-orientation");
+const { VisualPosition, VisualPositionClassNames } = require("core/enums/visual-position");
 const { PressComposer } = require("composer/press-composer");
 const { KeyComposer } = require("composer/key-composer");
 const { Control } = require("ui/control");
@@ -165,7 +165,7 @@ const Button = (exports.Button = class Button extends Control {
 
             // Store reference to track this specific promise
             const currentTrackedPromise = promise;
-            
+
             // Clear state when promise resolves/rejects
             // TODO: we should propably add an error state?...
             promise.finally(() => {
@@ -406,8 +406,8 @@ const Button = (exports.Button = class Button extends Control {
      * @see VisualPosition
      */
     _applyVisualPositionStyles() {
-        this.classList.deleteEach(...Object.values(VisualPosition));
-        this.classList.add(this.visualPosition);
+        this.classList.deleteEach(...Object.values(VisualPositionClassNames));
+        this.classList.add(VisualPositionClassNames[this.visualPosition]);
     }
 
     /**
@@ -416,8 +416,8 @@ const Button = (exports.Button = class Button extends Control {
      * @see VisualOrientation
      */
     _applyVisualOrientationStyles() {
-        this.classList.deleteEach(...Object.values(VisualOrientation));
-        this.classList.add(this.visualOrientation);
+        this.classList.deleteEach(...Object.values(VisualOrientationClassNames));
+        this.classList.add(VisualOrientationClassNames[this.visualOrientation]);
     }
 });
 
