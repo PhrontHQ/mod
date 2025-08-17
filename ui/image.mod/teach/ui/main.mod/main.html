@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach Image Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "banana": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "element": {"#": "banana"},
+                        "src": "assets/banana.svg"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1>Image</h1>
+
+            <!-- Default Cases -->
+            <div class="card column">
+                <h2>Basic Usage</h2>
+                <div class="row">
+                    <label>Banana (SVG):</label>
+                    <div data-mod-id="banana"></div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
