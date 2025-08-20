@@ -23,7 +23,7 @@ exports.ClientOAuthDataService = class ClientOAuthDataService extends HttpServic
     }
 
     static {
-
+        // do we need this??
         Montage.defineProperties(this.prototype, {
             apiVersion: {
                 value: "FROM AWS, NECESSARY FOR GCP?"
