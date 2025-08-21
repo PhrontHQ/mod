@@ -316,7 +316,21 @@ var DocumentResources = Montage.specialize({
                         classListScope = cssContext.classListScope,
                         cssLayerName = cssContext.cssLayerName,
                         stylesheet = target.sheet,
-                        cssRules = stylesheet.cssRules;
+                        cssRules;
+
+
+                    try {
+                        cssRules = stylesheet.cssRules || stylesheet.rules;
+                    } catch (e) {
+                        if (e.name === "SecurityError") {
+                            // This is a security error, we can't access the stylesheet rules.
+                            // This can happen if the stylesheet is cross-origin and CORS is not enabled.
+                            return;
+                        }
+
+                        console.error("Error accessing stylesheet rules", e);
+                        return;
+                    }
 
                     /*
                         Adding CSS Layers, and Scoping for components in dev mode. When we mop, we'll add it in the CSS. 
