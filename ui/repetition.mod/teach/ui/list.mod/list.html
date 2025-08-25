@@ -6,7 +6,8 @@
     {
         "owner": {
             "values": {
-                "element": {"#": "owner"}
+                "element": {"#": "owner"},
+                "defaultListItem": {"@":"listItem"}
             }
         },
 
@@ -20,11 +21,10 @@
             }
         },
 
-        "text": {
-            "prototype": "mod/ui/text.mod",
+        "listItem": {
+            "prototype": "/ui/list-item.mod",
             "values": {
-                "element": {"#": "text"},
-                "value": {"<-": "@repetition:iteration.object"}
+                "element": {"#": "listItem"}
             }
         },
 
@@ -39,7 +39,7 @@
     <div data-mod-id="owner" >
         <div data-mod-id="repetition" class="list">
             <div data-param="*">
-                <span data-mod-id="text" class="item"></span>
+                <span data-mod-id="listItem" class="item"></span>
             </div>
         </div>
     </div>

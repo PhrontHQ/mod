@@ -46,7 +46,8 @@
                 "prototype": "ui/list.mod",
                 "values": {
                     "element": {"#": "list2"},
-                    "content": {"<-": "@owner.content"}
+                    "content": {"<-": "@owner.content"},
+                    "@list2:iteration._childComponents.get(0).text.value": {"<-": "@list2:iteration.object", "trace": true}
                 }
             },
 
