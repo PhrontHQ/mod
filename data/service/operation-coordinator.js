@@ -342,7 +342,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
             if(operation.clientId) {
                 var self = this;
-                //                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      console.log("\n<<<<<<< operationCoordinator dispatch "+ operation.type+ " " +operation.id+" from "+operation.rawDataService?.identifier+", referrer "+ (operation.referrer?.id || operation.referrerId) +", for ["+operation.referrer?.target?.name + (operation?.referrer?.data?.readExpressions? (" "+operation?.referrer?.data?.readExpressions) : "") + "] like "+ operation.referrer?.criteria+"\n");
+                //console.log("\n<<<<<<< operationCoordinator dispatch "+ operation.type+ " " +operation.id+" from "+operation.rawDataService?.identifier+", referrer "+ (operation.referrer?.id || operation.referrerId) +", for ["+operation.referrer?.target?.name + (operation?.referrer?.data?.readExpressions? (" "+operation?.referrer?.data?.readExpressions) : "") + "] like "+ operation.referrer?.criteria+"\n");
 
                 this.dispatchOperationToConnectionClientId(operation,this.gateway,operation.clientId)
                 .then(function(operation) {
@@ -448,6 +448,9 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
         value: function(deserializedOperation, event, context, callback, gatewayClient) {
             var self = this,
                 resultOperationPromise;
+
+
+            //console.log("\n>>>>>>> handleOperation "+ deserializedOperation.type+ " " +deserializedOperation.id+" data "+deserializedOperation.data+", for ["+deserializedOperation.referrer?.target?.name + (deserializedOperation?.referrer?.data?.readExpressions? (" "+deserializedOperation?.referrer?.data?.readExpressions) : "") + "] like "+ deserializedOperation.referrer?.criteria+"\n");
 
             /*
                 Workaround until we get the serialization/deserialization to work with an object passed with a label that is pre-existing and passed to both the serialiaer and deserializer on each side.
