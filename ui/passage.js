@@ -11,7 +11,7 @@ var Montage = require("core/core").Montage;
  */
 exports.Passage = Montage.specialize(/** @lends Passage.prototype */{
     /**
-     * Use this to diffirentiate one type of passage from another. For example, when there are
+     * Use this to differentiate one type of passage from another. For example, when there are
      * multiple ways to passage from the same source to the same destination,
      * such as 2 buttons that lead to 2 different setting screens, you can switch on this identifier.
      *
