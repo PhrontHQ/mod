@@ -16,7 +16,7 @@ To make this situation works seamlessly, it relies on ssh and gitconfig settings
   
     # It is important the includeIf comes after the user configuration section
     # so that the email in the work config is picked up as the email to use
-    [includeIf "hasconfig:remote.*.url:https://github.com/*/**"]
+    [includeIf "hasconfig:remote.*.url:https://github.com/**"]
         path = ~/.gitconfig.personal
   
 
@@ -76,7 +76,7 @@ To make this situation works seamlessly, it relies on ssh and gitconfig settings
     # It is important the includeIf comes after the user configuration section
     # so that the email in the work config is picked up as the email to use
   
-    [includeIf "hasconfig:remote.*.url:https://github.acme.com/*/**"]
+    [includeIf "hasconfig:remote.*.url:https://github.acme.com/**"]
         path = ~/.gitconfig.github.acme
   
     # SSH remote to cover all bases
@@ -108,6 +108,8 @@ and uses others references from there as well:
   ```
   [url "acme.github.com:"]
       insteadOf = git@github.com:
+  [url "ssh://git@acme.github.com/"]
+      pushInsteadOf = https://acme.github.com/
 
   [user]
   email = bmarchant@acme.com
@@ -121,6 +123,9 @@ and uses others references from there as well:
   ```
 * ~/.gitconfig.github.acme
   ```
+  [url "ssh://git@github.acme.com/"]
+      pushInsteadOf = https://github.acme.com/
+
   [user]
   email = bmarchant@acme.com
   name = Benoit Marchant
