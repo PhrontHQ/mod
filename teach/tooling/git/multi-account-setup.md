@@ -46,6 +46,11 @@ To make this situation works seamlessly, it relies on ssh and gitconfig settings
     [url "git@acme.github.com:acme-source"]
         insteadOf = git@github.com:acme-source
         pushInsteadOf = git@github.com:acme-source
+
+    # Rewrite https cloning into ssh for acme-source repos 
+
+    [url "git@acme.github.com:acme-source"]
+	    insteadOf = https://github.com/acme-source
   
     ########### github.com/acme-source END ###########
   
