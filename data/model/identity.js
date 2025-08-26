@@ -50,7 +50,7 @@ const Identity = exports.Identity = class Identity extends Montage /** @lends Id
              *      https://jwt.io/introduction
              *      https://datatracker.ietf.org/doc/html/rfc7519#section-4.1)
              *
-             * @type {Objec}
+             * @type {Object}
              */
             provider: {
                 value: undefined
