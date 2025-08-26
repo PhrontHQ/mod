@@ -20,7 +20,7 @@
         "values": {
             "element": {"#": "select-1"},
             "content": [{"name": "Apple"}, {"name":"Banana"}, {"name":"Cherry"},{"name":"Date"} ],
-            "valuePropertyPath": "name"
+            "optionValueExpression": "name"
         }
     },
 
@@ -37,7 +37,22 @@
         "values": {
             "element": {"#": "select-2"},
             "content": [{"name": "Car"}],
-            "valuePropertyPath": "name"
+            "optionLabelExpression": "name"
+        }
+    },
+
+    "select-3-selection": {
+        "prototype": "mod/ui/text.mod",
+        "values": {
+            "element": {"#": "select-3-selection"},
+            "value": {"<-": "@selectWithDomContent.selection.0.text"}
+        }
+    },
+
+    "selectWithDomContent": {
+        "prototype": "mod/ui/select.mod",
+        "values": {
+            "element": {"#": "select-3"}
         }
     }
 
