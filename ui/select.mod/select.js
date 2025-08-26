@@ -42,7 +42,7 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
                 values = [];
 
             for (var i = 0, ii = selectedIndexes.length; i < ii; i++) {
-                values.push(content[selectedIndexes[i]][this.valuePropertyPath || 'value']);
+                values.push(content[selectedIndexes[i]][this.optionValueExpression || 'value']);
             }
 
             // values should be automatically created by a binding
@@ -184,6 +184,22 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
         Specifies the property belonging to the component's <code>contentController</code> to use as the "value" part of the <option>.
     */
     valuePropertyPath: {
+        get: function() {
+            return this.optionValueExpression;
+        },
+        set: function(value) {
+            if(value !== this.optionValueExpression) {
+                this.optionValueExpression = value;
+            }
+        }
+    },
+    
+    /**
+     * Specifies the expression to use to get the "value" part of the <option> from the component's <code>contentController</code> objects.
+     *
+     * @property {string}
+     */
+    optionValueExpression: {
         value: null
     },
 
@@ -191,6 +207,22 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
         Specifies the property belonging to the component's <code>contentController</code> to use as the text content of the <option>.
     */
     textPropertyPath: {
+        get: function() {
+            return this.optionLabelExpression;
+        },
+        set: function(value) {
+            if(value !== this.optionLabelExpression) {
+                this.optionLabelExpression = value;
+            }
+        }
+    },
+
+    /**
+     * Specifies the expression to use to get the "label" part of the <option> from the component's <code>contentController</code> objects.
+     *
+     * @property {string}
+     */
+    optionLabelExpression: {
         value: null
     },
 
@@ -249,7 +281,7 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
 
             if(length > 0) {
                 arr = [];
-                valuePath = this.valuePropertyPath || 'value';
+                valuePath = this.optionValueExpression || 'value';
 
                 for (var i = 0; i < length; i++) {
                     if (content[selectedIndexes[i]][valuePath]) {
@@ -350,18 +382,18 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
             // create a new RangeController if one is not provided
             // add options to contentController
             // look for selected options in the markup and mark these as selected
-            if(!this.contentController) {
-                var contentController = new RangeController();
+            // if(!this.contentController) {
+                var contentController =this.contentController;
                 var selection = [];
                 var content = [];
 
                 if(options && options.length > 0) {
                     var i=0, len = options.length, selected;
                     for(; i< len; i++) {
-                        selected = options[i].getAttribute('selected');
+                        selected = options[i].hasAttribute('selected') && options[i].selected;
                         var object = {
                             value: options[i].value,
-                            text: options[i].textContent
+                            text: options[i].label || options[i].textContent
                         };
                         if (selected) {
                             selection.push(object);
@@ -375,11 +407,11 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
                         selection.push(content[0]);
                     }
                     this._fromInput = true;
-                    this.contentController = contentController;
+                    // this.contentController = contentController;
                     contentController.content = content;
                     contentController.selection = selection;
                 }
-            }
+            // }
 
         }
     },
@@ -421,10 +453,8 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
                 if(typeof arr[i] === "string") {
                     text = value = arr[i];
                 } else {
-                    //text = arr[i][this.textPropertyPath || 'text'];
-                    text = valueForExpression.call(arr[i], (this.textPropertyPath || 'text'));
-                    //value = arr[i][this.valuePropertyPath  || 'value'];
-                    value = valueForExpression.call(arr[i], (this.valuePropertyPath || 'value'));
+                    text = valueForExpression.call(arr[i], (this.optionLabelExpression || 'text'));
+                    value = valueForExpression.call(arr[i], (this.optionValueExpression || 'value'));
 
                 }
 
@@ -521,7 +551,7 @@ var Select = exports.Select =  Control.specialize(/** @lends module:"mod/ui/nati
                 if(typeof arr[i] === "string") {
                     value = arr[i];
                 } else {
-                    value = arr[i][this.valuePropertyPath  || 'value'];
+                    value = arr[i][this.optionValueExpression  || 'value'];
                 }
                 if(value && value === val) {
                     return i;
