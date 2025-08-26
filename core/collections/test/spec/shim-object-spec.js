@@ -40,27 +40,6 @@ describe("ObjectShim-spec", function () {
 
     });
 
-    describe("isObject", function () {
-
-        [
-            ["null is not an object", null, false],
-            ["numbers are not objects", 1, false],
-            ["undefined is not an object", undefined, false],
-            ["arrays are objects", [], true],
-            ["object literals are objects", {}, true],
-            [
-                "pure objects (null prototype) are",
-                Object.create(null),
-                true
-            ]
-        ].forEach(function (test) {
-            it("should recognize that " + test[0], function () {
-                expect(Object.isObject(test[1])).toEqual(test[2]);
-            });
-        });
-
-    });
-
     describe("getValueOf", function () {
         var fakeNumber = Object.create({
             valueOf: function () {

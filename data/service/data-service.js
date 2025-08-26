@@ -6920,9 +6920,10 @@ DataService.addClassProperties({
 
     _getOfflineOperationMethodName: {
         value: function(type) {
-            var isString = typeof type === "string",
+            var isString = String.isString(type),
                 name = isString && this._offlineOperationMethodNames.get(type);
-            if (isString && !name) {
+
+            if (String.isString(type) && !name) {
                 name = "perform";
                 name += type[0].toUpperCase();
                 name += type.slice(1);
