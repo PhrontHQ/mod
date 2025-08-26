@@ -14,20 +14,6 @@ var singleton;
  */
 var StringToSubstringConverter = exports.StringToSubstringConverter = Converter.specialize({
 
-    constructor: {
-        value: function () {
-            if (this.constructor === StringToSubstringConverter) {
-                if (!singleton) {
-                    singleton = this;
-                }
-
-                return singleton;
-            }
-
-            return this;
-        }
-    },
-
     substringRange: {
       value: undefined
     },
@@ -45,14 +31,4 @@ var StringToSubstringConverter = exports.StringToSubstringConverter = Converter.
         }
     }
 
-});
-
-Object.defineProperty(exports, 'singleton', {
-    get: function () {
-        if (!singleton) {
-            singleton = new StringToSubstringConverter();
-        }
-
-        return singleton;
-    }
 });
