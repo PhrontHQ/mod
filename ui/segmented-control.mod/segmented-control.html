@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="segmented-control.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "_selectedOption": {"<-": "@optionsController.selection.0"},
+                        "element": {"#": "SegmentedControl"},
+                        "thumbElement": {"#": "thumb"}
+                    }
+                },
+                "optionsController": {
+                    "prototype": "core/range-controller",
+                    "values": {
+                        "selection.0": {"<-": "@owner.options.filter{path(@owner.valuePath) == @owner.selection}.0"},
+                        "content": {"<-": "@owner.options"}
+                    }
+                },
+                "segments": {
+                    "prototype": "ui/repetition.mod",
+                    "values": {
+                        "contentController": {"<-": "@optionsController"},
+                        "isSelectionEnabled": {"<-": "!@owner.disabled"},
+                        "element": {"#": "segments"}
+                    }
+                },
+                "segment": {
+                    "prototype": "ui/component",
+                    "values": {
+                        "classList.has('mod--selected')": {"<-": "@segments:iteration.object == @owner._selectedOption"},
+                        "element": {"#": "segment"},
+                        "hasTemplate": false
+                    }
+                },
+                ":segment": {
+                    "alias": "@segments:iteration"
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="SegmentedControl" class="ModSegmentedControl">
+            <div class="ModSegmentedControl-container">
+                <div class="ModSegmentedControl-thumb" data-mod-id="thumb"></div>
+                <div class="ModSegmentedControl-segments" data-mod-id="segments">
+                    <div class="ModSegmentedControl-segment" data-mod-id="segment">
+                        <div data-param="*"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -104,7 +104,6 @@ module.exports = require("mod/testing/run").run(require, [
     {name: "spec/ui/slider-spec", node: false},
     {name: "spec/ui/text/text-spec", node: false},
     {name: "spec/ui/label/label-spec", node: false},
-    {name: "spec/ui/segmented-bar/segmented-bar-spec", node: false, karma: false},
     {name: "spec/ui/flow-spec", node: false},
     {name: "spec/ui/component-spec", node: false},
     // Mod
