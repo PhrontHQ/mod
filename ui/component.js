@@ -3311,6 +3311,31 @@ Component.addClassProperties(
         }
     },
 
+    /**
+     * Enables container queries for this component.
+     * When set to true, the component's container element will have
+     * the CSS property `container-type` set to `inline-size` and
+     * `container-name` set to the component's name.
+     * This feature should probably not be set to true by default
+     * @see https://stackoverflow.com/questions/73975889/container-query-collapses-width-of-element/73980194#73980194
+     */
+    _containerized: {
+        value: false
+    },
+
+    containerized: {
+        get: function () {
+            return this._containerized;
+        },
+        set: function (value) {
+            value = !!value;
+
+            if (this._containerized !== value) {
+                this._containerized = value;
+            }
+        }
+    },
+
     //
     // Attribute Handling
     //
@@ -3786,6 +3811,30 @@ Component.addClassProperties(
 
                         delete _elementAttributeValues[attributeName];
                 }
+            }
+
+            // Handle containerization
+            // Check if we need to wrap the element
+            if (this.containerized && !this._containerElement) {
+                // Create the container
+                this._containerElement = document.createElement("div");
+                this._containerElement.style.setProperty("container", `${this.constructor.name} / inline-size`);
+                this._containerElement.classList.add(`${this.constructor.name}-container`);
+
+                // Place the new container right before the original element
+                element.before(this._containerElement);
+
+                // Move the original element inside the new container
+                this._containerElement.append(element);
+
+            // Check if we need to unwrap the element
+            } else if (!this.containerized && this._containerElement) {
+                // Place the original element back before the container
+                this._containerElement.before(element);
+
+                // Remove the now-empty container
+                this._containerElement.remove();
+                this._containerElement = null;
             }
 
             // classList
@@ -4775,7 +4824,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                     styles = resources.createStylesForDocument(ownerDocument),
                     componentElementClassList = (template.document.querySelector("body > [data-mod-id]"))?.classList;
 
-                /*  
+                /*
                     What we need to scope is a selector made of all the classes of the template's root element
 
                     template.document.querySelector("[data-mod-id=owner]").classList

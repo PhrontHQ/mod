@@ -1,0 +1,62 @@
+.Card {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.07);
+    overflow: hidden;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    display: flex;
+    flex-direction: column;
+}
+
+.Card-image {
+    height: 180px;
+    background-color: #f3f4f6;
+    background-size: cover;
+    background-position: center;
+    background-image: url("http://iso.500px.com/wp-content/uploads/2014/07/mesa-after.jpg");
+}
+
+.Card-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: #ffffff;
+
+    > .Card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #111827;
+        line-height: 1.2;
+    }
+
+    > .Card-subtitle {
+        font-size: 0.875rem;
+        color: #6b7280;
+    }
+
+    > .Card-body {
+        font-size: 1rem;
+        color: #374151;
+        line-height: 1.6;
+    }
+}
+
+@container Card (width < 600px) {
+    .Card {
+        max-width: 340px;
+    }
+}
+
+@container Card (width >= 600px) {
+    .Card {
+        flex-direction: row;
+        max-width: 100cqw;
+    }
+
+    .Card-image {
+        height: auto;
+        width: 200px;
+        flex-shrink: 0;
+    }
+}

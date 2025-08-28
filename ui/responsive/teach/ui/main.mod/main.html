@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "card1": {
+                    "prototype": "ui/card.mod",
+                    "values": {
+                        "element": {"#": "card1"},
+                        "containerized": true
+                    }
+                },
+                "card2": {
+                    "prototype": "ui/card.mod",
+                    "values": {
+                        "element": {"#": "card2"},
+                        "containerized": true
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <header>Responsive Card Example</header>
+            <section class="content">
+               <div class="cards">
+                 <div data-mod-id="card1"></div>
+                <div data-mod-id="card2"></div>
+               </div>
+            </section>
+        </div>
+    </body>
+</html>
