@@ -143,6 +143,10 @@ module.exports = require("mod/testing/run").run(require, [
     {name: "spec/meta/component-object-descriptor-spec", node: false},
     {name: "spec/meta/controller-object-descriptor-spec", node: false},
     {name: "spec/meta/event-descriptor-spec", node: false},
+
+    // Visual
+    {name: "spec/core/visual/color/rgb-color-spec", node: false},
+    {name: "spec/core/visual/color/hsl-color-spec", node: false},
 ]).then(function () {
     console.log('mod-testing', 'End');
 }, function (err) {
