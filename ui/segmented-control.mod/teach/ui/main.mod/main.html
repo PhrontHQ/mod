@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+        <title>Teach Segmented Control Mod</title>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "defaultSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "defaultSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "selection": "Apple"
+                    }
+                },
+                "defaultSegmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "defaultSegmentedControlSegment"},
+                        "value": {"<-": "@defaultSegmentedControl:segment.object"}
+                    }
+                },
+                "defaultSegmentedControlSelectedOption": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "defaultSegmentedControlSelectedOption"},
+                        "value": {"<-": "@defaultSegmentedControl.selection"}
+                    }
+                },
+                "defaultWithObjectSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "defaultWithObjectSegmentedControl"},
+                        "options": {"<-": "@owner.objectOptions"},
+                        "selection": "weekly",
+                        "valuePath": "value"
+                    }
+                },
+                "defaultWithObjectSegmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "defaultWithObjectSegmentedControlSegment"},
+                        "value": {"<-": "@defaultWithObjectSegmentedControl:segment.object.label"}
+                    }
+                },
+                "defaultWithObjectSegmentedControlSelectedOption": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "defaultWithObjectSegmentedControlSelectedOption"},
+                        "value": {"<-": "@defaultWithObjectSegmentedControl.selection"}
+                    }
+                },
+                "disabledSegmentedControl": {
+                   "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "disabledSegmentedControl"},
+                        "options": {"<-": "@owner.objectOptions"},
+                        "selection": "daily",
+                        "disabled": true,
+                        "valuePath": "value"
+                    }
+                },
+                "disabledSegmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "disabledSegmentedControlSegment"},
+                        "value": {"<-": "@disabledSegmentedControl:segment.object.label"}
+                    }
+                },
+                "iconSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "iconSegmentedControl"},
+                        "options": [
+                            {
+                                "iconSource": "assets/apple.svg",
+                                "value": "apple"
+                            },
+                            {
+                                "iconSource": "assets/banana.svg",
+                                "value": "banana"
+                            },
+                            {
+                                "iconSource": "assets/grappe.svg",
+                                "value": "grappe"
+                            }
+                        ],
+                        "selection": "grappe",
+                        "valuePath": "value"
+                    }
+                },
+                "iconSegmentedControlSegment": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "element": {"#": "iconSegmentedControlSegment"},
+                        "src": {"<-": "@iconSegmentedControl:segment.object.iconSource"}
+                    }
+                },
+                "iconSegmentedControlSegmentSelectedOption": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "iconSegmentedControlSegmentSelectedOption"},
+                        "value": {"<-": "@iconSegmentedControl.selection"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <h1>Segmented Control</h1>
+
+            <!-- Default Cases -->
+            <div class="card column">
+                <h2>Basic Usage</h2>
+                <div class="row center">
+                    <label>Default (Strings):</label>
+                    <div data-mod-id="defaultSegmentedControl">
+                        <div data-mod-id="defaultSegmentedControlSegment"></div>
+                    </div>
+                    <div>
+                        <small
+                            >Selected option:&nbsp;<span data-mod-id="defaultSegmentedControlSelectedOption"></span
+                        ></small>
+                    </div>
+                </div>
+                <div class="row center">
+                    <label>Default (Objects):</label>
+                    <div data-mod-id="defaultWithObjectSegmentedControl">
+                        <div data-mod-id="defaultWithObjectSegmentedControlSegment"></div>
+                    </div>
+                    <div>
+                        <small
+                            >Selected option:&nbsp;<span
+                                data-mod-id="defaultWithObjectSegmentedControlSelectedOption"
+                            ></span
+                        ></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disabled -->
+            <div class="card column">
+                <h2>Disabled Segments</h2>
+                <div class="row center">
+                    <label>Disabled:</label>
+                    <div data-mod-id="disabledSegmentedControl">
+                        <div data-mod-id="disabledSegmentedControlSegment"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Icon Segmented Control -->
+            <div class="card column">
+                <h2>Icon Segmented Control</h2>
+                <div class="row center">
+                    <label>With Icons:</label>
+                    <div data-mod-id="iconSegmentedControl">
+                        <img data-mod-id="iconSegmentedControlSegment" width="20px" height="20px" />
+                    </div>
+                    <div>
+                        <small
+                            >Selected option:&nbsp;<span data-mod-id="iconSegmentedControlSegmentSelectedOption"></span
+                        ></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
