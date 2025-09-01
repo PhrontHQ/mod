@@ -62,6 +62,22 @@
                         "element": {"#": "text"},
                         "value": {"<-": "@owner.message || 'please hit a button'"}
                     }
+                },
+                "debounceButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "debounceButton"},
+                        "debounceEnabled": true,
+                        "label": "Debounced Button",
+                        "debounceThreshold": 1000
+                    }
+                },
+                "debounceText": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "debounceText"},
+                        "value": {"<-": "@owner.debounceMessage"}
+                    }
                 }
             }
         </script>
@@ -84,6 +100,8 @@
                 <span data-mod-id="text" class="infoText"></span>
                 <br />
                 <button>Bare Button</button>
+                <button data-mod-id="debounceButton" class="button"></button>
+                <span data-mod-id="debounceText" class="infoText"></span>
             </section>
         </div>
     </body>
