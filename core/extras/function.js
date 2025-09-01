@@ -77,3 +77,26 @@ Object.defineProperty(Function.prototype, "isClass", {
     configurable: true
 });
 
+
+if (typeof Function.isFunction === "undefined") {
+    /**
+     * Function.isFunction() - Determines if a value is a function
+     *
+     * Adds a static method to the Function constructor that determines whether the passed
+     * value is a function. This method provides functionality similar to `Array.isArray()`
+     * but specifically for function types.
+     *
+     * This method detects all types of functions including regular functions, arrow functions,
+     * async functions, generator functions, class constructors, and built-in functions.
+     *
+     * Only adds the method if it doesn't already exist, ensuring
+     * compatibility with environments that may implement this method natively in the future.
+     *
+     * @function external:Function.isFunction
+     * @param {*} value - The value to test. Can be any JavaScript value.
+     * @returns {boolean} Returns `true` if the value is any type of function
+     */
+    Function.isFunction = function (value) {
+        return typeof value === "function";
+    };
+}
