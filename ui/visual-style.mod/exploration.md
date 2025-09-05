@@ -50,42 +50,101 @@ This specification defines a unified visual style system for consistent theming 
 ### Surface Colors
 
 - **`baseSurfaceColor`**:
+
   - _Default (light)_: `rgba(246 246 246, 1)`
   - _Usage_: The base background for primary interface areas.
   - _Example_: Main content areas, page backgrounds.
 - **`raisedSurfaceColor`**:
+
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
   - _Example_: Cards, ~~widgets~~, highlighted content tiles.
 - **`elevatedSurfaceColor`**:
+
   - _Default (light)_: `rgba(254 254 254, 0.96)`
   - _Usage_: Floating elements that sit above all other content.
   - _Example_: Modals, dropdown menus, dialogs.
 
-  ### Control Surface Colors
-  - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
+  ### ControlBackground Colors
 
-- **`controlBaseSurfaceColor`**:
+  - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
+- **`controlBackgroundColor`**:
+
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
   - _Example_: Cards, widgets, highlighted content tiles.
-- **`controlSurfaceColor`**:
+- **`controlSecondaryBackgroundolor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
+  - _Example_: Sliders
+
+- **`controlTertiaryBackgroundColor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
+  - _Example_: Sliders
+
+- **`controlQuaternaryBackgroundColor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a fourth interactive element or a control, like the fourth knob in a multi slider
+  - _Example_: Sliders
+
+  #### Control Colors
+
+- **`controlColor`**:
+
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_: Background color for interactive elements
   - _Example_: Buttons, form fields
-- **`controlSelectionSurfaceColor`**:
+
+- **`controlSecondaryColor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
+  - _Example_: Sliders
+
+- **`controlTertiaryColor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
+  - _Example_: Sliders
+
+- **`controlQuaternaryColor`**:
+
+  - _Default (light)_: `rgba(243 244 246, 1)`
+  - _Usage_:  color for a fourth interactive element or a control, like the fourth knob in a multi slider
+  - _Example_: Sliders
+
+There's a limit to how much interactive parts a control should have where it would become a usability liabilty... So if one wants that, we don't want to encourage it. It can be a one-off
+
+- **`controlSelectionColor`**:
+
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Background color for selected control states
+  - _Usage_: Use when you want to show that a selection is or has bee made. So for a slider, if it's not been used by the user, the knowb/thumb/handle would have the controlColor. But while being used, it could take the controlSelectinColor, and it could even keep that controlSelectinColor once the interation is over to highlight the fact that a new value was selected 
   - _Example_: Selected dropdown options, active tabs
-- **`controlHoverSurfaceColor`**:
+
+- **`controlSelectionBackgroundColor`**:
+
+  - _Default (light)_: `rgba(252 252 252, 1)`
+  - _Usage_: Use when a selection is or has bee made. So for a slider, if it's not been used by the user, the track left to the thumb/handle/knob, which represent the value selected, should be of controlSelectionBackgroundColor, which defaults to controlBackgroundColor. The part of the track right to the thumb/handle/knob should be of controlBackgroundColor. This should be used as well for select list items.
+  - _Example_: value selected with a slider, selected items in a list
+
+- **`controlHoverColor`**:
+
   - _Default (light)_: `rgba(239, 240, 243, 1)`
   - _Usage_: Background color when hovering over interactive elements
   - _Example_: Button hover state, card hover effect, menu item hover
-- **`controlActiveSurfaceColor`**:
+
+- **`controlActiveColor`**:
+
   - _Default (light)_: `rgba(230, 233, 237, 1)`
-  - _Usage_: Background color when actively pressing/clicking interactive elements
+  - _Usage_: color of the control when the use actively interacts with it. Defaults to controlSelectionColor
   - _Example_: Button pressed state, active dropdown item
-- **`controlFocusSurfaceColor`**: (highlight)
+
+- **`controlFocusColor`**: (highlight)
+
   - _Default (light)_: `rgba(248, 249, 251, 1)`
   - _Usage_: Background color for focused interactive elements
   - _Example_: Focused input fields, keyboard-navigated buttons
