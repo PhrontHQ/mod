@@ -39,20 +39,36 @@ This specification defines a unified visual style system for consistent theming 
 - **`brown`**:
   - _Default (light)_: `rgb(172, 127, 94)`
 
+### Color Palette
+
+- see with Rachel
+- We need to see how we define one
+- how do we define it
+- how do we map colors from the palette to the different semantic colors we want:  canvasSurfaceColor, raisedSurfaceColor, textColor, etc...
+- queation about hue nad color components in general
+
 ### Surface Colors
 
-- **`canvasSurfaceColor`**:
+- **`baseSurfaceColor`**:
   - _Default (light)_: `rgba(246 246 246, 1)`
   - _Usage_: The base background for primary interface areas.
   - _Example_: Main content areas, page backgrounds.
 - **`raisedSurfaceColor`**:
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
-  - _Example_: Cards, widgets, highlighted content tiles.
+  - _Example_: Cards, ~~widgets~~, highlighted content tiles.
 - **`elevatedSurfaceColor`**:
   - _Default (light)_: `rgba(254 254 254, 0.96)`
   - _Usage_: Floating elements that sit above all other content.
   - _Example_: Modals, dropdown menus, dialogs.
+
+  ### Control Surface Colors
+  - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
+
+- **`controlBaseSurfaceColor`**:
+  - _Default (light)_: `rgba(252 252 252, 1)`
+  - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
+  - _Example_: Cards, widgets, highlighted content tiles.
 - **`controlSurfaceColor`**:
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_: Background color for interactive elements
