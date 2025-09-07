@@ -57,7 +57,7 @@ This specification defines a unified visual style system for consistent theming 
 - **`raisedSurfaceColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
+  - _Usage_: Elements with a slight elevation to distinguish them from the base.
   - _Example_: Cards, ~~widgets~~, highlighted content tiles.
 - **`elevatedSurfaceColor`**:
 
@@ -67,28 +67,28 @@ This specification defines a unified visual style system for consistent theming 
 
   ### ControlBackground Colors
 
-  - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
+  - questions: do we keep just the prefix control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
 - **`controlBackgroundColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
-  - _Example_: Cards, widgets, highlighted content tiles.
+  - _Usage_: The background color beneath an interactive element or a control, like the unselected portion of the track in a slider
+  - _Example_: Sliders 
 - **`controlSecondaryBackgroundolor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
-  - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
+  - _Usage_:  The second background color beneath an interactive element or a control, like a portion that is not available for selection
   - _Example_: Sliders
 
 - **`controlTertiaryBackgroundColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
-  - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
+  - _Usage_:  The third background color beneath an interactive element or a control
   - _Example_: Sliders
 
 - **`controlQuaternaryBackgroundColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
-  - _Usage_:  color for a fourth interactive element or a control, like the fourth knob in a multi slider
+  - _Usage_:   The third background color beneath an interactive element or a control
   - _Example_: Sliders
 
   #### Control Colors
@@ -96,7 +96,7 @@ This specification defines a unified visual style system for consistent theming 
 - **`controlColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
-  - _Usage_: Background color for interactive elements
+  - _Usage_: Color for interactive elements
   - _Example_: Buttons, form fields
 
 - **`controlSecondaryColor`**:
@@ -122,13 +122,13 @@ There's a limit to how much interactive parts a control should have where it wou
 - **`controlSelectionColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Use when you want to show that a selection is or has bee made. So for a slider, if it's not been used by the user, the knowb/thumb/handle would have the controlColor. But while being used, it could take the controlSelectinColor, and it could even keep that controlSelectinColor once the interation is over to highlight the fact that a new value was selected 
+  - _Usage_: Use when you want to show that a selection is or has been made, as for the selected item in a list. 
   - _Example_: Selected dropdown options, active tabs
 
 - **`controlSelectionBackgroundColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Use when a selection is or has bee made. So for a slider, if it's not been used by the user, the track left to the thumb/handle/knob, which represent the value selected, should be of controlSelectionBackgroundColor, which defaults to controlBackgroundColor. The part of the track right to the thumb/handle/knob should be of controlBackgroundColor. This should be used as well for select list items.
+  - _Usage_: Use when a selection is or has bee made, such as if you want to change the background color of an entire list to indicate a selection has been made. 
   - _Example_: value selected with a slider, selected items in a list
 
 - **`controlHoverColor`**:
