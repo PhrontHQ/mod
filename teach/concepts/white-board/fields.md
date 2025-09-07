@@ -7,7 +7,7 @@ Draft for a spec to implememnt a Field components that adds to any control a con
 - validation errors' messages as they happen
 - help
 - placeholders values? 
-- wether the value has been edited?
+- whether the value has been edited?
 - if the data being loaded?
 - the fact that someone else is editing the same value at the same time and facilitate a chat between the two to avoid stepping on each other (later...)
 - the list of previous valid values entered there by the user in the current session, like a dedicated UndoManager for that control/property, where the user can navigate and re-select a past value

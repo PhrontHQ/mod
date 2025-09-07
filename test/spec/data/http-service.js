@@ -1,6 +1,6 @@
 var DataService = require("mod/data/service/data-service").DataService,
     HttpService = require("mod/data/service/http-service").HttpService,
-    DataQuery = require("mod/data/service/data-query").DataQuery,
+    DataQuery = require("mod/data/model/data-query").DataQuery,
     Criteria = require("mod/core/criteria").Criteria,
     WeatherReport = require("./logic/model/weather-report").WeatherReport,
     WeatherService = require("./logic/service/weather-service").WeatherService,
