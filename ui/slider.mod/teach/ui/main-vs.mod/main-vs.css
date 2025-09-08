@@ -1,4 +1,4 @@
-html, body, .Main {
+html, body, .Main-VS {
     padding: 0;
     margin: 0;
     height: 100%;
@@ -6,7 +6,7 @@ html, body, .Main {
     font-family: "Helvetica Neue Light", "Lucida Grande", "Calibri", "Arial", sans-serif;
 }
 
-.Main, .sliders {
+.Main-VS, .sliders {
     display: flex;
     align-items: center;
     flex-direction: column;

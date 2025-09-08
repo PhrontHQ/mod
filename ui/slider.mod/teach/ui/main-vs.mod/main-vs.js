@@ -7,10 +7,10 @@
 var Component = require("mod/ui/component").Component;
 
 /**
- * @class Main
+ * @class MainVs
  * @extends Component
  */
-exports.Main = Component.specialize(/** @lends Main.prototype */ {
+exports.MainVs = Component.specialize(/** @lends MainVs.prototype */ {
 
     enterDocument: {
         value: function (firstTime) {

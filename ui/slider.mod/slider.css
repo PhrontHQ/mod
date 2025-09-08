@@ -29,9 +29,22 @@
     width:100%;
 }*/
 
-.mod-Slider .mod-Slider--track{
+.mod-Slider .mod-Slider--track {
     position: absolute;
     z-index:0;
+    background-color: var(--mod-vs-control-background-color);
+}
+
+.mod-Slider .mod-Slider--track[data-mod-index="1"] {
+    background-color: var(--mod-vs-control-secondary-background-color);
+}
+
+.mod-Slider .mod-Slider--track[data-mod-index="2"] {
+    background-color: var(--mod-vs-control-tertiary-background-color);
+}
+
+.mod-Slider .mod-Slider--track[data-mod-index="3"] {
+    background-color: var(--mod-vs-control-quaternary-background-color);
 }
 
 .mod-Slider .mod-Slider--thumbWrapper {
@@ -47,6 +60,24 @@
     background: black;*/
 }
 
+.mod-Slider--thumb {
+    background-color: var(--mod-vs-control-color);
+}
+
+.mod-Slider--thumb[data-mod-index="1"] {
+    background-color: var(--mod-vs-control-secondary-color);
+}
+
+.mod-Slider--thumb[data-mod-index="2"] {
+    background-color: var(--mod-vs-control-tertiary-color);
+}
+
+.mod-Slider--thumb[data-mod-index="3"] {
+    background-color: var(--mod-vs-control-quaternary-color);
+}
+
+
+
 /* Create */
 
 .mod-Slider-thumb--default {
@@ -54,7 +85,6 @@
     width:20px;
     height:20px;
     border-radius:20px;
-    background-color: gray;
 }
 
 .mod-Slider[aria-orientation="horizontal"] .mod-Slider-thumb--default {

@@ -187,7 +187,9 @@ Slider.addClassProperties({
 
                         iTrackElement = ownerDocument.createElement("div");
                         iTrackElement.className = "mod-Slider--track";
-                        iTrackElement.setAttribute("data-montage-index",i);
+                        iTrackElement.setAttribute("data-mod-index", i);
+
+                        iThumbElementWithClass.setAttribute("data-mod-index", i);
 
                         iDimension = isHorizontal ? iThumbElementWithClass.offsetWidth : iThumbElementWithClass.offsetHeight;
                         //If the thumb has no size, or if it's horizontak and occupy the whole width, we're stepping in
@@ -209,6 +211,7 @@ Slider.addClassProperties({
                     //Last track element:
                     iTrackElement = ownerDocument.createElement("div");
                     iTrackElement.className = "mod-Slider--track";
+                    iTrackElement.setAttribute("data-mod-index", i);
                     fragment.appendChild(iTrackElement);
                     this.trackElements.push(iTrackElement);
 
