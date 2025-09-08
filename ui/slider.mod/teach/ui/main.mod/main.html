@@ -6,11 +6,21 @@
     {
         "owner": {
             "values": {
-                "element": {"#": "main"}
+                "element": {"#": "main"},
+                "visualStyle": {"@": "visualStyle"}
             },
             "listeners": [
                 {"type": "action", "listener": {"@": "owner"}}
             ]
+        },
+
+        "visualStyle": {
+            "prototype": "mod/ui/visual-style.mod",
+            "values": {
+                "baseSurfaceColor": "#FFF",
+                "controlColor": "#F00",
+                "controlBackgroundColor": "#0F0"
+            }
         },
 
         "slider": {
@@ -176,6 +186,13 @@
                 "element": {"#": "vertical-slider-field-max"},
                 "value": {"<->": "@verticalSlider.values.2"}
             }
+        },
+        
+        "defaultSlider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "defaultSlider"}
+            }
         }
     }
     </script>
@@ -186,6 +203,9 @@
 
         <section class="sliders">
 
+            <div class="slider-container">
+                <div data-mod-id="defaultSlider" class="slider"></div>
+            </div>
             <div class="slider-container">
                 <div data-mod-id="slider" class="slider A">
                     <div data-mod-id="sliderThumb" class="slider-thumb A"></div>

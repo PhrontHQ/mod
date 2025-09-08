@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="main-vs.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "main"},
+                "visualStyle": {"@": "visualStyle"}
+            },
+            "listeners": [
+                {"type": "action", "listener": {"@": "owner"}}
+            ]
+        },
+
+        "visualStyle": {
+            "prototype": "mod/ui/visual-style.mod",
+            "values": {
+                "baseSurfaceColor": "#FFF",
+                "controlColor": "#F00",
+                "controlSecondaryColor": "#FF0",
+                "controlBackgroundColor": "#0F0",
+                "controlSecondaryBackgroundColor": "#00F"
+            }
+        },
+
+        "slider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "slider"},
+                "thumbElement": {"#": "sliderThumb"},
+                "values": [],
+                "min":0,
+                "max":180,
+                "values.0": {"<->": "@sliderFieldMin.value"},
+                "values.1": {"<->": "@sliderFieldMid.value"},
+                "values.2": {"<->": "@sliderFieldMax.value"}
+            }
+
+        },
+
+        "sliderFieldMin": {
+            "prototype": "mod/ui/text-field.mod",
+            "values": {
+                "element": {"#": "slider-field-min"},
+                "value": 10
+            }
+        },
+
+        "sliderFieldMid": {
+            "prototype": "mod/ui/text-field.mod",
+            "values": {
+                "element": {"#": "slider-field-mid"},
+                "value": 75
+            }
+        },
+
+        "sliderFieldMax": {
+            "prototype": "mod/ui/text-field.mod",
+            "values": {
+                "element": {"#": "slider-field-max"},
+                "value": 120
+            }
+        },
+        
+        "defaultSlider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "defaultSlider"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="main" class="Main-VS">
+        <header>Teach Slider Mod</header>
+
+        <section class="sliders">
+
+            <div class="slider-container">
+                <div data-mod-id="defaultSlider" class="slider"></div>
+            </div>
+            <div class="slider-container">
+                <div data-mod-id="slider" class="slider A">
+                    <div data-mod-id="sliderThumb" class="slider-thumb A"></div>
+                    <div data-mod-id="sliderThumb" class="slider-thumb B"></div>
+                    <div data-mod-id="sliderThumb" class="slider-thumb C"></div>
+                </div>
+                <div class="input-text">
+                    <input type="text" data-mod-id="slider-field-min" class="input-text">
+                    <input type="text" data-mod-id="slider-field-mid" class="input-text">
+                    <input type="text" data-mod-id="slider-field-max" class="input-text">
+                </div>
+
+            </div>
+        </section>
+    </div>
+</body>
+</html>

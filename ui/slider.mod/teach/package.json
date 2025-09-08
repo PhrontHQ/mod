@@ -8,7 +8,7 @@
     "mappings": {
         "mod": "../../../",
         "just-kebab-case": "../../../node_modules/just-kebab-case",
-        "strange": "../../../node_modules/strange",
-        "ical.js": "../../../node_modules/ical.js"
+        "ical.js": "../../../node_modules/ical.js",
+        "strange": "../../../node_modules/strange"
     }
 }
