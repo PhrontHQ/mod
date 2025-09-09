@@ -3313,9 +3313,9 @@ Component.addClassProperties(
 
     /**
      * Enables container queries for this component.
-     * When set to true, the component's container element will have
+     * When set to true, the component creates a container element that will have
      * the CSS property `container-type` set to the value of the
-     * `containerType` property (default is `inline-size`) and
+     * `enclosedSizeType` property (default is `inline-size`) and
      * `container-name` set to the component's name.
      *
      * Note: Experimental feature, use with caution.
@@ -3326,31 +3326,42 @@ Component.addClassProperties(
      * @type {boolean}
      * @default false
      */
-    _containerized: {
+    _enclosesSize: {
         value: false
     },
 
-    containerized: {
+    // enclosesSize
+    // providesStyleContainmentContext
+    enclosesSize: {
         get: function () {
-            return this._containerized;
+            return this._enclosesSize;
         },
         set: function (value) {
             value = !!value;
 
-            if (this._containerized !== value) {
-                this._containerized = value;
+            if (this._enclosesSize !== value) {
+                this._enclosesSize = value;
             }
         }
     },
 
     /**
-     * Defines the type of container query to use when `containerized` is true.
+     * Defines the type of container query to use when `enclosesSize` is true.
      * Possible values are `size`, `inline-size` and `normal`.
      * @type {string}
      * @default "inline-size"
      */
-    containerType: {
+    enclosedSizeType: {
         value: "inline-size"
+    },
+    /**
+     * Holds the DOM element providing CSS Size containment
+     * @private
+     * @type {Element}
+     * @default null
+     */
+    _cssContainerElement: {
+        value: null
     },
 
     //
@@ -3832,26 +3843,43 @@ Component.addClassProperties(
 
             // Handle containerization
             // Check if we need to wrap the element
-            if (this.containerized && !this._containerElement) {
-                // Create the container
-                this._containerElement = document.createElement("div");
-                this._containerElement.style.setProperty("container", `${this.constructor.name} / ${this.containerType}`);
-                this._containerElement.classList.add(`${this.constructor.name}-container`);
+            //TODO: When a component is instanciated, it is given an element. If a component has a tenplate,
+            // that element is replaced by the component's element coming from its template.
+            //If we need to keep an extra container in that case, we should probabaly reuse that element
+            //instead of creating a new one.
+            if (this.enclosesSize && !this._cssContainerElement) {
 
-                // Place the new container right before the original element
-                element.before(this._containerElement);
+                if((element.tagName === "HTML") || (element.tagName === "BODY")) {
+                    let containerName = this.constructor.name === "Component" 
+                        ? !!this.identifier
+                            ? null
+                            : this.identifier
+                        : this.constructor.name;
 
-                // Move the original element inside the new container
-                this._containerElement.append(element);
+                    if(containerName) {
+                        element.style.setProperty("container", `${this.constructor.name} / ${this.enclosedSizeType}`);
+                    }
+                } else {
+                    // Create the container
+                    this._cssContainerElement = document.createElement("div");
+                    this._cssContainerElement.style.setProperty("container", `${this.constructor.name} / ${this.enclosedSizeType}`);
+                    this._cssContainerElement.classList.add(`${this.constructor.name}-container`);
+
+                    // Place the new container right before the original element
+                    element.before(this._cssContainerElement);
+
+                    // Move the original element inside the new container
+                    this._cssContainerElement.append(element);
+                }
 
             // Check if we need to unwrap the element
-            } else if (!this.containerized && this._containerElement) {
+            } else if (!this.enclosesSize && this._cssContainerElement) {
                 // Place the original element back before the container
-                this._containerElement.before(element);
+                this._cssContainerElement.before(element);
 
                 // Remove the now-empty container
-                this._containerElement.remove();
-                this._containerElement = null;
+                this._cssContainerElement.remove();
+                this._cssContainerElement = null;
             }
 
             // classList
