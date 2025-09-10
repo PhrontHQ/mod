@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>NestedBar Component</title>
+
+    <link rel="stylesheet" href="nested-bar.css">
+
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "NestedBar"}
+            }
+        },
+        "succession": {
+            "prototype": "mod/ui/succession.mod",
+            "values": {
+                "element": {"#": "succession"},
+                "preventsEmptyContent": true
+            }
+        },
+        "barbar": {
+            "prototype": "bar.mod",
+            "values": {
+                "element": {"#": "barbar"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="NestedBar" class="nestedBar absolute">
+        <div data-mod-id="succession" class="success">
+            <div data-mod-id="barbar" class="barbar" data-arg="content"></div>
+        </div>
+    </div>
+</body>
+</html>
