@@ -21,7 +21,21 @@
                 "controlColor": "#F00",
                 "controlSecondaryColor": "#FF0",
                 "controlBackgroundColor": "#0F0",
-                "controlSecondaryBackgroundColor": "#00F"
+                "controlSecondaryBackgroundColor": "#00F",
+                "scopedStyles": [
+                    {"@": "scopedVisualStyle"}
+                ]
+            }
+        },
+
+        "scopedVisualStyle": {
+            "prototype": "mod/ui/visual-style.mod",
+            "values": {
+                "scope": "special-slider",
+                "baseSurfaceColor": "#FFF",
+                "controlColor": "#222",
+                "controlSecondaryColor": "#eee",
+                "controlBackgroundColor": "#999"
             }
         },
 
@@ -69,6 +83,13 @@
             "values": {
                 "element": {"#": "defaultSlider"}
             }
+        },
+
+        "scopedSlider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "scopedSlider"}
+            }
         }
     }
     </script>
@@ -81,6 +102,9 @@
 
             <div class="slider-container">
                 <div data-mod-id="defaultSlider" class="slider"></div>
+            </div>
+            <div class="slider-container">
+                <div data-mod-id="scopedSlider" class="slider special-slider"></div>
             </div>
             <div class="slider-container">
                 <div data-mod-id="slider" class="slider A">
