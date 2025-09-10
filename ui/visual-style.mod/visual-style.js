@@ -39,34 +39,28 @@ var PROPERTIES = [
  */
 var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
 
+    //TODO move the PROPERTIES down to real property definitions? Or make VisualStyleProperty an enum?
+
     /*
-    baseSurfaceColor = VisualStyleProperty.withVariable("--mod-vs-base-surface-color");
-    // raisedSurfaceColor;
-    // elevatedSurfaceColor;
-    controlBackgroundColor = VisualStyleProperty.withVariableAndValue("--mod-vs-control-background-color", "rgba(0,0,0,0.2)");
-    controlSecondaryBackgroundColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-secondary-background-color", this.controlBackgroundColor);
-    controlTertiaryBackgroundColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-tertiary-background-color", this.controlSecondaryBackgroundColor);
-    controlQuaternaryBackgroundColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-quaternary-background-color", this.controlTertiaryBackgroundColor);
-    controlColor = VisualStyleProperty.withVariableAndValue("--mod-vs-control-color", "#555");
-    controlSecondaryColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-secondary-color", this.controlColor);
-    controlTertiaryColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-tertiary-color", this.controlSecondaryColor);
-    controlQuaternaryColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-quaternary-color", this.controlTertiaryColor);
-    controlSelectionColor = VisualStyleProperty.withVariableAndFallback("--mod-vs-control-selection-color", "#007Aff");
-    controlSelectionBackgroundColor = VisualStyleProperty.withVariable("--mod-vs-control-selection-background-color", this.controlBackgroundColor);
+     @type moduleId of the component for which to scope this visual style. 
+      e.g All controls in an app share a visual style (buttons, checkboxes, etc) with the exception of Sliders 
 
-    controlHoverColor = VisualStyleProperty.withVariable("--mod-vs-control-hover-color");
-    // controlActiveColor;
-    // controlFocusColor;
-
-
-    // textColor;
-    // secondaryTextColor;
-    // tertiaryTextColor;
-    // quaternaryTextColor;
-    // linkTextColor;
-
-    controlBorderColor = VisualStyleProperty.withVariable("--mod-vs-control-border-color");
+      componentModuleId = mod/ui/slider.mod
     */
+
+   //This can allow you to define the component instead of the className (good!), but it depends on the component 
+   //following the class naming convention. E.g. .mod-Slider
+    componentModuleId;
+
+    /** 
+     * Scope in which to apply this visual style. E.g. 
+     * 'acme-panel' could set the visual style for a panel branded for Acme co
+     * 'slider' could set the visual style for all slider components
+     */
+    scope;
+
+    scopedStyles;
+
 
     constructor() {
         super();
@@ -101,18 +95,37 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
     apply() {
         var head = document.querySelector("head"),
             style = document.createElement("style"),
-            rawCSS = `
-            html, body {
+            rawCSS = this._createCSS();
+
+        style.innerHTML = rawCSS;
+        head.appendChild(style);
+        console.log("VisualStyle", this.scopedStyles);
+        if (this.scopedStyles) {
+            this.scopedStyles.forEach(function (scope) {
+                scope.apply();
+            }, this);
+        }
+    }
+
+    _createCSS() {
+        let rawCSS;
+        
+        if (this.scope) {
+            rawCSS = `@scope (.${this.scope}) {
             `;
+        } else {
+            rawCSS = `
+                html, body {
+                `;
+        }
+
 
         PROPERTIES.forEach(function (property) {
             rawCSS = this._addVariableForProperty(property.name, rawCSS);
         }, this);
         rawCSS += `}
         `;
-
-        style.innerHTML = rawCSS;
-        head.appendChild(style);
+        return rawCSS;
     }
 
     _addVariableForProperty(name, rawCSS) {
@@ -139,7 +152,24 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         return value;
     }
 
+    _normalizeModuleId(moduleId) {
+        if (moduleId.startsWith("mod/")) {
+            moduleId = moduleId.replace("mod/", "");
+        }
+        return moduleId;
+    }
+
     deserializeSelf(deserializer) {
+        let moduleId = deserializer.getProperty("componentModuleId");
+        if (moduleId) {
+            let normalized = this._normalizeModuleId(moduleId);
+            console.log(normalized);
+            require.async(normalized).then(function (exports) {
+                console.log("visualStyle.module", exports);
+            });
+        }
+        this.scope = deserializer.getProperty("scope");
+        this.scopedStyles = deserializer.getProperty("scopedStyles");
         this._deserializeProperty(deserializer, "baseSurfaceColor");
         this._deserializeProperty(deserializer, "controlBackgroundColor");
         this._deserializeProperty(deserializer, "controlSecondaryBackgroundColor");
@@ -153,6 +183,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlSelectionBackgroundColor");
         this._deserializeProperty(deserializer, "controlHoverColor");
         this._deserializeProperty(deserializer, "controlBorderColor");
+        
     }
 
     _deserializeProperty(deserializer, property) {
