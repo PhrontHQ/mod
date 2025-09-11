@@ -1,0 +1,96 @@
+Work in progress to define the data model underlying a task-based mod, formally known as an app
+
+We start by stating that an application data object (I'd like to avoid the word application...) is typically partitioned in sections. So [Application]Section is a data object modeling a piece of an app
+
+Section alone is too vague, for the super class. After that we're going to deal with named instances'
+
+> LayoutSection? Does "Layout" apply to the overall information architecture, is a synonym / term used by non-technical people? if it is, could we use "LayoutSection" ?
+
+> DataSection?
+
+> ContentSection?
+
+The downside of "Layout" is that it is also used to talk about the spatial positioning of user interface elements...
+
+
+
+
+Would "Activity" be a better name than Section? Activity has a very specific meaning in Android that is not that. It looks like "activity" is more used as:
+
+>
+> A Record of What They (or Others) Have Done
+> Users typically associate "activity" with:
+
+> * A history or log of actions they’ve taken or interactions they’ve had within the app.
+> * A feed or list showing recent events, updates, or changes (often social or collaborative).
+
+
+
+
+#### Activity Map: The "What" Users Do**
+
+An ****Activity Map**** **highlights** ****user actions**** **(e.g., posting, liking, editing, completing tasks) and the** ****relationships between those actions** .
+
+#### **Section: A Container for Related Features or Content**
+
+A ****"Section"**** **is a** ****group of related features, tools, or content**** **within an app. It’s a** ****structural unit**** **that organizes the app’s functionality.
+
+#### **Section Map**
+
+A ****"Section Map"**** **would visually represent the** ****different sections of the app**** **and how they relate to each other.
+
+
+
+
+
+"Section" has:
+
+- a name
+- an icon
+- optionally a visual style different from others
+- DataSet (current DataQuery renamed), which is at minimun DataType+criteria. Plus ordering, etc.. Do they have one or more?
+- content: The list/graph of expressions / data properties displayed within that section
+  - A DataSet could model this the way DataQuery has readExpressions, which are intended to effienctly retrieve the sub graph of data for a piece of UI
+- relatedSections: this isn't purely hierarchical as sections could loop back. It's a graph. So adjacentSections? Should we consider subSections that are embedded - vs related/adjacent/navigationSections which are section reacheable via the current one, but makes the current one go away? Or are they at core / data similar, and it's the component's job to decide what gets embedded vs what gets navigated to?
+  - Voicemail Section has 2 related sections
+
+    - Greeting
+    - VoicemailDetailSection
+      The selection of the list of voicemails is a DataSet: Voicemail + Dataset representing the voicemail selected
+- Sections needs to have a DataSetDescriptor, that is used to validate live that a dataSet assigned to it is valid for that section
+
+* **Sortable**
+* **Mutable**
+  * **Both is editable?**
+
+note: Removing a section from the flow / navigation should make it available in a known place somewhere else, so you can get it back to put it somewhere else or where it was
+
+## Components and Sections
+
+Components have a "sections" property, an array, ordered of Section DataObjects. For example, the Main component's sections then become the data behind a menu bar at the bottom of many mobile apps. The iOS call app Home/Main Section has 5 sections [favorites, recents, contacts, keypad, voicelmail].
+
+## Naming
+
+We need a name for the section, a data object modeling piece of an app architecture, one for a component that "displays" / render this section. There could be multiple varations of components rendering the same section data object.
+
+PersonSection - The DataObject representing a section of an application that focuses on all persons. Prefixed by the data type's name, it becomes obvious.
+
+PersonView - A component displaying a PersonSection
+
+PersonDisplay ? A component displaying a PersonSection
+
+PersonDetail(s?)Section - The DataObject representing a section of an application that focuses on the details of one person
+
+PersonDetailView - A component displaying a PersonDetailSection
+
+View is really a technical term. Users just use the names given to the sections. Like "go to the voicemail"
+
+The truth is that in mod, we have a structure /data and /ui. so
+
+/data/model/person.js/.mjson - It's clear it's a data level Person
+
+/ui/person.mod - It's clear since it's in the ui folder that it is a component dealing with person
+
+/ui/person-detail.mod - It's clear since it's in the ui folder that it is a component dealing with a person's detail
+
+So we may not need to add a suffix?
