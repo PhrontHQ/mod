@@ -12,16 +12,30 @@ This document summarizes Mod-specific naming conventions and recommendations for
 
 All module and package names are written in lowercase letters or numbers and delimited by dashes (for example, `child-package`).
 
-## Components (.mod)
+## Components — ui/*.mod
 
 User interface components are stored in the ui directory of your Mod project and identified by a .mod extension.
 
 The following naming conventions apply for `.mod` directories:
 
-* Component names are always spelled in lowercase letters.
-* If the name uses multiple words, follow a dash-delimited `"word-word"` pattern; for example, `radio-button.mod`, or `text-field.mod`.
+Component file names are always spelled in lowercase letters.
 
-## CSS Classes
+If the name uses multiple words, follow a dash-delimited `"word-word"` pattern; for example, `radio-button.mod`, or `text-field.mod`.
+
+### Naming
+
+Components that render primarily a type of data should be named based on that type's name. So for a Person data type:
+
+- A component rendering a list of persons should be named  **Persons.mod**
+- A component rendering a single person should be named **PersonDetails** or **PersonInfo.mod**
+- A component rendering a relationship, like "contacts" of a data type Person should concatenate both: **PersonContacts.mod**
+- If a specific component is needed for a specific task / activity on a data type, it should be included in the name: for example LabelPersons.mod, OrganizePersons.mod, PersonFamilyTreeEditor.mod
+
+### Organization
+
+TODO: Recommendations to organize components in folders
+
+### CSS Classes
 
 CSS class names follow a dash-delimited `package-Component` and `package-Component-childElement` pattern. For variations and states, double dash is used. For example, for the Matte Progress component it would be:
 
