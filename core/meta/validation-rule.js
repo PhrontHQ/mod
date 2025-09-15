@@ -35,7 +35,7 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
         value: function (serializer) {
             serializer.setProperty("name", this.name);
             serializer.setProperty("objectDescriptor", this.owner, "reference");
-            //            serializer.setProperty("validationSelector", this._validationSelector, "reference");
+            serializer.setProperty("criteria", this._criteria, "reference");
             serializer.setProperty("messageKey", this.messageKey);
             serializer.setAllValues();
         }
@@ -52,7 +52,17 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
             if (value !== void 0) {
                 this._owner = value;
             }
-            //            this._validationSelector = deserializer.getProperty("validationSelector");
+
+            //Backward compatibility
+            value = deserializer.getProperty("validationSelector");
+            if(value) {
+                this._criteria = value;
+            } else {
+                value = deserializer.getProperty("criteria");
+                if(value) {
+                    this._criteria = value;
+                }
+            }
             value = deserializer.getProperty("messageKey");
             if (value !== void 0) {
                 this._messageKey = value;
@@ -109,7 +119,7 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
     },
 
 
-    _validationSelector: {
+    _criteria: {
         value: null
     },
 
@@ -117,18 +127,35 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
      * Criteria to evaluate to check this rule.
      * @type {Criteria}
      */
+    criteria: {
+        serializable: false,
+        get: function () {
+            if (!this._criteria) {
+                this._criteria = Criteria['false'];
+            }
+            return this._criteria;
+        },
+        set: function (value) {
+            this._criteria = value;
+        }
+    },
+
+    /**
+     * Backward compatibility
+     * @type {Criteria}
+     */
     validationSelector: {
         serializable: false,
         get: function () {
-            if (!this._validationSelector) {
-                this._validationSelector = Criteria['false'];
-            }
-            return this._validationSelector;
+            return this.criteria;
         },
         set: function (value) {
-            this._validationSelector = value;
+            this.criteria = value;
         }
     },
+
+
+
 
     _messageKey: {
         value: ""
