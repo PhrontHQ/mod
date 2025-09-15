@@ -33,9 +33,9 @@ When validation logic runs, if validation rules find issues, they will be entere
 
 Are what's stored within the InvalidityState a new ValidationError subclass of Error that we need to create?
 
-## Control and the InvalidityState
+## PropertyField and the InvalidityState
 
-Controls need know which property of which instance it is editing, so it can access informations off that instance's invalidityState for the property it is wired to edit. Some error validations can also involve more than 1 property. In order to enable this, we propose that Control gains the following new properties:
+PropertyFields need know which property of which instance it is editing, so it can access informations off that instance's invalidityState for the property it is wired to edit. Some error validations can also involve more than 1 property. In order to enable this, we propose that PropertyField gains the following new properties:
 
 * dataType, or dataDescriptor - The Type or ObjectDescriptor of the instance being edited. We intend to populate this by leveraging information from data bindings when available
 
@@ -52,5 +52,6 @@ Controls need know which property of which instance it is editing, so it can acc
 2. Data bindings propagate the value to dataInstance's property setter, and the DataTrigger
 3. the DataTrigger invoke the main service's handleChange(aChangeEvent) carrying the change that happened
 4. The mainService is either in autosave and the validation kicks in from saveChanges(), or it directly invoke validation targeted on the propery that just changed
+    THIS MEANS WE ACCEPT INVALID DATA ON DATA OBJECTS PROPERTIES TO STAY THERE UNTIL FIXED BY USER
 5. Validation errors are set on the data instance's invalidityState
 6. The control(s) involved in editing the data instance, using data binding or property observing (which means they needs to be able to reister as such the invalidity state knowing what they edit) informed of validation errors to handle and need to push the right states / user-intended errors on the field they're part of. It could be that other properties are involved as well at the same time. So the ValidationError might need a property carrying set of those properties.
