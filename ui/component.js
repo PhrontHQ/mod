@@ -2310,6 +2310,7 @@ Component.addClassProperties(
 
             this._treeLevel = level;
             if (firstDraw) {
+                this._drawVisualStyle();
                 this.originalElement = this.element;
             }
             if (this.needsDraw) {
@@ -2342,6 +2343,21 @@ Component.addClassProperties(
                     }
                 }
                 this._disposeArray(oldDrawList);
+            }
+        }
+    },
+
+    _drawVisualStyle: {
+        value: function () {
+            var css, head, styleEl;
+            console.log("Component.drawVisualStyle", this.identifier, this.visualStyle);
+            if (this.visualStyle && !this._visualStyleElement) {
+                head = document.querySelector("head");
+                styleEl = document.createElement("style");
+                css = this.visualStyle.generateCSS();
+                styleEl.innerHTML = css;
+                head.appendChild(styleEl);
+                this._visualStyleElement = styleEl;
             }
         }
     },
