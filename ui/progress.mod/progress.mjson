@@ -1,0 +1,59 @@
+{
+    "value_property": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "value",
+            "valueType": "number",
+            "objectDescriptor": {
+                "@": "root"
+            }
+        }
+    },
+    "max_property": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "max",
+            "valueType": "number",
+            "objectDescriptor": {
+                "@": "root"
+            }
+        }
+    },
+    "objectDescriptor_parent": {
+        "object": "ui/control.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Progress",
+            "parent": {
+                "@": "objectDescriptor_parent"
+            },
+            "propertyDescriptors": [
+                {
+                    "@": "value_property"
+                },
+                {
+                    "@": "max_property"
+                }
+            ],
+            "propertyDescriptorGroups": {
+                "Main": [
+                    {
+                        "@": "value_property"
+                    },
+                    {
+                        "@": "max_property"
+                    }
+                ]
+            },
+            "objectDescriptorModule": {
+                "%": "ui/progress.mod/progress.mjson"
+            },
+            "exportName": "Progress",
+            "module": {
+                "%": "ui/progress.mod"
+            }
+        }
+    }
+}
