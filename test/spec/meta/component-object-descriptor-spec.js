@@ -102,10 +102,10 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"), "required");
             newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"), "required");
 
-            newObjectDescriptor.addPropertyValidationRule("rule1").validationSelector = null;
-            //            newObjectDescriptor.addPropertyValidationRule("rule1").validationSelector = Criteria.property("requiredBindableProperty1").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule2").validationSelector = Criteria.property("requiredBindableProperty2").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule3").validationSelector = Criteria.property("requiredBindableProperty3").isBound;
+            newObjectDescriptor.addPropertyValidationRule("rule1").criteria = null;
+            //            newObjectDescriptor.addPropertyValidationRule("rule1").criteria = Criteria.property("requiredBindableProperty1").isBound;
+            //            newObjectDescriptor.addPropertyValidationRule("rule2").criteria = Criteria.property("requiredBindableProperty2").isBound;
+            //            newObjectDescriptor.addPropertyValidationRule("rule3").criteria = Criteria.property("requiredBindableProperty3").isBound;
 
             component3.objectDescriptor = newObjectDescriptor;
 
