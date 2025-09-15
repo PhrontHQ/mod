@@ -12,14 +12,6 @@ var Component = require("mod/ui/component").Component;
  */
 exports.MainVs = Component.specialize(/** @lends MainVs.prototype */ {
 
-    enterDocument: {
-        value: function (firstTime) {
-            if (firstTime) {
-                this.visualStyle.apply();
-            }
-        }
-    },
-
     handleSliderAction: {
         value: function (event) {
             event.stopPropagation();

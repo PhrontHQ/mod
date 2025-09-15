@@ -23,7 +23,8 @@
                 "controlBackgroundColor": "#0F0",
                 "controlSecondaryBackgroundColor": "#00F",
                 "scopedStyles": [
-                    {"@": "scopedVisualStyle"}
+                    {"@": "scopedVisualStyle"},
+                    {"@": "defaultScopedVisualStyle"}
                 ]
             }
         },
@@ -36,6 +37,13 @@
                 "controlColor": "#222",
                 "controlSecondaryColor": "#eee",
                 "controlBackgroundColor": "#999"
+            }
+        },
+
+        "defaultScopedVisualStyle": {
+            "prototype": "mod/ui/visual-style.mod",
+            "values": {
+                "scope": "default-slider"
             }
         },
 
@@ -90,6 +98,13 @@
             "values": {
                 "element": {"#": "scopedSlider"}
             }
+        },
+
+        "defaultScopedSlider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "defaultScopedSlider"}
+            }
         }
     }
     </script>
@@ -99,7 +114,9 @@
         <header>Teach Slider Mod</header>
 
         <section class="sliders">
-
+            <div class="slider-container">
+                <div data-mod-id="defaultScopedSlider" class="slider default-slider"></div>
+            </div>
             <div class="slider-container">
                 <div data-mod-id="defaultSlider" class="slider"></div>
             </div>

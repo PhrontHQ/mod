@@ -241,3 +241,12 @@ There's a limit to how much interactive parts a control should have where it wou
 - size: `xs`, `sm`, `md`, `lg`, `xl` (short cut to dimensions?)
 - spacing: `compact`, `comfortable`, `spacious`
 - stateManagement? `default`, `hover`, `active`, `disabled`, `focus`, `selected`
+
+
+### Questions / Unresolved issues
+
+- Should visual style provide a standard icon set? Left carat, right carat, cancel, etc
+
+#### Additional Properties to Consider
+- Text size
+- Border radius

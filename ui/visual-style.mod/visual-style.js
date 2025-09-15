@@ -4,53 +4,59 @@ var Montage = require("montage").Montage;
 
 
 var PROPERTIES = [
-    {name: "baseSurfaceColor", variable: "--mod-vs-base-surface-color", defaultValue: "#FFF"},
+    {name: "baseSurfaceColor", variable: "--mod-vs-base-surface-color", defaultValue: "hsl(0, 0%, 100%)"},
     {name: "raisedSurfaceColor", variable: "--mod-vs-raised-surface-color", backup: "baseSurfaceColor"},
     {name: "elevatedSurfaceColor", variable: "--mod-vs-elevated-surface-color", backup: "baseSurfaceColor"},
 
-    {name: "controlBackgroundColor", variable: "--mod-vs-control-background-color", defaultValue: "#555"},
+    {name: "controlBackgroundColor", variable: "--mod-vs-control-background-color", defaultValue: "hsl(0,0%,86%)"},
     {name: "controlSecondaryBackgroundColor", variable: "--mod-vs-control-secondary-background-color", backup: "controlBackgroundColor"},
     {name: "controlTertiaryBackgroundColor", variable: "--mod-vs-control-tertiary-background-color", backup: "controlSecondaryBackgroundColor"},
     {name: "controlQuaternaryBackgroundColor", variable: "--mod-vs-control-quaternary-background-color", backup: "controlTertiaryBackgroundColor"},
 
-    {name: "controlColor", variable: "--mod-vs-control-color", defaultValue: "#555"},
+    {name: "controlColor", variable: "--mod-vs-control-color", defaultValue: "linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%))"},
     {name: "controlSecondaryColor", variable: "--mod-vs-control-secondary-color", backup: "controlColor"},
     {name: "controlTertiaryColor", variable: "--mod-vs-control-tertiary-color", backup: "controlSecondaryColor"},
     {name: "controlQuaternaryColor", variable: "--mod-vs-control-quaternary-color", backup: "controlTertiaryColor"},
 
-    {name: "controlBorderColor", variable: "--mod-vs-border-color", defaultValue: "#bbb"},
+    {name: "controlBorderColor", variable: "--mod-vs-border-color", defaultValue: "hsla(0,0%,65%,1)"},
 
-    {name: "controlSelectionColor", variable: "--mod-vs-control-quaternary-color", defaultValue: "#007Aff"},
-    {name: "controlSelectionBackgroundColor", variable: "--mod-vs-control-quaternary-color", backup: "controlBackgroundColor"},
+    {name: "controlSelectionColor", variable: "--mod-vs-control-selection-color", defaultValue: "hsl(211, 100%, 50%)"},
+    {name: "controlSelectionBackgroundColor", variable: "--mod-vs-control-selection-background-color", backup: "controlBackgroundColor"},
 
     {name: "controlHoverColor", variable: "--mod-vs-control-hover-color", backup: "controlColor"},
     {name: "controlActiveColor", variable: "--mod-vs-control-active-color", backup: "controlSelectionColor"},
     {name: "controlFocusColor", variable: "--mod-vs-control-focus-color", backup: "controlActiveColor"},
 
-    {name: "textColor", variable: "--mod-vs-text-color", backup: "controlActiveColor"},
+    {name: "textColor", variable: "--mod-vs-text-color", defaultValue: "hsl(0, 0, 0)"},
     {name: "textSecondaryColor", variable: "--mod-vs-text-secondary-color", backup: "textColor"},
     {name: "textTertiaryColor", variable: "--mod-vs-text-tertiary-color", backup: "textSecondaryColor"},
     {name: "textQuaternaryColor", variable: "--mod-vs-text-quaternary-color", backup: "textTertiaryColor"},
 
-    {name: "linkTextColor", variable: "--mod-vs-control-focus-color", backup: "textColor"}
+    {name: "linkTextColor", variable: "--mod-vs-link-text-color", backup: "textColor"}
 ]
 /**
  * @extends module:mod/ui/visual-style.mod
  */
 var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
 
-    //TODO move the PROPERTIES down to real property definitions? Or make VisualStyleProperty an enum?
+    
 
-    /*
-     @type moduleId of the component for which to scope this visual style. 
-      e.g All controls in an app share a visual style (buttons, checkboxes, etc) with the exception of Sliders 
 
-      componentModuleId = mod/ui/slider.mod
-    */
-
-   //This can allow you to define the component instead of the className (good!), but it depends on the component 
-   //following the class naming convention. E.g. .mod-Slider
-    componentModuleId;
+    constructor() {
+        super();
+        //TODO move the PROPERTIES down to real property definitions? Or make VisualStyleProperty an enum?
+        PROPERTIES.forEach(function (property) {
+            this[property.name] = new VisualStyleProperty();
+            this[property.name].variableName = property.variable;
+            this[property.name].value = property.defaultValue;
+        }, this);
+        
+        PROPERTIES.forEach(function (property) {
+            if (this[property.name] && this[property.backup]) {
+                this[property.name].fallback = this[property.backup];
+            }
+        }, this);
+    }
 
     /** 
      * Scope in which to apply this visual style. E.g. 
@@ -59,55 +65,13 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
      */
     scope;
 
+    /*
+    * @type {Array<VisualStyle>}
+    */
     scopedStyles;
 
 
-    constructor() {
-        super();
-        var property;
-        PROPERTIES.forEach(function (property) {
-            this[property.name] = new VisualStyleProperty();
-            this[property.name].variableName = property.variable;
-            this[property.name].value = property.defaultValue;
-        }, this);
-        
-
-        PROPERTIES.forEach(function (property) {
-            if (this[property.name] && this[property.backup]) {
-                this[property.name].fallback = this[property.backup];
-            }
-        }, this);
-        console.log(this);
-    }
-
-
-
-
-    /***
-     * TODO - Move this logic to component. 
-     * 
-     * Visual Style is not a component so should NOT manipulate the DOM in any way. 
-     * This class' responsibilities are 
-     *  - Define the properties of the visual style 
-     *  - Define the mapping of visual style properties to CSS variables 
-     *  - Deserialize the properties of the visual style
-     */
-    apply() {
-        var head = document.querySelector("head"),
-            style = document.createElement("style"),
-            rawCSS = this._createCSS();
-
-        style.innerHTML = rawCSS;
-        head.appendChild(style);
-        console.log("VisualStyle", this.scopedStyles);
-        if (this.scopedStyles) {
-            this.scopedStyles.forEach(function (scope) {
-                scope.apply();
-            }, this);
-        }
-    }
-
-    _createCSS() {
+    generateCSS() {
         let rawCSS;
         
         if (this.scope) {
@@ -125,6 +89,13 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         }, this);
         rawCSS += `}
         `;
+        if (this.scopedStyles) {
+            this.scopedStyles.forEach(function (scope) {
+                rawCSS += `
+                ${scope.generateCSS()}
+                `;
+            }, this);
+        }
         return rawCSS;
     }
 
@@ -160,14 +131,6 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
     }
 
     deserializeSelf(deserializer) {
-        let moduleId = deserializer.getProperty("componentModuleId");
-        if (moduleId) {
-            let normalized = this._normalizeModuleId(moduleId);
-            console.log(normalized);
-            require.async(normalized).then(function (exports) {
-                console.log("visualStyle.module", exports);
-            });
-        }
         this.scope = deserializer.getProperty("scope");
         this.scopedStyles = deserializer.getProperty("scopedStyles");
         this._deserializeProperty(deserializer, "baseSurfaceColor");
