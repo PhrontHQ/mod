@@ -90,3 +90,23 @@ The truth is that in mod, we have a structure /data and /ui. so
 /ui/person-detail.mod - It's clear since it's in the ui folder that it is a component dealing with a person's detail
 
 So we may not need to add a suffix?
+
+
+## More Thoughts, on Navigation Rules?
+Section has : user selection . A user selection doesn’t necessarily means navigation, it could mean showing a nested / embedded / subsection
+
+But a navigation always happen following a user selection (defined here as a user interaction selecting a piece of data - a section is a piece of data, not just data objects): either selecting a data instance or clicking a button/link that represents a data set / section to go explore
+
+So if we come up with “Navigation Rule” that is a way to evaluate the user selection, which needs to be a DataSet, with a criteria to derived an outcome —> be the section to go to, then we may have what we need.
+
+The resulting section should be added to the navigation history, which mirror a web anchor as an internal navigation or  another page.
+
+Then it comes down to mapping the section selected to a component to render it, and dealing with transitions which we have with the succession
+
+https://developer.mozilla.org/en-US/docs/Web/API/Navigation
+
+ Navigation needs to have:
+ - an history that is the record of all navigation. So if one goes back and forth between 2 sections 3 times, the history would have 6 entries
+ - a data structure that is the current state that is rendered and mutable, the “current navigation” that here would alternately has one or 2 entries.
+
+Entering a Modal state means another succession branching out from where the modal started
