@@ -18,7 +18,7 @@ var core = require("./core"),
 // sync.
 
 // The controller can determine which content to display and the order in which
-// to render them in a variety of ways. You can use a "selector" to
+// to render them in a variety of ways. You can use a "criteria" to
 // filter and sort the content. The controller binds the content of
 // "organizedContent" depending on which strategy you use.
 

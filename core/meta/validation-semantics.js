@@ -1,7 +1,7 @@
 var Montage = require("../core").Montage;
 // TODO kriskowal: massage selectors and FRB together
 var Semantics = Montage;
-// var Semantics = (require)("core/selector/semantics").Semantics;
+// var Semantics = (require)("core/criteria/semantics").Semantics;
 var deprecate = require("../deprecate"),
     logger = require("../logger").logger("objectDescriptor");
 
@@ -40,9 +40,9 @@ var PropertyValidationSemantics = exports.PropertyValidationSemantics = Semantic
 
     /**
      * Compile the syntax tree into a function that can be used for evaluating
-     * this selector.
+     * this criteria.
      * @function
-     * @param {Selector} selector syntax
+     * @param {Criteria} criteria syntax
      * @returns function
      */
     compile: {

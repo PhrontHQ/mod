@@ -3,7 +3,7 @@
 var Montage = require("mod/core/core").Montage;
 var TestPageLoader = require("mod-testing/testpageloader").TestPageLoader;
 var Component = require("mod/ui/component").Component;
-var Selector = require("mod/core/selector").Selector;
+var Criteria = require("mod/core/criteria").Criteria;
 var ObjectDescriptor = require("mod/core/meta/object-descriptor").ObjectDescriptor;
 var Promise = require("mod/core/promise").Promise;
 var Serializer = require("mod/core/serialization/serializer/montage-serializer").MontageSerializer;
@@ -103,9 +103,9 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"), "required");
 
             newObjectDescriptor.addPropertyValidationRule("rule1").validationSelector = null;
-            //            newObjectDescriptor.addPropertyValidationRule("rule1").validationSelector = Selector.property("requiredBindableProperty1").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule2").validationSelector = Selector.property("requiredBindableProperty2").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule3").validationSelector = Selector.property("requiredBindableProperty3").isBound;
+            //            newObjectDescriptor.addPropertyValidationRule("rule1").validationSelector = Criteria.property("requiredBindableProperty1").isBound;
+            //            newObjectDescriptor.addPropertyValidationRule("rule2").validationSelector = Criteria.property("requiredBindableProperty2").isBound;
+            //            newObjectDescriptor.addPropertyValidationRule("rule3").validationSelector = Criteria.property("requiredBindableProperty3").isBound;
 
             component3.objectDescriptor = newObjectDescriptor;
 

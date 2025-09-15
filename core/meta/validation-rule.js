@@ -7,7 +7,7 @@
  */
 var Montage = require("../core").Montage,
     PropertyValidationSemantics = require("./validation-semantics").PropertyValidationSemantics,
-    Selector = require("../selector").Selector,
+    Criteria = require("../criteria").Criteria,
     deprecate = require("../deprecate");
 
 /**
@@ -114,14 +114,14 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
     },
 
     /**
-     * Selector to evaluate to check this rule.
-     * @type {Selector}
+     * Criteria to evaluate to check this rule.
+     * @type {Criteria}
      */
     validationSelector: {
         serializable: false,
         get: function () {
             if (!this._validationSelector) {
-                this._validationSelector = Selector['false'];
+                this._validationSelector = Criteria['false'];
             }
             return this._validationSelector;
         },
@@ -163,7 +163,7 @@ exports.PropertyValidationRule = Montage.specialize( /** @lends PropertyValidati
         value: function (objectInstance) {
             if (this._propertyValidationEvaluator === null) {
                 var propertyValidationSemantics = new PropertyValidationSemantics().initWithBlueprint(this.objectDescriptor);
-                this._propertyValidationEvaluator = propertyValidationSemantics.compile(this.selector.syntax);
+                this._propertyValidationEvaluator = propertyValidationSemantics.compile(this.criteria.syntax);
             }
             return this._propertyValidationEvaluator(objectInstance);
         }

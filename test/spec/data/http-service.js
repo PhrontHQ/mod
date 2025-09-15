@@ -1,6 +1,6 @@
 var DataService = require("mod/data/service/data-service").DataService,
     HttpService = require("mod/data/service/http-service").HttpService,
-    DataSelector = require("mod/data/service/data-selector").DataSelector,
+    DataQuery = require("mod/data/service/data-query").DataQuery,
     Criteria = require("mod/core/criteria").Criteria,
     WeatherReport = require("./logic/model/weather-report").WeatherReport,
     WeatherService = require("./logic/service/weather-service").WeatherService,
@@ -18,7 +18,7 @@ describe("An HttpService", function() {
         };
         var dataCriteria = new Criteria().initWithExpression(dataExpression, dataParameters);
         var dataType = WeatherReport.TYPE;
-        var dataQuery  = DataSelector.withTypeAndCriteria(dataType, dataCriteria);
+        var dataQuery  = DataQuery.withTypeAndCriteria(dataType, dataCriteria);
 
         var mainService = new DataService();
         var weatherService = new WeatherService();

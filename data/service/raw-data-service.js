@@ -882,7 +882,7 @@ RawDataService.addClassProperties({
      * @method
      * @argument {Object} records  - An array of objects whose properties' values
      *                               hold the raw data.
-     * @argument {?DataQuery} selector
+     * @argument {?DataQuery} query
      *                             - Describes how the raw data was selected.
      * @argument {?} context       - The value that was passed in to the
      *                               [rawDataDone()]{@link RawDataService#rawDataDone}
@@ -892,7 +892,7 @@ RawDataService.addClassProperties({
      * usually be `null`.
      */
     writeOfflineData: {
-        value: function (records, selector, context) {
+        value: function (records, query, context) {
             // Subclasses should override this to do something useful.
             return this.nullPromise;
         }
@@ -938,7 +938,7 @@ RawDataService.addClassProperties({
     addRawData: {
         value: function (stream, records, context) {
             var offline, i, n,
-                streamSelectorType = stream.query.type,
+                streamQueryType = stream.query.type,
                 iRecord;
             // Record fetched raw data for offline use if appropriate.
             offline = records && !this.isOffline && this._streamRawData.get(stream);
@@ -957,10 +957,10 @@ RawDataService.addClassProperties({
                 // only "outer scoped variable" we're accessing here is stream,
                 // which is a constant reference and won't cause unexpected
                 // behavior due to iteration.
-                // if (streamSelectorType.name && streamSelectorType.name.toUpperCase().indexOf("BSP") !== -1) {
+                // if (streamQueryType.name && streamQueryType.name.toUpperCase().indexOf("BSP") !== -1) {
                 //     console.debug("set a breakpoint here");
                 // }
-                this.addOneRawData(stream, records[i], context, streamSelectorType);
+                this.addOneRawData(stream, records[i], context, streamQueryType);
                 /*jshint +W083*/
             }
         }
@@ -1839,26 +1839,25 @@ RawDataService.addClassProperties({
      */
 
     /**
-     * Convert a selector for data objects to a selector for raw data.
+     * Convert a query for data objects to a query for raw data.
      *
-     * The selector returned by this method will be the selector used by methods
+     * The query returned by this method will be the query used by methods
      * that deal with raw data, like
      * [fetchRawData()]{@link RawDataService#fetchRawData]},
      * [addRawData()]{@link RawDataService#addRawData]},
      * [rawDataDone()]{@link RawDataService#rawDataDone]}, and
      * [writeOfflineData()]{@link RawDataService#writeOfflineData]}. Any
      * [stream]{@link DataStream} available to these methods will have their
-     * selector references temporarly replaced by references to the mapped
-     * selector returned by this method.
+     * query references temporarly replaced by references to the mapped
+     * query returned by this method.
      *
-     * The default implementation of this method returns the passed in selector.
+     * The default implementation of this method returns the passed in query.
      *
      * @method
-     * @argument {DataQuery} selector - A selector defining data objects to
-     *                                     select.
-     * @returns {DataQuery} - A selector defining raw data to select.
+     * @argument {DataQuery} query - A query defining data objects to select.
+     * @returns {DataQuery} - A query defining raw data to select.
      */
-    mapSelectorToRawDataQuery: {
+    mapQueryToRawDataQuery: {
         value: function (query) {
             return query;
         }
@@ -1866,8 +1865,8 @@ RawDataService.addClassProperties({
 
     mapSelectorToRawDataSelector: {
         value: deprecate.deprecateMethod(void 0, function (selector) {
-            return this.mapSelectorToRawDataQuery(selector);
-        }, "mapSelectorToRawDataSelector", "mapSelectorToRawDataQuery"),
+            return this.mapQueryToRawDataQuery(selector);
+        }, "mapSelectorToRawDataSelector", "mapQueryToRawDataQuery"),
     },
 
     _defaultDataMapping: {

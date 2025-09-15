@@ -49,8 +49,8 @@
             "denyDelete": false,
             "readOnly": false,
             "valueType": "object",
-            "valueObjectPrototypeName": "Selector",
-            "valueObjectModuleId": "core/selector",
+            "valueObjectPrototypeName": "Criteria",
+            "valueObjectModuleId": "core/criteria",
             "enumValues": [],
             "helpKey": ""
         }

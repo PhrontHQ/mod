@@ -5970,7 +5970,7 @@ DataService.addClassProperties({
                         //Regardless of the policy, we're asked to fetch a user identity
                         var streamQuery = stream.query;
                         if(stream.query.criteria) {
-                            stream.query = self.mapSelectorToRawDataQuery(streamQuery);
+                            stream.query = self.mapQueryToRawDataQuery(streamQuery);
                         }
                         this.fetchRawData(stream);
                         //Switch it back
@@ -6023,7 +6023,7 @@ DataService.addClassProperties({
 
                         identityPromise.then(function (identity) {
                             var streamSelector = stream.query;
-                            stream.query = self.mapSelectorToRawDataQuery(streamSelector);
+                            stream.query = self.mapQueryToRawDataQuery(streamSelector);
                             self.fetchRawData(stream);
                             stream.query = streamSelector;
                         }).catch(function (e) {
@@ -6047,7 +6047,7 @@ DataService.addClassProperties({
 
                     this.authorizationPromise.then(function (authorization) {
                         var streamSelector = stream.query;
-                        stream.query = self.mapSelectorToRawDataQuery(streamSelector);
+                        stream.query = self.mapQueryToRawDataQuery(streamSelector);
                         self.fetchRawData(stream);
                         stream.query = streamSelector;
                     }).catch(function (e) {

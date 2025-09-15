@@ -359,7 +359,7 @@ describe("A RawDataService", function() {
     xit("has a fetchData() method that creates and return a new stream when none is passed in", function () {
     });
 
-    xit("has a fetchData() method that sets its stream's selector", function () {
+    xit("has a fetchData() method that sets its stream's criteria", function () {
     });
 
     xit("has a fetchData() method that calls the service's fetchRawData() when appropriate", function () {

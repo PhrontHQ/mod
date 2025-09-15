@@ -12,22 +12,20 @@ Section alone is too vague, for the super class. After that we're going to deal 
 
 The downside of "Layout" is that it is also used to talk about the spatial positioning of user interface elements...
 
+A mod has
 
+- a tree/graph of sections - the data model, which should be able to editable by user or AI
+- a tree of ui components that render the sections
 
+Notes: We want in the future the ability for a user, or a user's AI agent, to modlulate what component renders what section, down ultimaterly to individual controls used to render/edit properties
 
-Would "Activity" be a better name than Section? Activity has a very specific meaning in Android that is not that. It looks like "activity" is more used as:
+A user's "activity" is the record / receipt of what they have done over time
 
->
-> A Record of What They (or Others) Have Done
-> Users typically associate "activity" with:
+* A history, log, of all actions they’ve taken, interactions they’ve had within the app, and the resulting data operations.
 
-> * A history or log of actions they’ve taken or interactions they’ve had within the app.
-> * A feed or list showing recent events, updates, or changes (often social or collaborative).
+#### A user's "activityMap" would be showing how the activity mops to components used at the time.
 
-
-
-
-#### Activity Map: The "What" Users Do**
+##### Activity Map: The "What" Users Do**
 
 An ****Activity Map**** **highlights** ****user actions**** **(e.g., posting, liking, editing, completing tasks) and the** ****relationships between those actions** .
 
@@ -39,10 +37,6 @@ A ****"Section"**** **is a** ****group of related features, tools, or content***
 
 A ****"Section Map"**** **would visually represent the** ****different sections of the app**** **and how they relate to each other.
 
-
-
-
-
 "Section" has:
 
 - a name
@@ -50,13 +44,15 @@ A ****"Section Map"**** **would visually represent the** ****different sections 
 - optionally a visual style different from others
 - DataSet (current DataQuery renamed), which is at minimun DataType+criteria. Plus ordering, etc.. Do they have one or more?
 - content: The list/graph of expressions / data properties displayed within that section
+
   - A DataSet could model this the way DataQuery has readExpressions, which are intended to effienctly retrieve the sub graph of data for a piece of UI
 - relatedSections: this isn't purely hierarchical as sections could loop back. It's a graph. So adjacentSections? Should we consider subSections that are embedded - vs related/adjacent/navigationSections which are section reacheable via the current one, but makes the current one go away? Or are they at core / data similar, and it's the component's job to decide what gets embedded vs what gets navigated to?
+
   - Voicemail Section has 2 related sections
 
     - Greeting
     - VoicemailDetailSection
-      The selection of the list of voicemails is a DataSet: Voicemail + Dataset representing the voicemail selected
+      The selection of the list of voicemails is a DataSet: Voicemail type + criteria specifying the voicemail selected, which would be a "primaryKey == $primaryKey" kind of criteria. This would allow us to re-hydrate a user session and reconstruct selections.
 - Sections needs to have a DataSetDescriptor, that is used to validate live that a dataSet assigned to it is valid for that section
 
 * **Sortable**
@@ -67,7 +63,7 @@ note: Removing a section from the flow / navigation should make it available in 
 
 ## Components and Sections
 
-Components have a "sections" property, an array, ordered of Section DataObjects. For example, the Main component's sections then become the data behind a menu bar at the bottom of many mobile apps. The iOS call app Home/Main Section has 5 sections [favorites, recents, contacts, keypad, voicelmail].
+Component, or a subclass, would have a "sections" property, an array, ordered of Section DataObjects. For example, the Main component's sections then become the data behind a menu bar at the bottom of many mobile apps. The iOS call app Home/Main Section has 5 sections [favorites, recents, contacts, keypad, voicelmail].
 
 ## Naming
 

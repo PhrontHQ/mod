@@ -22,13 +22,13 @@ describe("A DataQuery", function() {
     });
 
     it("preserves its type", function () {
-        var selector = new DataQuery(),
+        var query = new DataQuery(),
             type = new ObjectDescriptor(),
             name = "String" + Math.random();
         type.name = name;
-        selector.type = type;
-        expect(selector.type).toBe(type);
-        expect(selector.type.name).toEqual(name);
+        query.type = type;
+        expect(query.type).toBe(type);
+        expect(query.type.name).toEqual(name);
     });
 
     xit("initially has no criteria", function () {
@@ -36,12 +36,12 @@ describe("A DataQuery", function() {
     });
 
     xit("preserves its criteria", function () {
-        var selector = new DataQuery(),
+        var query = new DataQuery(),
             criteria = {a: Math.random(), b: Math.random(), c: Math.random()};
-        selector.criteria.a = criteria.a;
-        selector.criteria.b = criteria.b;
-        selector.criteria.c = criteria.c;
-        expect(selector.criteria).toEqual(criteria);
+        query.criteria.a = criteria.a;
+        query.criteria.b = criteria.b;
+        query.criteria.c = criteria.c;
+        expect(query.criteria).toEqual(criteria);
     });
 
 
