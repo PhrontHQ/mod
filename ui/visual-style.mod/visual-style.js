@@ -1,6 +1,7 @@
 /*global require, exports, console, MontageElement */
 
-var Montage = require("montage").Montage;
+var Montage = require("montage").Montage,
+    uuid = require("core/uuid");
 
 
 var PROPERTIES = [
@@ -40,12 +41,10 @@ var PROPERTIES = [
  */
 var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
 
-    
-
 
     constructor() {
         super();
-        //TODO move the PROPERTIES down to real property definitions? Or make VisualStyleProperty an enum?
+        //TODO move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
         PROPERTIES.forEach(function (property) {
             this[property.name] = new VisualStyleProperty();
             this[property.name].variableName = property.variable;
@@ -57,26 +56,30 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
                 this[property.name].fallback = this[property.backup];
             }
         }, this);
+        this.identifier = uuid.generate();
+
     }
 
     /** 
-     * Scope in which to apply this visual style. E.g. 
-     * 'acme-panel' could set the visual style for a panel branded for Acme co
-     * 'slider' could set the visual style for all slider components
+     * Name of this visual style.
      */
-    scope;
+    name;
 
-    /*
-    * @type {Array<VisualStyle>}
-    */
-    scopedStyles;
+    /** 
+     * The scope in which to apply this visual style. Derived from the name.
+     * If no name is provided, the scope will be generated from the identifer
+     */
+    get scopeName() {
+        var name = this.name || this.identifier;
+        return `mod-vs-${name}`;
+    }
 
 
-    generateCSS() {
+    generateCSS(isRoot) {
         let rawCSS;
         
-        if (this.scope) {
-            rawCSS = `@scope (.${this.scope}) {
+        if (!isRoot) {
+            rawCSS = `@scope (.${this.scopeName}) {
             `;
         } else {
             rawCSS = `
@@ -90,13 +93,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         }, this);
         rawCSS += `}
         `;
-        if (this.scopedStyles) {
-            this.scopedStyles.forEach(function (scope) {
-                rawCSS += `
-                ${scope.generateCSS()}
-                `;
-            }, this);
-        }
+        
         return rawCSS;
     }
 
@@ -132,8 +129,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
     }
 
     deserializeSelf(deserializer) {
-        this.scope = deserializer.getProperty("scope");
-        this.scopedStyles = deserializer.getProperty("scopedStyles");
+        this.name = deserializer.getProperty("name");
         this._deserializeProperty(deserializer, "baseSurfaceColor");
         this._deserializeProperty(deserializer, "controlBackgroundColor");
         this._deserializeProperty(deserializer, "controlSecondaryBackgroundColor");

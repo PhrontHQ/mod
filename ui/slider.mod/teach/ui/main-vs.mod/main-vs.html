@@ -21,18 +21,15 @@
                 "controlColor": "#F00",
                 "controlSecondaryColor": "#FF0",
                 "controlBackgroundColor": "#0F0",
-                "controlSecondaryBackgroundColor": "#00F",
-                "scopedStyles": [
-                    {"@": "scopedVisualStyle"},
-                    {"@": "defaultScopedVisualStyle"}
-                ]
+                "controlSecondaryBackgroundColor": "#00F"
             }
         },
 
         "scopedVisualStyle": {
             "prototype": "mod/ui/visual-style.mod",
             "values": {
-                "scope": "special-slider",
+                "name": "slider-style",
+                "componentModule": "mod/ui/slider.mod",
                 "baseSurfaceColor": "#FFF",
                 "controlColor": "#222",
                 "controlSecondaryColor": "#eee",
@@ -43,7 +40,7 @@
         "defaultScopedVisualStyle": {
             "prototype": "mod/ui/visual-style.mod",
             "values": {
-                "scope": "default-slider"
+                "name": "default-slider"
             }
         },
 
@@ -96,14 +93,16 @@
         "scopedSlider": {
             "prototype": "mod/ui/slider.mod",
             "values": {
-                "element": {"#": "scopedSlider"}
+                "element": {"#": "scopedSlider"},
+                "visualStyle": {"@": "scopedVisualStyle"}
             }
         },
 
         "defaultScopedSlider": {
             "prototype": "mod/ui/slider.mod",
             "values": {
-                "element": {"#": "defaultScopedSlider"}
+                "element": {"#": "defaultScopedSlider"},
+                "visualStyle": {"@": "defaultScopedVisualStyle"}
             }
         }
     }
