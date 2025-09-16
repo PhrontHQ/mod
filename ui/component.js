@@ -5276,6 +5276,17 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
         value: function () {
             this.dragManager.draw();
         }
+    },
+
+    visualStyle: {
+        get: function () {
+            var main;
+            if (!this._visualStyle && this.bodyComponent) {
+                main = this.bodyComponent.childComponents[0];
+                this._visualStyle = main && main.visualStyle;
+            }
+            return this._visualStyle;
+        }
     }
 
 

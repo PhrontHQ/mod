@@ -46,12 +46,10 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
      * Additional Considerations / TODOs
      * 1. Move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
      * 2. Allow components to reference any visual style defined elsewhere in the application. A map on VisualStyle?
-     * 
      */
 
     constructor() {
         super();
-        //TODO move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
         PROPERTIES.forEach(function (property) {
             this[property.name] = new VisualStyleProperty();
             this[property.name].variableName = property.variable;
