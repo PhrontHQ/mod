@@ -66,28 +66,29 @@ describe("test/ui/visual-style-spec", function () {
         it("can generate the default visual style", function () {
             var expectedOutput = `
                 html, body {
-                --mod-vs-base-surface-color: #FFF;
-            --mod-vs-raised-surface-color: #FFF;
-            --mod-vs-elevated-surface-color: #FFF;
-            --mod-vs-control-background-color: #999;
-            --mod-vs-control-secondary-background-color: #999;
-            --mod-vs-control-tertiary-background-color: #999;
-            --mod-vs-control-quaternary-background-color: #999;
-            --mod-vs-control-color: #555;
-            --mod-vs-control-secondary-color: #555;
-            --mod-vs-control-tertiary-color: #555;
-            --mod-vs-control-quaternary-color: #555;
-            --mod-vs-border-color: #BBB;
-            --mod-vs-control-selection-color: #007Aff;
-            --mod-vs-control-selection-background-color: #999;
-            --mod-vs-control-hover-color: #555;
-            --mod-vs-control-active-color: #007Aff;
-            --mod-vs-control-focus-color: #007Aff;
-            --mod-vs-text-color: #000;
-            --mod-vs-text-secondary-color: #000;
-            --mod-vs-text-tertiary-color: #000;
-            --mod-vs-text-quaternary-color: #000;
-            --mod-vs-link-text-color: #000;
+                --mod-vs-base-surface-color: hsl(0, 0%, 100%);
+            --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
+            --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
+            --mod-vs-control-background-color: hsl(0,0%,86%);
+            --mod-vs-control-secondary-background-color: hsl(0,0%,86%);
+            --mod-vs-control-tertiary-background-color: hsl(0,0%,86%);
+            --mod-vs-control-quaternary-background-color: hsl(0,0%,86%);
+            --mod-vs-control-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+            --mod-vs-control-secondary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+            --mod-vs-control-tertiary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+            --mod-vs-control-quaternary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+            --mod-vs-control-border-color: hsla(0,0%,65%,1);
+            --mod-vs-control-border-radius: 8px;
+            --mod-vs-control-selection-color: hsl(211, 100%, 50%);
+            --mod-vs-control-selection-background-color: hsl(0,0%,86%);
+            --mod-vs-control-hover-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+            --mod-vs-control-active-color: hsl(211, 100%, 50%);
+            --mod-vs-control-focus-color: hsl(211, 100%, 50%);
+            --mod-vs-text-color: hsl(0, 0, 0);
+            --mod-vs-text-secondary-color: hsl(0, 0, 0);
+            --mod-vs-text-tertiary-color: hsl(0, 0, 0);
+            --mod-vs-text-quaternary-color: hsl(0, 0, 0);
+            --mod-vs-link-text-color: hsl(0, 0, 0);
             }
             `;
 
@@ -97,9 +98,9 @@ describe("test/ui/visual-style-spec", function () {
         it("can generate a visual style with hierarchy", function () {
             var expectedOutput = `
                 html, body {
-                --mod-vs-base-surface-color: #FFF;
-            --mod-vs-raised-surface-color: #FFF;
-            --mod-vs-elevated-surface-color: #FFF;
+                --mod-vs-base-surface-color: hsl(0, 0%, 100%);
+            --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
+            --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
             --mod-vs-control-background-color: #888;
             --mod-vs-control-secondary-background-color: #777;
             --mod-vs-control-tertiary-background-color: #777;
@@ -108,7 +109,8 @@ describe("test/ui/visual-style-spec", function () {
             --mod-vs-control-secondary-color: #E00;
             --mod-vs-control-tertiary-color: #D00;
             --mod-vs-control-quaternary-color: #D00;
-            --mod-vs-border-color: #BBB;
+            --mod-vs-control-border-color: hsla(0,0%,65%,1);
+            --mod-vs-control-border-radius: 8px;
             --mod-vs-control-selection-color: #0F0;
             --mod-vs-control-selection-background-color: #0D0;
             --mod-vs-control-hover-color: #F00;
@@ -142,48 +144,50 @@ describe("test/ui/visual-style-spec", function () {
         it("can generate a scoped visual style", function () {
             var expectedOutput = `
             html, body {
-                --mod-vs-base-surface-color: #FFF;
-                --mod-vs-raised-surface-color: #FFF;
-                --mod-vs-elevated-surface-color: #FFF;
-                --mod-vs-control-background-color: #999;
-                --mod-vs-control-secondary-background-color: #999;
-                --mod-vs-control-tertiary-background-color: #999;
-                --mod-vs-control-quaternary-background-color: #999;
-                --mod-vs-control-color: #555;
-                --mod-vs-control-secondary-color: #555;
-                --mod-vs-control-tertiary-color: #555;
-                --mod-vs-control-quaternary-color: #555;
-                --mod-vs-border-color: #BBB;
-                --mod-vs-control-selection-color: #007Aff;
-                --mod-vs-control-selection-background-color: #999;
-                --mod-vs-control-hover-color: #555;
-                --mod-vs-control-active-color: #007Aff;
-                --mod-vs-control-focus-color: #007Aff;
-                --mod-vs-text-color: #000;
-                --mod-vs-text-secondary-color: #000;
-                --mod-vs-text-tertiary-color: #000;
-                --mod-vs-text-quaternary-color: #000;
-                --mod-vs-link-text-color: #000;
+                --mod-vs-base-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-control-background-color: hsl(0,0%,86%);
+                --mod-vs-control-secondary-background-color: hsl(0,0%,86%);
+                --mod-vs-control-tertiary-background-color: hsl(0,0%,86%);
+                --mod-vs-control-quaternary-background-color: hsl(0,0%,86%);
+                --mod-vs-control-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+                --mod-vs-control-secondary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+                --mod-vs-control-tertiary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+                --mod-vs-control-quaternary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+                --mod-vs-control-border-color: hsla(0,0%,65%,1);
+                --mod-vs-control-border-radius: 8px;
+                --mod-vs-control-selection-color: hsl(211, 100%, 50%);
+                --mod-vs-control-selection-background-color: hsl(0,0%,86%);
+                --mod-vs-control-hover-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
+                --mod-vs-control-active-color: hsl(211, 100%, 50%);
+                --mod-vs-control-focus-color: hsl(211, 100%, 50%);
+                --mod-vs-text-color: hsl(0, 0, 0);
+                --mod-vs-text-secondary-color: hsl(0, 0, 0);
+                --mod-vs-text-tertiary-color: hsl(0, 0, 0);
+                --mod-vs-text-quaternary-color: hsl(0, 0, 0);
+                --mod-vs-link-text-color: hsl(0, 0, 0);
             }
 
             @scope(.mod-style-scope) {
-                --mod-vs-base-surface-color: #FFF;
-                --mod-vs-raised-surface-color: #FFF;
-                --mod-vs-elevated-surface-color: #FFF;
-                --mod-vs-control-background-color: #999;
-                --mod-vs-control-secondary-background-color: #999;
-                --mod-vs-control-tertiary-background-color: #999;
-                --mod-vs-control-quaternary-background-color: #999;
+                --mod-vs-base-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
+                --mod-vs-control-background-color: hsl(0,0%,86%);
+                --mod-vs-control-secondary-background-color: hsl(0,0%,86%);
+                --mod-vs-control-tertiary-background-color: hsl(0,0%,86%);
+                --mod-vs-control-quaternary-background-color: hsl(0,0%,86%);
                 --mod-vs-control-color: #F00;
                 --mod-vs-control-secondary-color: #E00;
                 --mod-vs-control-tertiary-color: #D00;
                 --mod-vs-control-quaternary-color: #D00;
-                --mod-vs-border-color: #BBB;
-                --mod-vs-control-selection-color: #007Aff;
-                --mod-vs-control-selection-background-color: #999;
+                --mod-vs-control-border-color: hsla(0,0%,65%,1);
+                --mod-vs-control-border-radius: 8px;
+                --mod-vs-control-selection-color: hsl(211, 100%, 50%);
+                --mod-vs-control-selection-background-color: hsl(0,0%,86%);
                 --mod-vs-control-hover-color: #F00;
-                --mod-vs-control-active-color: #007Aff;
-                --mod-vs-control-focus-color: #007Aff;
+                --mod-vs-control-active-color: hsl(211, 100%, 50%);
+                --mod-vs-control-focus-color: hsl(211, 100%, 50%);
                 --mod-vs-text-color: #222;
                 --mod-vs-text-secondary-color: #222;
                 --mod-vs-text-tertiary-color: #222;

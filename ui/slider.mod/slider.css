@@ -2,6 +2,7 @@
 .mod-Slider {
     position: relative;
     touch-action: none;
+    border-radius: var(--mod-vs-control-border-radius);
 }
 
 .mod-Slider[aria-orientation="horizontal"] .mod-Slider--track {
@@ -16,18 +17,8 @@
     right: 0;
     bottom: 0;
 
-    /* margin-right: 60px; */
-    /* This spacer thing only used to add that margin */
-    /* The margin value must be the sum of the width of all thumbs */
-    /* 40px + 40px + 40px = 120px */
 }
 
-/*.mod-Slider[aria-orientation="horizontal"] .mod-Slider--spacer {
-    height:100%;
-}
-.mod-Slider[aria-orientation="vertical"] .mod-Slider--spacer {
-    width:100%;
-}*/
 
 .mod-Slider .mod-Slider--track {
     position: absolute;
@@ -50,14 +41,6 @@
 .mod-Slider .mod-Slider--thumbWrapper {
     position: absolute;
     z-index:1;
-    /*display:flex;*/
-    /*align-items: center;*/
-    /*top: 0;
-    left: 30%;
-    width: 10px;
-    height: 40px;
-    border-radius: 5px;
-    background: black;*/
 }
 
 .mod-Slider--thumb {

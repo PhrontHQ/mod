@@ -1,0 +1,14 @@
+{
+    "name": "teach-slider-mod",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../../",
+        "just-kebab-case": "../../../node_modules/just-kebab-case",
+        "ical.js": "../../../node_modules/ical.js",
+        "strange": "../../../node_modules/strange"
+    }
+}

@@ -18,7 +18,8 @@ var PROPERTIES = [
     {name: "controlTertiaryColor", variable: "--mod-vs-control-tertiary-color", backup: "controlSecondaryColor"},
     {name: "controlQuaternaryColor", variable: "--mod-vs-control-quaternary-color", backup: "controlTertiaryColor"},
 
-    {name: "controlBorderColor", variable: "--mod-vs-border-color", defaultValue: "hsla(0,0%,65%,1)"},
+    {name: "controlBorderColor", variable: "--mod-vs-control-border-color", defaultValue: "hsla(0,0%,65%,1)"},
+    {name: "controlBorderRadius", variable: "--mod-vs-control-border-radius", defaultValue: "8px"},
 
     {name: "controlSelectionColor", variable: "--mod-vs-control-selection-color", defaultValue: "hsl(211, 100%, 50%)"},
     {name: "controlSelectionBackgroundColor", variable: "--mod-vs-control-selection-background-color", backup: "controlBackgroundColor"},

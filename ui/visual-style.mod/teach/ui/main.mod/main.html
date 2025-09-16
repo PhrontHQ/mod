@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "main"},
+                "visualStyle": {"@": "visualStyle"}
+            },
+            "listeners": [
+                {"type": "action", "listener": {"@": "owner"}}
+            ]
+        },
+
+
+
+        "visualStyle": {
+            "prototype": "mod/ui/visual-style.mod",
+            "values": {
+
+            }
+        },
+
+        "slider": {
+            "prototype": "mod/ui/slider.mod",
+            "values": {
+                "element": {"#": "slider"}
+            }
+        },
+
+        "button": {
+            "prototype": "mod/ui/button.mod",
+            "values": {
+                "element": {"#": "button"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="main" class="Main">
+        <header>Visual Style Mod</header>
+
+        <section class="controls">
+            <div class="slider-container">
+                <div data-mod-id="slider" class="slider default-slider"></div>
+            </div>
+            <div data-mod-id="button"></div>
+        </section>
+    </div>
+</body>
+</html>
