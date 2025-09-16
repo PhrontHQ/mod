@@ -73,8 +73,19 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     enterDocument() {
         this._cancelHandleOptionsChange = this.addRangeAtPathChangeListener("_options", this, "handleOptionsChange");
         this.addPathChangeListener("_selectedOption", this, "handleSelectionChange");
+        // const mainDiv = document.getElementById("ModSegmentedControl-container");
+        // const myResizeObserver = new ResizeObserver(entries => {
+        //     for(let entry of entries) {
+        //         this._moveThumbToSegment(this.templateObjects?.segments?.selectedIterations[0]?.firstElement);
+        //     }
+        // });
+        // myResizeObserver.observe(mainDiv);
+        this.element.addEventListener("change", this, {
+               size: {
+                     box: "border-box"
+              }
+        });
     }
-
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
         this._cancelHandleOptionsChange?.();
