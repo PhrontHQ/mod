@@ -153,26 +153,6 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         this[property].value = value ? value : this[property].value;
     }
 
-
-    /********************************************
-     * CSS Layer Proposal
-     */
-
-    /**
-     * @type string
-     * Allows the implementer to name the layer to which the visual style is applied. 
-     * Undecided if this should be an arbitrary string or be an enum like (FRAMEWORK, ROOT, COMPONENT_CLASS, COMPONENT)
-     */
-    layer;
-
-    /**
-     * An alternative to 'layer' where the implementer simply assigns the priority of the rule. The range of priorities used is up to the implementer. 
-     * 1 - Applied with maximum specificity and should never be overwritten by an outside rule
-     * 2 - Applied for the majority of components, but can be overwritten at the base level. 
-     * Undefined - Applied at the framework level. 
-     */
-    priority;
-
 }
 
 class VisualStyleProperty {
