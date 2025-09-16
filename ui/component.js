@@ -1041,6 +1041,10 @@ Component.addClassProperties(
         }
     },
 
+    visualStyle: {
+        value: undefined
+    },
+
     /**
      * @function
      * @returns targetElementController
@@ -1894,6 +1898,7 @@ Component.addClassProperties(
                         this._expandComponentPromise = this._instantiateTemplate().then(function() {
                             self._isComponentExpanded = true;
                             self._addTemplateStylesIfNeeded();
+                            self._drawVisualStyleIfNeeded();
 
                             /*
                                 Javier found out that there was a double draw in repetition.
@@ -2310,7 +2315,6 @@ Component.addClassProperties(
 
             this._treeLevel = level;
             if (firstDraw) {
-                this._drawVisualStyle();
                 this.originalElement = this.element;
             }
             if (this.needsDraw) {
@@ -2347,18 +2351,36 @@ Component.addClassProperties(
         }
     },
 
-    _drawVisualStyle: {
+    _isMainComponent: {
         value: function () {
-            var css, head, styleEl;
-            console.log("Component.drawVisualStyle", this.identifier, this.visualStyle);
-            if (this.visualStyle && !this._visualStyleElement) {
-                head = document.querySelector("head");
-                styleEl = document.createElement("style");
-                css = this.visualStyle.generateCSS();
-                styleEl.innerHTML = css;
-                head.appendChild(styleEl);
-                this._visualStyleElement = styleEl;
+            var bodyComponent = this.rootComponent.bodyComponent,
+                child = bodyComponent.childComponents[0],
+                isInDocument = this.element.parentNode;
+            // If the main component is in the DOM, it will be the sole child of the bodyComponent.  
+            // If the main component is NOT in the DOM, it's parent will be the loader and the loader will be the sole child of the bodyComponent
+            return isInDocument ? child === this : child === this.parentComponent; 
+        }
+    },
+
+    _drawVisualStyleIfNeeded: {
+        value: function () {
+            var isMain, head, styleEl;
+            if (!this.visualStyle || this._visualStyleElement) {
+                return
             }
+
+            isMain = this._isMainComponent();
+            head = document.querySelector("head");
+            styleEl = document.createElement("style");
+            styleEl.innerHTML = this.visualStyle.generateCSS(isMain);
+            if (isMain) {
+                styleEl.setAttribute("data-mod-id", "mod-vs-root");
+            } else {
+                styleEl.setAttribute("data-mod-id", this.visualStyle.scopeName);
+                this.element.classList.add(this.visualStyle.scopeName);
+            }
+            head.appendChild(styleEl);
+            this._visualStyleElement = styleEl;
         }
     },
 

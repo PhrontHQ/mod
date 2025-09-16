@@ -92,7 +92,7 @@ describe("test/ui/visual-style-spec", function () {
             }
             `;
 
-            expect(visualStyle.generateCSS()).toEqual(expectedOutput);
+            expect(visualStyle.generateCSS(true)).toEqual(expectedOutput);
         })
 
         it("can generate a visual style with hierarchy", function () {
@@ -123,7 +123,6 @@ describe("test/ui/visual-style-spec", function () {
             --mod-vs-link-text-color: #484;
             }
             `;
-
             visualStyle.controlBackgroundColor.value = "#888";
             visualStyle.controlSecondaryBackgroundColor.value = "#777";
             visualStyle.controlColor.value = "#F00";
@@ -138,38 +137,12 @@ describe("test/ui/visual-style-spec", function () {
             visualStyle.textTertiaryColor.value = "#777";
             visualStyle.textQuaternaryColor.value = "#777";
 
-            expect(visualStyle.generateCSS()).toEqual(expectedOutput);
+            expect(visualStyle.generateCSS(true)).toEqual(expectedOutput);
         })
 
         it("can generate a scoped visual style", function () {
             var expectedOutput = `
-            html, body {
-                --mod-vs-base-surface-color: hsl(0, 0%, 100%);
-                --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
-                --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
-                --mod-vs-control-background-color: hsl(0,0%,86%);
-                --mod-vs-control-secondary-background-color: hsl(0,0%,86%);
-                --mod-vs-control-tertiary-background-color: hsl(0,0%,86%);
-                --mod-vs-control-quaternary-background-color: hsl(0,0%,86%);
-                --mod-vs-control-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-                --mod-vs-control-secondary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-                --mod-vs-control-tertiary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-                --mod-vs-control-quaternary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-                --mod-vs-control-border-color: hsla(0,0%,65%,1);
-                --mod-vs-control-border-radius: 8px;
-                --mod-vs-control-selection-color: hsl(211, 100%, 50%);
-                --mod-vs-control-selection-background-color: hsl(0,0%,86%);
-                --mod-vs-control-hover-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-                --mod-vs-control-active-color: hsl(211, 100%, 50%);
-                --mod-vs-control-focus-color: hsl(211, 100%, 50%);
-                --mod-vs-text-color: hsl(0, 0, 0);
-                --mod-vs-text-secondary-color: hsl(0, 0, 0);
-                --mod-vs-text-tertiary-color: hsl(0, 0, 0);
-                --mod-vs-text-quaternary-color: hsl(0, 0, 0);
-                --mod-vs-link-text-color: hsl(0, 0, 0);
-            }
-
-            @scope(.mod-style-scope) {
+            @scope(.mod-vs-scope) {
                 --mod-vs-base-surface-color: hsl(0, 0%, 100%);
                 --mod-vs-raised-surface-color: hsl(0, 0%, 100%);
                 --mod-vs-elevated-surface-color: hsl(0, 0%, 100%);
@@ -194,16 +167,14 @@ describe("test/ui/visual-style-spec", function () {
                 --mod-vs-text-quaternary-color: #222;
                 --mod-vs-link-text-color: #222;
             }
-            `,
-            scoped = new VisualStyle();
-            scoped.scope = "mod-style-scope";
-            visualStyle.scopedStyles = [scoped];
+            `;
+            visualStyle.name = "scope";
 
-            scoped.controlColor.value = "#F00";
-            scoped.controlSecondaryColor.value = "#E00";
-            scoped.controlTertiaryColor.value = "#D00";
-            scoped.controlQuaternaryColor.value = "#D00";
-            scoped.textColor.value = "#222";
+            visualStyle.controlColor.value = "#F00";
+            visualStyle.controlSecondaryColor.value = "#E00";
+            visualStyle.controlTertiaryColor.value = "#D00";
+            visualStyle.controlQuaternaryColor.value = "#D00";
+            visualStyle.textColor.value = "#222";
 
             expect(visualStyle.generateCSS()).toEqual(expectedOutput);
         })
