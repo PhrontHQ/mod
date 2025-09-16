@@ -407,7 +407,7 @@ describe("A DataService", function() {
     xit("has a fetchData() method that creates and return a new stream when none is passed in", function () {
     });
 
-    xit("has a fetchData() method that sets its stream's selector", function () {
+    xit("has a fetchData() method that sets its stream's criteria", function () {
     });
 
     xit("has a registerService() method that needs to be further tested", function () {});

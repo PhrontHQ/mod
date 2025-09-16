@@ -1745,7 +1745,7 @@ var expressionPropertyDescriptors = {
      * Observes changes to the value of an FRB expression.  The content of the
      * emitted value may react to changes, particularly if it is an array.
      * @function Montage#observeExpression
-     * @param {string} path an FRB expression
+     * @param {string} expression an FRB expression
      * @param {function} emit a function that receives new values in response
      * to changes.  The emitter may return a `cancel` function if it manages
      * event listeners that must be collected when the value changes.

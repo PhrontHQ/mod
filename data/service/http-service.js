@@ -723,15 +723,15 @@ HttpService.addClassProperties({
 
     fetchHttpObjectProperty: {
         value: function (type, object, propertyName, prerequisitePropertyNames, criteria) {
-            var self, selector, prerequisites, stream;
+            var self, query, prerequisites, stream;
             // Create and cache a new fetch promise if necessary.
             if (!this._getCachedFetchPromise(object, propertyName)) {
                 // Parse arguments.
                 if (arguments.length >= 4) {
-                    selector = DataQuery.withTypeAndCriteria(type, arguments[arguments.length - 1]);//RDW unclear if there's any special change required here for formal Criteria
+                    query = DataQuery.withTypeAndCriteria(type, arguments[arguments.length - 1]);//RDW unclear if there's any special change required here for formal Criteria
 
                 } else {
-                    selector = DataQuery.withTypeAndCriteria(type);
+                    query = DataQuery.withTypeAndCriteria(type);
                 }
                 if (arguments.length < 5 || !prerequisitePropertyNames) {
                     prerequisites = [];
@@ -747,7 +747,7 @@ HttpService.addClassProperties({
                     return self.rootService.getObjectProperties(object, prerequisites);
                 }).then(function () {
                     // Then fetch the requested data...
-                    stream = self.rootService.fetchData(selector);
+                    stream = self.rootService.fetchData(query);
                     return stream;
                 }).then(function () {
                     // Then wait until the next event loop to ensure only one

@@ -1,0 +1,74 @@
+# Naming, one of the hard things in Software
+
+Having a coherent set of guiding principles streamlines the task of naming classes, methods. It reduces learning overhead. But equally important if not more, is the clarity of thoughts that goes into the piece of software to be named. And for that there's no shortcut: experience does reduce a bit the number of iterations it takes to get it right, but as every creative process, there's no clarity without iteration.
+
+While Mod's specific naming conventions are layed out, Apple's guidelines are really good:[https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html#//apple_ref/doc/uid/10000146-SW1](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html#//apple_ref/doc/uid/10000146-SW1)
+
+# Naming Conventions
+
+This document summarizes Mod-specific naming conventions and recommendations for modules, components, and CSS classes. Please refer to these conventions when creating Mod packages or contributing to the Mod framework.
+
+## Modules
+
+All module and package names are written in lowercase letters or numbers and delimited by dashes (for example, `child-package`).
+
+## Components — ui/*.mod
+
+User interface components are stored in the ui directory of your Mod project and identified by a .mod extension.
+
+The following naming conventions apply for `.mod` directories:
+
+Component file names are always spelled in lowercase letters.
+
+If the name uses multiple words, follow a dash-delimited `"word-word"` pattern; for example, `radio-button.mod`, or `text-field.mod`.
+
+### Naming
+
+Components that render primarily a type of data should be named based on that type's name. So for a Person data type:
+
+- A component rendering a list of persons should be named  **Persons.mod**
+- A component rendering a single person should be named **PersonDetails** or **PersonInfo.mod**
+- A component rendering a relationship, like "contacts" of a data type Person should concatenate both: **PersonContacts.mod**
+- If a specific component is needed for a specific task / activity on a data type, it should be included in the name: for example LabelPersons.mod, OrganizePersons.mod, PersonFamilyTreeEditor.mod
+
+### Organization
+
+TODO: Recommendations to organize components in folders
+
+### CSS Classes
+
+CSS class names follow a dash-delimited `package-Component` and `package-Component-childElement` pattern. For variations and states, double dash is used. For example, for the Matte Progress component it would be:
+
+```css
+.digit-Progress          /* package-Component */
+.digit-Progress-bar      /* package-Component-childElement */
+.digit-Progress--small   /* package-Component--variation */
+.digit-Progress--loading /* package-Component--state */
+```
+
+More specifically, the following conventions apply:
+
+1. All CSS classes are **name-spaced** with **package** + **dash**, like `montage-`, `digit-`, `matte-` etc.
+2. Followed by the **Component** name that always starts with an uppercase letter; for example a button component would be: `digit-Button` and used as:
+
+   ```html
+   <button data-mod-id="button" class="digit-Button">
+   ```
+
+   If a component name consists of more than one word, each new word also starts with an uppercase letter, a convention commonly  referred to as **upper camel case** ("CamelCaps") formatting; for example, `montage-InputRange`.
+3. **Composite components** (components with children) follow this convention:
+
+   * If a component has a **child element**, the child's name is written in lowercase (to signal the distinction between parent and child) and follows the component’s name separated by a dash; for example, `digit-Slider-thumb`.
+   * If a child element consists of concatenated words, its name is written in lower camelCase; for example, `digit-Slider-thumbWithSpikyEars`.
+   * If a component has multiple levels of child elements, each child can be separated from the other by a dash; for example, `digit-Slider-thumb-nobs-centerNob`. This is not required in all cases as the class name would become too long. Only use if it makes sense.
+4. **Variations** If a component offers variations, a double-dash is used; for example: `digit-Button--primary`, `digit-Slider--vertical`.
+5. **States** If a component uses different states, also a double-dash is used; for example: `digit-Slider--dragging`, `matte-Button--pressed`.
+
+### Rationale
+
+These CSS naming conventions are similar to [BEM](http://bem.info/method/). But the syntax got adapted for the following reasons:
+
+* Name-spacing it with the package avoids name collisions when packages are getting mixed.
+* Not using underscores "_" increases usability because you can double-click each part to quickly select and edit it. (Try it: `digit-Slider-thumb` versus `digit_Slider_thumb`.)
+* Using upper "CamelCase" for components highlights component/child relationship.
+* Using "camelCase" for multiword names increases readability but still keeps each part grouped together.

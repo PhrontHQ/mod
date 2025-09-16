@@ -78,7 +78,7 @@ DataStream = exports.DataStream = DataProvider.specialize(/** @lends DataStream.
     },
 
     /**
-     * The selector defining the data returned in this stream.
+     * The criteria defining the data returned in this stream.
      *
      * @type {DataQuery}
      */
@@ -183,7 +183,7 @@ DataStream = exports.DataStream = DataProvider.specialize(/** @lends DataStream.
      *                                       method is called, usually after all
      *                                       the data expected for the stream
      *                                       has been sent to it. Because a
-     *                                       stream's selector can change after
+     *                                       stream's query can change after
      *                                       that, or changes in the service
      *                                       data can occur for other reasons,
      *                                       it is possible for a stream's

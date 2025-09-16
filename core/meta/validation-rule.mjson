@@ -37,10 +37,10 @@
             }
         }
     },
-    "validation_rule_object_descriptor_validationSelector": {
+    "validation_rule_object_descriptor_criteria": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "validationSelector",
+            "name": "criteria",
             "objectDescriptor": {
                 "@": "root"
             },
@@ -49,8 +49,8 @@
             "denyDelete": false,
             "readOnly": false,
             "valueType": "object",
-            "valueObjectPrototypeName": "Selector",
-            "valueObjectModuleId": "core/selector",
+            "valueObjectPrototypeName": "Criteria",
+            "valueObjectModuleId": "core/criteria",
             "enumValues": [],
             "helpKey": ""
         }
@@ -84,7 +84,7 @@
                     "@": "validation_rule_owner_object_descriptor"
                 },
                 {
-                    "@": "validation_rule_object_descriptor_validationSelector"
+                    "@": "validation_rule_object_descriptor_criteria"
                 },
                 {
                     "@": "validation_rule_object_descriptor_messageKey"
@@ -99,7 +99,7 @@
                         "@": "validation_rule_owner_object_descriptor"
                     },
                     {
-                        "@": "validation_rule_object_descriptor_validationSelector"
+                        "@": "validation_rule_object_descriptor_criteria"
                     },
                     {
                         "@": "validation_rule_object_descriptor_messageKey"

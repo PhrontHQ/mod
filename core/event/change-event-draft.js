@@ -35,37 +35,56 @@
 
     it should test listener callbacks using propertyName on top of identifier, so for an object with identifier "foo" whose property "name" changes:
 
-    1) phase + identifier + PropertyName + event type: handleFooNamePropertyChange,
-    2) phase + identifier + event type: handleFooPropertyChange,
-    3) phase + propertyName + event type: handleNamePropertyChange,
+    1) phase + identifier + PropertyName + event type: handleFooNameChange,
+    2) phase + identifier + event type: handleFooChange,
+    3) phase + propertyName + event type: handleNameChange,
     4) phase +  event type: handlePropertyChange
 
             var aTarget = this,
-                event = new CustomEvent("propertychange", {
-                details: {
-                    value: this.foo,
-                    property:"foo"
-                },
-                bubbles: false
+                event = new CustomEvent("change", {
+                    keyValue: this.foo,
+                    key: "foo",
+                    bubbles: false
             });
             this.dispatchEvent(event);
 
     Or
 
                 var aTarget = this,
-                event = new CustomEvent("PropertyWillChange", {
-                details: {
-                    value: this.foo,
-                    property:"foo",
-                },
-                bubbles: false
+                event = new CustomEvent("willChange", {
+                    keyValue: this.foo,
+                    key: "foo",
+                    bubbles: false
             });
             this.dispatchEvent(event);
 
 
 
 
- *foo.addEventListener(“propertychange”, this, {before: true, properties: [“name”, “surname”]});
+ *foo.addEventListener(“change”, this, {before: true, expressions: [“name”, “surname”, "mother.lastName"]});
+
+ For using this with size, abstractiong ResizeObserver(), the observe() method can have an option itself. So we need to be able to provide options per expression. 
+ Doing so for a property that is involved in a more complex expression is challenging.
+
+foo.addEventListener(“change”, this, { 
+    “name”: {
+        before: true
+    }, 
+    “surname”: undefined, //No option here
+    "mother.lastName": {
+        before: true
+    }
+});
+
+this.element.addEventListener(“change”, this, { 
+    "size": {
+        box: "device-pixel-content-box"
+    }
+});
+
+
+internally we'll use observeExpression() in core.js
+
  Without options:properties/property, it would be all
  */
 
