@@ -30,7 +30,7 @@ var Montage = require("../core").Montage,
     MontageElement = (typeof window === "object") ? window.MontageElement : null;
 
 
-
+__resizeObserver = null;
 
 
 /**
@@ -1422,6 +1422,27 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+    _resizeObserver: {
+        enumerable: false,
+        value: function _resizeObserver() {
+            if(!this.__resizeObserver) {
+                this.__resizeObserver = new ResizeObserver(dispatchCallback);
+
+                const dispatchCallback = (entries, observer) => {
+                    entries.forEach(entry => {
+                        // Assuming ChangeEvent is a class or constructor available in this scope
+                        var changeEvent = new ChangeEvent();
+                        changeEvent.target = entry.target;
+                        changeEvent.key = "size";
+                        changeEvent.keyValue = entry; // The entry object contains detailed resize info
+                        this.handleEvent(changeEvent); // 'this' correctly refers to YourClass instance
+                    });
+                }
+            }
+            return this.__resizeObserver;
+        }
+    },
+
    registerTargetEventListener: {
         enumerable: false,
         value: function registerTargetEventListener(target, eventType, listener, optionsOrUseCapture) {
@@ -1449,6 +1470,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
                 // }
             // }
+
+            if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
+                this._resizeObserver.observe(target, {box: optionsOrUseCapture.size.box});
+            }
 
             listenerOptions.listener = listener;
 
