@@ -609,84 +609,86 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 SOME WORK WILL MIGHT NEEDED WHEN WE EXPAND TO MORE THAN ONE FETCHED EXPRESSION
             */
-            // if(readCompletedOperation?.referrer?.data?.readExpressions?.length === 1) {
+
+            /* WARNING: this commented block 614 -> 687 + 689 and 691 is caused some syncing regressions. It needs to be looked at */
+            if(readCompletedOperation?.referrer?.data?.readExpressions?.length === 1) {
 
 
-            //     let sourceObjectDescriptor = readCompletedOperation.referrer.target,
-            //         sourceObjectCriteria = readCompletedOperation.referrer.criteria,
-            //         sourceObjectCriteriaParameters = sourceObjectCriteria.parameters,
-            //         fetchedPropertyName = readCompletedOperation?.referrer?.data?.readExpressions[0],
-            //         sourceObjectDescriptorMapping = this.destinationDataService.mappingForObjectDescriptor(sourceObjectDescriptor),
-            //         sourceObjectDescriptorMappingRawDataPrimaryKeys = sourceObjectDescriptorMapping.rawDataPrimaryKeys,
-            //         sourceObjectSnapshot = readCompletedOperation?.referrer?.hints?.snapshot,
-            //         sourceObjectDataIdentifier,
-            //         sourceObjectPromise,
-            //         sourceObject;
+                let sourceObjectDescriptor = readCompletedOperation.referrer.target,
+                    sourceObjectCriteria = readCompletedOperation.referrer.criteria,
+                    sourceObjectCriteriaParameters = sourceObjectCriteria.parameters,
+                    fetchedPropertyName = readCompletedOperation?.referrer?.data?.readExpressions[0],
+                    sourceObjectDescriptorMapping = this.destinationDataService.mappingForObjectDescriptor(sourceObjectDescriptor),
+                    sourceObjectDescriptorMappingRawDataPrimaryKeys = sourceObjectDescriptorMapping.rawDataPrimaryKeys,
+                    sourceObjectSnapshot = readCompletedOperation?.referrer?.hints?.snapshot,
+                    sourceObjectDataIdentifier,
+                    sourceObjectPromise,
+                    sourceObject;
                  
-            //     // sourceObjectPromise = this.mainService.getObjectProperties(value, readCompletedOperation.referrer.data.readExpressions);
+                // sourceObjectPromise = this.mainService.getObjectProperties(value, readCompletedOperation.referrer.data.readExpressions);
 
-            //     // //The sourceObjectCriteriaParameters if there (vs the property / value embedded in the criteria's syntax) has to be the primary key
-            //     // if(sourceObjectCriteriaParameters && sourceObjectCriteria.qualifiedProperties.includesAll(sourceObjectDescriptorMappingRawDataPrimaryKeys)) {
-            //     //     sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectCriteriaParameters);
-            //     //     // sourceObjectDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(sourceObjectDescriptor, parameters, readCompletedOperation.referrer)
-            //     // }
-            //     // else {
-            //     //     if(!sourceObjectSnapshot) {
-            //     //         sourceObjectSnapshot = {};
-            //     //         //We need to extract the primary key from the criteria
-            //     //         let parameters = sourceObjectCriteria.parameters;
-            //     //         for(let i=0, countI = sourceObjectDescriptorMappingRawDataPrimaryKeys.length, iPrimaryKeyExpression, iPrimaryKeyExpressionValue; (i<countI); i++) {
-            //     //             iPrimaryKeyExpression = sourceObjectDescriptorMappingRawDataPrimaryKeys[i];
-            //     //             //Borrow valueForExpression to dataObject
-            //     //             iPrimaryKeyExpressionValue = dataObject.valueForExpression.call(parameters, iPrimaryKeyExpression);
-            //     //             sourceObjectSnapshot[iPrimaryKeyExpression] = iPrimaryKeyExpressionValue;
-            //     //         }
-            //     //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
-            //     //     } else {
-            //     //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
-            //     //     }
-            //     // }
-            //     sourceObjectPromise = Promise.resolve(dataObject);
+                // //The sourceObjectCriteriaParameters if there (vs the property / value embedded in the criteria's syntax) has to be the primary key
+                // if(sourceObjectCriteriaParameters && sourceObjectCriteria.qualifiedProperties.includesAll(sourceObjectDescriptorMappingRawDataPrimaryKeys)) {
+                //     sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectCriteriaParameters);
+                //     // sourceObjectDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(sourceObjectDescriptor, parameters, readCompletedOperation.referrer)
+                // }
+                // else {
+                //     if(!sourceObjectSnapshot) {
+                //         sourceObjectSnapshot = {};
+                //         //We need to extract the primary key from the criteria
+                //         let parameters = sourceObjectCriteria.parameters;
+                //         for(let i=0, countI = sourceObjectDescriptorMappingRawDataPrimaryKeys.length, iPrimaryKeyExpression, iPrimaryKeyExpressionValue; (i<countI); i++) {
+                //             iPrimaryKeyExpression = sourceObjectDescriptorMappingRawDataPrimaryKeys[i];
+                //             //Borrow valueForExpression to dataObject
+                //             iPrimaryKeyExpressionValue = dataObject.valueForExpression.call(parameters, iPrimaryKeyExpression);
+                //             sourceObjectSnapshot[iPrimaryKeyExpression] = iPrimaryKeyExpressionValue;
+                //         }
+                //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
+                //     } else {
+                //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
+                //     }
+                // }
+                sourceObjectPromise = Promise.resolve(dataObject);
 
-            //     //2. assign/add the dataObject value to the appropriate property
+                //2. assign/add the dataObject value to the appropriate property
 
-            //     return sourceObjectPromise.then((sourceObject) => {
+                return sourceObjectPromise.then((sourceObject) => {
 
-            //         if(sourceObject) {
+                    if(sourceObject) {
 
-            //             /*
-            //                 We make sure we register the created object in the origin service with his natural dataIdentifier
-            //             */
-            //             //Added to resolveObjectForTypeRawData() to avoid doing that "manually" here
-            //             //rawDataService.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                        /*
+                            We make sure we register the created object in the origin service with his natural dataIdentifier
+                        */
+                        //Added to resolveObjectForTypeRawData() to avoid doing that "manually" here
+                        //rawDataService.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
 
-            //             let propertyDescriptor = sourceObjectDescriptor.propertyDescriptorNamed(fetchedPropertyName);
+                        let propertyDescriptor = sourceObjectDescriptor.propertyDescriptorNamed(fetchedPropertyName);
 
-            //             if(propertyDescriptor.cardinality === 1) {
-            //                 sourceObject[fetchedPropertyName] = dataObject;
-            //             } else {
-            //                 if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
-            //                     //Problematic: the line bellow triggers a fetch of fetchedPropertyName on sourceObject...
-            //                     //sourceObject[fetchedPropertyName].push(dataObject);
+                        if(propertyDescriptor.cardinality === 1) {
+                            sourceObject[fetchedPropertyName] = dataObject;
+                        } else {
+                            if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
+                                //Problematic: the line bellow triggers a fetch of fetchedPropertyName on sourceObject...
+                                //sourceObject[fetchedPropertyName].push(dataObject);
 
-            //                     let fetchedPropertyNameValue = Object.getPropertyDescriptor(sourceObject,fetchedPropertyName).get.call(sourceObject, /*shouldFetch*/false);
-            //                     if(fetchedPropertyNameValue) {
-            //                         fetchedPropertyNameValue.push(dataObject);
-            //                     } else {
-            //                         console.error("Couldn't update property '"+fetchedPropertyName+"' on sourceObject described by "+sourceObject.objectDescriptor.name+" because fetchedPropertyNameValue is "+ fetchedPropertyNameValue);
-            //                     }
-            //                 } else {
-            //                     throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
-            //                 }
-            //             }
-            //         }
+                                let fetchedPropertyNameValue = Object.getPropertyDescriptor(sourceObject,fetchedPropertyName).get.call(sourceObject, /*shouldFetch*/false);
+                                if(fetchedPropertyNameValue) {
+                                    fetchedPropertyNameValue.push(dataObject);
+                                } else {
+                                    console.error("Couldn't update property '"+fetchedPropertyName+"' on sourceObject described by "+sourceObject.objectDescriptor.name+" because fetchedPropertyNameValue is "+ fetchedPropertyNameValue);
+                                }
+                            } else {
+                                throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
+                            }
+                        }
+                    }
 
-            //         return value;
-            //     });
+                    return value;
+                });
                 
-            // } else {
+            } else {
                 return Promise.resolve(value);
-            // }
+            }
         })
         .then((value) => {
 
