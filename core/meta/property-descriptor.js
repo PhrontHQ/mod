@@ -162,6 +162,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
                 this._setPropertyWithDefaults(serializer, "enumValues", this.enumValues);
             }
             this._setPropertyWithDefaults(serializer, "defaultValue", this.defaultValue);
+            this._setPropertyWithDefaults(serializer, "value", this.value);
             this._setPropertyWithDefaults(serializer, "defaultExpressions", this.defaultExpressions);
 
             this._setPropertyWithDefaults(serializer, "helpKey", this.helpKey);
@@ -234,6 +235,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._overridePropertyWithDefaults(deserializer, "_keyDescriptorReference", "keyDescriptor");
             this._overridePropertyWithDefaults(deserializer, "enumValues");
             this._overridePropertyWithDefaults(deserializer, "defaultValue");
+            this._overridePropertyWithDefaults(deserializer, "value");
             this._overridePropertyWithDefaults(deserializer, "defaultExpressions");
             this._overridePropertyWithDefaults(deserializer, "helpKey");
             this._overridePropertyWithDefaults(deserializer, "definition");
@@ -749,6 +751,17 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
     defaultValue: {
         value: Defaults.defaultValue
     },
+
+    /**
+     * Specifies a value for a property which effectively means that all objects of that type should have that value, making it a constant / 
+     * value that has to be set on the javascript types's prototype, making it shared by all
+     * 
+     * @default undefined
+     */
+    value: {
+        value: undefined
+    },
+
 
     /**
      * Specifies the defaultValue a property should have, regardless of the . Being a value it's expected to be javascript type,

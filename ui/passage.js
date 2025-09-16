@@ -22,6 +22,7 @@ const Montage = require("core/core").Montage;
  */
 exports.Passage = Montage.specialize({
     /**
+
      * A unique identifier that distinguishes this passage from others with the same source and destination.
      *
      * This is useful when you have multiple navigation paths between the same two components

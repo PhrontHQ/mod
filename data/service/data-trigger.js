@@ -289,6 +289,10 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                 getter = this._valueGetter, 
                 propertyName = this._propertyName;
 
+            // if(shouldFetch === undefined && this._service.rootService._objectsBeingMapped.has(object) && !object.snapshot) {
+            //     shouldFetch = false;
+            // }
+
             /*
                 Experiment to see if it would make sense to avoid triggering getObjectProperty during mapping?
             */
@@ -414,8 +418,8 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
         configurable: true,
         writable: true,
         value: function (object, initialValue, currentValue) {
-            let isArray = Array.isArray(initialValue);
-                isMap  = !isArray && initialValue instanceof Map;
+            let isInitialValueArray = Array.isArray(initialValue);
+                isMap  = !isInitialValueArray && initialValue instanceof Map;
 
             /* a range is a collection containing infinite values but it may not properly have a cardinality properly set as such, so we check this to be sure */
             if(this.isToMany || (this.propertyDescriptor.collectionValueType === "range" )) {
@@ -423,7 +427,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                     var listener = this._collectionListener.get(object);
                     if(listener) {
 
-                        if(isArray) {
+                        if(isInitialValueArray) {
                             initialValue.removeRangeChangeListener(listener);
                         } else if(isMap) {
                             initialValue.removeMapChangeListener(listener);
@@ -444,29 +448,31 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                             if(!listener) {
 
                                 listener = function _triggerArrayCollectionListener(plus, minus, index) {
-                                    //If we're not in the middle of a mapping...:
-                                    if(!self._service._objectsBeingMapped.has(object)) {
-                                        //Dispatch update event
-                                        var changeEvent = new ChangeEvent;
-                                        changeEvent.target = object;
-                                        changeEvent.key = self._propertyName;
+                                    if(plus?.length > 0 || minus?.length > 0) {
+                                        //If we're not in the middle of a mapping...:
+                                        // if(!self._service._objectsBeingMapped.has(object)) {
+                                            //Dispatch update event
+                                            var changeEvent = new ChangeEvent;
+                                            changeEvent.target = object;
+                                            changeEvent.key = self._propertyName;
 
-                                        //This
-                                        changeEvent.index = index;
-                                        changeEvent.addedValues = plus;
-                                        changeEvent.removedValues = minus;
+                                            //This
+                                            changeEvent.index = index;
+                                            changeEvent.addedValues = plus;
+                                            changeEvent.removedValues = minus;
 
-                                        //Or this?
-                                        //changeEvent.rangeChange = [plus, minus, index];
+                                            //Or this?
+                                            //changeEvent.rangeChange = [plus, minus, index];
 
-                                        //Or both with a getter/setter for index, addedValues and removedValues on top of rangeChange?
+                                            //Or both with a getter/setter for index, addedValues and removedValues on top of rangeChange?
 
-                                        //To deal with changes happening to an array value of that property,
-                                        //we'll need to add/cancel observing on the array itself
-                                        //and dispatch added/removed change in the array's change handler.
+                                            //To deal with changes happening to an array value of that property,
+                                            //we'll need to add/cancel observing on the array itself
+                                            //and dispatch added/removed change in the array's change handler.
 
-                                        //Bypass EventManager for now
-                                        self._service.rootService.handleChange(changeEvent);
+                                            //Bypass EventManager for now
+                                            self._service.rootService.handleChange(changeEvent);
+                                        // }
                                     }
                                 }
 
@@ -481,7 +487,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                         var self = this,
                             listener = function _triggerMapCollectionListener(value, key) {
                                 //If we're not in the middle of a mapping...:
-                                if(!self._service._objectsBeingMapped.has(object)) {
+                                // if(!self._service._objectsBeingMapped.has(object)) {
                                     //Dispatch update event
                                     var changeEvent = new ChangeEvent;
                                     changeEvent.target = object;
@@ -536,7 +542,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
 
                                     //Bypass EventManager for now
                                     self._service.rootService.handleChange(changeEvent);
-                                }
+                                // }
                             };
 
                         this._collectionListener.set(object,listener);
@@ -547,7 +553,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                         let self = this,
                             listener = function _triggerArrayCollectionListener(plus, minus, index) {
                                 //If we're not in the middle of a mapping...:
-                                if(!self._service._objectsBeingMapped.has(object)) {
+                                // if(!self._service._objectsBeingMapped.has(object)) {
                                     //Dispatch update event
                                     var changeEvent = new ChangeEvent;
                                     changeEvent.target = object;
@@ -558,7 +564,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
 
                                     //Bypass EventManager for now
                                     self._service.rootService.handleChange(changeEvent);
-                                }
+                                // }
                             };
 
                         this._collectionListener.set(object,listener);
@@ -581,7 +587,10 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
         configurable: true,
         writable: true,
         value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
-            var status, prototype, descriptor, getter, setter = this._valueSetter, writable, currentValue, isToMany, isArray, isMap, initialValue,
+
+            if(object[this._privatePropertyName] === value) return;
+
+            var status, prototype, descriptor, getter, setter = this._valueSetter, writable, currentValue, isToMany, isInitialValueArray, isMap, initialValue,
             dispatchChange = (arguments.length >= 3) ? _dispatchChange : true,
             //shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
             shouldFetch = undefined;
@@ -594,10 +603,16 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
             this._setValueStatus(object, null);
 
             initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch);
+
+            // initialValue = arguments.length >= 4 
+            //     ? _initialValue 
+            //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
+            //         ? undefined
+            //         : this._getValue(object, shouldFetch);
             //If Array / to-Many
             isToMany = this.isToMany;
-            isArray = Array.isArray(initialValue);
-            isMap  = !isArray && initialValue instanceof Map;
+            isInitialValueArray = Array.isArray(initialValue);
+            isMap  = !isInitialValueArray && initialValue instanceof Map;
 
             // Set this trigger's property to the desired value, but only if
             // that property is writable.
@@ -606,8 +621,24 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                 //currentValue = value;
             } else if (this._isPropertyWritable) {
 
+                /*
+                    This is going to broacast the change, which the DataService listens to. 
+                    The only way we have right now to tell if a change happens from an internal fetch
+                    is:
+                         this._getValueStatus(object), which returns a promise related to fetching that value
+                    but to accommodate a potential setter right up, we're doing
+                        this._setValueStatus(object, null);
+                    Which remove the ability for DataService.mainService to tell the difference.
+
+                    So we're going to re-set the status to hold the promise.
+
+                    And we'll clear it again bellow as we resolve the promise.
+                */
+                //this._setValueStatus(object, status);
+
+
                 if (isToMany) {
-                    if(isArray) {
+                    if(isInitialValueArray) {
                         /*
                             this._getValue() sets object[this._privatePropertyName] to [] via calling this
                         */
@@ -650,6 +681,14 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
             }
 
             currentValue = arguments.length >= 5 ? _currentValue : this._getValue(object, shouldFetch);
+            // currentValue = arguments.length >= 5 
+            //     ? _currentValue 
+            //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
+            //         ? undefined
+            //         : this._getValue(object, shouldFetch);
+
+
+
             if(currentValue !== initialValue) {
                 this._setAndObserveValue(object, initialValue, currentValue);
             }
@@ -658,7 +697,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
 //addRangeChangeListener
 
             //If we're not in the middle of a mapping...:
-            if(currentValue !== initialValue && dispatchChange && (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))) {
+            if(currentValue !== initialValue && dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/) {
                 //Dispatch update event
                 var changeEvent = new ChangeEvent;
                 changeEvent.target = object;
@@ -677,6 +716,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
 
             // Resolve any pending promise for this trigger's property value.
             if (status) {
+                //this._setValueStatus(object, null);
                 status.resolve(currentValue);
             }
         }
@@ -795,7 +835,10 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
         value: function (object) {
             var self = this;
             //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
-            this._service.fetchObjectProperty(object, this._propertyName).then(function (propertyValue) {
+            this._service.fetchObjectProperty(object, this._propertyName).then((propertyValue) => {
+
+                this._service._objectsBeingMapped.add(object);
+
                 /*
                     If there's a propertyValue, it's the actual result of the fetch 
                     and bipassed the existing path where the mapping would have added the value 
@@ -865,20 +908,23 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                     }
 
                 }
-                return self._fulfillObjectPropertyFetch(object);
-            }).catch(function (error) {
+                return self._fulfillObjectPropertyFetch(object, /*error*/undefined, propertyValue);
+            }).catch((error) => {
                 console.error("DataTrigger Error _fetchObjectProperty for property \""+self._propertyName+"\"",error);
                 return self._fulfillObjectPropertyFetch(object, error);
+            })
+            .finally(() => {
+                this._service._objectsBeingMapped.delete(object);
             });
         }
     },
 
     _fulfillObjectPropertyFetch: {
-        value: function (object, error) {
+        value: function (object, error, propertyValue) {
             var status = this._getValueStatus(object);
             this._setValueStatus(object, null);
             if (status && !error) {
-                status.resolve(null);
+                status.resolve(propertyValue);
             } else if (status && error) {
                 console.error(error);
                 status.reject(error);

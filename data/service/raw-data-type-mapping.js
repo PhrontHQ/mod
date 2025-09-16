@@ -90,7 +90,7 @@ exports.RawDataTypeMapping = Montage.specialize({
             if(this._rawDataProperty === undefined) {
                 var expressionSyntax = this.expressionSyntax;
 
-                if(expressionSyntax.type === "defined" && expressionSyntax.args[0].type === "property") {
+                if(/*expressionSyntax.type === "defined" && */expressionSyntax.args[0].type === "property") {
                     this._rawDataProperty = expressionSyntax.args[0].args[1].value;
                 } else {
                     console.error("Couldn't determine rawDataProperty from  RawDataTypeMapping:",this, " expressionSyntax:", this.expressionSyntax);

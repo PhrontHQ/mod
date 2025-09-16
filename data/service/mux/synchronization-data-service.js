@@ -2,6 +2,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     Montage = require('core/core').Montage,
     Promise = require("core/promise").Promise,
     CountedSet = require("core/counted-set").CountedSet,
+    uuid = require("core/uuid"),
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
     DataOperation = require("../data-operation").DataOperation;
@@ -67,10 +68,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             this.addEventListener(DataOperation.Type.ReadOperation, this, true);
             this.addEventListener(DataOperation.Type.ReadUpdateOperation, this, true);
             this.addEventListener(DataOperation.Type.ReadFailedOperation, this, true);
-            this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, true);
 
             //To prevent any ReadCompletedOperation from an origin service to make it out of the worker
-            this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+            this.addEventListener(DataOperation.Type.ReadUpdatedOperation, this, true);
+            this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, true);
+
+            //handleReadCompletedOperation() is not doing anything at this point
+            // this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
 
             this._destinationDataService = value;
         }
@@ -121,6 +125,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if(this._originDataService !== value) {
             this._originDataServices = value;
         }
+    }
+
+    isOriginDataService(aDataService) {
+        return this.originDataServices?.has(aDataService);
     }
 
 
@@ -205,9 +213,22 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }   
     }
 
+    /*
+        To avoid duplicates and find nested data that may not be accessible as such via API, we attempt to find it in the originDataSnapshot column
+        of the type fetched. But it could also be a nested type, stored in a another root column. Don't think it's properly handled
 
+        Plus the criteria to run within the originDataSnapshot column needs to be in the raw data format of the data service looking for it
+        NOT in the high level / model structure.
+    */
     rawDataServiceWillHandleReadOperation(originDataService, readOperation) {
-        console.log("<-> Service: rawDataService "+originDataService.identifier +" WillHandleReadOperation "+readOperation.id, readOperation);
+
+        //Temporarily bypassing until issues mentioned above are taken care of
+        return Promise.resolve(readOperation);
+
+        console.log("Sync Service: rawDataService "+originDataService.identifier +" WillHandleReadOperation "+readOperation.id, readOperation);
+
+
+
 
         /*
             We try to see if we find the result within in our destination service's object store's originDataSnapshot
@@ -222,6 +243,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
             //We need to create a new DataOperation()
             let originDataSnapshotReadOperation = new DataOperation();
+            originDataSnapshotReadOperation.name = "originDataSnapshotReadOperation";
             originDataSnapshotReadOperation.type = DataOperation.Type.ReadOperation;
             originDataSnapshotReadOperation.target = readOperation.target;
             originDataSnapshotReadOperation.identity = originDataSnapshotReadOperation.identity;
@@ -234,7 +256,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             */  
             this.destinationDataService.handleReadOperation(originDataSnapshotReadOperation)
             .then((resultOperation) => {
-                console.log("<-> Service: rawDataService "+originDataService.identifier +" WillHandleReadOperation "+readOperation.id+" result:", resultOperation);
+                console.log("Sync Service: rawDataService "+originDataService.identifier +" WillHandleReadOperation "+readOperation.id+" result:", resultOperation);
 
                 //If data was found, it was dispatched back this.destinationDataService.handleReadOperation()
                 if(resultOperation.type === DataOperation.Type.ReadCompletedOperation && (resultOperation.data !=- null || resultOperation.data?.length > 0)) {
@@ -263,7 +285,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             every property in the readOperation.criteria by "originDataSnapshot.${rawDataService.identifier}."" 
         */
         if(rawDataService && this.originDataServices.has(rawDataService) && rawDataService.handlesType(readOperation.target)) {
-            console.log("Sync Service originDataSnapshot LookUp capture ReadOperation "+readOperation.id+" from "+rawDataService.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
+            console.log("Sync Service originDataSnapshotLookUp capture ReadOperation "+readOperation.id+" from "+rawDataService.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
             /*
                 composedPath is unique to the read operation, so we can mod it without side effects.
@@ -293,20 +315,20 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     We probably can call handleReadOperation on our destinationService directy, which is setup to return  promise.
                     If it finds something, then we stop propagation and return the originDataSapshot, since we're likely in a mapping
                 */  
-                //console.log("<-> Service destinationDataService handle[modified]ReadOperation "+originDataSnapshotReadOperation.id+" from "+rawDataService.identifier+", for "+readOperation.target.name+ " like "+ readOperation.criteria);
+                //console.log("Sync Service destinationDataService handle[modified]ReadOperation "+originDataSnapshotReadOperation.id+" from "+rawDataService.identifier+", for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
                 this.destinationDataService.handleReadOperation(originDataSnapshotReadOperation)
                 .then((resultOperation) => {
 
                     //If data is found, we let it retur, it should?
                     if(resultOperation.type === DataOperation.Type.ReadCompletedOperation && (resultOperation.data !=- null || resultOperation.data?.length > 0)) {
-                        console.log("<-> Service originDataSnapshotLookUp result FOUND for readOperation "+originDataSnapshotReadOperation.id+" from "+readOperation.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
+                        console.log("Sync Service originDataSnapshotLookUp result FOUND for readOperation "+originDataSnapshotReadOperation.id+" from "+readOperation.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
                         readOperation.stopImmediatePropagation();
                         resolve(resultOperation);
                     } else {
 
-                        console.log("<-> Service originDataSnapshotLookUp result NOT FOUND for readOperation "+originDataSnapshotReadOperation.id+" from "+readOperation.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
+                        console.log("Sync Service originDataSnapshotLookUp result NOT FOUND for readOperation "+originDataSnapshotReadOperation.id+" from "+readOperation.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
                         /*
                             Nothing found, we remove our destination service from the composedPath 
@@ -456,7 +478,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }    
 
 
-    __syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync) {
+    __syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged) {
         // if(objectDescriptor.name === "Device") {
         //     console.log("sync Device"+objectDescriptor.name+" rawData: ", rawData);
         // }
@@ -554,7 +576,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
 
-        return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions)
+        return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
         .then((value) => {
 
             //cleanup:
@@ -587,75 +609,86 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 SOME WORK WILL MIGHT NEEDED WHEN WE EXPAND TO MORE THAN ONE FETCHED EXPRESSION
             */
-            if(readCompletedOperation?.referrer?.data?.readExpressions?.length === 1) {
-                let sourceObjectDescriptor = readCompletedOperation.referrer.target,
-                    sourceObjectCriteria = readCompletedOperation.referrer.criteria,
-                    sourceObjectCriteriaParameters = sourceObjectCriteria.parameters,
-                    fetchedPropertyName = readCompletedOperation?.referrer?.data?.readExpressions[0],
-                    sourceObjectDescriptorMapping = this.destinationDataService.mappingForObjectDescriptor(sourceObjectDescriptor),
-                    sourceObjectDescriptorMappingRawDataPrimaryKeys = sourceObjectDescriptorMapping.rawDataPrimaryKeys,
-                    sourceObjectSnapshot = readCompletedOperation?.referrer?.hints?.snapshot,
-                    sourceObjectDataIdentifier,
-                    sourceObjectPromise,
-                    sourceObject;
+
+            /* WARNING: this commented block 614 -> 687 + 689 and 691 is caused some syncing regressions. It needs to be looked at */
+            // if(readCompletedOperation?.referrer?.data?.readExpressions?.length === 1) {
+
+
+            //     let sourceObjectDescriptor = readCompletedOperation.referrer.target,
+            //         sourceObjectCriteria = readCompletedOperation.referrer.criteria,
+            //         sourceObjectCriteriaParameters = sourceObjectCriteria.parameters,
+            //         fetchedPropertyName = readCompletedOperation?.referrer?.data?.readExpressions[0],
+            //         sourceObjectDescriptorMapping = this.destinationDataService.mappingForObjectDescriptor(sourceObjectDescriptor),
+            //         sourceObjectDescriptorMappingRawDataPrimaryKeys = sourceObjectDescriptorMapping.rawDataPrimaryKeys,
+            //         sourceObjectSnapshot = readCompletedOperation?.referrer?.hints?.snapshot,
+            //         sourceObjectDataIdentifier,
+            //         sourceObjectPromise,
+            //         sourceObject;
                  
-                //The sourceObjectCriteriaParameters if there (vs the property / value embedded in the criteria's syntax) has to be the primary key
-                if(sourceObjectCriteriaParameters) {
-                    sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectCriteriaParameters);
-                    // sourceObjectDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(sourceObjectDescriptor, parameters, readCompletedOperation.referrer)
-                }
-                else {
-                    if(!sourceObjectSnapshot) {
-                        sourceObjectSnapshot = {};
-                        //We need to extract the primary key from the criteria
-                        let parameters = sourceObjectCriteria.parameters;
-                        for(let i=0, countI = sourceObjectDescriptorMappingRawDataPrimaryKeys.length, iPrimaryKeyExpression, iPrimaryKeyExpressionValue; (i<countI); i++) {
-                            iPrimaryKeyExpression = sourceObjectDescriptorMappingRawDataPrimaryKeys[i];
-                            //Borrow valueForExpression to dataObject
-                            iPrimaryKeyExpressionValue = dataObject.valueForExpression.call(parameters, iPrimaryKeyExpression);
-                            sourceObjectSnapshot[iPrimaryKeyExpression] = iPrimaryKeyExpressionValue;
-                        }
-                        sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
-                    } else {
-                        sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
-                    }
-                }
+            //     // sourceObjectPromise = this.mainService.getObjectProperties(value, readCompletedOperation.referrer.data.readExpressions);
 
-                //2. assign/add the dataObject value to the appropriate property
+            //     // //The sourceObjectCriteriaParameters if there (vs the property / value embedded in the criteria's syntax) has to be the primary key
+            //     // if(sourceObjectCriteriaParameters && sourceObjectCriteria.qualifiedProperties.includesAll(sourceObjectDescriptorMappingRawDataPrimaryKeys)) {
+            //     //     sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectCriteriaParameters);
+            //     //     // sourceObjectDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(sourceObjectDescriptor, parameters, readCompletedOperation.referrer)
+            //     // }
+            //     // else {
+            //     //     if(!sourceObjectSnapshot) {
+            //     //         sourceObjectSnapshot = {};
+            //     //         //We need to extract the primary key from the criteria
+            //     //         let parameters = sourceObjectCriteria.parameters;
+            //     //         for(let i=0, countI = sourceObjectDescriptorMappingRawDataPrimaryKeys.length, iPrimaryKeyExpression, iPrimaryKeyExpressionValue; (i<countI); i++) {
+            //     //             iPrimaryKeyExpression = sourceObjectDescriptorMappingRawDataPrimaryKeys[i];
+            //     //             //Borrow valueForExpression to dataObject
+            //     //             iPrimaryKeyExpressionValue = dataObject.valueForExpression.call(parameters, iPrimaryKeyExpression);
+            //     //             sourceObjectSnapshot[iPrimaryKeyExpression] = iPrimaryKeyExpressionValue;
+            //     //         }
+            //     //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
+            //     //     } else {
+            //     //         sourceObjectPromise = this.destinationDataService.resolveObjectForTypeRawData(sourceObjectDescriptor, sourceObjectSnapshot);
+            //     //     }
+            //     // }
+            //     sourceObjectPromise = Promise.resolve(dataObject);
 
-                return sourceObjectPromise.then((sourceObject) => {
-                    /*
-                        We make sure we register the created object in the origin service with his natural dataIdentifier
-                    */
-                    //Added to resolveObjectForTypeRawData() to avoid doing that "manually" here
-                    //rawDataService.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+            //     //2. assign/add the dataObject value to the appropriate property
 
-                    let propertyDescriptor = sourceObjectDescriptor.propertyDescriptorNamed(fetchedPropertyName);
+            //     return sourceObjectPromise.then((sourceObject) => {
 
-                    if(propertyDescriptor.cardinality === 1) {
-                        sourceObject[fetchedPropertyName] = dataObject;
-                    } else {
-                        if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
-                            //Problematic: the line bellow triggers a fetch of fetchedPropertyName on sourceObject...
-                            //sourceObject[fetchedPropertyName].push(dataObject);
+            //         if(sourceObject) {
 
-                            let fetchedPropertyNameValue = Object.getPropertyDescriptor(sourceObject,fetchedPropertyName).get.call(sourceObject, /*shouldFetch*/false);
-                            if(fetchedPropertyNameValue) {
-                                fetchedPropertyNameValue.push(dataObject);
-                            } else {
-                                console.error("Couldn't update property '"+fetchedPropertyName+"' on sourceObject described by "+sourceObject.objectDescriptor.name+" because fetchedPropertyNameValue is "+ fetchedPropertyNameValue);
-                            }
-                        } else {
-                            throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
-                        }
-                    }
+            //             /*
+            //                 We make sure we register the created object in the origin service with his natural dataIdentifier
+            //             */
+            //             //Added to resolveObjectForTypeRawData() to avoid doing that "manually" here
+            //             //rawDataService.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
 
-                    return value;
-                });
+            //             let propertyDescriptor = sourceObjectDescriptor.propertyDescriptorNamed(fetchedPropertyName);
+
+            //             if(propertyDescriptor.cardinality === 1) {
+            //                 sourceObject[fetchedPropertyName] = dataObject;
+            //             } else {
+            //                 if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
+            //                     //Problematic: the line bellow triggers a fetch of fetchedPropertyName on sourceObject...
+            //                     //sourceObject[fetchedPropertyName].push(dataObject);
+
+            //                     let fetchedPropertyNameValue = Object.getPropertyDescriptor(sourceObject,fetchedPropertyName).get.call(sourceObject, /*shouldFetch*/false);
+            //                     if(fetchedPropertyNameValue) {
+            //                         fetchedPropertyNameValue.push(dataObject);
+            //                     } else {
+            //                         console.error("Couldn't update property '"+fetchedPropertyName+"' on sourceObject described by "+sourceObject.objectDescriptor.name+" because fetchedPropertyNameValue is "+ fetchedPropertyNameValue);
+            //                     }
+            //                 } else {
+            //                     throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
+            //                 }
+            //             }
+            //         }
+
+            //         return value;
+            //     });
                 
-            } else {
+            // } else {
                 return Promise.resolve(value);
-            }
+            // }
         })
         .then((value) => {
 
@@ -680,7 +713,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
             if(dataObject.objectDescriptor.name === "Task") {
-                console.log("\n\n\############# Task "+dataObject.dataIdentifier+" originId: "+JSON.stringify(dataObject.originId)+" "+dataObject.description+" "+dataObject.associatedTools.length+" associatedTools: ["+dataObject.associatedTools.map((value) => value?.description)+"], "+rawData.tools.length+" rawData.tools: " + rawData.tools.map((value) => value?.description)+"\n\n")
+                console.log("\n\n\############# Task "+dataIdentifier+" originId: "+JSON.stringify(dataObject.originId)+" "+dataObject.description+" "+dataObject.associatedTools.length+" associatedTools: ["+dataObject.associatedTools.map((value) => value?.description)+"], "+rawData.tools.length+" rawData.tools: " + rawData.tools.map((value) => value?.description)+"\n\n")
             }
 
             return value;
@@ -709,20 +742,29 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
      * not yet to attempt to find out if there are updates in originDataSercices.
      * 
      * TODO: WHEN WE DO: We'll have to check if destinationDataService has a record for the primary key 
-     * in dataObject.dataIdentifier in the row's originDataSnapshot
+     * in this.dataIdentifierForObject(). in the row's originDataSnapshot
      *
      * @method
      * @argument {RawDataService} rawDataService - the rawDataService involved.
      * @argument {ObjectDescriptor} objectDescriptor - The Object Descriptor for the Data Object being created.
      */
     dataIdentifierForRawDataServiceCreatingObjectWithDataIdentifier(rawDataService, dataIdentifier) {
-        return this.destinationDataService.dataIdentifierForNewObjectWithObjectDescriptor(dataIdentifier.objectDescriptor);
+        //A little bit of an hard assumption here that destinationDataService uses UUID as primary keys...
+        if(!uuid.isUUID(dataIdentifier.primaryKey)) {
+            return this.destinationDataService.dataIdentifierForNewObjectWithObjectDescriptor(dataIdentifier.objectDescriptor);
+        } else {
+            return this.destinationDataService.dataIdentifierForTypePrimaryKey(dataIdentifier.objectDescriptor, dataIdentifier.primaryKey);
+        }
     }
 
     dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor) {
         return this.destinationDataService.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
     }
+    dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey) {
+        return this.destinationDataService.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey);
+    }
 
+    
 
     /**
      * Called by one of SynchronizationDataService's originDataSercices.
@@ -749,7 +791,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         this.mainService.registerCreatedDataObject(object);
 
         //Now register the object by it's destinationDataService-issued dataIdentifier as well
-        this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForNewObjectWithObjectDescriptor(object.objectDescriptor));
+        //this.destinationDataService.dataIdentifierForObject should find one by now, but it doesn't one will get created
+        this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForObject(object));
     
     }
 
@@ -783,21 +826,238 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         return this.destinationDataService.dataIdentifierForTypeRawData(type, rawData, dataOperation);
     }
 
-    _syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, previousPromise) {
+    _syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, previousPromise, registerMappedPropertiesAsChanged) {
         if(previousPromise) {
             return previousPromise.then(() => {
-                return this.__syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync);
+                return this.__syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged);
             })
         } else {
-            return this.__syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync);
+            return this.__syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged);
         }
 
     }
 
+
+    _saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation) {
+
+        /*
+            If the readCompletedOperation returns result for the type that was requested, we pay attention to readExpressions
+            But if it was a read operation for a type with a readExpression being a relationship to another type,
+            then we get data of that type, and readExpression won't match
+        */
+        let readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
+            rawData = readCompletedOperation.data,
+            iDataIdentifier,
+            rawDataService = readCompletedOperation.rawDataService,
+            mainService = this.mainService,
+            objectDescriptor = readCompletedOperation.target,
+            i=0, countI = rawData.length,
+            mappingPromises,
+            mappedObjects = [],
+            iObject,
+            mappingPromise,
+            serializeMapping = false,
+            previousMappingResult,
+            iMappingResult,
+            readEmptyHandedDataServices = this._readEmptyHandedDataServicesByReadOperation.get(readCompletedOperation.referrer),
+            readEmptyHandedDataServicesByCreatedObjectsToSync = this._readEmptyHandedDataServicesByCreatedObjectsToSync;
+
+        for (; i <  countI; i++) {
+            // console.log("rawData["+i+"] == ", rawData[i]);
+
+            // iDataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData[i]);
+            // rawDataService.recordSnapshot(iDataIdentifier,  rawData[i]);
+
+            // //We create a brand new object
+            // iObject = mainService.createDataObject(objectDescriptor);
+            // mappedObjects.push(iObject);
+
+            // //We ask the fetching rawDataService to do the mapping
+            // /*
+            //     TODO: while we have a snapshot - which we typically don't have for created objects, but this could be considered
+            //     a merge, we could ask the delegate if there are some specific properties it wishes to have mapped on top of default
+            //     ones
+            // */
+            // if(this.delegate?.synchronizationDataServiceWillMapRawDataToObjectFromDataOperationWithReadExpressions) {
+            //     let delegateReadExpressions = this.delegate.synchronizationDataServiceWillMapRawDataToObjectFromDataOperationWithReadExpressions(this, rawData[i], iObject, readCompletedOperation, readExpressions)
+            //     if((!readExpressions && delegateReadExpressions) || (readExpressions && delegateReadExpressions)) {
+            //         readExpressions = delegateReadExpressions;
+            //     }
+            // }
+            // iMappingResult = rawDataService.mapRawDataToObject(rawData[i], iObject, readCompletedOperation, readExpressions);
+
+            // //Set originDataSnapshot:
+            // iObject.originDataSnapshot = rawData[i];
+
+            if( rawData[i]) {
+                console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+                iMappingResult = this._syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData[i], readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, previousMappingResult, /*registerMappedPropertiesAsChanged*/ true);
+
+                if(serializeMapping) {
+                    previousMappingResult = iMappingResult;
+                }
+
+                if (!serializeMapping && Promise.is(iMappingResult)) {
+                    (mappingPromises || (mappingPromises = [])).push(iMappingResult);
+                } else {
+                    console.log("We shouldn't be here");
+                } 
+            }
+
+            // //Register objects being synced to RawDataService that failed to fetch it
+            // for (const aRawDataService of readEmptyHandedDataServices.keys()) {
+            //     let readEmptyHandedDataServices = readEmptyHandedDataServicesByCreatedObjectsToSync.get(iObject);
+            //     if(!readEmptyHandedDataServices) {
+            //         readEmptyHandedDataServicesByCreatedObjectsToSync.set(iObject, [aRawDataService]);
+            //     } else {
+            //         readEmptyHandedDataServices.push(aRawDataService);
+            //     }
+            // }
+        }
+
+        mappingPromise = mappingPromises 
+            ? Promise.all(mappingPromises)
+            : serializeMapping 
+                ? iMappingResult
+                : Promise.resolve(mappedObjects);
+        
+        return mappingPromise.then((values) => {
+
+            console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation COMPLETED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria + ", values:",values);
+            
+            let fetchedObjects = values,
+                promise;
+            if(this.delegate?.synchronizationDataServiceWillSaveChanges) {
+                promise = this.delegate.synchronizationDataServiceWillSaveChanges(this, fetchedObjects);
+            } else {
+                promise = Promise.resolve(fetchedObjects);
+            }
+
+            //Now that all is done, we're saving:
+            return promise.then( () => {
+
+                console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": saving changes from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+                /*
+                    one more thing: if it's a readOperation for a relationship, we need to make sure the join actually happens.
+                    We need to grab info from the the read expression, create the object it represent, then set the relationship
+                    we just got data from
+                */
+            //    if(readCompletedOperation?.referrer?.data?.readExpressions?.length > 0) {
+            //         let readOperation = readCompletedOperation.referrer,
+            //             objectDescriptorBeingRead = readOperation.target,
+                        
+            //             //#WARNING: We're still assuming there's only 1 readExpressions at a time, for now
+            //             propertyDescriptor = objectDescriptorBeingRead.propertyDescriptorNamed(readOperation.data.readExpressions[0]),
+            //             /*
+            //                 Uneasy about that one, it assumes that the client's mapping is from our destinationService, which is the only way used so far.
+            //             */
+            //             objectBeingReadRawData = readOperation.criteria.parameters,
+            //             objectBeingReadDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(objectDescriptorBeingRead, objectBeingReadRawData, readOperation),
+            //             objectBeingRead = this.objectForTypeRawData(objectDescriptorBeingRead, objectBeingReadRawData, objectBeingReadDataIdentifier, readOperation);
+
+            //             /*
+            //                 WARNING: SHORTCUT. Let's test an assumed property before we evaluate as an expression, 
+            //                 which could lead to other derivative fetches and might need to adapt the logical flow to do so
+            //             */
+            //             //objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0][readOperation.data.readExpressions[0]];
+            //             //We need to pay attention to cardinality:
+            //             if(propertyDescriptor.cardinality === 1) {
+            //                 objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0];
+            //             } else {
+            //                 if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
+            //                     //Do we have to worry about duplicates here?
+            //                     //objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0];
+            //                     objectBeingRead[readOperation.data.readExpressions[0]].addEach(fetchedObjects);
+            //                 } else {
+            //                     throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
+            //                 }
+            //             }
+
+            //             objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects;
+
+            //    }
+
+                return mainService.saveChanges()
+                    .then((transaction) => {
+
+                        console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": changes SAVED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+                        let createdDataObjects = transaction.createdDataObjects;
+
+                        return fetchedObjects;
+                    })
+                });
+        })
+        .then((fetchedObjects) => {
+            // let createdDataObjects = transaction.createdDataObjects;
+                let destinationDataServiceRawData = [];
+                
+            // if(createdDataObjects) {
+
+            //     createdDataObjects.forEach((objectDescriptorCreatedObjects) => {
+            //         // let objectDescriptorCreatedObjects = createdDataObjects.get(objectDescriptor);
+            //         objectDescriptorCreatedObjects.forEach((value) => {
+            //             destinationDataServiceRawData.push(this.destinationDataService.snapshotForObject(value));
+            //         });
+            //     });
+            // }
+
+            for(let i=0, countI=fetchedObjects.length; (i<countI); i++) {
+                destinationDataServiceRawData.push(this.destinationDataService.snapshotForObject(fetchedObjects[i]));
+            }
+
+            console.log("Sync Service capture ReadCompletedOperation "+readCompletedOperation.id+": SNAPSHPOT GATHERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+            console.log(destinationDataServiceRawData);
+
+
+            /*
+                Clean-up before we dispatch so we don't end up here in captureSynchronizationDataServiceReadCompletedOperation() 
+                again amd attempt to sync things again
+            */
+            this.readOperationsPendingSynchronization.delete(readCompletedOperation.referrer);
+
+            /*
+                And dispatch a new operation. The last argument means that the target should be of the type of objects returned
+                Not the one that asked for it (readOperation.target)
+            */
+            let responseOperation = this.destinationDataService.responseOperationForReadOperation(readCompletedOperation.referrer, null, destinationDataServiceRawData, false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
+            responseOperation.target.dispatchEvent(responseOperation);
+
+            console.log("Sync Service capture ReadCompletedOperation "+readCompletedOperation.id+": dispatchEvent responseOperation COMPLETED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+
+            /*
+                Now that we have an found data from one of our childDataServices, created new objects and saved it in our destinationDataService,
+                we're pretty much done, we just nneed to return their snapshot to the client in a read completed operation.
+            */
+            // return destinationDataServiceRawData;
+
+        })
+        .catch((error) => {
+            console.log("Sync Service failed to sync objects ",mappedObjects," with error: ", error);
+            let responseOperation = this.responseOperationForReadOperation(readCompletedOperation.referrer, error, null, false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
+            responseOperation.target.dispatchEvent(responseOperation);
+            return null;
+        });
+
+    }
+
+
+    captureSynchronizationDataServiceReadUpdateOperation(readUpdateOperation) {
+        return this._captureSynchronizationDataServiceReadCompletionOperation(readUpdateOperation);
+    }
     captureSynchronizationDataServiceReadCompletedOperation(readCompletedOperation) {
+        return this._captureSynchronizationDataServiceReadCompletionOperation(readCompletedOperation);
+    }
+
+    _captureSynchronizationDataServiceReadCompletionOperation(readCompletedOperation) {
+        const ReadCompletedOperationType = DataOperation.Type.ReadCompletedOperation;
 
         //Ideally we shouldn't have that, remove the noise
-        if(readCompletedOperation.rawDataService === this) return;
+         if(readCompletedOperation.rawDataService === this) return;
 
 
         if(readCompletedOperation.referrer?.criteria?.name === 'originDataSnapshotLookUp') {
@@ -809,104 +1069,30 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
 
 
-        console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria+": ", readCompletedOperation.data);
+        console.log("Sync Service capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria+": ", readCompletedOperation.data);
 
         //Record the read completion from that service:
-        this.registerChildDataServiceReadCompletionOperation(readCompletedOperation);
+        if(readCompletedOperation.type === ReadCompletedOperationType) {
+            this.registerChildDataServiceReadCompletionOperation(readCompletedOperation);
+        }
 
         /*
             Wether it's a readCompletedOperation to a top level readOperation we know about, 
             or if it's one from a subgraph of that being synced, as coming from an originDataService, we try to sync
         */
         if(/*(readCompletedOperation.rawDataService !== this.destinationDataService) ||*/ (this.readOperationsPendingSynchronization.has(readCompletedOperation.referrer) && readCompletedOperation.data?.length)) {
-            console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": REGISTERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+            console.log("Sync Service capture ReadCompletedOperation "+readCompletedOperation.id+": REGISTERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
             /*
-                A read from another data service failed to return data, and now we have another one did
+                A read from another data service failed to return data, and now we have another one who did
                 We got some work to Sync!
 
                 To do so, we'll have to convert those data into objects created into the main service and do a saveChanges.
                 IF the raw data service that provided the data could save, it would have to assess the save by looking at those objects
                 and use the originId to compare with its snapshot and realize there's no change and it should be a no-op with existing implementation
             */
-            if(this.delegate?.dataServiceWillSynchroniseOriginServiceReadCompletedOperation) {
-                this.delegate.dataServiceWillSynchroniseOriginServiceReadCompletedOperation(this, readCompletedOperation.rawDataService, readCompletedOperation);
-            }
-
-            /*
-                If the readCompletedOperation returns result for the type that was requested, we pay attention to readExpressions
-                But if it was a read operation for a type with a readExpression being a relationship to another type,
-                then we get data of that type, and readExpression won't match
-            */
-            let readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
-                rawData = readCompletedOperation.data,
-                iDataIdentifier,
-                rawDataService = readCompletedOperation.rawDataService,
-                mainService = this.mainService,
-                objectDescriptor = readCompletedOperation.target,
-                i=0, countI = rawData.length,
-                mappingPromises,
-                mappedObjects = [],
-                iObject,
-                mappingPromise,
-                serializeMapping = false,
-                previousMappingResult,
-                iMappingResult,
-                readEmptyHandedDataServices = this._readEmptyHandedDataServicesByReadOperation.get(readCompletedOperation.referrer),
-                readEmptyHandedDataServicesByCreatedObjectsToSync = this._readEmptyHandedDataServicesByCreatedObjectsToSync;
-
-            for (; i <  countI; i++) {
-                // console.log("rawData["+i+"] == ", rawData[i]);
-
-                // iDataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData[i]);
-                // rawDataService.recordSnapshot(iDataIdentifier,  rawData[i]);
-
-                // //We create a brand new object
-                // iObject = mainService.createDataObject(objectDescriptor);
-                // mappedObjects.push(iObject);
-
-                // //We ask the fetching rawDataService to do the mapping
-                // /*
-                //     TODO: while we have a snapshot - which we typically don't have for created objects, but this could be considered
-                //     a merge, we could ask the delegate if there are some specific properties it wishes to have mapped on top of default
-                //     ones
-                // */
-                // if(this.delegate?.synchronizationDataServiceWillMapRawDataToObjectFromDataOperationWithReadExpressions) {
-                //     let delegateReadExpressions = this.delegate.synchronizationDataServiceWillMapRawDataToObjectFromDataOperationWithReadExpressions(this, rawData[i], iObject, readCompletedOperation, readExpressions)
-                //     if((!readExpressions && delegateReadExpressions) || (readExpressions && delegateReadExpressions)) {
-                //         readExpressions = delegateReadExpressions;
-                //     }
-                // }
-                // iMappingResult = rawDataService.mapRawDataToObject(rawData[i], iObject, readCompletedOperation, readExpressions);
-
-                // //Set originDataSnapshot:
-                // iObject.originDataSnapshot = rawData[i];
-
-                if( rawData[i]) {
-                    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
-
-                    iMappingResult = this._syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData[i], readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, previousMappingResult);
-
-                    if(serializeMapping) {
-                        previousMappingResult = iMappingResult;
-                    }
-
-                    if (!serializeMapping && Promise.is(iMappingResult)) {
-                        (mappingPromises || (mappingPromises = [])).push(iMappingResult);
-                    } else {
-                        console.log("We shouldn't be here");
-                    } 
-                }
-
-                // //Register objects being synced to RawDataService that failed to fetch it
-                // for (const aRawDataService of readEmptyHandedDataServices.keys()) {
-                //     let readEmptyHandedDataServices = readEmptyHandedDataServicesByCreatedObjectsToSync.get(iObject);
-                //     if(!readEmptyHandedDataServices) {
-                //         readEmptyHandedDataServicesByCreatedObjectsToSync.set(iObject, [aRawDataService]);
-                //     } else {
-                //         readEmptyHandedDataServices.push(aRawDataService);
-                //     }
-                // }
+            if(this.delegate?.dataServiceWillSynchronizeOriginServiceReadCompletedOperation) {
+                this.delegate.dataServiceWillSynchronizeOriginServiceReadCompletedOperation(this, readCompletedOperation.rawDataService, readCompletedOperation);
             }
 
             /*
@@ -916,138 +1102,14 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             */
             //readCompletedOperation.stopPropagation();
             readCompletedOperation.stopImmediatePropagation();
-                
 
-            mappingPromise = mappingPromises 
-                ? Promise.all(mappingPromises)
-                : serializeMapping 
-                    ? iMappingResult
-                    : Promise.resolve(mappedObjects);
-            
-            return mappingPromise.then((values) => {
-
-                console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation COMPLETED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria + ", values:",values);
-                
-                let fetchedObjects = values,
-                    promise;
-                if(this.delegate?.synchronizationDataServiceWillSaveChanges) {
-                    promise = this.delegate.synchronizationDataServiceWillSaveChanges(this, fetchedObjects);
-                } else {
-                    promise = Promise.resolve(fetchedObjects);
-                }
-
-                //Now that all is done, we're saving:
-                return promise.then( () => {
-
-                    console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": saving changes from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
-
-                    /*
-                        one more thing: if it's a readOperation for a relationship, we need to make sure the join actually happens.
-                        We need to grab info from the the read expression, create the object it represent, then set the relationship
-                        we just got data from
-                    */
-                //    if(readCompletedOperation?.referrer?.data?.readExpressions?.length > 0) {
-                //         let readOperation = readCompletedOperation.referrer,
-                //             objectDescriptorBeingRead = readOperation.target,
-                            
-                //             //#WARNING: We're still assuming there's only 1 readExpressions at a time, for now
-                //             propertyDescriptor = objectDescriptorBeingRead.propertyDescriptorNamed(readOperation.data.readExpressions[0]),
-                //             /*
-                //                 Uneasy about that one, it assumes that the client's mapping is from our destinationService, which is the only way used so far.
-                //             */
-                //             objectBeingReadRawData = readOperation.criteria.parameters,
-                //             objectBeingReadDataIdentifier = this.destinationDataService.dataIdentifierForTypeRawData(objectDescriptorBeingRead, objectBeingReadRawData, readOperation),
-                //             objectBeingRead = this.objectForTypeRawData(objectDescriptorBeingRead, objectBeingReadRawData, objectBeingReadDataIdentifier, readOperation);
-
-                //             /*
-                //                 WARNING: SHORTCUT. Let's test an assumed property before we evaluate as an expression, 
-                //                 which could lead to other derivative fetches and might need to adapt the logical flow to do so
-                //             */
-                //             //objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0][readOperation.data.readExpressions[0]];
-                //             //We need to pay attention to cardinality:
-                //             if(propertyDescriptor.cardinality === 1) {
-                //                 objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0];
-                //             } else {
-                //                 if(propertyDescriptor.valueType == "array" || propertyDescriptor.collectionValueType == "array" || propertyDescriptor.collectionValueType == "list" ) {
-                //                     //Do we have to worry about duplicates here?
-                //                     //objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects[0];
-                //                     objectBeingRead[readOperation.data.readExpressions[0]].addEach(fetchedObjects);
-                //                 } else {
-                //                     throw "Handling of to-many for property "+propertyDescriptor.name+" of "+sourceObjectDescriptor.name+" is not implemented (range? set? map?) "
-                //                 }
-                //             }
-    
-                //             objectBeingRead[readOperation.data.readExpressions[0]] = fetchedObjects;
-
-                //    }
-
-                    return mainService.saveChanges()
-                        .then((transaction) => {
-
-                            console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": changes SAVED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
-
-                            let createdDataObjects = transaction.createdDataObjects;
-
-                            return fetchedObjects;
-                        })
-                    });
-            })
-            .then((fetchedObjects) => {
-                // let createdDataObjects = transaction.createdDataObjects;
-                    let destinationDataServiceRawData = [];
-                    
-                // if(createdDataObjects) {
-
-                //     createdDataObjects.forEach((objectDescriptorCreatedObjects) => {
-                //         // let objectDescriptorCreatedObjects = createdDataObjects.get(objectDescriptor);
-                //         objectDescriptorCreatedObjects.forEach((value) => {
-                //             destinationDataServiceRawData.push(this.destinationDataService.snapshotForObject(value));
-                //         });
-                //     });
-                // }
-
-                for(let i=0, countI=fetchedObjects.length; (i<countI); i++) {
-                    destinationDataServiceRawData.push(this.destinationDataService.snapshotForObject(fetchedObjects[i]));
-                }
-
-                console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": SNAPSHPOT GATHERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
-
-                console.log(destinationDataServiceRawData);
+            return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
 
 
-                /*
-                    Clean-up before we dispatch so we don't end up here in captureSynchronizationDataServiceReadCompletedOperation() 
-                    again amd attempt to sync things again
-                */
-                this.readOperationsPendingSynchronization.delete(readCompletedOperation.referrer);
-
-                /*
-                    And dispatch a new operation. The last argument means that the target should be of the type of objects returned
-                    Not the one that asked for it (readOperation.target)
-                */
-                let responseOperation = this.destinationDataService.responseOperationForReadOperation(readCompletedOperation.referrer, null, destinationDataServiceRawData, false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
-                responseOperation.target.dispatchEvent(responseOperation);
-
-                console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": dispatchEvent responseOperation COMPLETED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
-
-
-                /*
-                    Now that we have an found data from one of our childDataServices, created new objects and saved it in our destinationDataService,
-                    we're pretty much done, we just nneed to return their snapshot to the client in a read completed operation.
-                */
-                // return destinationDataServiceRawData;
-
-            })
-            .catch((error) => {
-                console.log("<-> Service failed to sync objects ",mappedObjects," with error: ", error);
-                let responseOperation = this.responseOperationForReadOperation(readCompletedOperation.referrer, error, null, false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
-                responseOperation.target.dispatchEvent(responseOperation);
-                return null;
-            });
 
 
         } else if(readCompletedOperation.data == null || (Array.isArray(readCompletedOperation.data) && readCompletedOperation.data.length === 0 )) {
-            console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": NO DATA FOUND  from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+            console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+": NO DATA FOUND  from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
             // console.debug("No Data Found. Do we check of the rawDataService is an originDataService?")
             /* 
@@ -1058,20 +1120,39 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 Otherwise, we're done. No data were found, anywhere, we let the readCompoletedOperation distribution run it's course
                 to the client
+
+
+                if there was only one data service that handled the read operation and was our destination service, then there's no point trying anything else
             */
-           if(!this.didAllChildServicesCompletedReadOperation(readCompletedOperation.referrer)) {
-                console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": TRY TO SYNC from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+           if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
 
-                //Register what we need to reconciliate with the OG readOperation from client
-                return this.tryToSynchronizeEmptyHandedReadOperation(readCompletedOperation)
-                .then((canTry) => {
-                    if(canTry) {
-                        //We don't want the client to know about this still intermediary result:
-                        //readCompletedOperation.stopPropagation();
-                        readCompletedOperation.stopImmediatePropagation();
-                    }
+                /* if this readCompletedOperation doesn't come from our destinationDataService: */
+                if(((this.readCompletionOperationReadOperationAndObjectDescriptorTarget(readCompletedOperation.referrer, readCompletedOperation.target).length === 1) && (readCompletedOperation.rawDataService === this.destinationDataService))) {
+                    /* Origin Services need to have a shot, so we stop propagatiom of that readCompletedOperation from our destinationService, in order to have the readOperation continue to our oriin data services: */
+                    readCompletedOperation.stopPropagation();
 
-                })
+                } else {
+
+                    console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+": TRY TO SYNC from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+
+                    //Register what we need to reconciliate with the OG readOperation from client
+                    //This is trying to see of a fetch failing in the destination data service can find data within originDataSnapshot if they exists and match that use-case
+                    return this.tryToSynchronizeEmptyHandedReadOperation(readCompletedOperation)
+                    .then((canTry) => {
+                        if(canTry) {
+                            //We don't want the client to know about this still intermediary result:
+                            //readCompletedOperation.stopPropagation();
+                            readCompletedOperation.stopImmediatePropagation();
+                        }
+                    })
+
+                } 
+                /* Origin Services need to have shot, so we stop propagatiom of that readCompletedOperation: */
+                // else if(!this.isOriginDataService(readCompletedOperation.rawDataService)){
+                //     console.log("Sync Service capture ReadCompletedOperation "+readCompletedOperation.id+": "+readCompletedOperation.rawDataService.identifier+" NOT an OriginDataService, referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+                //     readCompletedOperation.stopImmediatePropagation();
+                // }
+
 
                 /*
                     Now that we have a formal approach to the pattern, let's have other origin services
@@ -1091,17 +1172,69 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 But it is from an origin data service. Should we tweak it even though the rawDataService property is stripped before being delivered
                 to client?
             */
-                console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+" CLEANUP from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") +" like "+ readCompletedOperation.referrer.criteria);
+                console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+" CLEANUP from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") +" like "+ readCompletedOperation.referrer.criteria);
                 this.unregisterReadOperation(readCompletedOperation.referrer);    
+
+                //There's a syncing in flight, so we stop the propagation of this one:
+                // if(this.readOperationsPendingSynchronization.has(readCompletedOperation.referrer)) {
+                //     readCompletedOperation.stopImmediatePropagation();
+                // }
            }
 
-        } else if(this.didAllChildServicesCompletedReadOperation(readCompletedOperation.referrer)) {
-            /*
-                No readOperationsPendingSynchronization pending, all childServices completed their read
-                Cleanup time
-            */
-            console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+" CLEANUP from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") +" like "+ readCompletedOperation.referrer.criteria);
-            this.unregisterReadOperation(readCompletedOperation.referrer);
+        } 
+        //else if((readCompletedOperation.type === ReadCompletedOperationType) && this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+        else if(this.hasRegisteredReadOperationForCompletionOperation(readCompletedOperation)) {
+
+            if((readCompletedOperation.type === ReadCompletedOperationType) && this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+                /*
+                    No readOperationsPendingSynchronization pending, all childServices completed their read
+                    Cleanup time
+                */
+                console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+" CLEANUP from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") +" like "+ readCompletedOperation.referrer.criteria);
+                            
+                this.unregisterReadOperation(readCompletedOperation.referrer);
+            }
+
+            /* If we have an originDataService that has found data, we need to save it into our destination service */
+            if(readCompletedOperation.rawDataService !== this.destinationDataService && (readCompletedOperation.data.length > 0) && (this.destinationDataService.handlesType(readCompletedOperation.target))) {
+                
+                /*
+                    _saveOriginReadCompletedOperationDataToDestinationDataService is going to save readCompletedOperation.data in the destination service
+                    and dispatch it from there. So we don't need this readCompletedOperation to continue propagation.
+                */
+                readCompletedOperation.stopImmediatePropagation();
+
+                /*
+                    Now, this isn't going to prevent the intial readOperation to continue on and eventually be grabbed by another origin service...
+                    
+                    If we want to impose the stack having another mux service to handle that, then we should do:
+                                    readCompletedOperation.referrer.stopImmediatePropagation();
+
+                    Otherwise, we don't quite know what DS will do what, so we'd have to hold-on the current result, or send a readUpdateOperation
+                    followed eventually by more or an empty readCompletedOperation.
+
+                    Choosing to stop right there for now.
+                */
+                readCompletedOperation.referrer.stopImmediatePropagation();
+
+                return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
+            } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
+                //TODO: cleanup that logic regarding the next block bellow
+                /*
+                    We got involved, so we need to be the only one that feed those data to an eventual data stream.
+                    So we handle it and stop propagation so it doesn't reach the origin and destination services.
+                */
+                /*
+                    Data found!! We prevent the origin services to act on it
+                    In the future if one would want to do so for fetching update
+                    We'd have to introduce some subtlety here
+                */
+                console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+" !!! stopImmediatePropagation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id +", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+    
+                readCompletedOperation.referrer.stopImmediatePropagation();
+
+            }
+            
         } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
 
             /*
@@ -1114,12 +1247,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 We'd have to introduce some subtlety here
             */
             // if(readCompletedOperation.referrer.target.name === "Workstation" && readCompletedOperation.referrer.data.readExpressions[0] === "parent") {
-                console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+" !!! stopImmediatePropagation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id +", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+                console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+" !!! stopImmediatePropagation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id +", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
             // }
     
             readCompletedOperation.referrer.stopImmediatePropagation();
         } else {
-            console.log("<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+" ELSE from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+            console.log("\tSync Service capture ReadCompletedOperation "+readCompletedOperation.id+" ELSE from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
         }
     }
 
@@ -1128,7 +1261,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //     if(readCompletedOperation.rawDataService !== this && readCompletedOperation.rawDataService !== this.destinationDataService) {
     //         //Temporary solution to prevent OperationCoordinator to send readCompletedOperation from originDataServices back to client
     //         if(readCompletedOperation.clientId) {
-    //             console.log("<-> Service handle ReadCompletedOperation "+ readCompletedOperation.id+" with referrer readOperation " + readCompletedOperation.referrer.id +" prevents it to reach client");
+    //             console.log("Sync Service handle ReadCompletedOperation "+ readCompletedOperation.id+" with referrer readOperation " + readCompletedOperation.referrer.id +" prevents it to reach client");
 
     //             readCompletedOperation.clientId = null;
     //         }
@@ -1138,7 +1271,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
     handleReadCompletedOperation (operation) {
-        //console.warn("<-> Service handle ReadCompletedOperation is #WARNING Neutralized #WARNING for "+operation.id+" from "+operation.rawDataService.identifier+", referrer "+operation.referrer.id+", for "+operation.referrer.target.name + (operation.referrer?.data?.readExpressions? (" "+operation.referrer?.data?.readExpressions) : "") + " like "+ operation.referrer.criteria);
+        //console.warn("Sync Service handle ReadCompletedOperation is #WARNING Neutralized #WARNING for "+operation.id+" from "+operation.rawDataService.identifier+", referrer "+operation.referrer.id+", for "+operation.referrer.target.name + (operation.referrer?.data?.readExpressions? (" "+operation.referrer?.data?.readExpressions) : "") + " like "+ operation.referrer.criteria);
     }
 
     fetchOriginDataForReadOperation(readOperation) {
@@ -1155,10 +1288,25 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
 
+    /**
+     * A single readOperation can lead to mnultiple readCompletedOperation when a readOperation has multiple read expressions to different destinations, each has to become a read operation followed by a readCompleted/Failed one.
+     * So we need to go from readOperation -> {type -> [readCompletedOperation]}
+     * 
+     * And we know we're done when all known child services capable of handling a type has completed its handling by returning a readCompletedOperation. 
+     *
+     * @method
+     * @argument {DataOperationType - read} aReadOperation
+     * @argument {ObjectDescriptor} anObjectDescriptor — the target of one of the read completed operation for one of aReadOperation's readExpessions if any, defaults to aReadOperation's target if absent
+     * @returns {Boolean}
+     */
 
-    didAllChildServicesCompletedReadOperation(aReadOperation) {
-        return this.handlesType(aReadOperation.target)
-                ? this.readCompletionOperationByChildDataServiceForReadOperation(aReadOperation).size === this.childServicesHandlingDataOperation(aReadOperation).length
+    didAllChildServicesCompletedReadOperationForTarget(aReadOperation, anObjectDescriptor = aReadOperation.target) {
+        /*
+            All RawDataServices have to map aReadOperation's to the same type being fetched: The same as aReadOperation.target for regular fetches,
+            The type at the end of an expression for relationships, complex expressions or derived properties
+        */
+        return this.handlesType(anObjectDescriptor)
+                ? this.readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptor).length === this.childServicesHandlingDataOperationTypeForType(aReadOperation.type, anObjectDescriptor).length
                 : true;
     }
 
@@ -1166,19 +1314,31 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         return this.__childDataServiceReadCompletionOperationByReadOperation || (this.__childDataServiceReadCompletionOperationByReadOperation = new Map());
     }
 
-    readCompletionOperationByChildDataServiceForReadOperation(aReadOperation) {
+    readCompletionOperationByTargetForReadOperation(aReadOperation) {
         let result;
         return this._childDataServiceReadCompletionOperationByReadOperation.get(aReadOperation) || (this._childDataServiceReadCompletionOperationByReadOperation.set(aReadOperation, (result = new Map())) && result);
+    }
+
+    readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptorTarget) {
+        return this.readCompletionOperationByTargetForReadOperation(aReadOperation).get(anObjectDescriptorTarget);
     }
 
     registerChildDataServiceReadCompletionOperation(aReadCompletionOperation) {
 
         if(aReadCompletionOperation.rawDataService.handlesDataOperationTypeForType(aReadCompletionOperation.type, aReadCompletionOperation.target)) {
-            let readCompletionOperationByChildDataService = this.readCompletionOperationByChildDataServiceForReadOperation(aReadCompletionOperation.referrer);
-            readCompletionOperationByChildDataService.set(aReadCompletionOperation.rawDataService, aReadCompletionOperation);    
+            let readCompletionOperationByChildDataService = this.readCompletionOperationByTargetForReadOperation(aReadCompletionOperation.referrer),
+                readCompletionOperations = readCompletionOperationByChildDataService.get(aReadCompletionOperation.target);
+            if(!readCompletionOperations) {
+                readCompletionOperationByChildDataService.set(aReadCompletionOperation.target, (readCompletionOperations = []));    
+            }
+            readCompletionOperations.push(aReadCompletionOperation);    
         } else {
             console.warn("ReadCompletionOperation could not be registered as its rawDataService ("+aReadCompletionOperation.rawDataService.name+") doesn't handle the operation's target "+aReadCompletionOperation.target.name);
         }
+    }
+
+    hasRegisteredReadOperationForCompletionOperation(aReadCompletionOperation) {
+        return this._childDataServiceReadCompletionOperationByReadOperation.has(aReadCompletionOperation.referrer);
     }
 
     unregisterReadOperation(aReadOperation) {
@@ -1203,7 +1363,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             return;
         }
 
-        console.log("captureSynchronizationDataServiceReadFailedOperation: ", readFailedOperation);
+        console.log("Sync Service capture ReadFailedOperation "+readFailedOperation.id+" from "+readFailedOperation.rawDataService.identifier+", referrer "+readFailedOperation.referrer.id+", for "+readFailedOperation.referrer.target.name + (readFailedOperation.referrer?.data?.readExpressions? (" "+readFailedOperation.referrer?.data?.readExpressions) : "") + " like "+ readFailedOperation.referrer.criteria+": ", readFailedOperation.data);
 
         if((readFailedOperation.data.name === DataOperationErrorNames.DatabaseMissing) || 
         (readFailedOperation.data.name === DataOperationErrorNames.ObjectDescriptorStoreMissing) ) {

@@ -81,6 +81,36 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
     }
 
 
+
+    /**
+     * This method needs to evolve to handle the coordination betwen the resolution of the readOperation itself and all derivatives needed 
+     * to read readOperation's readExpressions.
+     * 
+     * Only a RawDataService can assess how far down the graph created by readExpressions can it map it, own it, vs needing to issue readOperations 
+     * for other data services to eventally handle if present in the stack.
+     * 
+     * The readCompletedOperation for readOperation (readCompletedOperation.referrer === readOperation) needs to be sent when all derivative reads 
+     * have been completed.
+     * 
+     * It is also possible that a readOperations's criteria may involve multiple discreet read operations being executed one after the other, 
+     * likely to be the case with HTTP-based data services. Those read operations may or may not all be directly handled by the RawDataService 
+     * handling the root read operation. Another use case with a database is if there's no complet or obvious inverse path to follow back to what is known 
+     * of the root read type.criteria. In that case, there's no option than to chain the reads, partially or fully. This will depend on a RawDataService's implementation of
+     * mapReadOperationToRawDataOperation
+     * 
+     * If a readOperation isn't about fullfilling expressions for a single object, and if there are readExpressions, the first readUpdateOperation
+     * shoud return the results for the root read operation, subsequent read operations for readExpressions should be readUpdateOperations referring
+     * to the root readOperation, and the last one should be the readCompletedOperation.
+     * 
+     *             this.mapDataOperationToRawDataOperations(readOperation, readOperations)
+     *  vs
+     *             readOperations = this.mapReadOperationToRawReadOperation(readOperation, rawDataOperation);
+     *
+     * @method
+     * @argument {DataOperation} readOperation - The different known connections to the database
+     * @returns {undefined|Promise} - undefined, or a promise that will trigger the event manager to continue propagation when that promise is resolved.
+     */
+
     handleReadOperation(readOperation) {
         
     }
@@ -521,7 +551,7 @@ RawDataService.addClassProperties({
     fetchRawObjectProperty: {
         value: function (object, propertyName) {
 
-            console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+object.dataIdentifier+", property: "+propertyName);
+            //console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+ this.dataIdentifierForObject(object)+", property: "+propertyName);
 
             var self = this,
                 objectDescriptor = this.objectDescriptorForObject(object),
@@ -537,7 +567,7 @@ RawDataService.addClassProperties({
 
 
                 var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor)),
-                    objectSnpashot = this.snapshotForObject(object);
+                    objectSnapshot = this.snapshotForObject(object);
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
 
@@ -555,10 +585,19 @@ RawDataService.addClassProperties({
                 let requirements = rule.requirements,
                     hintSnapshot;
 
-                if(objectSnpashot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
                     hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
                     for(let i=0, countI = requirements.length; (i<countI); i++) {
-                        hintSnapshot[requirements[i]] = objectSnpashot[requirements[i]];
+
+                        /* This is getting into mapping's business so it should migrate there */
+                        /* 
+                            If this is the form toMainyArray.has($), then if we have the value of toMainyArray and it's null or empty, there's no way we'd find something on the other side...
+                            So we can save time and return right away
+                        */
+                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule.converter.convertSyntax.type === "has") {
+                            return Promise.resolve(null);
+                        }
+                        hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
                     }
 
 
@@ -576,8 +615,8 @@ RawDataService.addClassProperties({
                     
                     We pass that as a hint through DataQuery's hints property.
                 */
-                if(objectSnpashot?.hasOwnProperty("originDataSnapshot")) {
-                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = objectSnpashot.originDataSnapshot;
+                if(objectSnapshot?.hasOwnProperty("originDataSnapshot")) {
+                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = objectSnapshot.originDataSnapshot;
                 }
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
@@ -586,7 +625,8 @@ RawDataService.addClassProperties({
                 //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
 
                 return DataService.mainService.fetchData(propertyNameQuery)
-                .then(function(fetchResult) {
+                .then((fetchResult) => {
+
                     // console.debug("object === fetchResult[0]", object === fetchResult[0]);
                     if(Array.isArray(fetchResult)) {
                         if(fetchResult[0] !== object) {
@@ -1127,8 +1167,8 @@ RawDataService.addClassProperties({
                 If rawData is null, we have no rawData-level property to work with and store in the snapshot
             */
             if(rawData) {
-                //Record the snapshot before we map.
-                this.recordSnapshot(object.dataIdentifier, rawData);
+                //Record the snapshot before we map. this.dataIdentifierForObject(object)
+                this.recordSnapshot(this.dataIdentifierForObject(object), rawData);
             }
 
 
@@ -1136,7 +1176,7 @@ RawDataService.addClassProperties({
 
             if (this._isAsync(result)) {
                 result = result.then( (resultValue) => {
-                    // console.log(object.dataIdentifier.objectDescriptor.name +" addOneRawData id:"+rawData.id+"  MAPPING PROMISE RESOLVED -> stream.addData(object)");
+                    // console.log( this.dataIdentifierForObject(object).objectDescriptor.name +" addOneRawData id:"+rawData.id+"  MAPPING PROMISE RESOLVED -> stream.addData(object)");
 
                     /*
                         Attempt to put in place something when an object is first fetched.
@@ -1273,7 +1313,8 @@ RawDataService.addClassProperties({
 
             if (!object) {
                 //iDataIdentifier argument should be all we need later on
-                return this.getDataObject(type, rawData, dataIdentifier, context);
+                object = this.getDataObject(type, rawData, dataIdentifier, context);
+                this.recordDataIdentifierForObject(dataIdentifier, object);
             }
             return object;
 
@@ -1379,7 +1420,7 @@ RawDataService.addClassProperties({
             } else {
                 var mapping = this.mappingForType(type);
                 if(mapping && mapping.rawDataPrimaryKeyCompiledExpressions) {
-                throw "-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData);
+                    throw "-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData);
                 }
             }
         }
@@ -1550,12 +1591,12 @@ RawDataService.addClassProperties({
                                         }
                                     }
                                 } else {
-                                    console.warn("recordSnapshot from Update: snapshot for '" + awDataKeys[i] + "' is not an Array but removedValues:", iDiffValues);
+                                    console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but removedValues:", iDiffValues);
                                     console.error("removedValues but no entry in snapshot for ")
                                     //snapshot[rawDataKeys[i]] = iDiffValues;
                                 }
                             } else {
-                                console.warn("recordSnapshot from Update: No entry in snapshot for '" + awDataKeys[i] + "' but removedValues:", iDiffValues);
+                                console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but removedValues:", iDiffValues);
                             }
                         }
 
@@ -2063,13 +2104,13 @@ RawDataService.addClassProperties({
 
      */
     mapRawDataToObject: {
-        value: function (record, object, context, readExpressions, registerMappedPropertiesAsChanged) {
+        value: function (record, object, context, readExpressions, registerMappedPropertiesAsChanged = false) {
             var self = this,
                 mapping = this.mappingForObject(object),
                 snapshot,
                 result;
 
-            // console.log(object.dataIdentifier.objectDescriptor.name +" _mapRawDataToObject id:"+record.id);
+            // console.log( this.dataIdentifierForObject(object).objectDescriptor.name +" _mapRawDataToObject id:"+record.id);
             if (mapping) {
                 let mappedProperties = this.delegate ? [] : null;
 
@@ -2087,7 +2128,7 @@ RawDataService.addClassProperties({
                     return Promise.resolve(object);
 
                     // if(this._objectsBeingMapped.has(object)) {
-                    //     console.log(object.dataIdentifier.objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FOUND EXISTING MAPPING PROMISE");
+                    //     console.log( this.dataIdentifierForObject(object).objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FOUND EXISTING MAPPING PROMISE");
                     //     return undefined;
                     //     return Promise.resolve(object);
                     //     return this._getMapRawDataToObjectPromise(snapshot,object);
@@ -2104,9 +2145,9 @@ RawDataService.addClassProperties({
 
                 //Recording snapshot even if we already had an object
                 //Record snapshot before we may create an object
-                //this.recordSnapshot(object.dataIdentifier, record);
+                //this.recordSnapshot( this.dataIdentifierForObject(object), record);
 
-                // console.log(object.dataIdentifier.objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FIRST NEW MAPPING PROMISE");
+                // console.log( this.dataIdentifierForObject(object).objectDescriptor.name +" _mapRawDataToObject id:"+record.id+" FIRST NEW MAPPING PROMISE");
 
                 if (result) {
                     return result.then( (resultValue) => {
@@ -2414,6 +2455,24 @@ RawDataService.addClassProperties({
     },
 
     /**
+     * Allows to know if objectDescriptor has descendants that are stored in the same
+     * object store, which is necessary to know what to do in term of instantiation 
+     * of the right subclass
+     *
+     * @method
+     * @argument {ObjectDescriptor} objectDescriptor        - the objectDescriptor object
+     * @returns {boolean}  -
+     */
+    isObjectDescriptorStoreShared: {
+        value: function(objectDescriptor) {
+            let mapping = this.mappingForObjectDescriptor(objectDescriptor);
+            return mapping
+                ? mapping.isObjectStoreShared
+                : false;
+        }
+    },
+
+    /**
      * @todo Document.
      * @todo Make this method overridable by type name with methods like
      * `mapHazardToRawData()` and `mapProductToRawData()`.
@@ -2706,7 +2765,7 @@ RawDataService.addClassProperties({
      * which triggers the event manager to continue the propagation when that promise settles.
      * 
      * If promisesReadOperationCompletion is set to true, a RawDataService has to return a promise that resolves
-     * to the operation followig the read, a readCompletedOperation / readCompletedOperation or a readFailedOperation
+     * to the operation following the read, a readCompletedOperation / readCompletedOperation or a readFailedOperation
      *
      *
      * @property {Boolean}
@@ -3013,7 +3072,7 @@ RawDataService.addClassProperties({
 
             if (parameters && typeof criteria.parameters === "object") {
                 var keys = Object.keys(parameters),
-                    i, countI, iKey, iValue, iRecord,
+                    i, countI, iKey, iValue, iRecord, iDataIdentifier,
                     criteriaClone;
 
                 //rawParameters = Array.isArray(parameters) ? [] : {};
@@ -3024,7 +3083,7 @@ RawDataService.addClassProperties({
                     if (!iValue) {
                         console.warn("fetchData: criteria ",criteria, "has value: "+value+" for parameter key " + iKey);
                     } else {
-                        if (iValue.dataIdentifier) {
+                        if (iDataIdentifier = this.dataIdentifierForObject(iValue)) {
 
 
                             if (!criteriaClone) {
@@ -3040,7 +3099,7 @@ RawDataService.addClassProperties({
                             // (promises || (promises = [])).push(
                             //     self._mapObjectToRawData(iValue, iRecord)
                             // );
-                            rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
+                            rawParameters[iKey] = iDataIdentifier.primaryKey;
                         }
                         // else {
                         //     rawParameters[iKey] = iValue;
@@ -4178,7 +4237,7 @@ RawDataService.addClassProperties({
         value: function (object, operationType, dataObjectChangesMap, dataOperationsByObject, commitTransactionOperation) {
             try {
 
-                console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id)
+                //console.log("_saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id)
                 //TODO
                 //First thing we should be doing here is run validation
                 //on the object, which should be done one level up
@@ -4196,7 +4255,7 @@ RawDataService.addClassProperties({
 
                 var self = this,
                     operation = new DataOperation(),
-                    dataIdentifier = this.dataIdentifierForObject(object),
+                    dataIdentifier =  operationType === DataOperation.Type.CreateOperation ? this.mainService.dataIdentifierForObject(object) : this.dataIdentifierForObject(object),
                     objectDescriptor = this.objectDescriptorForObject(object),
                     //We make a shallow copy so we can remove properties we don't care about
                     snapshot,
@@ -4232,7 +4291,7 @@ RawDataService.addClassProperties({
                     }
                 }
 
-                if (snapshot = this.snapshotForDataIdentifier(object.dataIdentifier)) {
+                if (snapshot = this.snapshotForDataIdentifier(dataIdentifier)) {
                     //We make a shallow copy so we can remove properties we don't care about
                     snapshot = Object.assign({}, snapshot);
                 }
@@ -4266,10 +4325,10 @@ RawDataService.addClassProperties({
                     this.mapObjectTypeToRawData(object, operationData, operation);
                 }
 
-                console.log("_save ("+operationType+") for "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
+                //console.log("_save ("+operationType+") for "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping starts")
                 return this._mapObjectChangesToOperationData(object, dataObjectChanges, operationData, snapshot, dataSnapshot, isNewObject, isDeletedObject, objectDescriptor)
-                    .then(function (resolvedOperationData) {
-                        console.log("_saveDataOperation ("+operationType+") forObject "+ object.dataIdentifier+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping ends")
+                    .then((resolvedOperationData) => {
+                        //console.log("_saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " mapping ends")
 
                         if (!isDeletedObject) {
 
@@ -4301,6 +4360,9 @@ RawDataService.addClassProperties({
                         if (dataOperationsByObject) {
                             dataOperationsByObject.set(object, operation);
                         }
+
+                        console.debug("###### _saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " is ", operation)
+
                         return operation;
                     });
             }
@@ -4378,7 +4440,7 @@ RawDataService.addClassProperties({
                                 /*
                                     resolvedOperations could contains some null if changed objects don't have anything to solve in their own row because it's stored on the other side of a relationship, which is why we keep track of the other array ourselves to avoid looping over again and modify the array after, or send noop operation through the wire for nothing. Cost time an money!
                                 */
-                                resolve(operations);
+                                resolve(resolvedOperations);
                             }, function (rejectedValue) {
                                 reject(rejectedValue);
                             });

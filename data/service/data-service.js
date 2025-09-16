@@ -2725,9 +2725,9 @@ DataService.addClassProperties({
                         We keep a reference for ourselves to the unique object returned 
                         for our own dataIdentifier for it.
                     */
-                    if(dataObject.dataIdentifier !== dataIdentifier) {
-                        this.recordObjectForDataIdentifier(dataObject, dataIdentifier);
-                    }
+                    // if(dataObject.dataIdentifier !== dataIdentifier) {
+                    //     this.recordObjectForDataIdentifier(dataObject, dataIdentifier);
+                    // }
     
                 }
                 
@@ -2788,10 +2788,24 @@ DataService.addClassProperties({
      dataIdentifierForObject: {
         value: function (object) {
             //If we don't have a local / native one, we return the one assigned by the main service
-            let dataIdentifier = this._dataIdentifierByObject.get(object) || object.dataIdentifier;
-            if(!dataIdentifier && this !== this.mainService) {
-                dataIdentifier = this.createDataIdentifierForObject(object);
+            //let dataIdentifier = this._dataIdentifierByObject.get(object) || object.dataIdentifier;
+            let dataIdentifier = this._dataIdentifierByObject.get(object);
+
+            //When we merge in a graph of data object's it's possible that those objects are
+            if(!dataIdentifier && this !==this.mainService) {
+
+                dataIdentifier = this.mainService.dataIdentifierForObject(object);
+                if(!dataIdentifier) {
+
+                    // throw "No dataIdentifier found for data object: "+object;
+                    dataIdentifier = this.createDataIdentifierForObject(object);
+                    if(this.parentService === this.mainService) {
+                        this.mainService.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
+                        this.mainService.recordDataIdentifierForObject(dataIdentifier, object);
+                    }
+                }
                 this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
+
             }
             return dataIdentifier;
         }
@@ -2817,8 +2831,9 @@ DataService.addClassProperties({
                     this._dataIdentifierByObject.get(object) are actually not the same. need to figure out why, but narrowing the test
                 to verify they have the same primaryKey should help for now.
             */
-            if(this._dataIdentifierByObject.has(object) && this._dataIdentifierByObject.get(object).primaryKey !== dataIdentifier.primaryKey) {
-                throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
+            if(this._dataIdentifierByObject.has(object) && this._dataIdentifierByObject.get(object)?.primaryKey !== dataIdentifier.primaryKey) {
+                //throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
+                console.error("WARNING: recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
             }
             /*
                 TODO: This is called twice when this._dataIdentifierByObject already contains (object, dataIdentifier)
@@ -3278,70 +3293,78 @@ DataService.addClassProperties({
      */
 
     _invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject: {
-        value: function(delegate, dataObject, propertyName, valueToMerge, existingDataObject, propertyArray, propertyIndex, _promises, isRoot ) {
-            let delegatePromise = delegate.willMergeDataObjectPropertyValueIntoExistingDataObject(dataObject, propertyName,  valueToMerge, existingDataObject, propertyArray, propertyIndex )
-                .then((delegateValueToMerge) => {
-                    /*
-                        If null is returned by the delegate, nothing to do
-                        But if an object is returned that is known, then the 
-                        next mergeDataObject() will punt as needed
-                    */
-                    if(delegateValueToMerge) {
-                        this.mergeDataObject(delegateValueToMerge, delegate, _promises, isRoot);
-
+        value: function(delegate, dataObject, propertyName, valueToMerge, existingDataObject, propertyArray, propertyIndex, _promises, isRoot, _mergingDataObjects) {
+            if(!delegate?.willMergeDataObjectPropertyValueIntoExistingDataObject) {
+                this.mergeDataObject(valueToMerge, delegate, _promises, isRoot, _mergingDataObjects);
+            } else {
+                let delegatePromise = delegate.willMergeDataObjectPropertyValueIntoExistingDataObject(dataObject, propertyName,  valueToMerge, existingDataObject, propertyArray, propertyIndex )
+                    .then((delegateValueToMerge) => {
                         /*
-                            Update the property
-                            DOES NOT HANDLE ANYTHING BUT to-one and array-based to-many...
-                            Shall we leave this to the delegate to do?
+                            If null is returned by the delegate, nothing to do
+                            But if an object is returned that is known, then the 
+                            next mergeDataObject() will punt as needed
                         */
-                        if(propertyArray) {
-                            if(!existingDataObject) {
-                                if(propertyArray[propertyIndex] !== delegateValueToMerge) {
-                                    propertyArray.set(propertyIndex, delegateValueToMerge);
+                        if(delegateValueToMerge) {
+                            this.mergeDataObject(delegateValueToMerge, delegate, _promises, isRoot, _mergingDataObjects);
+
+                            /*
+                                Update the property
+                                DOES NOT HANDLE ANYTHING BUT to-one and array-based to-many...
+                                Shall we leave this to the delegate to do?
+                            */
+                            if(propertyArray) {
+                                if(!existingDataObject) {
+                                    if(propertyArray[propertyIndex] !== delegateValueToMerge) {
+                                        propertyArray.set(propertyIndex, delegateValueToMerge);
+                                    }
+                                } else {
+                                    return this.getObjectProperties(existingDataObject, [propertyName])
+                                    .then(()=>{
+                                        let existingDataObjectArray = existingDataObject[propertyName];
+                                        if(!existingDataObjectArray.includes(delegateValueToMerge)) {
+                                            existingDataObjectArray.push(delegateValueToMerge);
+                                        }    
+                                    })
                                 }
                             } else {
-                                return this.getObjectProperties(existingDataObject, [propertyName])
-                                .then(()=>{
-                                    let existingDataObjectArray = existingDataObject[propertyName];
-                                    if(!existingDataObjectArray.includes(delegateValueToMerge)) {
-                                        existingDataObjectArray.push(delegateValueToMerge);
-                                    }    
-                                })
+                                if(existingDataObject) {
+                                    return this.getObjectProperties(existingDataObject, [propertyName])
+                                    .then(()=>{
+                                        let existingDataObjectValue = existingDataObject[propertyName];
+                                        if(existingDataObjectValue !== delegateValueToMerge) {
+                                            existingDataObjectValue[propertyName] = delegateValueToMerge;
+                                        }
+                                    });
+                                } else if(dataObject[propertyName] !== delegateValueToMerge) {
+                                    dataObject[propertyName] = delegateValueToMerge;
+                                }
                             }
-                        } else {
-                            if(existingDataObject) {
-                                return this.getObjectProperties(existingDataObject, [propertyName])
-                                .then(()=>{
-                                    let existingDataObjectValue = existingDataObject[propertyName];
-                                    if(existingDataObjectValue !== delegateValueToMerge) {
-                                        existingDataObjectValue[propertyName] = delegateValueToMerge;
-                                    }
-                                });
-                            } else if(dataObject[propertyName] !== delegateValueToMerge) {
-                                dataObject[propertyName] = delegateValueToMerge;
-                            }
-                        }
-                    } 
+                        } 
 
-                    return delegateValueToMerge;
-                });
+                        return delegateValueToMerge;
+                    });
 
-            _promises.push(delegatePromise);
-            return delegatePromise;
+                _promises.push(delegatePromise);
+                return delegatePromise;
+            }
         }
     },
 
     _invokeDelegateWillMergeDataObject: {
         value: function(delegate, dataObject, _promises, isRoot) {
-            let delegatePromise = delegate.willMergeDataObject(dataObject);
-            _promises.push(delegatePromise);
-            return delegatePromise;
+            if(delegate?.willMergeDataObject) {
+                let delegatePromise = delegate.willMergeDataObject(dataObject);
+                _promises.push(delegatePromise);
+                return delegatePromise;
+            } else {
+                return Promise.resolve(dataObject);
+            }
         }
     },
 
 
     _mergeDataObjectProperties: {
-        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot) {
+        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot, _mergingDataObjects) {
 
             //Sanity check
             if(delegateObjectToMerge === dataObject) {
@@ -3352,7 +3375,7 @@ DataService.addClassProperties({
             for(let iKey of objectKeys) {
 
                 let iValue = dataObject[iKey];
-                console.log("merging "+iKey+", iValue ",iValue, "for ",dataObject);
+                //console.log("merging "+iKey+", iValue ",iValue, "for ",dataObject.identifier);
 
                 //If it's a new object, we need to make sure things are square like if dataObject had been created by the data service
                 if(!delegateObjectToMerge) {
@@ -3367,29 +3390,29 @@ DataService.addClassProperties({
                 if(Array.isArray(iValue)) {
                     for(let i=0, countI = iValue.length; (i<countI); i++) {
                         if(delegate) {
-                            this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue[i], delegateObjectToMerge, iValue, i, _promises, _isRoot)
+                            this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue[i], delegateObjectToMerge, iValue, i, _promises, _isRoot, _mergingDataObjects)
                         } else {
                             //We don't change the structure, we just blend in values off dataObject
-                            this.mergeDataObject(iValue[i], delegate, _promises, _isRoot);
+                            this.mergeDataObject(iValue[i], delegate, _promises, _isRoot, _mergingDataObjects);
                         }
                     }
                 } else if(iValue && typeof iValue === "object") {
                     if(delegate) {
-                        this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue, delegateObjectToMerge, undefined, undefined, _promises, _isRoot)
+                        this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(delegate, dataObject, iKey, iValue, delegateObjectToMerge, undefined, undefined, _promises, _isRoot, _mergingDataObjects)
                     } else {
                         //We don't change the structure, we just blend in values off dataObject
-                        this.mergeDataObject(iValue, delegate, _promises, _isRoot);
+                        this.mergeDataObject(iValue, delegate, _promises, _isRoot, _mergingDataObjects);
                     }
                 }
 
-                console.log("merged "+iKey+" for:",dataObject);
+                //console.log("merged "+iKey+" for:"+dataObject.identifier);
             }
 
         }
     },
 
     _mergeDataObject: {
-        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot) {
+        value: function(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot, _mergingDataObjects) {
 
             if(!delegateObjectToMerge || (delegateObjectToMerge && dataObject === delegateObjectToMerge)) {
 
@@ -3408,18 +3431,20 @@ DataService.addClassProperties({
                     //     //
                     //     //primaryKey = service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject),
                     //     primaryKey = service.primaryKeyForTypeRawData(objectDescriptor, dataObject),
-                        prototype = this._getPrototypeForType(objectDescriptor/*, service*/),
+                        prototype = this._getPrototypeForType(objectDescriptor/*, service*/);
                         //     dataIdentifier = primaryKey 
                         //         ? service.dataIdentifierForTypePrimaryKey(objectDescriptor, primaryKey)
                         //         : service.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor);
-
-                        dataIdentifier = this.dataIdentifierForObject(dataObject);
-
                     /*
                         for Anonymous identity object, it happens that no service is found, which is to be investigated.
                         One unusual thing is that Identity extends Montage and not DataObject, relevant?
                     */
                     if(service) {
+
+                        let dataIdentifier = service.dataIdentifierForObject(dataObject);
+                        // this is mainService here
+                        // this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                        // this.recordDataIdentifierForObject(dataIdentifier, dataObject);
 
                         if(!dataIdentifier) {
                             dataIdentifier = service?.dataIdentifierForNewObjectWithObjectDescriptor(objectDescriptor, dataObject);
@@ -3446,14 +3471,15 @@ DataService.addClassProperties({
                         this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
 
                         //Let's make sure the values are now handled by DataTriggers
-                        this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot);
+                        this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot, _mergingDataObjects);
 
                         //Build the changes we'll want to upsert
                         //this.registerMergedDataObjectChanges(dataObject);
 
                         this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
 
-                        if(delegate && _isRoot && _promises) {
+                        //if(delegate && _isRoot && _promises) {
+                        if(_isRoot && _promises) {
                             return Promise.all(_promises).then(() => dataObject);
                         }
                         return dataObject;
@@ -3462,13 +3488,15 @@ DataService.addClassProperties({
                         console.warn("WARNING: Object NOT MERGED: No RawDataService found that can save data type "+objectDescriptor);
 
                     }
-                }
-            } else {
+                } 
+            } 
+            else {
                 //An existing object was found, but we still want to eventually move properties from dataObject to delegateObjectToMerge
-                this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot);
+                this._mergeDataObjectProperties(dataObject, delegate, delegateObjectToMerge, _promises, _isRoot, _mergingDataObjects);
             }
 
-            if(delegate && _isRoot && _promises) {
+            //if(delegate && _isRoot && _promises) {
+            if(_isRoot && _promises) {
                 return Promise.all(_promises).then(() => dataObject);
             }
             return dataObject;
@@ -3477,36 +3505,63 @@ DataService.addClassProperties({
     },
 
     mergeDataObject: {
-        value: function(dataObject, delegate, _promises) {
-            let isRoot = (_promises === undefined),
+        value: function(dataObject, delegate, _promises, _isRoot, _mergingDataObjects) {
+            let isRoot = arguments.length === 4 ? _isRoot : (_promises === undefined),
                 promises;
 
+            if(_promises) {
+                promises = _promises;
+            }
+
+            if(!_mergingDataObjects) {
+                _mergingDataObjects = new Set();
+            }
+
+            if(_mergingDataObjects.has(dataObject)) {
+                return (isRoot)? Promise.resolve(dataObject) : dataObject;
+            } else {
+                _mergingDataObjects.add(dataObject);
+            }
+            
+
             if(dataObject === null || dataObject === undefined) {
-                return (delegate && isRoot)? Promise.resolve(dataObject) : dataObject;
+                //return (delegate && isRoot)? Promise.resolve(dataObject) : dataObject;
+                return (isRoot)? Promise.resolve(dataObject) : dataObject;
             }
             
             let objectDescriptor = this.objectDescriptorForObject(dataObject);
             let childServicesForType = this.childServicesForType(objectDescriptor);
 
             if(!objectDescriptor || (objectDescriptor && (!this.handlesType(objectDescriptor) || !childServicesForType || (childServicesForType && childServicesForType?.filter((value) => value.handlesType(objectDescriptor))?.length == 0 )))) {
-                return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+                //return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+                return  (isRoot) ? Promise.resolve(dataObject) : dataObject;
             }
             //If we already know about the object, nothing to do
             else if((this.isObjectCreated(dataObject) || this.isObjectFetched(dataObject) || this.isObjectChanged(dataObject) || this.isObjectDeleted(dataObject))) {
-                return (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+                //return (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
+                return (isRoot) ? Promise.resolve(dataObject) : dataObject;
             } else {
                 let rootPromise;
                 
-                if(isRoot && delegate) {
+                if(delegate) {
                     return this._invokeDelegateWillMergeDataObject(delegate, dataObject, (promises || (promises = [])), isRoot)
                     .then((delegateObjectToMerge) => {
-                        return this._mergeDataObject(dataObject, delegate, delegateObjectToMerge, (promises || (promises = [])), isRoot)
+                        this._mergeDataObject(dataObject, delegate, delegateObjectToMerge, (promises || (promises = [])), isRoot, _mergingDataObjects);
+
+                        if(isRoot && promises) {
+                            return Promise.all(promises).then(() => dataObject);
+                        }
+                        else {
+                            return dataObject;
+                        }
+
                     })
                     
                 } else {
-                    this._mergeDataObject(dataObject, delegate, undefined, (promises || (promises = [])), isRoot);
+                    this._mergeDataObject(dataObject, delegate, undefined, (promises || (promises = [])), isRoot, _mergingDataObjects);
                     
-                    if(delegate && isRoot && promises) {
+                    // if(delegate && isRoot && promises) {
+                    if(isRoot && promises) {
                         return Promise.all(promises).then(() => dataObject);
                     }
                     else {
@@ -3751,6 +3806,8 @@ DataService.addClassProperties({
     /**
      * handles the propagation of a value set to a property's inverse property, fka "addToBothSidesOfRelationship..."
      * This doesn't handle range changes, which is done in another method.
+     * 
+     * WARNING: It doesn't look like this is called anywhere, but _setDataObjectPropertyDescriptorValueForInversePropertyDescriptor() is
      *
      * @private
      * @method
@@ -3777,14 +3834,27 @@ DataService.addClassProperties({
     },
 
     _setDataObjectPropertyDescriptorValueForInversePropertyDescriptor: {
-        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, previousValue) {
+        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, previousValue, isDataObjectBeingMapped) {
             if(!inversePropertyDescriptor) {
                 return;
             }
 
-            if(this._objectsBeingMapped.has(dataObject) && this._objectsBeingMapped.has(value)) {
-                return;
+            // if(this._objectsBeingMapped.has(dataObject) && this._objectsBeingMapped.has(value)) {
+            //     return;
+            // }
+
+            let addedValueAsObjectsBeingMapped = false,
+                setInversePromise;
+
+            if(this._objectsBeingMapped.has(dataObject)) {
+                if(this._objectsBeingMapped.has(value)) {
+                    return;
+                } else {
+                    addedValueAsObjectsBeingMapped = true;
+                    this._objectsBeingMapped.add(value);
+                }
             }
+
 
             var inversePropertyName = inversePropertyDescriptor.name,
                 inversePropertyCardinality = inversePropertyDescriptor.cardinality,
@@ -3836,7 +3906,7 @@ DataService.addClassProperties({
                             If we do value[inversePropertyName], it does trigger a fetch anyway and the value returned may or may not
                             end up overriding value[inversePropertyName] = dataObject done here, which isn't what the user intended.
                         */
-                       this.getObjectProperties(value, [inversePropertyName])
+                       setInversePromise = this.getObjectProperties(value, [inversePropertyName])
                        .then(() => {
                             if(value[inversePropertyName] !== dataObject) {
                                 value[inversePropertyName] = dataObject;
@@ -3905,6 +3975,19 @@ DataService.addClassProperties({
                 // }
 
             }
+
+
+            //Cleanup: 
+            if(addedValueAsObjectsBeingMapped) {
+                if(setInversePromise) {
+                    setInversePromise.then(() => {
+                        this._objectsBeingMapped.delete(value);
+                    })
+                } else {
+                    this._objectsBeingMapped.delete(value);
+                }
+            }
+
         }
     },
 
@@ -3937,7 +4020,7 @@ DataService.addClassProperties({
     },
 
     _addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor: {
-        value: function (dataObject, propertyDescriptor, values, inversePropertyDescriptor) {
+        value: function (dataObject, propertyDescriptor, values, inversePropertyDescriptor, isDataObjectBeingMapped) {
             if(inversePropertyDescriptor) {
                 //value should  be an array
                 if((values && !Array.isArray(values)) || !(propertyDescriptor.cardinality > 0)) {
@@ -3949,16 +4032,20 @@ DataService.addClassProperties({
                     i, countI;
 
                 for(i=0, countI = values?.length; (i<countI); i++) {
-                    this._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, values[i], inversePropertyDescriptor, inversePropertyCardinality, inversePropertyName);
+                    this._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, values[i], inversePropertyDescriptor, inversePropertyCardinality, inversePropertyName, isDataObjectBeingMapped);
 
                 }
-                }
+            }
         }
     },
 
     _addDataObjectPropertyDescriptorValueForInversePropertyDescriptor: {
-        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, _inversePropertyCardinality, _inversePropertyName) {
+        value: function (dataObject, propertyDescriptor, value, inversePropertyDescriptor, _inversePropertyCardinality, _inversePropertyName, isDataObjectBeingMapped) {
             if(inversePropertyDescriptor && value) {
+
+                if(isDataObjectBeingMapped) {
+                    this._objectsBeingMapped.add(value);
+                }
 
                 if((_inversePropertyCardinality || inversePropertyDescriptor.cardinality) > 1) {
                     //many to many:
@@ -3985,6 +4072,11 @@ DataService.addClassProperties({
                         value[_inversePropertyName || inversePropertyDescriptor.name] = dataObject;
                     }
                 }
+
+                if(isDataObjectBeingMapped) {
+                    this._objectsBeingMapped.delete(value);
+                }
+
             }
         }
     },
@@ -4065,7 +4157,8 @@ DataService.addClassProperties({
             var dataObject =  changeEvent.target,
                 key = changeEvent.key,
                 objectDescriptor = this.objectDescriptorForObject(dataObject),
-                propertyDescriptor = objectDescriptor.propertyDescriptorForName(key);
+                propertyDescriptor = objectDescriptor.propertyDescriptorForName(key),
+                isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject);
 
 
             //Property with definitions are read-only shortcuts, we don't want to treat these as changes the raw layers will want to know about
@@ -4073,7 +4166,7 @@ DataService.addClassProperties({
                 return;
             }
 
-            if(this.autosaves && !this.isAutosaveScheduled) {
+            if(!isDataObjectBeingMapped && this.autosaves && !this.isAutosaveScheduled) {
                 this.isAutosaveScheduled = true;
                 queueMicrotask(() => {
                     this.isAutosaveScheduled = false;
@@ -4115,6 +4208,7 @@ DataService.addClassProperties({
                 keyValue = changeEvent.keyValue,
                 addedValues = changeEvent.addedValues,
                 removedValues = changeEvent.removedValues,
+                isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject),
                 changesForDataObject = this.changesForDataObject(dataObject),
                 //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                 //inversePropertyDescriptor,
@@ -4131,7 +4225,7 @@ DataService.addClassProperties({
             */
 
 
-            if(!isCreatedObject) {
+            if(!isCreatedObject && !isDataObjectBeingMapped) {
                 //this.changedDataObjects.add(dataObject);
                 this.registerChangedDataObject(dataObject);
             }
@@ -4178,11 +4272,13 @@ DataService.addClassProperties({
             */
             if( changeEvent.hasOwnProperty("key") && changeEvent.hasOwnProperty("keyValue") && key !== "length" &&
             /* new for blocking re-entrant */ changesForDataObject.get(key) !== keyValue) {
-            changesForDataObject.set(key,keyValue);
+                if(!isDataObjectBeingMapped) {
+                    changesForDataObject.set(key,keyValue);
+                }
 
                 //Now set the inverse if any
                 if(inversePropertyDescriptor) {
-                    self._setDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, keyValue, inversePropertyDescriptor, changeEvent.previousKeyValue);
+                    self._setDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, keyValue, inversePropertyDescriptor, changeEvent.previousKeyValue, isDataObjectBeingMapped);
                 }
             }
 
@@ -4209,8 +4305,8 @@ DataService.addClassProperties({
                     /*
                         In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
                     */
-                    if(Array.isArray(manyChanges) && isCreatedObject) {
-                        self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues, inversePropertyDescriptor);
+                    if(Array.isArray(manyChanges) && (isCreatedObject || isDataObjectBeingMapped)) {
+                        self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues, inversePropertyDescriptor, isDataObjectBeingMapped);
                     } else {
                         var registeredAddedValues = manyChanges.addedValues;
                         if(!registeredAddedValues) {
@@ -4222,14 +4318,18 @@ DataService.addClassProperties({
                                 changesForDataObject.set(key, manyChanges);
                            }
 
-                            manyChanges.addedValues = (registeredAddedValues = new Set(addedValues));
-                            self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues, inversePropertyDescriptor);
+                           if(!isDataObjectBeingMapped) {
+                                manyChanges.addedValues = (registeredAddedValues = new Set(addedValues));
+                           }
+                            self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues, inversePropertyDescriptor, isDataObjectBeingMapped);
 
                         } else {
 
                             for(i=0, countI=addedValues.length;i<countI;i++) {
+                                if(!isDataObjectBeingMapped) {
                                 registeredAddedValues.add(addedValues[i]);
-                                self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues[i], inversePropertyDescriptor);
+                                }
+                                self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, addedValues[i], inversePropertyDescriptor, isDataObjectBeingMapped);
                             }
                         }
                     }
@@ -4238,18 +4338,23 @@ DataService.addClassProperties({
                 if(removedValues) {
                     /*
                         In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
+                        If the change is triggered by resolving properties by the framewok itself, then isDataObjectBeingMapped is true, and we don't want to register any of it as a change
                     */
-                    if(Array.isArray(manyChanges) && isCreatedObject) {
-                        self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues, inversePropertyDescriptor);
+                    if(Array.isArray(manyChanges) &&  (isCreatedObject || isDataObjectBeingMapped)) {
+                        self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues, inversePropertyDescriptor, isDataObjectBeingMapped);
                     } else {
                         var registeredRemovedValues = manyChanges.removedValues;
                         if(!registeredRemovedValues) {
-                            manyChanges.removedValues = (registeredRemovedValues = new Set(removedValues));
-                            self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues, inversePropertyDescriptor);
+                            if(!isDataObjectBeingMapped) {
+                                manyChanges.removedValues = (registeredRemovedValues = new Set(removedValues));
+                            }
+                            self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues, inversePropertyDescriptor, isDataObjectBeingMapped);
                         } else {
                             for(i=0, countI=removedValues.length;i<countI;i++) {
-                                registeredRemovedValues.delete(removedValues[i]);
-                                self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues[i], inversePropertyDescriptor);
+                                if(!isDataObjectBeingMapped) {
+                                    registeredRemovedValues.delete(removedValues[i]);
+                                }
+                                self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(dataObject, propertyDescriptor, removedValues[i], inversePropertyDescriptor, isDataObjectBeingMapped);
                             }
                         }
                     }
@@ -4428,6 +4533,44 @@ DataService.addClassProperties({
         }
     },
 
+    _promisesByPendingTransactions: {
+        value: undefined
+    },
+    registerPendingTransactionPromise: {
+        value: function(transaction, promise) {
+            (this._promisesByPendingTransactions || (this._promisesByPendingTransactions = new Map())).set(transaction,promise);
+        }
+    },
+    registeredPromiseForPendingTransaction: {
+        value: function(transaction) {
+            return this._promisesByPendingTransactions?.get(transaction);
+        }
+    },
+
+    hasPendingTransaction: {
+        get: function() {
+            return this._promisesByPendingTransactions && this._promisesByPendingTransactions.size > 0;
+        }
+    },
+
+    pendingTransactions: {
+        get: function() {
+            return Array.from(this._promisesByPendingTransactions?.keys());
+        }
+    },
+    pendingTransactionPromises: {
+        get: function() {
+            return Array.from(this._promisesByPendingTransactions?.values());
+        }
+    },
+
+    unregisterPendingTransaction: {
+        value: function(transaction) {
+            if(this._promisesByPendingTransactions) {
+                this._promisesByPendingTransactions.delete(transaction);
+            }
+        }
+    },
 
     _pendingTransactions: {
         value: undefined
@@ -4737,9 +4880,20 @@ DataService.addClassProperties({
         value: function () {
             //If nothing to do, we bail out as early as possible.
             if(this.createdDataObjects.size === 0 && this.changedDataObjects.size === 0 && this.deletedDataObjects.size === 0) {
-                var noOpOperation = new DataOperation();
-                noOpOperation.type = DataOperation.Type.NoOp;
-                return Promise.resolve(noOpOperation);
+                /*
+                    If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separatin of changes,
+                    best we can do is return a promise encompasing all pending.
+
+                    If anothe saveChanges were to be called, it may not use that same promise
+                */
+                if(this.hasPendingTransaction) {
+                    let pendingTransactionPromises = this.pendingTransactionPromises;
+                    return pendingTransactionPromises.length === 1 ? pendingTransactionPromises[0] : Promise.all(this.pendingTransactionPromises);
+                } else {
+                    var noOpOperation = new DataOperation();
+                    noOpOperation.type = DataOperation.Type.NoOp;
+                    return Promise.resolve(noOpOperation);
+                }
             }
 
             var transaction = new Transaction(),
@@ -4765,7 +4919,7 @@ DataService.addClassProperties({
             // this.dataObjectChanges.clear();
             // this.objectDescriptorsWithChanges.clear();
 
-            return new Promise(function(resolve, reject) {
+            let pendingTransactionPromise = new Promise(function(resolve, reject) {
                 try {
                     var deletedDataObjectsIterator,
                         operation,
@@ -4986,7 +5140,8 @@ DataService.addClassProperties({
                         */
 
                             //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-                        self.removePendingTransaction(transaction);
+                        // self.removePendingTransaction(transaction);
+                        self.unregisterPendingTransaction(transaction);
                        resolve(transaction);
 
                     })
@@ -5016,6 +5171,10 @@ DataService.addClassProperties({
                     self._cancelTransaction(transaction, error, reject);
                 }
             });
+
+            self.registerPendingTransactionPromise(transaction, pendingTransactionPromise);
+
+            return pendingTransactionPromise;
         }
     },
 
@@ -5040,6 +5199,9 @@ DataService.addClassProperties({
             })
             .catch(function(error) {
                 rejectFunction(error)
+            })
+            .finally(()=> {
+                this.unregisterPendingTransaction(transaction);
             });
 
         }
@@ -6410,6 +6572,21 @@ DataService.addClassProperties({
      */
     handleChange: {
         value: function(changeEvent) {
+
+            //Adding check to avoid changes from property-fetching
+            let trigger = this._triggerForObjectProperty(changeEvent.target, changeEvent.key),
+                triggerValueStatus = trigger._getValueStatus(changeEvent.target);
+
+            /*
+                If triggerValueStatus is a promise, then we know the property is being fetched.
+                BUT HOW CAN WE BE SURE THAT THIS CHANGE IS THE RESULT OF THE FETCH?
+                
+                But that that specific change Event could still be a change coming from user-side?
+
+                - The snapshot may not help us since it could be a property resolved off the primary key
+                    if(trigger._getValueStatus(object) == )
+
+            */
             //Commentting out the restriction to exclude created objects as we might want to
             //use it for them as well
 
@@ -6515,7 +6692,7 @@ DataService.addClassProperties({
                             // }
 
                         }, function(error) {
-                            console.log(error);
+                            console.error(error);
                             return Promise.reject(error);
                         });
                     }
