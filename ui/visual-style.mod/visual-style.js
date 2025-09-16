@@ -42,6 +42,13 @@ var PROPERTIES = [
 var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
 
 
+    /*************
+     * Additional Considerations / TODOs
+     * 1. Move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
+     * 2. Allow components to reference any visual style defined elsewhere in the application. A map on VisualStyle?
+     * 
+     */
+
     constructor() {
         super();
         //TODO move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
@@ -74,7 +81,9 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         return `mod-vs-${name}`;
     }
 
-
+    /** 
+     * Create the CSS for this visual style
+     */
     generateCSS(isRoot) {
         let rawCSS;
         
@@ -119,13 +128,6 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         }
 
         return value;
-    }
-
-    _normalizeModuleId(moduleId) {
-        if (moduleId.startsWith("mod/")) {
-            moduleId = moduleId.replace("mod/", "");
-        }
-        return moduleId;
     }
 
     deserializeSelf(deserializer) {
