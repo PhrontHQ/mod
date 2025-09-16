@@ -2364,7 +2364,7 @@ Component.addClassProperties(
 
     _drawVisualStyleIfNeeded: {
         value: function () {
-            var isMain, head, styleEl;
+            var isMain, head, styleEl, styleScope;
             if (!this.visualStyle || this._visualStyleElement) {
                 return
             }
@@ -2373,10 +2373,13 @@ Component.addClassProperties(
             head = document.querySelector("head");
             styleEl = document.createElement("style");
             styleEl.innerHTML = this.visualStyle.generateCSS(isMain);
-            if (isMain) {
-                styleEl.setAttribute("data-mod-id", "mod-vs-root");
-            } else {
-                styleEl.setAttribute("data-mod-id", this.visualStyle.scopeName);
+            styleScope = isMain ? "mod-vs-root" : this.visualStyle.scopeName;
+            if (document.querySelector('[data-mod-id="' + styleScope + '"]')) {
+                console.error("Visual style with scope name " + styleScope + " already exists.");
+                return;
+            };
+            styleEl.setAttribute("data-mod-id", styleScope);
+            if (!isMain) {
                 this.element.classList.add(this.visualStyle.scopeName);
             }
             head.appendChild(styleEl);
