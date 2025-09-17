@@ -20,6 +20,7 @@ var Montage = require("../core").Montage,
     Deserializer = require("../serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../collections/map"),
     currentEnvironment = require("../environment").currentEnvironment,
+    ChangeEvent = require("./change-event").ChangeEvent,
     Event_NONE = 0,
     Event_CAPTURING_PHASE =	1,
     Event_AT_TARGET	= 2,
@@ -1426,9 +1427,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         enumerable: false,
         value: function _resizeObserver() {
             if(!this.__resizeObserver) {
-                this.__resizeObserver = new ResizeObserver(dispatchCallback);
-
-                const dispatchCallback = (entries, observer) => {
+                this.__resizeObserver = new ResizeObserver(entries => {
                     entries.forEach(entry => {
                         // Assuming ChangeEvent is a class or constructor available in this scope
                         var changeEvent = new ChangeEvent();
@@ -1437,7 +1436,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         changeEvent.keyValue = entry; // The entry object contains detailed resize info
                         this.handleEvent(changeEvent); // 'this' correctly refers to YourClass instance
                     });
-                }
+                });
             }
             return this.__resizeObserver;
         }
@@ -1472,7 +1471,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             // }
 
             if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
-                this._resizeObserver.observe(target, {box: optionsOrUseCapture.size.box});
+                this._resizeObserver().observe(target, {box: optionsOrUseCapture.size.box});
             }
 
             listenerOptions.listener = listener;
@@ -1551,6 +1550,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 listenerOptions.capture
                 ? targetEntryForEventType.delete(Event_CAPTURING_PHASE)
                 : targetEntryForEventType.delete(Event_BUBBLING_PHASE)
+            }
+            if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
+                this._resizeObserver().unobserve(target);
             }
 
             this._stopObservingTargeForEventTypeIfNeeded(target, eventType, targetEntryForEventType);
