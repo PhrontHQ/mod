@@ -67,6 +67,7 @@ This specification defines a unified visual style system for consistent theming 
 
   ### ControlBackground Colors
 
+
   - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
 - **`controlBackgroundColor`**:
 
@@ -78,13 +79,11 @@ This specification defines a unified visual style system for consistent theming 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
   - _Example_: Sliders
-
 - **`controlTertiaryBackgroundColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
   - _Example_: Sliders
-
 - **`controlQuaternaryBackgroundColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
@@ -92,25 +91,21 @@ This specification defines a unified visual style system for consistent theming 
   - _Example_: Sliders
 
   #### Control Colors
-
 - **`controlColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_: Background color for interactive elements
   - _Example_: Buttons, form fields
-
 - **`controlSecondaryColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
   - _Example_: Sliders
-
 - **`controlTertiaryColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
   - _Example_: Sliders
-
 - **`controlQuaternaryColor`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
@@ -122,27 +117,23 @@ There's a limit to how much interactive parts a control should have where it wou
 - **`controlSelectionColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
-  - _Usage_: Use when you want to show that a selection is or has bee made. So for a slider, if it's not been used by the user, the knowb/thumb/handle would have the controlColor. But while being used, it could take the controlSelectinColor, and it could even keep that controlSelectinColor once the interation is over to highlight the fact that a new value was selected 
+  - _Usage_: Use when you want to show that a selection is or has bee made. So for a slider, if it's not been used by the user, the knowb/thumb/handle would have the controlColor. But while being used, it could take the controlSelectinColor, and it could even keep that controlSelectinColor once the interation is over to highlight the fact that a new value was selected
   - _Example_: Selected dropdown options, active tabs
-
 - **`controlSelectionBackgroundColor`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Use when a selection is or has bee made. So for a slider, if it's not been used by the user, the track left to the thumb/handle/knob, which represent the value selected, should be of controlSelectionBackgroundColor, which defaults to controlBackgroundColor. The part of the track right to the thumb/handle/knob should be of controlBackgroundColor. This should be used as well for select list items.
   - _Example_: value selected with a slider, selected items in a list
-
 - **`controlHoverColor`**:
 
   - _Default (light)_: `rgba(239, 240, 243, 1)`
   - _Usage_: Background color when hovering over interactive elements
   - _Example_: Button hover state, card hover effect, menu item hover
-
 - **`controlActiveColor`**:
 
   - _Default (light)_: `rgba(230, 233, 237, 1)`
   - _Usage_: color of the control when the use actively interacts with it. Defaults to controlSelectionColor
   - _Example_: Button pressed state, active dropdown item
-
 - **`controlFocusColor`**: (highlight)
 
   - _Default (light)_: `rgba(248, 249, 251, 1)`
@@ -241,3 +232,16 @@ There's a limit to how much interactive parts a control should have where it wou
 - size: `xs`, `sm`, `md`, `lg`, `xl` (short cut to dimensions?)
 - spacing: `compact`, `comfortable`, `spacious`
 - stateManagement? `default`, `hover`, `active`, `disabled`, `focus`, `selected`
+
+## Typography
+
+[https://www.fourzerothree.in/p/typography-system](https://https://www.fourzerothree.in/p/typography-system)
+
+- Defining a Typographic Scale:
+  - Typography “Roles”:
+    - Display
+    - Heading
+    - Label
+    - Body
+- reference from that article: [https://base.uber.com/6d2425e9f/p/976582-typography](https://https://base.uber.com/6d2425e9f/p/976582-typography)
+- [https://www.fourzerothree.in/p/typography-variables](https://https://www.fourzerothree.in/p/typography-variables)
