@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>Styling Sample</title>
+
+    <style >
+
+        html, body {
+            --base-background-color: #eee;
+            --control-color: #555;
+            --text-color: darkblue;
+            --border-color: purple;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 16px;
+        }
+        .root {
+            background-color: #f00;
+        }
+
+        .description {
+            color: #000;
+        }
+
+
+        @scope(.sectionA) {
+            :scope {
+                background-color: #777;
+                height: 200px;
+                width: 500px;
+                color: darkblue;
+            }
+        }
+
+        @scope(.sectionB) {
+            :scope {
+                background-color: #777;
+                height: 200px;
+                width: 500px;
+                color: var(--text-color);
+            }
+        }
+
+        @scope(.root) {
+            :scope {
+                background-color: var(--base-background-color);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                color: #f00;
+            }
+
+            .sectionA, .sectionB {
+                margin-top: 20px;
+            }
+
+            @scope(.sectionA) {
+                :scope {
+                    color: darkgreen
+                }
+            }
+        }
+
+
+        .sectionC {
+            background-color: #777;
+            height: 200px;
+            width: 500px;
+            margin-top: 20px;
+            color: lightblue;
+        }
+
+        @scope(.subsectionA) {
+            /*Wins over all over scopes because it has the closest proximity to the element*/
+            :scope {
+                color: darkgreen;
+            }
+        }
+
+        @scope(.sectionC.sectionScope) {
+            /* Loses to scope(.sectionScope) because sectionScope is defined later */
+            :scope {
+                color: blue;
+            }
+        }
+
+        @scope(.sectionC) {
+            /* Added to illustrate that scope order DOES matter if proximity is equal. This loses to sectionScope */
+            :scope {
+                color: pink;
+            }
+        }
+
+        @scope(.sectionScope) {
+            /* Wins over scope(.sectionC) and scope(.sectionC.sectionScope) because it is defined later */
+            /* Loses to scope(.subsectionA) because it is further away from the element */
+            :scope {
+                color: purple;
+            }
+        }
+
+
+
+
+
+    </style>
+
+</head>
+<body>
+    <div class="root">
+        See <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/@scope#how_scope_conflicts_are_resolved"> MDN - How Scope Conflicts are resolved</a>
+        <div class="sectionA">
+            Section A
+        </div>
+        <div class="sectionB">
+            Section B
+        </div>
+        <div class="sectionC sectionScope">
+            Section C
+            <div class="subsectionA">
+                <div class="childSection">
+                    Child Section - subsectionA wins because it is the fewest jumps away from the element.
+                </div>
+            </div>
+            <div class="subsectionB">
+                Subsection with competing scopes sectionC and sectionScope
+            </div>
+
+        </div>
+        <div class="description">
+            Scope proximity provides the functionality we need for mod. It states that the scope that is the fewest 
+            jumps from the element wins. So say rootScope and sectionScope are defined as siblings in the stylesheet. 
+            The element here: rootScope > sectionScope > element would take sectionScope.
+            
+            If they are an equivalent distance from the scope, the declaration order wins. 
+        </div>
+    </div>
+</body>
+</html>

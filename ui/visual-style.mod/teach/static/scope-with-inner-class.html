@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>Styling Sample</title>
+
+    <style >
+
+        html, body {
+            --base-background-color: #fff;
+            --control-color: #555;
+            --text-color: #0F0;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+        }
+
+        h1 {
+            font-size: 16px;
+            text-indent: 6px;
+        }
+
+        span {
+            font-size: 12px;
+        }
+
+        .root {
+            background-color: #eee;
+
+        }
+
+        .scoped {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            height: 200px;
+        }
+
+        .control {
+            height: 150px;
+            width: 200px;
+            background-color: #999;
+        }
+
+        @scope(.scoped) {
+            :scope {
+                color: #F00;
+            }
+
+            .control.B {
+                color: #00F;
+            }
+        }
+
+        
+
+    </style>
+
+</head>
+<body>
+
+    <div class="root">
+        <div class="scoped">
+            <div class="control A">
+                Color set at root level of @scope(.scoped) 
+            </div>
+            <div class="control B">
+                Color set with .control.B within @scope(.scoped) 
+            </div>
+        </div>
+    </div>
+</body>
+</html>

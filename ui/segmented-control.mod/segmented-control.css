@@ -33,11 +33,9 @@
     --mod-segment-active-text: rgba(0, 0, 0, 1);
 }
 
-@scope (.ModSegmentedControl) {
-    :scope {
-        display: inline-flex;
-        -webkit-tap-highlight-color: transparent;
-    }
+.ModSegmentedControl {
+    display: inline-flex;
+    -webkit-tap-highlight-color: transparent;
 
     > .ModSegmentedControl-container {
         display: flex;

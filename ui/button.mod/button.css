@@ -1,17 +1,34 @@
-@scope (.ModButton) {
-    :scope {
-        border: none;
+/* WILL NOT BE FOUND */
+/* .ModButton { 
+    border: solid 1px;
+    border-color: var(--mod-vs-control-border-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    font-weight: 600;
+    position: relative;
+    border-radius: var(--mod-vs-control-border-radius);
+
+    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+    /*transition: background-color 0.2s ease-in-out;
+    gap: 6px;
+} */
+
+
+.ModButton {
+        border: solid 1px;
+        border-color: var(--mod-vs-control-border-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
         font-weight: 600;
         position: relative;
-
+        border-radius: var(--mod-vs-control-border-radius);
         /* FIXME: Temporary arbitrary values, waiting for Button Themes */
         transition: background-color 0.2s ease-in-out;
         gap: 6px;
-    }
 
     &:hover {
         cursor: pointer;

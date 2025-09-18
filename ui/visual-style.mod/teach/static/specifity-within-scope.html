@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>Styling Sample</title>
+
+    <style >
+
+        html, body {
+            --base-background-color: #fff;
+            --control-color: #555;
+            --text-color: #0F0;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            height: 100%;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 16px;
+            text-indent: 6px;
+        }
+
+        span {
+            font-size: 14px;
+            display: inline-block;
+            white-space: pre-line;
+        }
+
+        .root {
+            background-color: #eee;
+            height: 100%;
+
+        }
+
+        .scoped {
+            display: flex;
+            align-items: center;
+            justify-content: space-evenly;
+            flex-direction: column;
+            min-height: 800px;
+        }
+
+        .control {
+            height: 200px;
+            width: 500px;
+            background-color: #999;
+        }
+
+        @scope(.scoped) {
+            :scope {
+                color: #F00;
+            }
+
+            .control.B {
+                color: #00F;
+            }
+
+            .control.C {
+                color: purple;
+            }
+
+            span {
+                color: #0F0;
+            }
+
+            .text {
+                color: lightblue;
+            }
+        }
+
+        @scope(.control.C) {
+            :scope {
+                color: darkgreen;
+            }
+        }
+
+        
+
+    </style>
+
+</head>
+<body>
+
+    <div class="root">
+        <div class="scoped">
+            <div class="control A">
+                Color set at root level of @scope(.scoped) 
+            </div>
+            <div class="control B">
+                Color set with .control.B within @scope(.scoped) 
+            </div>
+            <div class="control C">
+                .root -> .scoped -> .control.C
+                <span class="text">
+                    Color set with scope(.scoped) { .text {color:lightblue} }. Takes precedence over these....
+
+                    scope(.scoped) { .control.C {color:purple} }
+
+                    scope(.scoped) { span {color:purple} }
+
+                    scope(.control.C) { :scope { color: darkgreen; } }
+                </span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

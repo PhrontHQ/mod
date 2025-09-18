@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+
+    <title>Styling Sample</title>
+
+    <style >
+
+        html, body {
+            --base-background-color: #eee;
+            --control-color: #555;
+            --text-color: darkblue;
+            --border-color: purple;
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-size: 12px;
+        }
+
+        h1 {
+            font-size: 16px;
+            text-indent: 6px;
+        }
+
+        .root {
+            background-color: #f00;
+        }
+
+        @scope(.root) {
+            :scope {
+                background-color: var(--base-background-color);
+                display: flex;
+                flex-direction: column;
+            }
+        }
+
+
+
+        .levelTwo {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            width: 80%;
+        }
+    
+
+        .levelThree {
+            min-height: 100px;
+            max-width: 250px;
+            min-width: 100px;
+            border: 1px solid black;
+            background-color: #ccc;
+        }
+
+        .levelThree.B {
+            color: #f0F;
+        }
+
+        @scope(.levelThree.B) {
+            :scope {
+                color: #FF0;
+            }
+
+            .text {
+                color: #000;
+            }
+
+            span {
+                color: purple;
+            }
+            
+        }
+
+
+
+        @scope(.levelTwo.A) {
+            div {
+                color: blue;
+            }
+        }
+
+        @scope(.levelTwo) {
+            div {
+                color: red;
+            }
+        }
+
+        @scope(.B) {
+            --text-color: #00F;
+        }
+
+        @scope(.levelTwo.B) {
+            div {
+                color: var(--text-color);
+            }
+        }
+
+
+    </style>
+
+</head>
+<body>
+
+    <div class="root">
+        <div class="levelTwo A">
+            <div class="levelThree A">
+                <h1>Level 3 A</h1>
+                <span> 
+                    Order of definiton determines the order the scopes are applied. Specificity is ignored. 
+                    In this case, scope (.levelTwo) is defined last so it has priority even though it is less specific than scope (.levelTwo.A)
+                </span>
+            </div>
+            <div class="levelThree B">
+                <h1 >Level 3 B</h1>
+                <span class="text"> 
+                    Scopeless declarations have a higher priority than scoped ones
+                </span>
+            </div>
+            <div class="levelThree B2">
+                <h1>Level 3 B2</h1>
+            </div>
+        </div>
+        <div class="levelTwo B">
+            <div class="levelThree C">
+                <h1>Level 3 C</h1>
+            </div>
+        </div>
+        <div class="levelTwo C">
+            <div class="levelThree D">
+                <h1>Level 3 D</h1>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -2373,15 +2373,13 @@ Component.addClassProperties(
             head = document.querySelector("head");
             styleEl = document.createElement("style");
             styleEl.innerHTML = this.visualStyle.generateCSS(isMain);
-            styleScope = isMain ? "mod-vs-root" : this.visualStyle.scopeName;
+            styleScope = isMain ? "root" : this.visualStyle.scopeName;
             if (document.querySelector('[data-mod-id="' + styleScope + '"]')) {
                 console.error("Visual style with scope name " + styleScope + " already exists.");
                 return;
             };
             styleEl.setAttribute("data-mod-id", styleScope);
-            if (!isMain) {
-                this.element.classList.add(this.visualStyle.scopeName);
-            }
+            this.element.setAttribute("data-visual-style", styleScope);
             head.appendChild(styleEl);
             this._visualStyleElement = styleEl;
         }
@@ -4893,6 +4891,8 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
      */
     addStylesheetWithClassListScopeInCSSLayerName: {
         value: function (style, classListScope, cssLayerName) {
+            console.log("Component.addStylesheetWithClassListScopeInCSSLayerName", style, classListScope, cssLayerName);
+            // debugger;
             this._stylesheets.push(style);
             this._stylesheetsclassListScopes.push(classListScope ? `.${this._stylesheets.join.call(classListScope,".")}` : undefined);
             this._cssLayerNames.push(cssLayerName);
@@ -4902,8 +4902,10 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
     _addedStyleSheetsByTemplate: {
         value: null
     },
+    
     addStyleSheetsFromTemplate: {
         value: function(template, cssLayerName) {
+            console.log("component.addStyleSheetsFromTemplate", cssLayerName)
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
                     ownerDocument = this.element.ownerDocument,
@@ -4949,6 +4951,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 documentHead = documentResources._document.head,
                 bufferDocumentFragment = this._bufferDocumentFragment;
 
+            console.log("stylesheets", stylesheets.slice());
             while ((stylesheet = stylesheets.shift())) {
                 documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift(), cssLayerNames.shift());
             }

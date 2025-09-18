@@ -33,7 +33,8 @@
         "button": {
             "prototype": "mod/ui/button.mod",
             "values": {
-                "element": {"#": "button"}
+                "element": {"#": "button"},
+                "label": "Press Me!"
             }
         }
     }
@@ -45,9 +46,11 @@
 
         <section class="controls">
             <div class="slider-container">
-                <div data-mod-id="slider" class="slider default-slider"></div>
+                <div data-mod-id="slider" class="slider"></div>
             </div>
-            <div data-mod-id="button"></div>
+            <div class="button-container">
+                <div data-mod-id="button" class="button"></div>
+            </div>
         </section>
     </div>
 </body>

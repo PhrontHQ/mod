@@ -75,8 +75,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
      * If no name is provided, the scope will be generated from the identifer
      */
     get scopeName() {
-        var name = this.name || this.identifier;
-        return `mod-vs-${name}`;
+        return this.name || this.identifier;
     }
 
     /** 
@@ -86,7 +85,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         let rawCSS;
         
         if (!isRoot) {
-            rawCSS = `@scope (.${this.scopeName}) {
+            rawCSS = `@scope ([data-visual-style="${this.scopeName}"]) {
             `;
         } else {
             rawCSS = `

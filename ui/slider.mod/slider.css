@@ -3,6 +3,8 @@
     position: relative;
     touch-action: none;
     border-radius: var(--mod-vs-control-border-radius);
+    border: solid 1px;
+    border-color: var(--mod-vs-control-border-color);
 }
 
 .mod-Slider[aria-orientation="horizontal"] .mod-Slider--track {
@@ -24,6 +26,7 @@
     position: absolute;
     z-index:0;
     background-color: var(--mod-vs-control-background-color);
+    height: 100%;
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="1"] {

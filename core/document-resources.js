@@ -251,7 +251,8 @@ var DocumentResources = Montage.specialize({
 
     _scopeSelectorRegExp: {
         // value: /\(([^)]+)\)/g
-        value: /\(([^()]*)\)/g
+        // value: /\(([^()]*)\)/g
+        value: /scope\(([^()]*)\)/g
 
     },
 
@@ -360,6 +361,7 @@ var DocumentResources = Montage.specialize({
                                 while ((match = scopeSelectorRegExp.exec(scopeRuleCSSText)) !== null) {
                                     scopeSelector =`.${cssLayerName}${match[1]}`;
                                     scopeRuleCSSText = scopeRuleCSSText.replace(match[1],scopeSelector);
+                                    console.log("DocumentResources.replaceScopeSelector", match[1], cssLayerName, scopeSelector);
                                     // console.log(
                                     //     `Found ${match[0]} start=${match.index} end=${scopeSelectorRegExp.lastIndex}.`,
                                     // );
@@ -370,7 +372,7 @@ var DocumentResources = Montage.specialize({
                             
                             let scopeRule = stylesheet.cssRules[iStart];
 
-                            //If the CSS is scopped, we move it into the CSSLayerBlockRule
+                            //If the CSS is scoped, we move it into the CSSLayerBlockRule
                             if(scopeRule && (scopeRule instanceof CSSScopeRule)) {
                                 stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
                                 let packageLayer = stylesheet.cssRules[iStart];
