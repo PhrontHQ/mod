@@ -55,3 +55,29 @@ PropertyFields need know which property of which instance it is editing, so it c
     THIS MEANS WE ACCEPT INVALID DATA ON DATA OBJECTS PROPERTIES TO STAY THERE UNTIL FIXED BY USER
 5. Validation errors are set on the data instance's invalidityState
 6. The control(s) involved in editing the data instance, using data binding or property observing (which means they needs to be able to reister as such the invalidity state knowing what they edit) informed of validation errors to handle and need to push the right states / user-intended errors on the field they're part of. It could be that other properties are involved as well at the same time. So the ValidationError might need a property carrying set of those properties.
+
+## Visual styling of constraint validation
+see [Visual styling of constraint validation](https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Constraint_validation#visual_styling_of_constraint_validation)
+The look of HTML elements can be controlled via CSS pseudo-classes.
+:REQUIRED AND :OPTIONAL CSS PSEUDO-CLASSES
+The :required and :optional pseudo-classes allow writing selectors that match form elements that have the required attribute, or that don't have it.
+
+:PLACEHOLDER-SHOWN CSS PSEUDO-CLASS
+See :placeholder-shown.
+
+:VALID :INVALID CSS PSEUDO-CLASSES
+The :valid and :invalid pseudo-classes are used to represent <input> elements whose content validates and fails to validate respectively according to the input's type setting. These classes allow the user to style valid or invalid form elements to make it easier to identify elements that are either formatted correctly or incorrectly.
+
+We may or may not need more than that, TBD
+
+
+## References
+- [ValidityState](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState)
+    - See below for one example of a specific invalid state, there are more standard ones liated on the left of that page
+    - [ValidityState: tooLong](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState/tooLong)
+    - For Range issue, there are rangeOverflow and rangeUnderlow:
+        - [rangeOverflow](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState/rangeOverflow)
+        - [rangeUnderflow](https://developer.mozilla.org/en-US/docs/Web/API/ValidityState/rangeUnderflow)
+- [Constraint Validation](https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Constraint_validation)
+- [Client-side form validation](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Form_validation)
+- 
