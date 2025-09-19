@@ -6,6 +6,11 @@ This specification defines a unified visual style system for consistent theming 
 
 ## Color Tokens
 
+important! We should be using the background shorthand CSS property that sets all background style properties at once, such as color, gradient (internally a generated image), image, origin and size, or repeat method.
+[https://developer.mozilla.org/en-US/docs/Web/CSS/background](https://developer.mozilla.org/en-US/docs/Web/CSS/background)
+[https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_images/Using_CSS_gradients](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_images/Using_CSS_gradients)
+
+
 ### System Colors
 
 - **`red`**:
