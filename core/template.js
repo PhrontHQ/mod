@@ -270,7 +270,7 @@ var Template = Montage.specialize( /** @lends Template# */ {
 
                 
                 //Verify that the element is flagged with the package name it belongs to:
-                let componentElementClassList = (_document.querySelector("body > [data-mod-id]"))?.classList,
+                let componentElementClassList = (_document.querySelector("body > [data-mod-id]") || _document.querySelector("body"))?.classList,
                     packageName = _require.packageDescription.name;
 
                 /*

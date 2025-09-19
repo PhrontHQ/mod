@@ -1,14 +1,14 @@
 /* WILL NOT BE FOUND */
 /* .ModButton { 
     border: solid 1px;
-    border-color: var(--mod-vs-control-border-color);
+    border-color: var(--visual-style-control-border-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
     font-weight: 600;
     position: relative;
-    border-radius: var(--mod-vs-control-border-radius);
+    border-radius: var(--visual-style-control-border-radius);
 
     /* FIXME: Temporary arbitrary values, waiting for Button Themes */
     /*transition: background-color 0.2s ease-in-out;
@@ -18,17 +18,19 @@
 
 .ModButton {
         border: solid 1px;
-        border-color: var(--mod-vs-control-border-color);
+        border-color: var(--visual-style-control-border-color);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         box-sizing: border-box;
-        font-weight: 600;
+        font-weight: var(--visual-style-control-text-weight);
+        padding: var(--visual-style-control-buffer);
         position: relative;
-        border-radius: var(--mod-vs-control-border-radius);
+        border-radius: var(--visual-style-control-border-radius);
         /* FIXME: Temporary arbitrary values, waiting for Button Themes */
         transition: background-color 0.2s ease-in-out;
         gap: 6px;
+        color: var(--visual-style-text-color);
 
     &:hover {
         cursor: pointer;

@@ -5,36 +5,44 @@ var Montage = require("montage").Montage,
 
 
 var PROPERTIES = [
-    {name: "baseSurfaceColor", variable: "--mod-vs-base-surface-color", defaultValue: "hsl(0, 0%, 100%)"},
-    {name: "raisedSurfaceColor", variable: "--mod-vs-raised-surface-color", backup: "baseSurfaceColor"},
-    {name: "elevatedSurfaceColor", variable: "--mod-vs-elevated-surface-color", backup: "baseSurfaceColor"},
+    {name: "baseSurfaceColor", variable: "--visual-style-base-surface-color", defaultValue: "hsl(0, 0%, 100%)"},
+    {name: "baseFill", variable: "--visual-style-base-fill", defaultValue: "hsl(0, 0%, 100%)"},
+    {name: "raisedSurfaceColor", variable: "--visual-style-raised-surface-color", backup: "baseSurfaceColor"},
+    {name: "elevatedSurfaceColor", variable: "--visual-style-elevated-surface-color", backup: "baseSurfaceColor"},
 
-    {name: "controlBackgroundColor", variable: "--mod-vs-control-background-color", defaultValue: "hsl(0,0%,86%)"},
-    {name: "controlSecondaryBackgroundColor", variable: "--mod-vs-control-secondary-background-color", backup: "controlBackgroundColor"},
-    {name: "controlTertiaryBackgroundColor", variable: "--mod-vs-control-tertiary-background-color", backup: "controlSecondaryBackgroundColor"},
-    {name: "controlQuaternaryBackgroundColor", variable: "--mod-vs-control-quaternary-background-color", backup: "controlTertiaryBackgroundColor"},
+    {name: "controlBackgroundColor", variable: "--visual-style-control-background-color", defaultValue: "hsl(0,0%,86%)"},
+    {name: "controlSecondaryBackgroundColor", variable: "--visual-style-control-secondary-background-color", backup: "controlBackgroundColor"},
+    {name: "controlTertiaryBackgroundColor", variable: "--visual-style-control-tertiary-background-color", backup: "controlSecondaryBackgroundColor"},
+    {name: "controlQuaternaryBackgroundColor", variable: "--visual-style-control-quaternary-background-color", backup: "controlTertiaryBackgroundColor"},
 
-    {name: "controlColor", variable: "--mod-vs-control-color", defaultValue: "linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%))"},
-    {name: "controlSecondaryColor", variable: "--mod-vs-control-secondary-color", backup: "controlColor"},
-    {name: "controlTertiaryColor", variable: "--mod-vs-control-tertiary-color", backup: "controlSecondaryColor"},
-    {name: "controlQuaternaryColor", variable: "--mod-vs-control-quaternary-color", backup: "controlTertiaryColor"},
+    {name: "controlColor", variable: "--visual-style-control-color", defaultValue: "hsl(0, 0%, 93%)"},
+    {name: "controlSecondaryColor", variable: "--visual-style-control-secondary-color", backup: "controlColor"},
+    {name: "controlTertiaryColor", variable: "--visual-style-control-tertiary-color", backup: "controlSecondaryColor"},
+    {name: "controlQuaternaryColor", variable: "--visual-style-control-quaternary-color", backup: "controlTertiaryColor"},
 
-    {name: "controlBorderColor", variable: "--mod-vs-control-border-color", defaultValue: "hsla(0,0%,65%,1)"},
-    {name: "controlBorderRadius", variable: "--mod-vs-control-border-radius", defaultValue: "8px"},
+    {name: "controlBorderColor", variable: "--visual-style-control-border-color", defaultValue: "hsl(0, 0%, 80%)"},
+    {name: "controlBorderRadius", variable: "--visual-style-control-border-radius", defaultValue: "8px"},
+    {name: "controlBorderWidth", variable: "--visual-style-control-border-width", defaultValue: "1px"},
+    {name: "controlBuffer", variable: "--visual-style-control-buffer", defaultValue: ".625em 1em"},
 
-    {name: "controlSelectionColor", variable: "--mod-vs-control-selection-color", defaultValue: "hsl(211, 100%, 50%)"},
-    {name: "controlSelectionBackgroundColor", variable: "--mod-vs-control-selection-background-color", backup: "controlBackgroundColor"},
+    {name: "controlTextWeight", variable: "--visual-style-control-text-weight", defaultValue: "normal"},
 
-    {name: "controlHoverColor", variable: "--mod-vs-control-hover-color", backup: "controlColor"},
-    {name: "controlActiveColor", variable: "--mod-vs-control-active-color", backup: "controlSelectionColor"},
-    {name: "controlFocusColor", variable: "--mod-vs-control-focus-color", backup: "controlActiveColor"},
+    {name: "controlSelectionColor", variable: "--visual-style-control-selection-color", defaultValue: "hsl(211, 100%, 50%)"},
+    {name: "controlSelectionBackgroundColor", variable: "--visual-style-control-selection-background-color", backup: "controlBackgroundColor"},
 
-    {name: "textColor", variable: "--mod-vs-text-color", defaultValue: "hsl(0, 0, 0)"},
-    {name: "textSecondaryColor", variable: "--mod-vs-text-secondary-color", backup: "textColor"},
-    {name: "textTertiaryColor", variable: "--mod-vs-text-tertiary-color", backup: "textSecondaryColor"},
-    {name: "textQuaternaryColor", variable: "--mod-vs-text-quaternary-color", backup: "textTertiaryColor"},
+    {name: "controlHoverColor", variable: "--visual-style-control-hover-color", backup: "controlColor"},
+    {name: "controlActiveColor", variable: "--visual-style-control-active-color", backup: "controlSelectionColor"},
+    {name: "controlFocusColor", variable: "--visual-style-control-focus-color", backup: "controlActiveColor"},
 
-    {name: "linkTextColor", variable: "--mod-vs-link-text-color", backup: "textColor"}
+    {name: "textColor", variable: "--visual-style-text-color", defaultValue: "hsla(0, 0%, 0%, .7)"},
+    {name: "textSecondaryColor", variable: "--visual-style-text-secondary-color", backup: "textColor"},
+    {name: "textTertiaryColor", variable: "--visual-style-text-tertiary-color", backup: "textSecondaryColor"},
+    {name: "textQuaternaryColor", variable: "--visual-style-text-quaternary-color", backup: "textTertiaryColor"},
+
+
+    {name: "linkTextColor", variable: "--visual-style-link-text-color", backup: "textColor"},
+
+    
 ]
 /**
  * @extends module:mod/ui/visual-style.mod

@@ -2,9 +2,11 @@
 .mod-Slider {
     position: relative;
     touch-action: none;
-    border-radius: var(--mod-vs-control-border-radius);
-    border: solid 1px;
-    border-color: var(--mod-vs-control-border-color);
+    border-radius: var(--visual-style-control-border-radius);
+    border-style: solid;
+    border-width: var(--visual-style-control-border-width);
+    border-color: var(--visual-style-control-border-color);
+    min-height: 4px;
 }
 
 .mod-Slider[aria-orientation="horizontal"] .mod-Slider--track {
@@ -25,20 +27,20 @@
 .mod-Slider .mod-Slider--track {
     position: absolute;
     z-index:0;
-    background-color: var(--mod-vs-control-background-color);
+    background-color: var(--visual-style-control-background-color);
     height: 100%;
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="1"] {
-    background-color: var(--mod-vs-control-secondary-background-color);
+    background-color: var(--visual-style-control-secondary-background-color);
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="2"] {
-    background-color: var(--mod-vs-control-tertiary-background-color);
+    background-color: var(--visual-style-control-tertiary-background-color);
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="3"] {
-    background-color: var(--mod-vs-control-quaternary-background-color);
+    background-color: var(--visual-style-control-quaternary-background-color);
 }
 
 .mod-Slider .mod-Slider--thumbWrapper {
@@ -47,19 +49,22 @@
 }
 
 .mod-Slider--thumb {
-    background-color: var(--mod-vs-control-color);
+    background-color: var(--visual-style-control-color);
+    border-color: var(--visual-style-control-border-color);
+    border-style: solid;
+    border-width: var(--visual-style-control-border-width);
 }
 
 .mod-Slider--thumb[data-mod-index="1"] {
-    background-color: var(--mod-vs-control-secondary-color);
+    background-color: var(--visual-style-control-secondary-color);
 }
 
 .mod-Slider--thumb[data-mod-index="2"] {
-    background-color: var(--mod-vs-control-tertiary-color);
+    background-color: var(--visual-style-control-tertiary-color);
 }
 
 .mod-Slider--thumb[data-mod-index="3"] {
-    background-color: var(--mod-vs-control-quaternary-color);
+    background-color: var(--visual-style-control-quaternary-color);
 }
 
 
