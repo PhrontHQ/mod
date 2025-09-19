@@ -10,6 +10,11 @@ important! We should be using the background shorthand CSS property that sets al
 [https://developer.mozilla.org/en-US/docs/Web/CSS/background](https://developer.mozilla.org/en-US/docs/Web/CSS/background)
 [https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_images/Using_CSS_gradients](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_images/Using_CSS_gradients)
 
+Keynote, as an application targeting designers and non-coders, uses those terms:
+    - for text: Text Color (historic the other options didn't exist for text for a while...), Gradient Fill, Advanced Gradient Fill, Image Fill and Advanced Image Fill. 
+    - for shapes: Color Fill, Gradient Fill, Advanced Gradient Fill, Image Fill and Advanced Image Fill.
+
+Fill might be a better term than background: it's shorter, works for both shapes and text, is understandable for everyone and add some separation from the implemntation details in CSS
 
 ### System Colors
 
@@ -54,54 +59,57 @@ important! We should be using the background shorthand CSS property that sets al
 
 ### Surface Colors
 
-- **`baseSurfaceColor`**:
+- **`baseSurfaceColor`** or **`baseSurfaceFill`**:
 
   - _Default (light)_: `rgba(246 246 246, 1)`
   - _Usage_: The base background for primary interface areas.
   - _Example_: Main content areas, page backgrounds.
-- **`raisedSurfaceColor`**:
+- **`raisedSurfaceColor`** or **`raisedSurfaceFill`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
   - _Example_: Cards, ~~widgets~~, highlighted content tiles.
-- **`elevatedSurfaceColor`**:
+- **`elevatedSurfaceColor`** or **`elevatedSurfaceFill`**:
 
   - _Default (light)_: `rgba(254 254 254, 0.96)`
   - _Usage_: Floating elements that sit above all other content.
   - _Example_: Modals, dropdown menus, dialogs.
 
-  ### ControlBackground Colors
+  ### ControlBackground Colors or Control Fills
 
 
   - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
-- **`controlBackgroundColor`**:
+- **`controlBackgroundColor`** or **`controlBackgroundFill`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Elements with a slight elevation to distinguish them from the canvas.
   - _Example_: Cards, widgets, highlighted content tiles.
-- **`controlSecondaryBackgroundolor`**:
+- **`controlSecondaryBackgroundolor`** or  **`controlSecondaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
   - _Example_: Sliders
-- **`controlTertiaryBackgroundColor`**:
+- **`controlTertiaryBackgroundColor`** or **`controlTertiaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
   - _Example_: Sliders
-- **`controlQuaternaryBackgroundColor`**:
+- **`controlQuaternaryBackgroundColor`** or **`controlQuaternaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a fourth interactive element or a control, like the fourth knob in a multi slider
   - _Example_: Sliders
 
   #### Control Colors
-- **`controlColor`**:
+
+  In light of the fact that these are actually defining background, as stated in Usage right bellow, shouldn't we name those controlBackground, controlSecondarBackground, etc...?
+  
+- **`controlColor`** or **`controlFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_: Background color for interactive elements
   - _Example_: Buttons, form fields
-- **`controlSecondaryColor`**:
+- **`controlSecondaryColor`** or **`controlSecondaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
@@ -119,7 +127,9 @@ important! We should be using the background shorthand CSS property that sets al
 
 There's a limit to how much interactive parts a control should have where it would become a usability liabilty... So if one wants that, we don't want to encourage it. It can be a one-off
 
-- **`controlSelectionColor`**:
+  In light of the fact that these are actually defining background, as stated in Usage right below, shouldn't we name those controlSelectionFill, controlSecondarSelectionFill, etc...?
+
+- **`controlSelectionColor`** or  **`controlSelectionFill`** or  **`controlSelectionBackground`** ?:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Use when you want to show that a selection is or has bee made. So for a slider, if it's not been used by the user, the knowb/thumb/handle would have the controlColor. But while being used, it could take the controlSelectinColor, and it could even keep that controlSelectinColor once the interation is over to highlight the fact that a new value was selected
@@ -145,11 +155,19 @@ There's a limit to how much interactive parts a control should have where it wou
   - _Usage_: Background color for focused interactive elements
   - _Example_: Focused input fields, keyboard-navigated buttons
 
-### Text Colors
+### Text Colors or Text Fill
+
+Same comment here. This is actually about selecting the fill of text, which can obviously be a color, but also a
+    - a gradient:
+        - [https://cssgradient.io/blog/css-gradient-text/](https://cssgradient.io/blog/css-gradient-text/)
+    - an animated gradient:
+        - [https://web.dev/articles/speedy-css-tip-animated-gradient-text](https://web.dev/articles/speedy-css-tip-animated-gradient-text)
+    - an image: 
+        - [https://usefulangle.com/post/372/css-text-background-image](https://usefulangle.com/post/372/css-text-background-image)
 
 #### Primary Text Hierarchy
 
-- **`textColor`**:
+- **`textColor`** or **`textFill`**:
   - _Default (light)_: `rgba(32 21 57, 1)`
   - _Usage_: Primary content text with maximum readability
   - _Example_: Body text, main headings, critical information
@@ -173,9 +191,9 @@ There's a limit to how much interactive parts a control should have where it wou
   - _Usage_: Interactive text elements and hyperlinks
   - _Example_: Navigation links, in-text links, clickable elements
 
-#### Control-Specific Text Colors
+#### Control-Specific Text / Label / Colors / Fills
 
-- **`controlTextColor`**:
+- **`controlTextColor`** or **`controlTextFill`** or **`controlLabelFill`** ?:
   - _Default (light)_: `rgba(75 85 101, 1)`
   - _Usage_: Text within interactive controls
   - _Example_: Button labels, dropdown options, checkbox labels
@@ -192,7 +210,12 @@ There's a limit to how much interactive parts a control should have where it wou
   - _Usage_: Text for unavailable interface elements
   - _Example_: Disabled buttons, inactive menu items, locked features
 
-### Border Colors
+### Border Colors / Border Fills
+
+Borders can be filled with colors, but also with image and therefore gradients:
+    - [https://developer.mozilla.org/en-US/docs/Web/CSS/border-image](https://developer.mozilla.org/en-US/docs/Web/CSS/border-image)
+    - [https://codyhouse.co/nuggets/css-gradient-borders](https://codyhouse.co/nuggets/css-gradient-borders)
+    - The approach using the background-clip property is compatible with the border-radius property.
 
 - **`controlBorderColor`**:
   - _Default (light)_: `rgba(229 231 235, 1)`
@@ -200,6 +223,8 @@ There's a limit to how much interactive parts a control should have where it wou
   - Example: Text input fields, select dropdowns, outlined buttons, unchecked checkboxes.
 
 ### Elevation
+
+!!Elevation should be a value, which combined with light position, intensity (other properties) defines shadows. Shadows should NOT be part of a visual style on their own
 
 - **`softShadow`**:
   - _Value_: `0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06)`
