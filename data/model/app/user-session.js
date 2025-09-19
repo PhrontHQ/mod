@@ -17,5 +17,6 @@ exports.UserSession = DataObject.specialize(/** @lends UserSession.prototype */ 
     },
     connectionTimeRange: {
         value: false
-    }
+    },
+    person: {value: undefined}
 });

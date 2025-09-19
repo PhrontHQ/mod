@@ -1,0 +1,253 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Person",
+            "description": "This should be a subclass of Being, itself a subclass of Party, when the time comes it's needed to deal with animals for example",
+            "propertyDescriptors": [
+                {"@": "name"},
+                {"@": "gender"},
+                {"@": "aliases"},
+                {"@": "preferredLocales"},
+                {"@": "tags"},
+                {"@": "userIdentities"},
+                {"@": "employmentHistory"},
+                {"@": "serviceProductVariantsProvided"},
+                {"@": "firstName"},
+                {"@": "lastName"},
+                {"@": "email"},
+                {"@": "phone"},
+                {"@": "addresses"},
+                {"@": "supplierRelationships"},
+                {"@": "customerSupplierResponsibilities"},
+                {"@": "firstPersonalRelationships"},
+                {"@": "secondPersonalRelationships"},
+                {"@": "signatures"}
+           ],
+            "objectDescriptorModule": {
+                "%": "./person.mjson"
+            },
+            "exportName": "Person",
+            "module": {
+                "%": "./person"
+            },
+            "parent":{"@": "PartyDescriptor"},
+            "userInterfaceDescriptorModules": {
+                "*": {
+                    "%": "./person-ui-descriptor.mjson"
+                },
+                "ui/list-item.reel": {
+                    "%": "./person-list-item-ui-descriptor.mjson"
+                },
+                "ui/cascading-list.reel": {
+                    "%": "./person-cascading-list-ui-descriptor.mjson"
+                }
+            }
+
+        }
+    },
+    "PartyDescriptor": {
+        "object": "./party.mjson"
+    },
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "PersonNameDescriptor"}
+        }
+    },
+    "PersonNameDescriptor": {
+        "object": "./person-name.mjson"
+    },
+    "gender": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "gender",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "gender_descriptor"}
+        }
+    },
+    "gender_descriptor": {
+        "object": "./gender.mjson"
+    },
+
+    "aliases": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "aliases",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PersonNameDescriptor"}
+        }
+    },
+
+    "preferredLocales": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "preferredLocales",
+            "cardinality": -1,
+            "valueType": "array"
+        }
+    },
+
+    "firstName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "firstName",
+            "valueType": "string"
+        }
+    },
+    "lastName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "lastName",
+            "valueType": "string"
+        }
+    },
+    "email": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "email",
+            "valueType": "string"
+        }
+    },
+    "phone": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "phone",
+            "valueType": "string"
+        }
+    },
+    "addresses": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "addresses",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "addresses_descriptor"}
+       }
+    },
+    "addresses_descriptor": {
+        "object": "./messaging-channel/postal-address.mjson"
+    },
+
+    "tags": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tags",
+            "valueType": "string",
+            "cardinality": -1
+       }
+    },
+    "userIdentities": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "userIdentities",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "userIdentity_descriptor"},
+            "inversePropertyName": "person"
+       }
+    },
+    "userIdentity_descriptor": {
+        "object": "./app/user-identity.mjson"
+    },
+    "employmentHistory": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "employmentHistory",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "employmentPositionStaffingDescriptor"},
+            "inversePropertyName": "employee"
+       }
+    },
+    "employmentPositionStaffingDescriptor": {
+        "object": "./employment-position-staffing.mjson"
+    },
+
+    "serviceProductVariantsProvided": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "serviceProductVariantsProvided",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "serviceProductVariantsDescriptor"},
+            "inversePropertyName": "providers"
+        }
+    },
+
+    "serviceProductVariantsDescriptor": {
+        "object": "./service-product-variant.mjson"
+    },
+
+    "supplierRelationships": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supplierRelationships",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "customer",
+            "valueDescriptor": {"@": "B2CCustomerSupplierRelationshipDescriptor"}
+       }
+    },
+    "B2CCustomerSupplierRelationshipDescriptor": {
+        "object": "./b-2-c-customer-supplier-relationship.mjson"
+    },
+
+
+    "customerSupplierResponsibilities": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "customerSupplierResponsibilities",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "responsibleParty",
+            "valueDescriptor": {"@": "B2CCustomerSupplierResponsiblePartyDescriptor"}
+       }
+    },
+    "B2CCustomerSupplierResponsiblePartyDescriptor": {
+        "object": "./b-2-c-customer-supplier-responsible-party.mjson"
+    },
+
+    "firstPersonalRelationships": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "firstPersonalRelationships",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "firstPerson",
+            "valueDescriptor": {"@": "PersonalRelationshipDescriptor"}
+       }
+    },
+    "PersonalRelationshipDescriptor": {
+        "object": "./personal-relationship.mjson"
+    },
+
+    "secondPersonalRelationships": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "secondPersonalRelationships",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "secondPerson",
+            "valueDescriptor": {"@": "PersonalRelationshipDescriptor"}
+       }
+    },
+
+    "PersonSignatureDescriptor": {
+        "object": "./person-signature.mjson"
+    },
+
+    "signatures": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "signatures",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "person",
+            "valueDescriptor": {"@": "PersonSignatureDescriptor"}
+       }
+    }
+
+}

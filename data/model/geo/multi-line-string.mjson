@@ -1,0 +1,38 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "MultiLineString",
+            "parent": {"@": "geometry"},
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "coordinates"}
+            ],
+            "exportName": "MultiLineString",
+            "module": {
+                "%": "../multi-line-string"
+            }
+        }
+    },
+
+    "geometry": {
+        "object": "./geometry.mjson"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "valueType": "object"
+        }
+    }
+
+}

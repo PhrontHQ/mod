@@ -1,0 +1,114 @@
+{
+
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Country",
+            "propertyDescriptors": [
+                {"@": "iso3166_1_alpha2Ccode"},
+                {"@": "iso3166_1_alpha3Ccode"},
+                {"@": "iso3166_1_numericCode"},
+                {"@": "geometry"},
+                {"@": "officialStateName"},
+                {"@": "name"},
+                {"@": "phoneCode"},
+                {"@": "timeZones"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./country.mjson"
+            },
+            "exportName": "Country",
+            "module": {
+                "%": "./country"
+            },
+            "object":{"@": "country"},
+            "parent":{"@": "objectDescriptor"}
+        }
+    },
+    "country": {
+        "object": "./country"
+    },
+
+    "objectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+
+    "iso3166_1_alpha2Ccode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "iso3166_1_alpha2Ccode",
+            "valueType": "string",
+            "isSearchable": true
+        }
+    },
+    "iso3166_1_alpha3Ccode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "iso3166_1_alpha3Ccode",
+            "valueType": "string",
+            "isSearchable": true
+        }
+    },
+    "iso3166_1_numericCode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "iso3166_1_numericCode",
+            "valueType": "number",
+            "isSearchable": true
+        }
+    },
+
+    "geometry": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "geometry",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "GeometryDescriptor"},
+            "isSearchable": true
+        }
+    },
+
+    "GeometryDescriptor": {
+        "object": "data/model/geo/geometry.mjson"
+    },
+
+    "officialStateName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "officialStateName",
+            "valueType": "string",
+            "isLocalizable": true
+        }
+    },
+
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "valueType": "string",
+            "isLocalizable": true
+        }
+    },
+
+    "phoneCode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "phoneCode",
+            "valueType": "string"
+        }
+    },
+
+    "timeZones": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "timeZones",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "timeZone-descriptor"}
+        }
+    },
+    "timeZone-descriptor": {
+        "object": "core/date/time-zone.mjson"
+    }
+}

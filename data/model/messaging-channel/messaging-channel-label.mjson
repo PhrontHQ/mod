@@ -1,0 +1,71 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "MessagingChannel",
+            "propertyDescriptors": [
+                {"@": "preferredForParties"},
+                {"@": "description"},
+                {"@": "tags"},
+                {"@": "serviceProvider"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./messaging-channel.mjson"
+            },
+            "exportName": "MessagingChannel",
+            "module": {
+                "%": "./messaging-channel"
+            },
+            "object":{"@": "MessagingChannel"},
+            "parent":{"@": "objectDescriptor"}
+        }
+    },
+    "MessagingChannel": {
+        "object": "./messaging-channel"
+    },
+    "objectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+    "preferredForParties": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "preferredForParties",
+            "valueType": "array",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PartyDescriptor"},
+            "isSearchable": true
+        }
+    },
+    "PartyDescriptor": {
+        "object": "../party.mjson"
+    },
+    "description": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "description",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    },
+    "tags": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tags",
+            "isLocalizable": true,
+            "cardinality": -1,
+            "valueType": "string"
+        }
+    },
+    "serviceProvider": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "serviceProvider",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "OrganizationDescriptor"}
+        }
+    },
+    "OrganizationDescriptor": {
+        "object": "../organization.mjson"
+    }
+}

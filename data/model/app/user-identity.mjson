@@ -19,7 +19,10 @@
                 {"@": "tags"},
                 {"@": "mfaCode"},
                 {"@": "locale"},
-                {"@": "timeZone"}
+                {"@": "timeZone"},
+                {"@": "person"},
+                {"@": "images"},
+                {"@": "addresses"}
             ],
             "objectDescriptorModule": {
                 "%": "./user-identity.mjson"
@@ -165,5 +168,42 @@
     },
     "timeZoneDescriptor": {
         "object": "../../../core/date/time-zone.mjson"
+    },
+    "images": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "images",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "image_descriptor"}
+        }
+    },
+    "image_descriptor": {
+        "object": "../image.mjson"
+    },
+    "addresses": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "addresses",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "addresses_descriptor"}
+       }
+    },
+    "addresses_descriptor": {
+        "object": "../messaging-channel/postal-address.mjson"
+    },
+    "person": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "person",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "personDescriptor"},
+            "inversePropertyName": "userIdentities"
+       }
+    },
+    "personDescriptor": {
+        "object": "../person.mjson"
     }
+
 }

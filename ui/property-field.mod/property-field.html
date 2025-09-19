@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="property-field.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "properties": {
+                "element": {"#": "owner"}
+            },
+            "bindings": {
+                "classList.has('is-mandatory')": {"<-": "!!@owner.isMandatory"},
+                "classList.has('help-is-shown')": {"<-": "@owner.helpShown"}
+            },
+            "listeners": [
+                {
+                    "type": "action",
+                    "listener": {"@": "owner"}
+                }
+            ]
+        },
+        "fieldTitle": {
+            "prototype": "ui/text.mod",
+            "properties": {
+                "element": {"#": "fieldTitle"}
+            },
+            "bindings": {
+                "value": {"<-": "@owner.label"}
+            }
+        },
+        "condition": {
+            "prototype": "ui/condition.reel",
+            "properties": {
+                "element": {"#": "condition"}
+            },
+            "bindings": {
+                "condition": {"<-": "!!@owner.helpMessage"}
+            }
+        },
+        "fieldInfoButton": {
+            "prototype": "ui/button.mod",
+            "properties": {
+                "element": {"#": "fieldInfoButton"}
+            }
+        },
+        "error": {
+            "prototype": "ui/text.mod",
+            "properties": {
+                "element": {"#": "error"}
+            },
+            "bindings": {
+                "value": {"<-": "@owner.errorMessage"}
+            }
+        },
+        "closeHelpButton": {
+            "prototype": "ui/button.mod",
+            "properties": {
+                "element": {"#": "closeHelpButton"},
+                "value": "Close"
+            }
+        },
+        "help": {
+            "prototype": "ui/controls/panel.mod",
+            "properties": {
+                "element": {"#": "help"}
+            }
+        },
+        "helpMessage": {
+            "prototype": "ui/text.mod",
+            "properties": {
+                "element": {"#": "helpMessage"}
+            },
+            "bindings": {
+                "value": {"<-": "@owner.helpMessage && @owner.helpMessage.length > 0 && 'help$$' + @owner.helpMessage"}
+            }
+        },
+        "loadingSubstitution": {
+            "prototype": "ui/substitution.reel",
+            "properties": {
+                "element": {"#": "loadingSubstitution"}
+            },
+            "bindings": {
+                "switchValue": {"<-": "!!@owner.isLoading + ''"}
+            }
+        },
+        "loading": {
+            "prototype": "ui/controls/spinner.reel",
+            "properties": {
+                "element": {"#": "loading"},
+                "isShown": true
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="owner" class="Field">
+        <div>
+            <div class="Field-title">
+                <label data-mod-id="fieldTitle" class="Field-label"></label>
+                <div data-mod-id="condition" class="Field-info-condition">
+                    <div data-mod-id="fieldInfoButton" class="Field-infoButton Button--naked Button--icon">
+                    <svg><use xlink:href="#i-help"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div data-mod-id="loadingSubstitution" class="Field-control-substitution">
+                <div class="Field-control" data-arg="false">
+                    <div data-param="*"></div>
+                    <div data-mod-id="error" class="Field-error"></div>
+                </div>
+                <div data-mod-id="loading" data-arg="true" class="Field-spinner"></div>
+            </div>
+        </div>
+        <div data-mod-id="help" class="Field-help g-margin-top">
+            <p data-mod-id="helpMessage"></p>
+            <button data-mod-id="closeHelpButton"></button>
+        </div>
+    </div>
+</body>
+</html>

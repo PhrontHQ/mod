@@ -1,0 +1,12 @@
+{
+    "name": "button-sample",
+    "version": "0.1.0",
+    "dependencies": {
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../../"
+    }
+}
+
+

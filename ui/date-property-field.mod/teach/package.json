@@ -1,0 +1,11 @@
+{
+    "name": "teach-date-property-field.mod",
+    "version": "0.1.0",
+    "private": true,
+    "dependencies": {
+        "mod": "*"
+    },  
+    "mappings": {
+        "mod": "../../../"
+    }
+}

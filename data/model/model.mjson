@@ -1,0 +1,213 @@
+{
+    "root": {
+        "prototype": "core/meta/model",
+        "values": {
+            "name": "ModDataModel",
+            "exportName": "ModDataModel",
+            "objectDescriptors": [
+                {"@": "DataObject"},
+                {"@": "ObjectStore"},
+                {"@": "Transaction"},
+                {"@": "TimeZone"},
+                {"@": "LocalizedString"},
+                {"@": "country"},
+                {"@": "messagingChannel"},
+                {"@": "partyMessagingChannel"},
+                {"@": "PhoneNumber"},
+                {"@": "partyPhoneNumber"},
+                {"@": "partySMSNumber"},
+                {"@": "InstantMessageAddress"},
+                {"@": "partyInstantMessageAddress"},
+                {"@": "contactForm"},
+                {"@": "partyContactForm"},
+                {"@": "EmailAddress"},
+                {"@": "partyEmailAddress"},
+                {"@": "party"},
+                {"@": "partyPartyRelationship"},
+                {"@": "organization"},
+                {"@": "postalAddress"},
+                {"@": "partyPostalAddress"},
+                {"@": "image"},
+                {"@": "person"},
+                {"@": "personSignature"},
+                {"@": "resource"},
+                {"@": "person-name"},
+                {"@": "personal-relationship"},
+                {"@": "role"},
+                {"@": "position"},
+                {"@": "Gender"},
+                {"@": "RoleRanking"},
+                {"@": "Application"},
+                {"@": "UserPool"},
+                {"@": "AppClient"},
+                {"@": "UserSession"},
+                {"@": "Identity"},
+                {"@": "UserIdentity"},
+                {"@": "WebSocketSession"},
+                {"@": "WebSocketSessionConnection"}
+
+          ]
+        }
+    },
+
+    "DataObject": {
+        "object": "data/model/data-object.mjson"
+    },
+
+    "ObjectStore": {
+        "object": "data/model/object-store.mjson"
+    },
+
+    "Transaction": {
+        "object": "data/model/transaction.mjson"
+    },
+
+    "TimeZone": {
+        "object": "core/date/time-zone.mjson"
+    },
+
+
+    "LocalizedString": {
+        "object": "./model/localized-string.mjson"
+    },
+
+    "country": {
+        "object": "./model/country.mjson"
+    },
+
+    "messagingChannel": {
+        "object": "./model/messaging-channel/messaging-channel.mjson"
+    },
+
+    "partyMessagingChannel": {
+        "object": "./model/messaging-channel/party-messaging-channel.mjson"
+    },
+
+    "PhoneNumber": {
+        "object": "./model/messaging-channel/phone-number.mjson"
+    },
+
+    "partyPhoneNumber": {
+        "object": "./model/messaging-channel/party-phone-number.mjson"
+    },
+
+    "partySMSNumber": {
+        "object": "./model/messaging-channel/party-s-m-s-number.mjson"
+    },
+
+    "InstantMessageAddress": {
+        "object": "./model/messaging-channel/instant-message-address.mjson"
+    },
+
+    "partyInstantMessageAddress": {
+        "object": "./model/messaging-channel/party-instant-message-address.mjson"
+    },
+
+    "contactForm": {
+        "object": "./model/messaging-channel/contact-form.mjson"
+    },
+
+    "partyContactForm": {
+        "object": "./model/messaging-channel/party-contact-form.mjson"
+    },
+
+    "EmailAddress": {
+        "object": "./model/messaging-channel/email-address.mjson"
+    },
+
+    "partyEmailAddress": {
+        "object": "./model/messaging-channel/party-email-address.mjson"
+    },
+
+    "organization": {
+        "object": "./model/organization.mjson"
+    },
+
+    "postalAddress": {
+        "object": "./model/messaging-channel/postal-address.mjson"
+    },
+
+    "partyPostalAddress": {
+        "object": "./model/messaging-channel/party-postal-address.mjson"
+    },
+
+    "party": {
+        "object": "./model/party.mjson"
+    },
+
+    "partyPartyRelationship": {
+        "object": "./model/party-party-relationship.mjson"
+    },
+
+    "image": {
+        "object": "./model/image.mjson"
+    },
+
+    "person": {
+        "object": "./model/person.mjson"
+    },
+
+    "personSignature": {
+        "object": "./model/person-signature.mjson"
+    },
+
+    "resource": {
+        "object": "./model/resource.mjson"
+    },
+
+    "person-name": {
+        "object": "./model/person-name.mjson"
+    },
+
+    "personal-relationship": {
+        "object": "./model/personal-relationship.mjson"
+    },
+
+    "AuthenticationPolicy": {
+        "object": "data/service/authentication-policy"
+    },
+
+    "role": {
+        "object": "./model/role.mjson"
+    },
+
+    "Gender": {
+        "object": "./model/gender.mjson"
+    },
+
+    "RoleRanking": {
+        "object": "./model/role-ranking.mjson"
+    },
+
+    "Application": {
+        "object": "./model/app/application.mjson"
+    },
+    
+    "UserPool": {
+        "object": "./model/app/user-pool.mjson"
+    },
+
+    "AppClient": {
+        "object": "data/model/app/app-client.mjson"
+    },
+
+    "UserSession": {
+        "object": "./model/app/user-session.mjson"
+    },
+
+    "Identity": {
+        "object": "data/model/identity.mjson"
+    },
+
+    "UserIdentity": {
+        "object": "./app/user-identity.mjson"
+    },
+
+    "WebSocketSession": {
+        "object": "data/model/app/web-socket-session.mjson"
+    },
+
+    "WebSocketSessionConnection": {
+        "object": "data/model/app/web-socket-session-connection.mjson"
+    }
+}

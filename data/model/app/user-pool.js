@@ -26,5 +26,6 @@ exports.UserPool = DataObject.specialize(/** @lends UserPool.prototype */ {
     },
     applications: {
         value: undefined
-    }
+    },
+    servedOrganizations: {value: undefined}
 });

@@ -7,7 +7,8 @@
                 {"@": "identity"},
                 {"@": "environment"},
                 {"@": "connectionId"},
-                {"@": "connectionTimeRange"}
+                {"@": "connectionTimeRange"},
+                {"@": "person"}
             ],
             "objectDescriptorModule": {
                 "%": "./user-session.mjson"
@@ -71,6 +72,18 @@
     },
     "rangeDescriptor": {
         "object": "../../../core/range.mjson"
+    },
+    "person": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "person",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "person_descriptor"}
+       }
+    },
+    "person_descriptor": {
+        "object": "../person.mjson"
     }
-   
+
 }
