@@ -1471,7 +1471,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             // }
 
             if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
-                this._resizeObserver().observe(target, {box: optionsOrUseCapture.size.box});
+                this._resizeObserver().observe(target, {box: optionsOrUseCapture?.size?.box});
             }
 
             listenerOptions.listener = listener;
