@@ -78,7 +78,8 @@ Fill might be a better term than background: it's shorter, works for both shapes
   ### ControlBackground Colors or Control Fills
 
 
-  - questions: dp we keep just the prrefic control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor
+  - questions: do we keep just the prefix control as the marker vs "content" or "physical" surface stuff are on, or do we prefix those as well, like environmentBaseSurfaceColor? environmentRaisedSurfaceColor, environmentElevatedSurfaceColor 
+
 - **`controlBackgroundColor`** or **`controlBackgroundFill`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
@@ -103,6 +104,18 @@ Fill might be a better term than background: it's shorter, works for both shapes
   #### Control Colors
 
   In light of the fact that these are actually defining background, as stated in Usage right bellow, shouldn't we name those controlBackground, controlSecondarBackground, etc...?
+
+  #### Accent
+
+  - [Apple Human Interface Guidelines for Color](https://developer.apple.com/design/human-interface-guidelines/color#Platform-considerations) defines it as:
+      Control accent: The accent color people select in System Settings. controlAccentColor
+  
+  - CSS now has an accent-color proeprty
+        However it's limiting as this can't take a gradient or image, but interesting for reference:
+      - [https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color](https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color)
+      - [https://css-tricks.com/almanac/properties/a/accent-color/](https://css-tricks.com/almanac/properties/a/accent-color/)
+      - [https://adactio.medium.com/accent-all-areas-d6c0208da53f](https://adactio.medium.com/accent-all-areas-d6c0208da53f)
+      - [https://www.bram.us/2021/08/23/tint-user-interface-controls-with-css-accent-color/](https://www.bram.us/2021/08/23/tint-user-interface-controls-with-css-accent-color/)
   
 - **`controlColor`** or **`controlFill`**:
 
@@ -275,3 +288,7 @@ Borders can be filled with colors, but also with image and therefore gradients:
     - Body
 - reference from that article: [https://base.uber.com/6d2425e9f/p/976582-typography](https://https://base.uber.com/6d2425e9f/p/976582-typography)
 - [https://www.fourzerothree.in/p/typography-variables](https://https://www.fourzerothree.in/p/typography-variables)
+
+## References
+- [CSS Contrast Color](https://webkit.org/blog/16929/contrast-color/)
+- [Apple Human Interface Guidelines for Color](https://developer.apple.com/design/human-interface-guidelines/color#Platform-considerations)
