@@ -25,6 +25,7 @@ var PROPERTIES = [
     {name: "controlBuffer", variable: "--visual-style-control-buffer", defaultValue: ".625em 1em"},
 
     {name: "controlLabelFill", variable: "--visual-style-control-label-fill", backup: "textFill"},
+    {name: "controlLabelSize", variable: "--visual-style-control-label-size", backup: "textSize"},
 
     {name: "controlSelectionFill", variable: "--visual-style-control-selection-fill", defaultValue: "hsl(211, 100%, 50%)"},
     {name: "controlSelectionBackgroundFill", variable: "--visual-style-control-selection-background-fill", backup: "controlBackgroundFill"},
@@ -38,6 +39,7 @@ var PROPERTIES = [
     {name: "textTertiaryFill", variable: "--visual-style-text-tertiary-fill", backup: "textSecondaryFill"},
     {name: "textQuaternaryFill", variable: "--visual-style-text-quaternary-fill", backup: "textTertiaryFill"},
 
+    {name: "textSize", variable: "--visual-style-text-size", defaultValue: "12px"},
 
     {name: "linkTextFill", variable: "--visual-style-link-text-fill", backup: "textFill"}
     

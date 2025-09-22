@@ -1,35 +1,23 @@
 :root {
     /* Segmented Control */
-    --mod-segmented-control-background: rgb(243, 244, 246);
     --mod-segmented-control-padding: 2px;
 
     /* Thumb */
-    --mod-segmented-control-thumb-background-color: none;
-    --mod-segmented-control-thumb-background-gradient: linear-gradient(
-        356deg,
-        rgba(253, 253, 253, 1) 0%,
-        rgba(255, 255, 255, 1) 100%
-    );
 
-    --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 1);
+    /* --mod-segmented-control-thumb-border-color: rgba(255, 255, 255, 1); */
     --mod-segmented-control-thumb-shadow: 0px 0px 3px 1px rgba(0, 0, 0, 0.04);
-    --mod-segmented-control-thumb-text: rgba(0, 0, 0, 0.85);
     --mod-segmented-control-thumb-transition: all 0.35s cubic-bezier(0.375, 0.075, 0, 1.115);
 
     /* Segment */
-    --mod-segment-text: rgba(0, 0, 0, 0.65);
     --mod-segment-transition: color 0.25s ease-out, background-color 0.25s ease-out;
     --mod-segment-height: 36px;
-    --mod-segment-border-radius: 6px;
     --mod-segment-padding: 4px 8px;
     --mod-segment-font-size: 12px;
 
     /* Segment Hover State */
-    --mod-segment-hover-background: rgba(229, 231, 235, 0.55);
     --mod-segment-hover-text: rgba(0, 0, 0, 1);
 
     /* Segment Active State */
-    --mod-segment-active-background: rgba(229, 231, 235, 1);
     --mod-segment-active-text: rgba(0, 0, 0, 1);
 }
 
@@ -39,22 +27,21 @@
 
     > .ModSegmentedControl-container {
         display: flex;
-        background-color: var(--mod-segmented-control-background);
-        padding: var(--mod-segmented-control-padding);
+        background-color: var(--visual-style-control-background-fill);
+        padding: var(--mod-segmented-control-padding); /** TODO Incorporate into visual-style? **/
         position: relative;
         flex: 1;
-        border-radius: var(--mod-segment-border-radius);
+        border-radius: var(--visual-style-control-border-radius);
 
         > .ModSegmentedControl-thumb {
             position: absolute;
             top: var(--mod-segmented-control-padding);
             left: var(--mod-segmented-control-padding);
-            background-color: var(--mod-segmented-control-thumb-background-color);
-            background-image: var(--mod-segmented-control-thumb-background-gradient);
+            background: var(--visual-style-control-fill);
             backdrop-filter: blur(10px);
-            border: 2px solid var(--mod-segmented-control-thumb-border-color);
+            border: 2px solid var(--visual-style-control-border-color);
             box-sizing: border-box;
-            box-shadow: var(--mod-segmented-control-thumb-shadow);
+            box-shadow: var(--visual-style-control-thumb-shadow); /** TODO Incorporate into visual-style? **/
             z-index: 1;
             pointer-events: none;
             height: calc(100% - var(--mod-segmented-control-padding) * 2);
@@ -73,11 +60,10 @@
                 flex: 1;
                 padding: var(--mod-segment-padding);
                 min-height: var(--mod-segment-height);
-                font-size: var(--mod-segment-font-size);
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: var(--mod-segment-text);
+                color: var(--visual-style-text-fill);
                 cursor: pointer;
                 transition: var(--mod-segment-transition);
                 z-index: 2;
@@ -93,17 +79,17 @@
                 gap: 8px;
 
                 &:hover:not(.mod--selected) {
-                    background-color: var(--mod-segment-hover-background);
+                    background-color: var(--visual-style-control-hover-fill);
                     color: var(--mod-segment-hover-text);
                 }
 
                 &:active:not(.mod--selected) {
-                    background-color: var(--mod-segment-active-background);
+                    background-color: var(--visual-style-control-active-fill);
                     color: var(--mod-segment-active-text);
                 }
 
                 &.mod--selected {
-                    color: var(--mod-segmented-control-thumb-text);
+                    color: var(--visual-style-text-fill);
                 }
 
                 > * {
@@ -115,7 +101,7 @@
 
         > .ModSegmentedControl-thumb,
         > .ModSegmentedControl-segments > .ModSegmentedControl-segment {
-            border-radius: calc(var(--mod-segment-border-radius) - var(--mod-segmented-control-padding));
+            border-radius: calc(var(--visual-style-control-border-radius) - var(--mod-segmented-control-padding));
         }
     }
 
