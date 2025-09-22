@@ -23,7 +23,7 @@ exports.TextField = TextInput.specialize({
     },
 
     hasTemplate: {
-        value: false
+        value: true
     },
 
     handleKeyPress: {

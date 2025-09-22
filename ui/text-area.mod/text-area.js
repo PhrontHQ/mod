@@ -11,7 +11,7 @@ var TextInput = require("ui/text-input").TextInput;
  */
 
 var TextArea = exports.TextArea = TextInput.specialize(/** @lends module:"mod/ui/native/textarea.mod".Textarea# */ {
-    hasTemplate: {value: false }
+    hasTemplate: {value: true }
 });
 
 TextArea.addAttributes( /** @lends module:"mod/ui/native/textarea.mod".Textarea# */ {

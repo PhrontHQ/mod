@@ -1,7 +1,7 @@
 /* WILL NOT BE FOUND */
 /* .ModButton { 
     border: solid 1px;
-    border-color: var(--visual-style-control-border-color);
+    border-color: var(--visual-style-control-border-fill);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -18,7 +18,7 @@
 
 .ModButton {
         border: solid 1px;
-        border-color: var(--visual-style-control-border-color);
+        border-color: var(--visual-style-control-border-fill);
         display: inline-flex;
         align-items: center;
         justify-content: center;

@@ -5,7 +5,7 @@
     border-radius: var(--visual-style-control-border-radius);
     border-style: solid;
     border-width: var(--visual-style-control-border-width);
-    border-color: var(--visual-style-control-border-color);
+    border-color: var(--visual-style-control-border-fill);
     min-height: 4px;
 }
 
@@ -27,20 +27,20 @@
 .mod-Slider .mod-Slider--track {
     position: absolute;
     z-index:0;
-    background-color: var(--visual-style-control-background-color);
+    background: var(--visual-style-control-background-fill);
     height: 100%;
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="1"] {
-    background-color: var(--visual-style-control-secondary-background-color);
+    background: var(--visual-style-control-secondary-background-fill);
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="2"] {
-    background-color: var(--visual-style-control-tertiary-background-color);
+    background: var(--visual-style-control-tertiary-background-fill);
 }
 
 .mod-Slider .mod-Slider--track[data-mod-index="3"] {
-    background-color: var(--visual-style-control-quaternary-background-color);
+    background: var(--visual-style-control-quaternary-background-fill);
 }
 
 .mod-Slider .mod-Slider--thumbWrapper {
@@ -49,22 +49,22 @@
 }
 
 .mod-Slider--thumb {
-    background-color: var(--visual-style-control-color);
-    border-color: var(--visual-style-control-border-color);
+    background: var(--visual-style-control-fill);
+    border-color: var(--visual-style-control-border-fill);
     border-style: solid;
     border-width: var(--visual-style-control-border-width);
 }
 
 .mod-Slider--thumb[data-mod-index="1"] {
-    background-color: var(--visual-style-control-secondary-color);
+    background: var(--visual-style-control-secondary-fill);
 }
 
 .mod-Slider--thumb[data-mod-index="2"] {
-    background-color: var(--visual-style-control-tertiary-color);
+    background: var(--visual-style-control-tertiary-fill);
 }
 
 .mod-Slider--thumb[data-mod-index="3"] {
-    background-color: var(--visual-style-control-quaternary-color);
+    background: var(--visual-style-control-quaternary-fill);
 }
 
 

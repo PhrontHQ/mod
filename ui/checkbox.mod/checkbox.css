@@ -1,0 +1,45 @@
+.ModCheckbox {
+    position: relative;
+    display: inline-block;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
+    vertical-align: middle;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: .25em;
+    border: 1px solid;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    fill: hsla(0,0%,0%,.7);
+    background: var(--visual-style-control-background-fill);
+    border-color: var(--visual-style-control-border-fill);
+}
+
+/* States --------------------- */
+
+.ModCheckbox.mod--active,
+.ModCheckbox.mod--checked {
+    background: var(--visual-style-control-selection-background-fill);;
+}
+
+.ModCheckbox.mod-Checkbox--disabled {
+    opacity: .5;
+    border-style: dashed;
+    pointer-events: none;
+}
+
+
+/* Icon --------------------- */
+
+.ModCheckbox-icon {
+    fill: transparent;
+}
+
+.ModCheckbox.mod--checked .ModCheckbox-icon {
+    fill: inherit;
+}
+
+.ModCheckbox.mod--active .ModCheckbox-icon {
+    fill: transparent;
+}
+

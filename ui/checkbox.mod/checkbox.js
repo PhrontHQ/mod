@@ -16,6 +16,8 @@ exports.Checkbox = class Checkbox extends CheckControl {
         });
     }
 
+    hasTemplate = true;
+
     // <---- Lifecycle Functions ---->
 
     enterDocument(firstTime) {
