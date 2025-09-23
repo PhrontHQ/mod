@@ -1,5 +1,8 @@
 # VSCode Best Practices + Conventions
 
+### Launch
+//TODO 
+
 ### Component-specific Teach
 A teach for a component can be opened as it's own workspace in VSCode. This allows mod and the teach to be opened in adjacent windows. It also allows the teach to leverage workspace-level features in VSCode. 
 
