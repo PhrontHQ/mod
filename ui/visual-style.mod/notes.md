@@ -3,7 +3,7 @@
 
 ## Outstanding Questions / TODOS
 
-### Implementation
+### Tasks
 - Move the property definitions from the inline js to a visual-style.mjson with relationships, default values.
 - Allow devs to define new properties and variables without subclassing
 - Pull out use of @scope and @layer from component.js.
@@ -15,6 +15,10 @@
     background-image: -ms-linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,92%) );
     background-image: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,92%) );
 ```
+
+
+### Icons
+- Should VisualStyle provide a standard icon set? Should it provide variables with icon values? e.g. --visual-style-left-carat
 
 ### Sizing
 VisualStyle should include a property or properties to determine the size of controls. 
