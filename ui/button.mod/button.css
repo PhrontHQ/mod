@@ -17,7 +17,8 @@
 
 
 .ModButton {
-        border: solid 1px;
+        border-style: solid;
+        border-width: var(--visual-style-control-border-width);
         border-color: var(--visual-style-control-border-fill);
         display: inline-flex;
         align-items: center;

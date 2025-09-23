@@ -4891,8 +4891,6 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
      */
     addStylesheetWithClassListScopeInCSSLayerName: {
         value: function (style, classListScope, cssLayerName) {
-            console.log("Component.addStylesheetWithClassListScopeInCSSLayerName", style, classListScope, cssLayerName);
-            // debugger;
             this._stylesheets.push(style);
             this._stylesheetsclassListScopes.push(classListScope ? `.${this._stylesheets.join.call(classListScope,".")}` : undefined);
             this._cssLayerNames.push(cssLayerName);
@@ -4905,7 +4903,6 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
     
     addStyleSheetsFromTemplate: {
         value: function(template, cssLayerName) {
-            console.log("component.addStyleSheetsFromTemplate", cssLayerName)
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
                     ownerDocument = this.element.ownerDocument,
@@ -4951,7 +4948,6 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 documentHead = documentResources._document.head,
                 bufferDocumentFragment = this._bufferDocumentFragment;
 
-            console.log("stylesheets", stylesheets.slice());
             while ((stylesheet = stylesheets.shift())) {
                 documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift(), cssLayerNames.shift());
             }

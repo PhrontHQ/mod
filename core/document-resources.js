@@ -361,7 +361,6 @@ var DocumentResources = Montage.specialize({
                                 while ((match = scopeSelectorRegExp.exec(scopeRuleCSSText)) !== null) {
                                     scopeSelector =`.${cssLayerName}${match[1]}`;
                                     scopeRuleCSSText = scopeRuleCSSText.replace(match[1],scopeSelector);
-                                    console.log("DocumentResources.replaceScopeSelector", match[1], cssLayerName, scopeSelector);
                                     // console.log(
                                     //     `Found ${match[0]} start=${match.index} end=${scopeSelectorRegExp.lastIndex}.`,
                                     // );
