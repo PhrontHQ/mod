@@ -2,31 +2,23 @@
     "root": {
         "prototype": "core/meta/module-object-descriptor",
         "properties": {
-            "name": "Polygon",
-            "parent": {"@": "geometry"},
+            "name": "Circle",
             "propertyDescriptors": [
-                {"@": "identifier"},
-                {"@": "coordinates"}
+                {"@": "coordinates"},
+                {"@": "radius"}
             ],
-            "exportName": "Polygon",
+            "exportName": "Circle",
             "module": {
-                "%": "../polygon"
-            }
+                "%": "../circle"
+            },
+            "parent":{"@": "GeometryDescriptor"}
         }
     },
 
-    "geometry": {
+    "GeometryDescriptor": {
         "object": "./geometry.mjson"
     },
-
-    "identifier": {
-        "prototype": "core/meta/property-descriptor",
-        "properties": {
-            "name": "identifier",
-            "valueType": "string"
-        }
-    },
-
+    
     "PositionDescriptor": {
         "object": "./position.mjson"
     },
@@ -35,9 +27,16 @@
         "prototype": "core/meta/property-descriptor",
         "properties": {
             "name": "coordinates",
-            "cardinality": -1,
-            "valueType": "array",
+            "cardinality": 1,
             "valueDescriptor": {"@": "PositionDescriptor"}
+        }
+    },
+
+    "radius": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "radius",
+            "valueType": "number"
         }
     }
 

@@ -1,5 +1,5 @@
 var Montage = require("core/core").Montage,
-    PersonNameToSringConverter = require("../converter/person-name-to-string-converter-private").PersonNameToSringConverter,
+    PersonNameToSringConverter = require("../../converter/person-name-to-string-converter-private").PersonNameToSringConverter,
     _sharedPersonNameToSringConverter = new PersonNameToSringConverter;
 
 /**

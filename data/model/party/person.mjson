@@ -11,15 +11,11 @@
                 {"@": "preferredLocales"},
                 {"@": "tags"},
                 {"@": "userIdentities"},
-                {"@": "employmentHistory"},
-                {"@": "serviceProductVariantsProvided"},
                 {"@": "firstName"},
                 {"@": "lastName"},
                 {"@": "email"},
                 {"@": "phone"},
                 {"@": "addresses"},
-                {"@": "supplierRelationships"},
-                {"@": "customerSupplierResponsibilities"},
                 {"@": "firstPersonalRelationships"},
                 {"@": "secondPersonalRelationships"},
                 {"@": "signatures"}
@@ -31,7 +27,7 @@
             "module": {
                 "%": "./person"
             },
-            "parent":{"@": "PartyDescriptor"},
+            "parent":{"@": "BeingDescriptor"},
             "userInterfaceDescriptorModules": {
                 "*": {
                     "%": "./person-ui-descriptor.mjson"
@@ -46,8 +42,8 @@
 
         }
     },
-    "PartyDescriptor": {
-        "object": "./party.mjson"
+    "BeingDescriptor": {
+        "object": "./being.mjson"
     },
     "name": {
         "prototype": "core/meta/property-descriptor",
@@ -151,63 +147,6 @@
     },
     "userIdentity_descriptor": {
         "object": "./app/user-identity.mjson"
-    },
-    "employmentHistory": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "employmentHistory",
-            "valueType": "object",
-            "cardinality": -1,
-            "valueDescriptor": {"@": "employmentPositionStaffingDescriptor"},
-            "inversePropertyName": "employee"
-       }
-    },
-    "employmentPositionStaffingDescriptor": {
-        "object": "./employment-position-staffing.mjson"
-    },
-
-    "serviceProductVariantsProvided": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "serviceProductVariantsProvided",
-            "valueType": "object",
-            "cardinality": -1,
-            "valueDescriptor": {"@": "serviceProductVariantsDescriptor"},
-            "inversePropertyName": "providers"
-        }
-    },
-
-    "serviceProductVariantsDescriptor": {
-        "object": "./service-product-variant.mjson"
-    },
-
-    "supplierRelationships": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "supplierRelationships",
-            "valueType": "object",
-            "cardinality": -1,
-            "inversePropertyName": "customer",
-            "valueDescriptor": {"@": "B2CCustomerSupplierRelationshipDescriptor"}
-       }
-    },
-    "B2CCustomerSupplierRelationshipDescriptor": {
-        "object": "./b-2-c-customer-supplier-relationship.mjson"
-    },
-
-
-    "customerSupplierResponsibilities": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "customerSupplierResponsibilities",
-            "valueType": "object",
-            "cardinality": -1,
-            "inversePropertyName": "responsibleParty",
-            "valueDescriptor": {"@": "B2CCustomerSupplierResponsiblePartyDescriptor"}
-       }
-    },
-    "B2CCustomerSupplierResponsiblePartyDescriptor": {
-        "object": "./b-2-c-customer-supplier-responsible-party.mjson"
     },
 
     "firstPersonalRelationships": {

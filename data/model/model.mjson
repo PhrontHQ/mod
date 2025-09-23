@@ -23,6 +23,10 @@
                 {"@": "EmailAddress"},
                 {"@": "partyEmailAddress"},
                 {"@": "party"},
+                {"@": "thing"},
+                {"@": "tangible"},
+                {"@": "intangible"},
+                {"@": "being"},
                 {"@": "partyPartyRelationship"},
                 {"@": "organization"},
                 {"@": "postalAddress"},
@@ -30,12 +34,23 @@
                 {"@": "image"},
                 {"@": "person"},
                 {"@": "personSignature"},
-                {"@": "resource"},
                 {"@": "person-name"},
                 {"@": "personal-relationship"},
                 {"@": "role"},
                 {"@": "position"},
-                {"@": "Gender"},
+                {"@": "gender"},
+                {"@": "j-s-o-n-web-token"},
+                {"@": "o-auth-access-token"},
+                {"@": "circle"},
+                {"@": "geometry"},
+                {"@": "line-string"},
+                {"@": "multi-line-string"},
+                {"@": "point"},
+                {"@": "multi-point"},
+                {"@": "polygon"},
+                {"@": "multi-polygon"},
+                {"@": "Variable"},
+                
                 {"@": "RoleRanking"},
                 {"@": "Application"},
                 {"@": "UserPool"},
@@ -135,6 +150,19 @@
         "object": "./model/party.mjson"
     },
 
+    "thing": {
+        "object": "./model/thing.mjson"
+    },
+    "tangible": {
+        "object": "./model/tangible.mjson"
+    },
+    "intangible": {
+        "object": "./model/intangible.mjson"
+    },
+    "being": {
+        "object": "./model/being.mjson"
+    },
+
     "partyPartyRelationship": {
         "object": "./model/party-party-relationship.mjson"
     },
@@ -149,10 +177,6 @@
 
     "personSignature": {
         "object": "./model/person-signature.mjson"
-    },
-
-    "resource": {
-        "object": "./model/resource.mjson"
     },
 
     "person-name": {
@@ -171,8 +195,42 @@
         "object": "./model/role.mjson"
     },
 
-    "Gender": {
+    "gender": {
         "object": "./model/gender.mjson"
+    },
+
+    "j-s-o-n-web-token": {
+        "object": "./model/authentication/j-s-o-n-web-token.mjson"
+    },
+    "o-auth-access-token": {
+        "object": "./model/authentication/o-auth-access-token.mjson"
+    },
+    "circle": {
+        "object": "./model/geo/circle.mjson"
+    },
+    "geometry": {
+        "object": "./model/geo/geometry.mjson"
+    },
+    "line-string": {
+        "object": "./model/geo/line-string.mjson"
+    },
+    "multi-line-string": {
+        "object": "./model/geo/multi-line-string.mjson"
+    },
+    "point": {
+        "object": "./model/geo/point.mjson"
+    },
+    "multi-point": {
+        "object": "./model/geo/multi-point.mjson"
+    },
+    "polygon": {
+        "object": "./model/geo/multi-polygon.mjson"
+    },
+    "multi-polygon": {
+        "object": "./model/geo/multi-polygon.mjson"
+    },
+    "position": {
+        "object": "./model/geo/position.mjson"
     },
 
     "RoleRanking": {
@@ -201,6 +259,10 @@
 
     "UserIdentity": {
         "object": "./app/user-identity.mjson"
+    },
+
+    "Variable": {
+        "object": "./variable.mjson"
     },
 
     "WebSocketSession": {

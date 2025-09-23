@@ -1,7 +1,7 @@
-var Party = require("./party").Party;
+var Being = require("./being").Being;
 /**
  * @class Person
- * @extends DataObject
+ * @extends Being
  */
 
 
@@ -18,7 +18,7 @@ var Party = require("./party").Party;
  */
 
 
-exports.Person = Party.specialize(/** @lends Person.prototype */ {
+exports.Person = Being.specialize(/** @lends Person.prototype */ {
     constructor: {
         value: function Person() {
             this.super();

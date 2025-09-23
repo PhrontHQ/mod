@@ -1,7 +1,7 @@
 /**
     @module mod/data/model/app/authentication/o-auth-access-token-compute-validity-range
 */
-const Range = require("../../../../core/range").Range;
+const Range = require("../../../core/range").Range;
 
 
 exports.OAuthAccessTokenComputeValidityRange = function (validityDuration) {

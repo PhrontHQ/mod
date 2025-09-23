@@ -27,11 +27,17 @@
         }
     },
 
+    "PolygonDescriptor": {
+        "object": "./polygon.mjson"
+    },
+
     "coordinates": {
         "prototype": "core/meta/property-descriptor",
         "properties": {
             "name": "coordinates",
-            "valueType": "object"
+            "cardinality": -1,
+            "valueType": "array",
+            "valueDescriptor": {"@": "PolygonDescriptor"}
         }
     }
 
