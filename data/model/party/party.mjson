@@ -71,7 +71,7 @@
         }
     },
     "PartyPostalAddressDescriptor": {
-        "object": "./messaging-channel/party-postal-address.mjson"
+        "object": "../messaging-channel/party-postal-address.mjson"
     },
     "emailAddresses": {
         "prototype": "core/meta/property-descriptor",
@@ -85,7 +85,7 @@
         }
     },
     "PartyEmailAddressDescriptor": {
-        "object": "./messaging-channel/party-email-address.mjson"
+        "object": "../messaging-channel/party-email-address.mjson"
     },
     "phoneNumbers": {
         "prototype": "core/meta/property-descriptor",
@@ -99,7 +99,7 @@
         }
     },
     "PartyPhoneNumberDescriptor": {
-        "object": "./messaging-channel/party-phone-number.mjson"
+        "object": "../messaging-channel/party-phone-number.mjson"
     },
 
     "smsNumbers": {
@@ -113,7 +113,7 @@
         }
     },
     "PartySMSNumberDescriptor": {
-        "object": "./messaging-channel/party-s-m-s-number.mjson"
+        "object": "../messaging-channel/party-s-m-s-number.mjson"
     },
 
     "instantMessageAddresses": {
@@ -128,7 +128,7 @@
         }
     },
     "PartyInstantMessageAddressDescriptor": {
-        "object": "./messaging-channel/party-instant-message-address.mjson"
+        "object": "../messaging-channel/party-instant-message-address.mjson"
     },
     "contactForms": {
         "prototype": "core/meta/property-descriptor",
@@ -151,7 +151,7 @@
         }
     },
     "PartyContactFormDescriptor": {
-        "object": "./messaging-channel/party-contact-form.mjson"
+        "object": "../messaging-channel/party-contact-form.mjson"
     },
     "socialProfiles": {
         "prototype": "core/meta/property-descriptor",

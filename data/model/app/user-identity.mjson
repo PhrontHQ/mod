@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "../../../core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "UserIdentity",
             "propertyDescriptors": [
@@ -39,28 +39,28 @@
     },
 
     "username": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "username",
             "valueType": "string"
         }
     },
     "password": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "password",
             "valueType": "string"
         }
     },
     "session": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "session",
             "valueType": "object"
         }
     },
     "accountConfirmationCode": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "accountConfirmationCode",
             "isSerializable": false,
@@ -68,7 +68,7 @@
         }
     },
     "isAccountConfirmed": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "isAccountConfirmed",
             "isSerializable": false,
@@ -77,7 +77,7 @@
         }
     },
     "needsNewConfirmationCode": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "needsNewConfirmationCode",
             "isSerializable": false,
@@ -86,7 +86,7 @@
         }
     },
     "isAuthenticated": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "isAuthenticated",
             "serializable": false,
@@ -95,7 +95,7 @@
         }
     },
     "isMfaEnabled": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "isMfaEnabled",
             "valueType": "boolean",
@@ -103,35 +103,35 @@
         }
     },
     "firstName": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "firstName",
             "valueType": "string"
         }
     },
     "lastName": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "lastName",
             "valueType": "string"
         }
     },
     "email": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "email",
             "valueType": "string"
         }
     },
     "phone": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "phone",
             "valueType": "string"
         }
     },
     "tags": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "tags",
             "valueType": "string",
@@ -139,14 +139,14 @@
        }
     },
     "mfaCode": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "mfaCode",
             "valueType": "string"
        }
     },
     "locale": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "locale",
             "valueType": "object",
@@ -155,10 +155,10 @@
        }
     },
     "localeDescriptor": {
-        "object": "../../../core/locale.mjson"
+        "object": "core/locale.mjson"
     },
     "timeZone": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "timeZone",
             "valueType": "object",
@@ -167,10 +167,10 @@
        }
     },
     "timeZoneDescriptor": {
-        "object": "../../../core/date/time-zone.mjson"
+        "object": "core/date/time-zone.mjson"
     },
     "images": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "images",
             "cardinality": -1,
@@ -181,7 +181,7 @@
         "object": "../image.mjson"
     },
     "addresses": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "addresses",
             "valueType": "object",
@@ -193,7 +193,7 @@
         "object": "../messaging-channel/postal-address.mjson"
     },
     "person": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "person",
             "valueType": "object",
@@ -203,7 +203,7 @@
        }
     },
     "personDescriptor": {
-        "object": "../person.mjson"
+        "object": "../party/person.mjson"
     }
 
 }

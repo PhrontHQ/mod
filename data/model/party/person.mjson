@@ -124,7 +124,7 @@
        }
     },
     "addresses_descriptor": {
-        "object": "./messaging-channel/postal-address.mjson"
+        "object": "../messaging-channel/postal-address.mjson"
     },
 
     "tags": {
@@ -146,7 +146,7 @@
        }
     },
     "userIdentity_descriptor": {
-        "object": "./app/user-identity.mjson"
+        "object": "../app/user-identity.mjson"
     },
 
     "firstPersonalRelationships": {

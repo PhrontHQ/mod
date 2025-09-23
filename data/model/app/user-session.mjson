@@ -74,7 +74,7 @@
         "object": "../../../core/range.mjson"
     },
     "person": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "person",
             "valueType": "object",

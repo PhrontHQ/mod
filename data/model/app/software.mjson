@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "../../../core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Software",
             "propertyDescriptors": [
@@ -31,7 +31,7 @@
         "object": "../data-object.mjson"
     },
     "name": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "name",
             "valueType": "string",
@@ -39,7 +39,7 @@
         }
     },
     "version": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "version",
             "valueType": "string",
@@ -47,7 +47,7 @@
         }
     },
     "maker": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "maker",
             "valueType": "object",
@@ -61,7 +61,7 @@
         "object": "../organization.mjson"
     },
     "phoneNumbers": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "phoneNumbers",
             "valueType": "object",
@@ -72,11 +72,11 @@
         }
     },
     "PartyPhoneNumberDescriptor": {
-        "object": "./messaging-channel/party-phone-number.mjson"
+        "object": "../messaging-channel/party-phone-number.mjson"
     },
 
     "smsNumbers": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "smsNumbers",
             "valueType": "object",
@@ -86,11 +86,11 @@
         }
     },
     "PartySMSNumberDescriptor": {
-        "object": "./messaging-channel/party-s-m-s-number.mjson"
+        "object": "../messaging-channel/party-s-m-s-number.mjson"
     },
 
     "instantMessageAddresses": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "instantMessageAddresses",
             "valueType": "object",
@@ -101,10 +101,10 @@
         }
     },
     "PartyInstantMessageAddressDescriptor": {
-        "object": "./messaging-channel/party-instant-message-address.mjson"
+        "object": "../messaging-channel/party-instant-message-address.mjson"
     },
     "contactForms": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "contactForms",
             "valueType": "object",
@@ -115,7 +115,7 @@
         }
     },
     "urlAddresses": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "urlAddresses",
             "valueType": "URL",
@@ -124,10 +124,10 @@
         }
     },
     "PartyContactFormDescriptor": {
-        "object": "./messaging-channel/party-contact-form.mjson"
+        "object": "../messaging-channel/party-contact-form.mjson"
     },
     "socialProfiles": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "socialProfiles",
             "valueType": "object",
@@ -140,7 +140,7 @@
         "object": "./social-profile.mjson"
     },
     "calendars": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "calendars",
             "valueType": "object",
@@ -154,7 +154,7 @@
     },
 
     "eventsParticipatingIn": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "eventsParticipatingIn",
             "valueType": "object",
@@ -168,7 +168,7 @@
     },
 
     "images": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "images",
             "cardinality": -1,

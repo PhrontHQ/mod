@@ -37,7 +37,7 @@
         }
     },
     "PartyDescriptor": {
-        "object": "../party.mjson"
+        "object": "../party/party.mjson"
     },
     "description": {
         "prototype": "core/meta/property-descriptor",

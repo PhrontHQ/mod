@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Gender",
             "propertyDescriptors": [
@@ -21,10 +21,10 @@
         "object": "./gender"
     },
     "ObjectObjectDescriptor": {
-        "object": "mod/data/model/data-object.mjson"
+        "object": "data/model/data-object.mjson"
     },
     "name": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "name",
             "isLocalizable": true,

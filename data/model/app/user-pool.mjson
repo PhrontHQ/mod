@@ -43,7 +43,7 @@
     },
     
     "servedOrganizations": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "servedOrganizations",
             "cardinality": -1,

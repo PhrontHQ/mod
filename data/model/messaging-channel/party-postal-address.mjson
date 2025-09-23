@@ -5,8 +5,7 @@
             "name": "PartyPostalAddress",
             "propertyDescriptors": [
                 {"@": "party"},
-                {"@": "messagingChannel"},
-                {"@": "hostedEvents"}
+                {"@": "messagingChannel"}
             ],
             "objectDescriptorModule": {
                 "%":"./party-postal-address.mjson"
@@ -38,7 +37,7 @@
         }
     },
     "PartyDescriptor": {
-        "object": "../party.mjson"
+        "object": "../party/party.mjson"
     },
 
     "messagingChannel": {
@@ -52,19 +51,6 @@
     },
     "PostalAddress": {
         "object": "./postal-address.mjson"
-    },
-
-    "hostedEvents": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "hostedEvents",
-            "valueType": "object",
-            "cardinality": -1,
-            "inversePropertyName": "location",
-            "valueDescriptor": {"@": "EventDescriptor"}
-        }
-    },
-    "EventDescriptor": {
-        "object": "../event.mjson"
     }
+
 }
