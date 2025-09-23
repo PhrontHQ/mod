@@ -54,11 +54,6 @@ atlassian-ide-plugin.xml
 .vscode-upload.json
 .eslintrc.json
 
-## Ignore in all directories
-.vscode/
-## Allow the one at the root
-!.vscode/
-
 ### TextMate ###
 *.tmproj
 *.tmproject
