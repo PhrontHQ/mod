@@ -5,11 +5,11 @@ var Montage = require("montage").Montage,
 
 
 var PROPERTIES = [
-    {name: "baseSurfaceFill", variable: "--visual-style-base-fill", defaultValue: "hsl(0, 0%, 100%)"},
+    {name: "baseSurfaceFill", variable: "--visual-style-base-surface-fill", defaultValue: "hsl(0, 0%, 100%)"},
     {name: "raisedSurfaceFill", variable: "--visual-style-raised-surface-fill", backup: "baseSurfaceFill"},
     {name: "elevatedSurfaceFill", variable: "--visual-style-elevated-surface-fill", backup: "baseSurfaceFill"},
 
-    {name: "controlBackgroundFill", variable: "--visual-style-control-background-fill", defaultValue: "hsl(0,0%,86%)"},
+    {name: "controlBackgroundFill", variable: "--visual-style-control-background-fill", defaultValue: "hsl(0, 0%, 86%)"},
     {name: "controlSecondaryBackgroundFill", variable: "--visual-style-control-secondary-background-fill", backup: "controlBackgroundFill"},
     {name: "controlTertiaryBackgroundFill", variable: "--visual-style-control-tertiary-background-fill", backup: "controlSecondaryBackgroundFill"},
     {name: "controlQuaternaryBackgroundFill", variable: "--visual-style-control-quaternary-background-fill", backup: "controlTertiaryBackgroundFill"},
@@ -47,13 +47,12 @@ var PROPERTIES = [
 /**
  * @extends module:mod/ui/visual-style.mod
  */
-var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
+exports.VisualStyle = class VisualStyle extends Montage {
 
 
     /*************
      * Additional Considerations / TODOs
-     * 1. Move the PROPERTIES down to property definitions instead of a pseudo-serialization? Or make VisualStyleProperty an enum?
-     * 2. Allow components to reference any visual style defined elsewhere in the application. A map on VisualStyle?
+     * See ./notes.md
      */
 
     constructor() {
@@ -77,6 +76,7 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
      * Name of this visual style.
      */
     name;
+
 
     /** 
      * The scope in which to apply this visual style. Derived from the name.
@@ -138,6 +138,8 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
     deserializeSelf(deserializer) {
         this.name = deserializer.getProperty("name");
         this._deserializeProperty(deserializer, "baseSurfaceFill");
+        this._deserializeProperty(deserializer, "raisedSurfaceFill");
+        this._deserializeProperty(deserializer, "elevatedSurfaceFill");
         this._deserializeProperty(deserializer, "controlBackgroundFill");
         this._deserializeProperty(deserializer, "controlSecondaryBackgroundFill");
         this._deserializeProperty(deserializer, "controlTertiaryBackgroundFill");
@@ -146,11 +148,23 @@ var VisualStyle = exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlSecondaryFill");
         this._deserializeProperty(deserializer, "controlTertiaryFill");
         this._deserializeProperty(deserializer, "controlQuaternaryFill");
+        this._deserializeProperty(deserializer, "controlBorderFill");
+        this._deserializeProperty(deserializer, "controlBorderRadius");
+        this._deserializeProperty(deserializer, "controlBorderWidth");
+        this._deserializeProperty(deserializer, "controlBuffer");
+        this._deserializeProperty(deserializer, "controlLabelFill");
+        this._deserializeProperty(deserializer, "controlLabelSize");
+        this._deserializeProperty(deserializer, "controlHoverFill");
+        this._deserializeProperty(deserializer, "controlActiveFill");
+        this._deserializeProperty(deserializer, "controlFocusFill");
         this._deserializeProperty(deserializer, "controlSelectionFill");
         this._deserializeProperty(deserializer, "controlSelectionBackgroundFill");
-        this._deserializeProperty(deserializer, "controlHoverFill");
-        this._deserializeProperty(deserializer, "controlBorderFill");
-        
+        this._deserializeProperty(deserializer, "textFill");
+        this._deserializeProperty(deserializer, "textSecondaryFill");
+        this._deserializeProperty(deserializer, "textTertiaryFill");
+        this._deserializeProperty(deserializer, "textQuaternaryFill");
+        this._deserializeProperty(deserializer, "textSize");
+        this._deserializeProperty(deserializer, "linkTextFill");
     }
 
     _deserializeProperty(deserializer, property) {

@@ -20,44 +20,44 @@ describe("test/ui/visual-style-spec", function () {
 
     describe("default styles", function () {
         it("defines the hierarchy of visual style properties", function () {
-            expect(visualStyle.baseSurfaceColor.fallback).toBe(undefined);
-            expect(visualStyle.raisedSurfaceColor.fallback).toBe(visualStyle.baseSurfaceColor);
-            expect(visualStyle.elevatedSurfaceColor.fallback).toBe(visualStyle.baseSurfaceColor);
+            expect(visualStyle.baseSurfaceFill.fallback).toBe(undefined);
+            expect(visualStyle.raisedSurfaceFill.fallback).toBe(visualStyle.baseSurfaceFill);
+            expect(visualStyle.elevatedSurfaceFill.fallback).toBe(visualStyle.baseSurfaceFill);
 
-            expect(visualStyle.controlBackgroundColor.fallback).toBe(undefined);
-            expect(visualStyle.controlSecondaryBackgroundColor.fallback).toBe(visualStyle.controlBackgroundColor, "control secondary bg color falls back to control bg color");
-            expect(visualStyle.controlTertiaryBackgroundColor.fallback).toBe(visualStyle.controlSecondaryBackgroundColor, "control tertiary bg color falls back to control secondary bg color");
-            expect(visualStyle.controlQuaternaryBackgroundColor.fallback).toBe(visualStyle.controlTertiaryBackgroundColor, "control quaternary bg color falls back to control tertiary bg color");
+            expect(visualStyle.controlBackgroundFill.fallback).toBe(undefined);
+            expect(visualStyle.controlSecondaryBackgroundFill.fallback).toBe(visualStyle.controlBackgroundFill, "control secondary bg color falls back to control bg color");
+            expect(visualStyle.controlTertiaryBackgroundFill.fallback).toBe(visualStyle.controlSecondaryBackgroundFill, "control tertiary bg color falls back to control secondary bg color");
+            expect(visualStyle.controlQuaternaryBackgroundFill.fallback).toBe(visualStyle.controlTertiaryBackgroundFill, "control quaternary bg color falls back to control tertiary bg color");
 
-            expect(visualStyle.controlColor.fallback).toBe(undefined);
-            expect(visualStyle.controlSecondaryColor.fallback).toBe(visualStyle.controlColor, "control secondary color falls back to control color");
-            expect(visualStyle.controlTertiaryColor.fallback).toBe(visualStyle.controlSecondaryColor, "control secondary color falls back to control color");
-            expect(visualStyle.controlQuaternaryColor.fallback).toBe(visualStyle.controlTertiaryColor, "control secondary color falls back to control color");
+            expect(visualStyle.controlFill.fallback).toBe(undefined);
+            expect(visualStyle.controlSecondaryFill.fallback).toBe(visualStyle.controlFill, "control secondary color falls back to control color");
+            expect(visualStyle.controlTertiaryFill.fallback).toBe(visualStyle.controlSecondaryFill, "control secondary color falls back to control color");
+            expect(visualStyle.controlQuaternaryFill.fallback).toBe(visualStyle.controlTertiaryFill, "control secondary color falls back to control color");
 
-            expect(visualStyle.controlBorderColor.fallback).toBe(undefined);
+            expect(visualStyle.controlBorderFill.fallback).toBe(undefined);
 
-            expect(visualStyle.controlSelectionColor.fallback).toBe(undefined);
-            expect(visualStyle.controlSelectionBackgroundColor.fallback).toBe(visualStyle.controlBackgroundColor);
+            expect(visualStyle.controlSelectionFill.fallback).toBe(undefined);
+            expect(visualStyle.controlSelectionBackgroundFill.fallback).toBe(visualStyle.controlBackgroundFill);
 
-            expect(visualStyle.controlHoverColor.fallback).toBe(visualStyle.controlColor);
-            expect(visualStyle.controlActiveColor.fallback).toBe(visualStyle.controlSelectionColor);
-            expect(visualStyle.controlFocusColor.fallback).toBe(visualStyle.controlActiveColor);
+            expect(visualStyle.controlHoverFill.fallback).toBe(visualStyle.controlFill);
+            expect(visualStyle.controlActiveFill.fallback).toBe(visualStyle.controlSelectionFill);
+            expect(visualStyle.controlFocusFill.fallback).toBe(visualStyle.controlActiveFill);
 
-            expect(visualStyle.textColor.fallback).toBe(undefined);
-            expect(visualStyle.textSecondaryColor.fallback).toBe(visualStyle.textColor);
-            expect(visualStyle.textTertiaryColor.fallback).toBe(visualStyle.textSecondaryColor);
-            expect(visualStyle.textQuaternaryColor.fallback).toBe(visualStyle.textTertiaryColor);
+            expect(visualStyle.textFill.fallback).toBe(undefined);
+            expect(visualStyle.textSecondaryFill.fallback).toBe(visualStyle.textFill);
+            expect(visualStyle.textTertiaryFill.fallback).toBe(visualStyle.textSecondaryFill);
+            expect(visualStyle.textQuaternaryFill.fallback).toBe(visualStyle.textTertiaryFill);
 
-            expect(visualStyle.linkTextColor.fallback).toBe(visualStyle.textColor);
+            expect(visualStyle.linkTextFill.fallback).toBe(visualStyle.textFill);
         });
 
         it("defines a default value for visual style properties without fallbacks", function () {
-            expect(visualStyle.baseSurfaceColor.value).toBeDefined("baseSurfaceColor value is defined");
-            expect(visualStyle.controlBackgroundColor.value).toBeDefined("controlBackgroundColor value is defined");
-            expect(visualStyle.controlColor.value).toBeDefined("controlColor value is defined");
-            expect(visualStyle.controlBorderColor.value).toBeDefined("controlBorderColor value is defined");
-            expect(visualStyle.controlSelectionColor.value).toBeDefined("controlSelectionColor value is defined");
-            expect(visualStyle.textColor.value).toBeDefined("textColor value is defined");
+            expect(visualStyle.baseSurfaceFill.value).toBeDefined("baseSurfaceFill value is defined");
+            expect(visualStyle.controlBackgroundFill.value).toBeDefined("controlBackgroundFill value is defined");
+            expect(visualStyle.controlFill.value).toBeDefined("controlFill value is defined");
+            expect(visualStyle.controlBorderFill.value).toBeDefined("controlBorderFill value is defined");
+            expect(visualStyle.controlSelectionFill.value).toBeDefined("controlSelectionFill value is defined");
+            expect(visualStyle.textFill.value).toBeDefined("textFill value is defined");
         });
     });
 
@@ -66,31 +66,37 @@ describe("test/ui/visual-style-spec", function () {
         it("can generate the default visual style", function () {
             var expectedOutput = `
                 html, body {
-                --visual-style-base-surface-color: hsl(0, 0%, 100%);
-            --visual-style-raised-surface-color: hsl(0, 0%, 100%);
-            --visual-style-elevated-surface-color: hsl(0, 0%, 100%);
-            --visual-style-control-background-color: hsl(0,0%,86%);
-            --visual-style-control-secondary-background-color: hsl(0,0%,86%);
-            --visual-style-control-tertiary-background-color: hsl(0,0%,86%);
-            --visual-style-control-quaternary-background-color: hsl(0,0%,86%);
-            --visual-style-control-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-            --visual-style-control-secondary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-            --visual-style-control-tertiary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-            --visual-style-control-quaternary-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-            --visual-style-control-border-color: hsla(0,0%,65%,1);
+                --visual-style-base-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-raised-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-elevated-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-control-background-fill: hsl(0,0%,86%);
+            --visual-style-control-secondary-background-fill: hsl(0,0%,86%);
+            --visual-style-control-tertiary-background-fill: hsl(0,0%,86%);
+            --visual-style-control-quaternary-background-fill: hsl(0,0%,86%);
+            --visual-style-control-fill: hsl(0, 0%, 93%);
+            --visual-style-control-secondary-fill: hsl(0, 0%, 93%);
+            --visual-style-control-tertiary-fill: hsl(0, 0%, 93%);
+            --visual-style-control-quaternary-fill: hsl(0, 0%, 93%);
+            --visual-style-control-border-fill: hsl(0, 0%, 80%);
             --visual-style-control-border-radius: 8px;
-            --visual-style-control-selection-color: hsl(211, 100%, 50%);
-            --visual-style-control-selection-background-color: hsl(0,0%,86%);
-            --visual-style-control-hover-color: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,83%));
-            --visual-style-control-active-color: hsl(211, 100%, 50%);
-            --visual-style-control-focus-color: hsl(211, 100%, 50%);
-            --visual-style-text-color: hsl(0, 0, 0);
-            --visual-style-text-secondary-color: hsl(0, 0, 0);
-            --visual-style-text-tertiary-color: hsl(0, 0, 0);
-            --visual-style-text-quaternary-color: hsl(0, 0, 0);
-            --visual-style-link-text-color: hsl(0, 0, 0);
+            --visual-style-control-border-width: 1px;
+            --visual-style-control-buffer: .625em 1em;
+            --visual-style-control-label-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-control-label-size: 12px;
+            --visual-style-control-selection-fill: hsl(211, 100%, 50%);
+            --visual-style-control-selection-background-fill: hsl(0,0%,86%);
+            --visual-style-control-hover-fill: hsl(0, 0%, 93%);
+            --visual-style-control-active-fill: hsl(211, 100%, 50%);
+            --visual-style-control-focus-fill: hsl(211, 100%, 50%);
+            --visual-style-text-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-text-secondary-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-text-tertiary-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-text-quaternary-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-text-size: 12px;
+            --visual-style-link-text-fill: hsla(0, 0%, 0%, .7);
             }
             `;
+
 
             expect(visualStyle.generateCSS(true)).toEqual(expectedOutput);
         })
@@ -98,83 +104,93 @@ describe("test/ui/visual-style-spec", function () {
         it("can generate a visual style with hierarchy", function () {
             var expectedOutput = `
                 html, body {
-                --visual-style-base-surface-color: hsl(0, 0%, 100%);
-            --visual-style-raised-surface-color: hsl(0, 0%, 100%);
-            --visual-style-elevated-surface-color: hsl(0, 0%, 100%);
-            --visual-style-control-background-color: #888;
-            --visual-style-control-secondary-background-color: #777;
-            --visual-style-control-tertiary-background-color: #777;
-            --visual-style-control-quaternary-background-color: #777;
-            --visual-style-control-color: #F00;
-            --visual-style-control-secondary-color: #E00;
-            --visual-style-control-tertiary-color: #D00;
-            --visual-style-control-quaternary-color: #D00;
-            --visual-style-control-border-color: hsla(0,0%,65%,1);
+                --visual-style-base-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-raised-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-elevated-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-control-background-fill: #888;
+            --visual-style-control-secondary-background-fill: #777;
+            --visual-style-control-tertiary-background-fill: #777;
+            --visual-style-control-quaternary-background-fill: #777;
+            --visual-style-control-fill: #F00;
+            --visual-style-control-secondary-fill: #E00;
+            --visual-style-control-tertiary-fill: #D00;
+            --visual-style-control-quaternary-fill: #D00;
+            --visual-style-control-border-fill: hsl(0, 0%, 80%);
             --visual-style-control-border-radius: 8px;
-            --visual-style-control-selection-color: #0F0;
-            --visual-style-control-selection-background-color: #0D0;
-            --visual-style-control-hover-color: #F00;
-            --visual-style-control-active-color: #0FF;
-            --visual-style-control-focus-color: #0FF;
-            --visual-style-text-color: #484;
-            --visual-style-text-secondary-color: #666;
-            --visual-style-text-tertiary-color: #777;
-            --visual-style-text-quaternary-color: #777;
-            --visual-style-link-text-color: #484;
+            --visual-style-control-border-width: 1px;
+            --visual-style-control-buffer: .625em 1em;
+            --visual-style-control-label-fill: #484;
+            --visual-style-control-label-size: 12px;
+            --visual-style-control-selection-fill: #0F0;
+            --visual-style-control-selection-background-fill: #0D0;
+            --visual-style-control-hover-fill: #F00;
+            --visual-style-control-active-fill: #0FF;
+            --visual-style-control-focus-fill: #0FF;
+            --visual-style-text-fill: #484;
+            --visual-style-text-secondary-fill: #666;
+            --visual-style-text-tertiary-fill: #777;
+            --visual-style-text-quaternary-fill: #777;
+            --visual-style-text-size: 12px;
+            --visual-style-link-text-fill: #484;
             }
             `;
-            visualStyle.controlBackgroundColor.value = "#888";
-            visualStyle.controlSecondaryBackgroundColor.value = "#777";
-            visualStyle.controlColor.value = "#F00";
-            visualStyle.controlSecondaryColor.value = "#E00"; 
-            visualStyle.controlTertiaryColor.value = "#D00"; 
-            visualStyle.controlQuaternaryColor.value = "#D00"; 
-            visualStyle.controlSelectionColor.value = "#0F0";
-            visualStyle.controlSelectionBackgroundColor.value = "#0D0";
-            visualStyle.controlActiveColor.value = "#0FF";
-            visualStyle.textColor.value = "#484";
-            visualStyle.textSecondaryColor.value = "#666";
-            visualStyle.textTertiaryColor.value = "#777";
-            visualStyle.textQuaternaryColor.value = "#777";
+            visualStyle.controlBackgroundFill.value = "#888";
+            visualStyle.controlSecondaryBackgroundFill.value = "#777";
+            visualStyle.controlFill.value = "#F00";
+            visualStyle.controlSecondaryFill.value = "#E00"; 
+            visualStyle.controlTertiaryFill.value = "#D00"; 
+            visualStyle.controlQuaternaryFill.value = "#D00"; 
+            visualStyle.controlSelectionFill.value = "#0F0";
+            visualStyle.controlSelectionBackgroundFill.value = "#0D0";
+            visualStyle.controlActiveFill.value = "#0FF";
+            visualStyle.textFill.value = "#484";
+            visualStyle.textSecondaryFill.value = "#666";
+            visualStyle.textTertiaryFill.value = "#777";
+            visualStyle.textQuaternaryFill.value = "#777";
 
             expect(visualStyle.generateCSS(true)).toEqual(expectedOutput);
         })
 
         it("can generate a scoped visual style", function () {
             var expectedOutput = `
-            @scope(.mod-vs-scope) {
-                --visual-style-base-surface-color: hsl(0, 0%, 100%);
-                --visual-style-raised-surface-color: hsl(0, 0%, 100%);
-                --visual-style-elevated-surface-color: hsl(0, 0%, 100%);
-                --visual-style-control-background-color: hsl(0,0%,86%);
-                --visual-style-control-secondary-background-color: hsl(0,0%,86%);
-                --visual-style-control-tertiary-background-color: hsl(0,0%,86%);
-                --visual-style-control-quaternary-background-color: hsl(0,0%,86%);
-                --visual-style-control-color: #F00;
-                --visual-style-control-secondary-color: #E00;
-                --visual-style-control-tertiary-color: #D00;
-                --visual-style-control-quaternary-color: #D00;
-                --visual-style-control-border-color: hsla(0,0%,65%,1);
-                --visual-style-control-border-radius: 8px;
-                --visual-style-control-selection-color: hsl(211, 100%, 50%);
-                --visual-style-control-selection-background-color: hsl(0,0%,86%);
-                --visual-style-control-hover-color: #F00;
-                --visual-style-control-active-color: hsl(211, 100%, 50%);
-                --visual-style-control-focus-color: hsl(211, 100%, 50%);
-                --visual-style-text-color: #222;
-                --visual-style-text-secondary-color: #222;
-                --visual-style-text-tertiary-color: #222;
-                --visual-style-text-quaternary-color: #222;
-                --visual-style-link-text-color: #222;
-            }
+    @scope([data-visual-style="scope"]) {
+            --visual-style-base-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-raised-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-elevated-surface-fill: hsl(0, 0%, 100%);
+            --visual-style-control-background-fill: hsl(0,0%,86%);
+            --visual-style-control-secondary-background-fill: hsl(0, 0%, 86%);
+            --visual-style-control-tertiary-background-fill: hsl(0, 0%, 86%);
+            --visual-style-control-quaternary-background-fill: hsl(0, 0%, 86%);
+            --visual-style-control-fill: #F00;
+            --visual-style-control-secondary-fill: #E00;
+            --visual-style-control-tertiary-fill: #D00;
+            --visual-style-control-quaternary-fill: #D00;
+            --visual-style-control-border-fill: hsl(0, 0%, 80%);
+            --visual-style-control-border-radius: 8px;
+            --visual-style-control-border-width: 1px;
+            --visual-style-control-buffer: .625em 1em;
+            --visual-style-control-label-fill: #222;
+            --visual-style-control-label-size: 12px;
+            --visual-style-control-selection-fill: hsl(211, 100%, 50%);
+            --visual-style-control-selection-background-fill: hsl(0, 0%, 86%);
+            --visual-style-control-hover-fill: #F00;
+            --visual-style-control-active-fill: hsl(211, 100%, 50%);
+            --visual-style-control-focus-fill: hsl(211, 100%, 50%);
+            --visual-style-text-fill: #222;
+            --visual-style-text-secondary-fill: #222;
+            --visual-style-text-tertiary-fill: #222;
+            --visual-style-text-quaternary-fill: #222;
+            --visual-style-text-size: 12px;
+            --visual-style-link-text-fill: #222;
+        }
             `;
             visualStyle.name = "scope";
 
-            visualStyle.controlColor.value = "#F00";
-            visualStyle.controlSecondaryColor.value = "#E00";
-            visualStyle.controlTertiaryColor.value = "#D00";
-            visualStyle.controlQuaternaryColor.value = "#D00";
-            visualStyle.textColor.value = "#222";
+            visualStyle.controlFill.value = "#F00";
+            visualStyle.controlSecondaryFill.value = "#E00";
+            visualStyle.controlTertiaryFill.value = "#D00";
+            visualStyle.controlQuaternaryFill.value = "#D00";
+            visualStyle.textFill.value = "#222";
 
             expect(visualStyle.generateCSS()).toEqual(expectedOutput);
         })
