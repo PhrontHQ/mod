@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+
+                "simpleTextField": {
+                    "prototype": "mod/ui/property-field.mod",
+                    "values": {
+                        "element": {"#": "simpleTextField"},
+                        "label": "First Name"
+                    }
+                },
+
+                "simpleTextControl": {
+                    "prototype": "mod/ui/text-field.mod",
+                    "values": {
+                        "element": {"#": "simpleTextControl"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <header>Teach PropertyField Mod</header>
+            <section class="fields">
+                <div data-mod-id="simpleTextField" class="Main-simpleTextField">
+                    <div data-mod-id="simpleTextControl" data-arg="control" class="Main-simpleTextField"></div>
+                </div>
+            </section>
+        </div>
+    </body>
+</html>

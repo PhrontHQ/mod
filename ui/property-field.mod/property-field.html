@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="property-field.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "owner"}
+            }
+        },
+
+        "label": {
+            "prototype": "ui/text.mod",
+            "values": {
+                "element": {"#": "label"},
+                "value": {"<-": "@owner.label"}
+            }
+        },
+
+        "helpButton": {
+            "prototype": "ui/button.mod",
+            "values": {
+                "element": {"#": "helpButton"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="owner" class="ModPropertyField">
+        <div class="ModPropertyField-heading">
+            <label data-mod-id="label" class="ModPropertyField-label"></label>
+            <div data-mod-id="helpButton" class="ModPropertyField-helpButton">
+                <div data-arg="visual">i</div>
+            </div>
+        </div>
+        <div class="controlWrapper" class="ModPropertyField-controlWrapper">
+            <div data-param="control" class="ModPropertyField-control"></div>
+        </div>
+        <div class="footing" class="ModPropertyField-footing">
+            <div data-mod-id="error" class="ModPropertyField-error"></div>
+        </div>
+    </div>
+</body>
+</html>
