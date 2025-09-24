@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "../../core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "LocalizedString",
             "propertyDescriptors": [
@@ -21,7 +21,7 @@
         "object": "./localized-string"
     },
     "locale": {
-        "prototype": "../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "locale",
             "valueType": "object",
@@ -34,7 +34,7 @@
     },
 
     "localization": {
-        "prototype": "../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "localization",
             "valueType": "object"
