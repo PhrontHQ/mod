@@ -39,6 +39,8 @@ var PROPERTIES = [
     {name: "textTertiaryFill", variable: "--visual-style-text-tertiary-fill", backup: "textSecondaryFill"},
     {name: "textQuaternaryFill", variable: "--visual-style-text-quaternary-fill", backup: "textTertiaryFill"},
 
+    {name: "textErrorFill", variable: "--visual-style-text-error-fill", backup: "textFill"},
+
     {name: "textSize", variable: "--visual-style-text-size", defaultValue: "12px"},
 
     {name: "linkTextFill", variable: "--visual-style-link-text-fill", backup: "textFill"}

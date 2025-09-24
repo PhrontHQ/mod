@@ -6,7 +6,15 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "main"}
+                        "element": {"#": "main"},
+                        "visualStyle": {"@": "visualStyle"}
+                    }
+                },
+
+                "visualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+
                     }
                 },
 
@@ -23,6 +31,22 @@
                     "values": {
                         "element": {"#": "simpleTextControl"}
                     }
+                },
+
+                "errorTextField": {
+                    "prototype": "mod/ui/property-field.mod",
+                    "values": {
+                        "element": {"#": "errorTextField"},
+                        "label": "Last name",
+                        "errorMessage": "This is an error"
+                    }
+                },
+
+                "errorTextControl": {
+                    "prototype": "mod/ui/text-field.mod",
+                    "values": {
+                        "element": {"#": "errorTextControl"}
+                    }
                 }
             }
         </script>
@@ -32,7 +56,10 @@
             <header>Teach PropertyField Mod</header>
             <section class="fields">
                 <div data-mod-id="simpleTextField" class="Main-simpleTextField">
-                    <div data-mod-id="simpleTextControl" data-arg="control" class="Main-simpleTextField"></div>
+                    <div data-mod-id="simpleTextControl" data-arg="control" class="Main-simpleTextControl"></div>
+                </div>
+                <div data-mod-id="errorTextField" class="Main-errorTextField">
+                    <div data-mod-id="errorTextControl" data-arg="control" class="Main-errorTextControl"></div>
                 </div>
             </section>
         </div>

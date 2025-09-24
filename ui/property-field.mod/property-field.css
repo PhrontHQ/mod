@@ -3,6 +3,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: stretch;
+    border-style: solid;
+    border-width: var(--visual-style-control-border-width);
+    border-color: var(--visual-style-control-border-fill);
+    border-radius: var(--visual-style-control-border-radius);
 }
 
 .ModPropertyField-heading {
@@ -10,6 +14,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.ModPropertyField-error {
+    color: var(--visual-style-text-error-fill);
 }
 
 .ModPropertyField-helpButton {
@@ -20,3 +28,45 @@
     align-items: center;
     justify-content: center;
 }
+
+
+.ModPropertyField.ModPropertyField--inlineLabel {
+
+    position: relative;
+    flex-direction: row;
+    box-sizing: border-box;
+    padding: 0px 6px;
+
+    & .ModPropertyField-heading {
+        width: auto;
+        flex: none;
+    }
+
+    & .controlWrapper {
+        text-align: right;
+        flex: 1;
+        overflow: hidden;
+
+        & > .ModPropertyField-control {
+            border: none;
+            background-color: inherit;
+            background-image: inherit;
+            outline: none;
+            box-shadow: none;
+            text-align: right;
+            max-width: 100%;
+        }
+    }
+
+    & .footing {
+        box-sizing: border-box;
+        position: absolute; 
+        left: 6px;
+        bottom: calc(-1rem - 4px);
+        height: 1rem;
+        width: 100%;
+    }
+
+
+}
+

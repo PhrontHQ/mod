@@ -7,7 +7,8 @@
     {
         "owner": {
             "values": {
-                "element": {"#": "owner"}
+                "element": {"#": "owner"},
+                "classList.has('ModPropertyField--inlineLabel')": {"<-": "!@owner.hasExternalLabel"}
             }
         },
 
@@ -22,7 +23,17 @@
         "helpButton": {
             "prototype": "ui/button.mod",
             "values": {
-                "element": {"#": "helpButton"}
+                "element": {"#": "helpButton"},
+                "classList.has('mod-invisible')": {"<-": "!@owner.helpMessage.defined()"}
+            }
+        },
+
+        "error": {
+            "prototype": "ui/text.mod",
+            "values": {
+                "element": {"#": "error"},
+                "classList.has('mod-invisible')": {"<-": "!@owner.errorMessage.defined()"},
+                "value": {"<-": "@owner.errorMessage"}
             }
         }
     }

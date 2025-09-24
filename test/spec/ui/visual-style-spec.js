@@ -92,6 +92,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-text-secondary-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-tertiary-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-quaternary-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-text-error-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: hsla(0, 0%, 0%, .7);
             }
@@ -130,6 +131,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-text-secondary-fill: #666;
             --visual-style-text-tertiary-fill: #777;
             --visual-style-text-quaternary-fill: #777;
+            --visual-style-text-error-fill: #484;
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: #484;
             }
@@ -180,6 +182,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-text-secondary-fill: #222;
             --visual-style-text-tertiary-fill: #222;
             --visual-style-text-quaternary-fill: #222;
+            --visual-style-text-error-fill: #222;
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: #222;
         }
