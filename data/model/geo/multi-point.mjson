@@ -10,7 +10,7 @@
             ],
             "exportName": "MultiPoint",
             "module": {
-                "%": "../multi-point"
+                "%": "./multi-point"
             }
         }
     },

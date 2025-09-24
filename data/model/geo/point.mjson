@@ -10,7 +10,7 @@
             ],
             "exportName": "Point",
             "module": {
-                "%": "../point"
+                "%": "./point"
             }
         }
     },

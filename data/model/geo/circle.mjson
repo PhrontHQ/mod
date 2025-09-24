@@ -9,7 +9,7 @@
             ],
             "exportName": "Circle",
             "module": {
-                "%": "../circle"
+                "%": "./circle"
             },
             "parent":{"@": "GeometryDescriptor"}
         }

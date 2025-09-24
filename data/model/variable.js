@@ -1,4 +1,4 @@
-var Intangible = require("./intangible").Intangible;
+var Intangible = require("./party/intangible").Intangible;
 
 /**
  * @class Variable

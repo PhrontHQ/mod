@@ -10,7 +10,7 @@
             ],
             "exportName": "Polygon",
             "module": {
-                "%": "../polygon"
+                "%": "./polygon"
             }
         }
     },

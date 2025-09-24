@@ -10,7 +10,7 @@
             ],
             "exportName": "MultiPolygon",
             "module": {
-                "%": "../multi-polygon"
+                "%": "./multi-polygon"
             }
         }
     },

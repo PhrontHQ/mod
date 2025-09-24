@@ -27,7 +27,6 @@
                 {"@": "tangible"},
                 {"@": "intangible"},
                 {"@": "being"},
-                {"@": "partyPartyRelationship"},
                 {"@": "organization"},
                 {"@": "postalAddress"},
                 {"@": "partyPostalAddress"},
@@ -35,7 +34,6 @@
                 {"@": "person"},
                 {"@": "personSignature"},
                 {"@": "person-name"},
-                {"@": "personal-relationship"},
                 {"@": "role"},
                 {"@": "position"},
                 {"@": "gender"},
@@ -83,108 +81,100 @@
 
 
     "LocalizedString": {
-        "object": "./model/localized-string.mjson"
+        "object": "./localized-string.mjson"
     },
 
     "country": {
-        "object": "./model/country.mjson"
+        "object": "./country.mjson"
     },
 
     "messagingChannel": {
-        "object": "./model/messaging-channel/messaging-channel.mjson"
+        "object": "./messaging-channel/messaging-channel.mjson"
     },
 
     "partyMessagingChannel": {
-        "object": "./model/messaging-channel/party-messaging-channel.mjson"
+        "object": "./messaging-channel/party-messaging-channel.mjson"
     },
 
     "PhoneNumber": {
-        "object": "./model/messaging-channel/phone-number.mjson"
+        "object": "./messaging-channel/phone-number.mjson"
     },
 
     "partyPhoneNumber": {
-        "object": "./model/messaging-channel/party-phone-number.mjson"
+        "object": "./messaging-channel/party-phone-number.mjson"
     },
 
     "partySMSNumber": {
-        "object": "./model/messaging-channel/party-s-m-s-number.mjson"
+        "object": "./messaging-channel/party-s-m-s-number.mjson"
     },
 
     "InstantMessageAddress": {
-        "object": "./model/messaging-channel/instant-message-address.mjson"
+        "object": "./messaging-channel/instant-message-address.mjson"
     },
 
     "partyInstantMessageAddress": {
-        "object": "./model/messaging-channel/party-instant-message-address.mjson"
+        "object": "./messaging-channel/party-instant-message-address.mjson"
     },
 
     "contactForm": {
-        "object": "./model/messaging-channel/contact-form.mjson"
+        "object": "./messaging-channel/contact-form.mjson"
     },
 
     "partyContactForm": {
-        "object": "./model/messaging-channel/party-contact-form.mjson"
+        "object": "./messaging-channel/party-contact-form.mjson"
     },
 
     "EmailAddress": {
-        "object": "./model/messaging-channel/email-address.mjson"
+        "object": "./messaging-channel/email-address.mjson"
     },
 
     "partyEmailAddress": {
-        "object": "./model/messaging-channel/party-email-address.mjson"
+        "object": "./messaging-channel/party-email-address.mjson"
     },
 
     "organization": {
-        "object": "./model/organization.mjson"
+        "object": "./party/organization.mjson"
     },
 
     "postalAddress": {
-        "object": "./model/messaging-channel/postal-address.mjson"
+        "object": "./messaging-channel/postal-address.mjson"
     },
 
     "partyPostalAddress": {
-        "object": "./model/messaging-channel/party-postal-address.mjson"
+        "object": "./messaging-channel/party-postal-address.mjson"
     },
 
     "party": {
-        "object": "./model/party.mjson"
+        "object": "./party/party.mjson"
     },
 
     "thing": {
-        "object": "./model/thing.mjson"
+        "object": "./party/thing.mjson"
     },
     "tangible": {
-        "object": "./model/tangible.mjson"
+        "object": "./party/tangible.mjson"
     },
     "intangible": {
-        "object": "./model/intangible.mjson"
+        "object": "./party/intangible.mjson"
     },
     "being": {
-        "object": "./model/being.mjson"
-    },
-
-    "partyPartyRelationship": {
-        "object": "./model/party-party-relationship.mjson"
+        "object": "./party/being.mjson"
     },
 
     "image": {
-        "object": "./model/image.mjson"
+        "object": "./image.mjson"
     },
 
     "person": {
-        "object": "./model/person.mjson"
+        "object": "./party/person.mjson"
     },
 
     "personSignature": {
-        "object": "./model/person-signature.mjson"
+        "object": "./party/person-signature.mjson"
     },
 
     "person-name": {
-        "object": "./model/person-name.mjson"
-    },
-
-    "personal-relationship": {
-        "object": "./model/personal-relationship.mjson"
+        "object": "./party/person-name.mjson"
     },
 
     "AuthenticationPolicy": {
@@ -192,57 +182,57 @@
     },
 
     "role": {
-        "object": "./model/party/role.mjson"
+        "object": "./party/role.mjson"
     },
 
     "gender": {
-        "object": "./model/gender.mjson"
+        "object": "./party/gender.mjson"
     },
 
     "j-s-o-n-web-token": {
-        "object": "./model/authentication/j-s-o-n-web-token.mjson"
+        "object": "./authentication/j-s-o-n-web-token.mjson"
     },
     "o-auth-access-token": {
-        "object": "./model/authentication/o-auth-access-token.mjson"
+        "object": "./authentication/o-auth-access-token.mjson"
     },
     "circle": {
-        "object": "./model/geo/circle.mjson"
+        "object": "./geo/circle.mjson"
     },
     "geometry": {
-        "object": "./model/geo/geometry.mjson"
+        "object": "./geo/geometry.mjson"
     },
     "line-string": {
-        "object": "./model/geo/line-string.mjson"
+        "object": "./geo/line-string.mjson"
     },
     "multi-line-string": {
-        "object": "./model/geo/multi-line-string.mjson"
+        "object": "./geo/multi-line-string.mjson"
     },
     "point": {
-        "object": "./model/geo/point.mjson"
+        "object": "./geo/point.mjson"
     },
     "multi-point": {
-        "object": "./model/geo/multi-point.mjson"
+        "object": "./geo/multi-point.mjson"
     },
     "polygon": {
-        "object": "./model/geo/multi-polygon.mjson"
+        "object": "./geo/multi-polygon.mjson"
     },
     "multi-polygon": {
-        "object": "./model/geo/multi-polygon.mjson"
+        "object": "./geo/multi-polygon.mjson"
     },
     "position": {
-        "object": "./model/geo/position.mjson"
+        "object": "./geo/position.mjson"
     },
 
     "RoleRanking": {
-        "object": "./model/party/role-ranking.mjson"
+        "object": "./party/role-ranking.mjson"
     },
 
     "Application": {
-        "object": "./model/app/application.mjson"
+        "object": "./app/application.mjson"
     },
     
     "UserPool": {
-        "object": "./model/app/user-pool.mjson"
+        "object": "./app/user-pool.mjson"
     },
 
     "AppClient": {
@@ -250,7 +240,7 @@
     },
 
     "UserSession": {
-        "object": "./model/app/user-session.mjson"
+        "object": "./app/user-session.mjson"
     },
 
     "Identity": {

@@ -10,7 +10,7 @@
             ],
             "exportName": "LineString",
             "module": {
-                "%": "../line-string"
+                "%": "./line-string"
             }
         }
     },

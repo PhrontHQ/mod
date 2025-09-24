@@ -2,7 +2,7 @@
     @module mod/data/model/app/authorization/j-s-o-n-web-token
 */
 
-var DataObject = require("../../data-object").DataObject;
+var DataObject = require("../data-object").DataObject;
 
 /**
  * @class JSONWebToken

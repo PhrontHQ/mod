@@ -10,7 +10,7 @@
             ],
             "exportName": "MultiLineString",
             "module": {
-                "%": "../multi-line-string"
+                "%": "./multi-line-string"
             }
         }
     },

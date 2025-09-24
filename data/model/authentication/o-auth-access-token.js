@@ -2,7 +2,7 @@
     @module mod/data/model/authentication/o-auth-access-token
 */
 
-const DataObject = require("../../data-object").DataObject;
+const DataObject = require("../data-object").DataObject;
 /**
  * @class OAuthAccessToken
  * @extends DataObject

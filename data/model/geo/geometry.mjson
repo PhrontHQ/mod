@@ -9,7 +9,7 @@
             ],
             "exportName": "Geometry",
             "module": {
-                "%": "../geometry"
+                "%": "./geometry"
             }
         }
     },
