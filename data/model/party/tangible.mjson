@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Tangible",
             "description": "A physical, non-living thing.",

@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Intangible",
             "description": "An immaterial thing, including digital things.",

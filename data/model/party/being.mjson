@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Being",
             "description": "A living thing, parent of Person and Animal (to be added if someone needs it)",
