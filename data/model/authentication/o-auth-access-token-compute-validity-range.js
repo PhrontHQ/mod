@@ -1,5 +1,5 @@
 /**
-    @module mod/data/model/app/authentication/o-auth-access-token-compute-validity-range
+    @module mod/data/model/authentication/o-auth-access-token-compute-validity-range
 */
 const Range = require("../../../core/range").Range;
 

@@ -209,7 +209,7 @@
         "values": {
             "name": "perimeter",
             "valueType": "object",
-            "valueDescriptor": {"@": "GeometyDescriptor"},
+            "valueDescriptor": {"@": "GeometryDescriptor"},
             "isSearchable": true
         }
     },

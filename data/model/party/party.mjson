@@ -27,7 +27,7 @@
         }
     },
     "objectDescriptor": {
-        "object": "./data-object.mjson"
+        "object": "../data-object.mjson"
     },
     "name": {
         "prototype": "core/meta/property-descriptor",
@@ -162,7 +162,7 @@
         }
     },
     "image_descriptor": {
-        "object": "./image.mjson"
+        "object": "../image.mjson"
     }
 
 }

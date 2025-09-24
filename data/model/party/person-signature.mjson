@@ -52,7 +52,7 @@
     },
 
     "AssetDescriptor": {
-        "object": "./asset.mjson"
+        "object": "../digital-asset.mjson"
     },
 
     "person": {

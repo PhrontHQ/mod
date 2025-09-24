@@ -1,5 +1,5 @@
 /**
-    @module mod/data/model/app/authentication/o-auth-access-token
+    @module mod/data/model/authentication/o-auth-access-token
 */
 
 const DataObject = require("../../data-object").DataObject;

@@ -95,22 +95,10 @@ exports.Person = Being.specialize(/** @lends Person.prototype */ {
     image: {
         value: undefined
     },
-    addresses: {
-        value: undefined
-    },
-    orders: {
-        value: undefined
-    },
     tags: {
         value: undefined
     },
     userIdentities: {
-        value: undefined
-    },
-    employmentHistory: {
-        value: undefined
-    },
-    respondentQuestionnaires: {
         value: undefined
     }
 

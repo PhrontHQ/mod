@@ -15,9 +15,6 @@
                 {"@": "lastName"},
                 {"@": "email"},
                 {"@": "phone"},
-                {"@": "addresses"},
-                {"@": "firstPersonalRelationships"},
-                {"@": "secondPersonalRelationships"},
                 {"@": "signatures"}
            ],
             "objectDescriptorModule": {
@@ -114,18 +111,6 @@
             "valueType": "string"
         }
     },
-    "addresses": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "addresses",
-            "valueType": "object",
-            "cardinality": -1,
-            "valueDescriptor": {"@": "addresses_descriptor"}
-       }
-    },
-    "addresses_descriptor": {
-        "object": "../messaging-channel/postal-address.mjson"
-    },
 
     "tags": {
         "prototype": "core/meta/property-descriptor",
@@ -147,31 +132,6 @@
     },
     "userIdentity_descriptor": {
         "object": "../app/user-identity.mjson"
-    },
-
-    "firstPersonalRelationships": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "firstPersonalRelationships",
-            "valueType": "object",
-            "cardinality": -1,
-            "inversePropertyName": "firstPerson",
-            "valueDescriptor": {"@": "PersonalRelationshipDescriptor"}
-       }
-    },
-    "PersonalRelationshipDescriptor": {
-        "object": "./personal-relationship.mjson"
-    },
-
-    "secondPersonalRelationships": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "secondPersonalRelationships",
-            "valueType": "object",
-            "cardinality": -1,
-            "inversePropertyName": "secondPerson",
-            "valueDescriptor": {"@": "PersonalRelationshipDescriptor"}
-       }
     },
 
     "PersonSignatureDescriptor": {

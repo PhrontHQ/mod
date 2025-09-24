@@ -34,12 +34,6 @@ exports.Party = DataObject.specialize(/** @lends Party.prototype */ {
     contactForms: {
         value: undefined
     },
-    socialProfiles: {
-        value: undefined
-    },
-    calendars: {
-        value: undefined
-    },
     images: {
         value: undefined
     }
