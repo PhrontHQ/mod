@@ -14,7 +14,6 @@
                 {"@": "instantMessageAddresses"},
                 {"@": "urlAddresses"},
                 {"@": "contactForms"},
-                {"@": "socialProfiles"},
                 {"@": "images"}
             ],
             "objectDescriptorModule": {
@@ -152,19 +151,6 @@
     },
     "PartyContactFormDescriptor": {
         "object": "../messaging-channel/party-contact-form.mjson"
-    },
-    "socialProfiles": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "socialProfiles",
-            "valueType": "object",
-            "cardinality": -1,
-            "valueDescriptor": {"@": "SocialProfileFormDescriptor"},
-            "isSearchable": true
-        }
-    },
-    "SocialProfileFormDescriptor": {
-        "object": "./social-profile.mjson"
     },
 
     "images": {
