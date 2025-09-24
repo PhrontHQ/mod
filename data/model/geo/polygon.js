@@ -1,7 +1,5 @@
 var Geometry = require("./geometry").Geometry,
-    BoundingBox = require("./bounding-box").BoundingBox,
     Circle = require("./circle").Circle,
-    d3Geo = require("d3-geo"),
     Point = require("./point").Point,
     Position = require("./position").Position;
 
@@ -26,10 +24,7 @@ var Polygon = exports.Polygon = Geometry.specialize(/** @lends Polygon.prototype
 
     bounds: {
         value: function () {
-            var geojson = Polygon.GeoJsonConverter.revert(this),
-                inverted = this._invertRings(geojson),
-                bounds = d3Geo.geoBounds(inverted);
-            return BoundingBox.withCoordinates(bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]);
+            throw "Polygon.bounds() implementation requires geo.mod";
         }
     },
 
@@ -61,42 +56,13 @@ var Polygon = exports.Polygon = Geometry.specialize(/** @lends Polygon.prototype
 
     makeBoundsObserver: {
         value: function () {
-            var self = this;
-            return function observeBounds(emit, scope) {
-                return self.observeBounds(emit);
-            }.bind(this);
+            throw "Polygon.makeBoundsObserver() implementation requires geo.mod";
         }
     },
 
     observeBounds: {
         value: function (emit) {
-            var self = this,
-                coordinatesPathChangeListener,
-                coordinatesRangeChangeListener,
-                cancel;
-
-            function update() {
-                if (cancel) {
-                    cancel();
-                }
-                cancel = emit(self.bounds());
-            }
-
-            update();
-            coordinatesPathChangeListener = this.addPathChangeListener("coordinates", update);
-            if (this.coordinates && this.coordinates.length) {
-                coordinatesRangeChangeListener = this.coordinates[0].addRangeChangeListener(update);
-            }
-
-            return function cancelObserver() {
-                coordinatesPathChangeListener();
-                if (coordinatesRangeChangeListener) {
-                    coordinatesRangeChangeListener();
-                }
-                if (cancel) {
-                    cancel();
-                }
-            };
+            throw "Polygon.observeBounds() implementation requires geo.mod";
         }
     },
 

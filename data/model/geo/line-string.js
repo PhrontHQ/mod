@@ -1,5 +1,4 @@
 var Geometry = require("./geometry").Geometry,
-    BoundingBox = require("./bounding-box").BoundingBox,
     Position = require("./position").Position;
 
 /**
@@ -22,59 +21,23 @@ var LineString = exports.LineString = Geometry.specialize(/** @lends LineString.
 
     bounds: {
         value: function () {
-            var xMin = Infinity,
-                yMin = Infinity,
-                xMax = -Infinity,
-                yMax = -Infinity,
-                coordinates = this.coordinates,
-                coordinate, i, n;
-
-            for (i = 0, n = coordinates && coordinates.length || 0; i < n; i += 1) {
-                coordinate = coordinates[i];
-                xMin = Math.min(xMin, coordinate.longitude);
-                yMin = Math.min(yMin, coordinate.latitude);
-                xMax = Math.max(xMax, coordinate.longitude);
-                yMax = Math.max(yMax, coordinate.latitude);
-            }
-
-            return BoundingBox.withCoordinates(xMin, yMin, xMax, yMax);
+            throw "LineString.bounds() implementation requires geo.mod";
         }
     },
 
+    /****************************************************************
+     * Observables
+     */
+
     makeBoundsObserver: {
         value: function () {
-            var self = this;
-            return function observeBounds(emit, scope) {
-                return self.observeBounds(emit);
-            }.bind(this);
+            throw "LineString.makeBoundsObserver() implementation requires geo.mod";
         }
     },
 
     observeBounds: {
         value: function (emit) {
-            var self = this,
-                coordinatesPathChangeListener,
-                cooordinatesRangeChangeListener,
-                cancel;
-
-            function update() {
-                if (cancel) {
-                    cancel();
-                }
-                cancel = emit(self.bounds());
-            }
-
-            update();
-            coordinatesPathChangeListener = this.addPathChangeListener("coordinates", update);
-            cooordinatesRangeChangeListener = this.coordinates.addRangeChangeListener(update);
-
-            return function cancelObserver() {
-                coordinatesPathChangeListener();
-                cooordinatesRangeChangeListener();
-                if (cancel) {
-                    cancel();
-                }
-            };
+            throw "LineString.observeBounds() implementation requires geo.mod";
         }
     },
 

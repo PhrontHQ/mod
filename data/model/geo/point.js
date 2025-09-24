@@ -1,7 +1,5 @@
 var Geometry = require("./geometry").Geometry,
-    BoundingBox = require("./bounding-box").BoundingBox,
-    Position = require("./position").Position,
-    Projection = require("./projection").Projection;
+    Position = require("./position").Position;
 
 /**
  *
@@ -86,16 +84,23 @@ var Point = exports.Point = Geometry.specialize(/** @lends Point.prototype */ {
     },
 
     /**
+     * @override
+     * @method
+     */
+    bounds: {
+        value: function () {
+            throw "Point.bounds() implementation requires geo.mod";
+        }
+    },
+
+    /**
      * Returns this point in the MGRS reference system.
      * @method
      * @return {string}
      */
     mgrs: {
         value: function () {
-            var coordinates = this.coordinates;
-            return Projection.forSrid("MGRS").projectPoint([
-                coordinates.longitude, coordinates.latitude
-            ]);
+            throw "Point.mgrs() implementation requires geo.mod";
         }
     },
 
@@ -103,89 +108,28 @@ var Point = exports.Point = Geometry.specialize(/** @lends Point.prototype */ {
      * Observables
      */
 
-    /**
-     * @override
-     * @method
-     */
-    bounds: {
-        value: function () {
-            var longitude = this.coordinates.longitude,
-                latitude = this.coordinates.latitude;
-            return BoundingBox.withCoordinates(longitude, latitude, longitude, latitude);
-        }
-    },
 
     makeBoundsObserver: {
         value: function () {
-            var self = this;
-            return function observeBounds(emit, scope) {
-                return self.observeBounds(emit);
-            }.bind(this);
+            throw "Point.makeBoundsObserver() implementation requires geo.mod";
         }
     },
 
     makeMgrsObserver: {
         value: function () {
-            var self = this;
-            return function observeMgrs(emit, scope) {
-                return self.observeMgrs(emit);
-            }.bind(this);
+            throw "Point.makeMgrsObserver() implementation requires geo.mod";
         }
     },
 
     observeBounds: {
         value: function (emit) {
-            var self = this,
-                latitudeListenerCanceler,
-                longitudeListenerCanceler,
-                cancel;
-
-            function update() {
-                if (cancel) {
-                    cancel();
-                }
-                cancel = emit(self.bounds());
-            }
-
-            update();
-            latitudeListenerCanceler = this.addPathChangeListener("coordinates.latitude", update);
-            longitudeListenerCanceler = this.addPathChangeListener("coordinates.longitude", update);
-
-            return function cancelObserver() {
-                latitudeListenerCanceler();
-                longitudeListenerCanceler();
-                if (cancel) {
-                    cancel();
-                }
-            };
+            throw "Point.observeBounds() implementation requires geo.mod";
         }
     },
 
     observeMgrs: {
         value: function (emit) {
-            var self = this,
-                latitudeListenerCanceler,
-                longitudeListenerCanceler,
-                cancel;
-
-            function update() {
-                if (cancel) {
-                    cancel();
-                }
-                cancel = emit(self.mgrs());
-            }
-
-            update();
-            latitudeListenerCanceler = this.addPathChangeListener("coordinates.latitude", update);
-            longitudeListenerCanceler = this.addPathChangeListener("coordinates.longitude", update);
-
-            return function cancelObserver() {
-                latitudeListenerCanceler();
-                longitudeListenerCanceler();
-                if (cancel) {
-                    cancel();
-                }
-            };
+            throw "Point.observeMgrs() implementation requires geo.mod";
         }
     },
 

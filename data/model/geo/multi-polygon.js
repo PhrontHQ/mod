@@ -1,5 +1,4 @@
 var Geometry = require("./geometry").Geometry,
-    BoundingBox = require("./bounding-box").BoundingBox,
     Polygon = require("./polygon").Polygon;
 
 /**
@@ -21,49 +20,19 @@ var MultiPolygon = exports.MultiPolygon = Geometry.specialize(/** @lends MultiPo
 
     bounds: {
         value: function () {
-            return this.coordinates.map(function (polygon) {
-                return polygon.bounds();
-            }).reduce(function (bounds, childBounds) {
-                bounds.extend(childBounds);
-                return bounds;
-            }, BoundingBox.withCoordinates(Infinity, Infinity, -Infinity, -Infinity));
+            throw "MultiPolygon.bounds() implementation requires geo.mod";
         }
     },
 
     makeBoundsObserver: {
         value: function () {
-            var self = this;
-            return function observeBounds(emit, scope) {
-                return self.observeBounds(emit);
-            }.bind(this);
+            throw "MultiPolygon.makeBoundsObserver() implementation requires geo.mod";
         }
     },
 
     observeBounds: {
         value: function (emit) {
-            var self = this,
-                coordinatesPathChangeListener,
-                coordinatesRangeChangeListener,
-                cancel;
-
-            function update() {
-                if (cancel) {
-                    cancel();
-                }
-                cancel = emit(self.bounds());
-            }
-
-            update();
-            coordinatesPathChangeListener = this.addPathChangeListener("coordinates", update);
-            coordinatesRangeChangeListener = this.coordinates.addRangeChangeListener(update);
-
-            return function cancelObserver() {
-                coordinatesPathChangeListener();
-                coordinatesRangeChangeListener();
-                if (cancel) {
-                    cancel();
-                }
-            };
+            throw "MultiPolygon.observeBounds() implementation requires geo.mod";
         }
     },
 
