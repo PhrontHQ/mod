@@ -192,7 +192,7 @@
     },
 
     "role": {
-        "object": "./model/role.mjson"
+        "object": "./model/party/role.mjson"
     },
 
     "gender": {
@@ -234,7 +234,7 @@
     },
 
     "RoleRanking": {
-        "object": "./model/role-ranking.mjson"
+        "object": "./model/party/role-ranking.mjson"
     },
 
     "Application": {
