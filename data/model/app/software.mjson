@@ -58,7 +58,7 @@
         }
     },
     "OrganizationDescriptor": {
-        "object": "../organization.mjson"
+        "object": "../party/organization.mjson"
     },
     "phoneNumbers": {
         "prototype": "core/meta/property-descriptor",
