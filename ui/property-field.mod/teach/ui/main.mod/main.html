@@ -14,38 +14,36 @@
                 "visualStyle": {
                     "prototype": "mod/ui/visual-style.mod",
                     "values": {
-
+                        "textErrorFill": "#f00"
                     }
                 },
 
-                "simpleTextField": {
-                    "prototype": "mod/ui/property-field.mod",
+                "wrappedTextField": {
+                    "prototype": "mod/ui/text-property-field.mod",
                     "values": {
-                        "element": {"#": "simpleTextField"},
-                        "label": "First Name"
+                        "element": {"#": "wrappedTextField"},
+                        "label": "First Name",
+                        "placeholder": "Your Name",
+                        "propertyName": "firstName"
                     }
                 },
 
-                "simpleTextControl": {
-                    "prototype": "mod/ui/text-field.mod",
+                "wrappedErrorTextField": {
+                    "prototype": "mod/ui/text-property-field.mod",
                     "values": {
-                        "element": {"#": "simpleTextControl"}
-                    }
-                },
-
-                "errorTextField": {
-                    "prototype": "mod/ui/property-field.mod",
-                    "values": {
-                        "element": {"#": "errorTextField"},
-                        "label": "Last name",
+                        "element": {"#": "wrappedErrorTextField"},
+                        "label": "First Name",
+                        "placeholder": "Your Name",
+                        "propertyName": "firstName",
                         "errorMessage": "This is an error"
                     }
                 },
 
-                "errorTextControl": {
-                    "prototype": "mod/ui/text-field.mod",
+                "wrappedTextArea": {
+                    "prototype": "mod/ui/multiline-text-property-field.mod",
                     "values": {
-                        "element": {"#": "errorTextControl"}
+                        "element": {"#": "wrappedTextArea"},
+                        "label": "Comments"
                     }
                 }
             }
@@ -55,11 +53,14 @@
         <div data-mod-id="main" class="Main">
             <header>Teach PropertyField Mod</header>
             <section class="fields">
+                <div data-mod-id="wrappedTextField" class="Main-wrappedTextField"></div>
                 <div data-mod-id="simpleTextField" class="Main-simpleTextField">
                     <div data-mod-id="simpleTextControl" data-arg="control" class="Main-simpleTextControl"></div>
                 </div>
-                <div data-mod-id="errorTextField" class="Main-errorTextField">
-                    <div data-mod-id="errorTextControl" data-arg="control" class="Main-errorTextControl"></div>
+                <div data-mod-id="wrappedErrorTextField" class="Main-wrappedErrorTextField"></div>
+                <div data-mod-id="wrappedTextArea" class="Main-wrappedTextArea"></div>
+                <div data-mod-id="simpleTextAreaField" class="Main-simpleTextAreaField">
+                    <div data-mod-id="simpleTextAreaControl" data-arg="control" class="Main-simpleTextAreaControl"></div>
                 </div>
             </section>
         </div>

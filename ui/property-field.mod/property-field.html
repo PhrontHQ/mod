@@ -8,7 +8,9 @@
         "owner": {
             "values": {
                 "element": {"#": "owner"},
-                "classList.has('ModPropertyField--inlineLabel')": {"<-": "!@owner.hasExternalLabel"}
+                "classList.has('ModPropertyField--inlineLabel')": {"<-": "!@owner.hasExternalLabel"},
+                "_labelEl": {"#": "label"},
+                "_controlWrapper": {"#": "controlWrapper"}
             }
         },
 
@@ -47,7 +49,7 @@
                 <div data-arg="visual">i</div>
             </div>
         </div>
-        <div class="controlWrapper" class="ModPropertyField-controlWrapper">
+        <div data-mod-id="controlWrapper" class="controlWrapper ModPropertyField-controlWrapper">
             <div data-param="control" class="ModPropertyField-control"></div>
         </div>
         <div class="footing" class="ModPropertyField-footing">

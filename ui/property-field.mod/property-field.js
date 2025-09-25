@@ -10,8 +10,6 @@ var Component = require("ui/component").Component,
  */
 exports.PropertyField = class PropertyField extends Component {
 
-
-
     static {
 
         Montage.defineProperties(this.prototype, {

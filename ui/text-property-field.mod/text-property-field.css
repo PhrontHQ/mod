@@ -1,0 +1,46 @@
+.ModTextPropertyField {
+    & .ModPropertyField.ModPropertyField--inlineLabel {
+        position: relative;
+        flex-direction: row;
+        box-sizing: border-box;
+        padding: 0px 6px;
+    }
+
+    & .ModPropertyField-heading {
+        flex: none;
+        width: auto;
+        align-self: flex-start;
+    }
+
+    & .controlWrapper {
+
+        flex: 1;
+        overflow: hidden;
+
+        & > .ModPropertyField-control {
+            border: none;
+            background-color: inherit;
+            background-image: inherit;
+            outline: none;
+            box-shadow: none;
+            width: 100%;
+        }
+
+        & > input[type="text"].ModPropertyField-control{
+            text-align: right;
+        }
+
+    }
+
+    & .footing {
+        box-sizing: border-box;
+        position: absolute; 
+        left: 6px;
+        bottom: calc(-1rem - 4px);
+        height: 1rem;
+        width: 100%;
+    }
+
+
+}
+

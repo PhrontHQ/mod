@@ -165,6 +165,7 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "textSecondaryFill");
         this._deserializeProperty(deserializer, "textTertiaryFill");
         this._deserializeProperty(deserializer, "textQuaternaryFill");
+        this._deserializeProperty(deserializer, "textErrorFill");
         this._deserializeProperty(deserializer, "textSize");
         this._deserializeProperty(deserializer, "linkTextFill");
     }
