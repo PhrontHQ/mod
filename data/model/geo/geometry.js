@@ -1,5 +1,4 @@
 var Montage = require("core/core").Montage,
-    BoundingBox = require("./bounding-box").BoundingBox,
     Uuid = require("core/uuid").Uuid,
     DASH_REG_EX = /-/g,
     IDENTIFIER_PREFIX = "G",
