@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "../../../service/fetch-resource-data-mapping",
+        "prototype": "data/service/fetch-resource-data-mapping",
         "values": {
             "objectDescriptor": {"@": "UserIdentityDescriptor"},
             "rawDataPrimaryKeys":["username"],
@@ -21,25 +21,25 @@
                     "tags": {"<->": "tags"},
                     "mfaCode": {"<->": "mfaCode"},
                     "locale": {"<->": "locale"},
-                    "timeZone": {"<->": "timeZone"},
+                    "timeZone": {"<->": "timeZone"}
                 }
             }
         }
     },
 
     "Criteria": {
-        "object": "../../../../core/criteria"
+        "object": "core/criteria"
     },
 
     "UserIdentityDescriptor": {
-        "object": "../../../data/model/app/user-identity.mjson",
+        "object": "data/model/app/user-identity.mjson",
         "values": {
             "mutabilityCriteria": "@Criteria.thatEvaluatesToFalse"
           }
     },
 
     "DataOperation": {
-        "object": "../../../service/data-operation"
+        "object": "data/service/data-operation"
     }
    
 }
