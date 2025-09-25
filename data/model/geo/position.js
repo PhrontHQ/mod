@@ -412,12 +412,6 @@ exports.Position.prototype = Object.create({}, /** @lends Position.prototype */ 
 
 Object.defineProperties(exports.Position, /** @lends Position */ {
 
-    Projection: {
-        get: function () {
-            return require("logic/model/projection").Projection;
-        }
-    },
-
     EARTH_RADIUS: {
         value: 6371e3
     },
