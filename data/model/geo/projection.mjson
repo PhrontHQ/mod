@@ -19,8 +19,8 @@
         }
     },
 
-    "position": {
-        "object": "./position"
+    "projection": {
+        "object": "./projection"
     },
 
     "srid": {

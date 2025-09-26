@@ -480,7 +480,7 @@ var Polygon = exports.Polygon = Geometry.specialize(/** @lends Polygon.prototype
 
     GeoJsonConverter: {
         get: function () {
-            return require("logic/converter/geo-json-to-geometry-converter").GeoJsonToGeometryConverter.getInstance();
+            throw "Polygon.GeoJsonConverter() implementation requires geo.mod";
         }
     },
 

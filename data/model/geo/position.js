@@ -424,7 +424,7 @@ exports.Position.prototype = Object.create({}, /** @lends Position.prototype */ 
 Object.defineProperties(exports.Position, /** @lends Position */ {
     Projection: {
         get: function () {
-            return require("logic/model/projection").Projection;
+            return require("./projection").Projection;
         }
     },
 
