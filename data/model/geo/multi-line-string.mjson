@@ -1,0 +1,45 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "MultiLineString",
+            "parent": {"@": "geometry"},
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "coordinates"}
+            ],
+            "exportName": "MultiLineString",
+            "module": {
+                "%": "./multi-line-string"
+            }
+        }
+    },
+
+    "geometry": {
+        "object": "./geometry.mjson"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "LineStringDescriptor": {
+        "object": "./line-string.mjson"
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "description": "The coordinates member of a multi-line string is an array of line string geometries.",
+            "cardinality": -1,
+            "valueType": "array",
+            "valueDescriptor": {"@": "LineStringDescriptor"}
+        }
+    }
+
+}

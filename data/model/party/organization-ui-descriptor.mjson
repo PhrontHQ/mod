@@ -1,0 +1,12 @@
+{
+    "root": {
+        "prototype": "core/meta/user-interface-descriptor",
+        "values": {
+            "collectionNameExpression": "'Organization'",
+            "collectionInspectorComponentModule": {
+                "%": "ui/list.mod"
+            },
+            "nameExpression": "name"
+        }
+    }
+}

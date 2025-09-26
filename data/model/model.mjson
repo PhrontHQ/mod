@@ -1,0 +1,265 @@
+{
+    "root": {
+        "prototype": "core/meta/model",
+        "values": {
+            "name": "ModDataModel",
+            "exportName": "ModDataModel",
+            "objectDescriptors": [
+                {"@": "DataObject"},
+                {"@": "ObjectStore"},
+                {"@": "Transaction"},
+                {"@": "TimeZone"},
+                {"@": "LocalizedString"},
+                {"@": "country"},
+                {"@": "messagingChannel"},
+                {"@": "partyMessagingChannel"},
+                {"@": "PhoneNumber"},
+                {"@": "partyPhoneNumber"},
+                {"@": "partySMSNumber"},
+                {"@": "InstantMessageAddress"},
+                {"@": "partyInstantMessageAddress"},
+                {"@": "contactForm"},
+                {"@": "partyContactForm"},
+                {"@": "EmailAddress"},
+                {"@": "partyEmailAddress"},
+                {"@": "party"},
+                {"@": "thing"},
+                {"@": "tangible"},
+                {"@": "intangible"},
+                {"@": "being"},
+                {"@": "organization"},
+                {"@": "postalAddress"},
+                {"@": "partyPostalAddress"},
+                {"@": "image"},
+                {"@": "person"},
+                {"@": "personSignature"},
+                {"@": "person-name"},
+                {"@": "role"},
+                {"@": "position"},
+                {"@": "gender"},
+                {"@": "j-s-o-n-web-token"},
+                {"@": "o-auth-access-token"},
+                {"@": "circle"},
+                {"@": "geometry"},
+                {"@": "line-string"},
+                {"@": "multi-line-string"},
+                {"@": "point"},
+                {"@": "multi-point"},
+                {"@": "polygon"},
+                {"@": "multi-polygon"},
+                {"@": "Variable"},
+                
+                {"@": "RoleRanking"},
+                {"@": "Application"},
+                {"@": "UserPool"},
+                {"@": "AppClient"},
+                {"@": "UserSession"},
+                {"@": "Identity"},
+                {"@": "UserIdentity"},
+                {"@": "WebSocketSession"},
+                {"@": "WebSocketSessionConnection"}
+
+          ]
+        }
+    },
+
+    "DataObject": {
+        "object": "data/model/data-object.mjson"
+    },
+
+    "ObjectStore": {
+        "object": "data/model/object-store.mjson"
+    },
+
+    "Transaction": {
+        "object": "data/model/transaction.mjson"
+    },
+
+    "TimeZone": {
+        "object": "core/date/time-zone.mjson"
+    },
+
+
+    "LocalizedString": {
+        "object": "./localized-string.mjson"
+    },
+
+    "country": {
+        "object": "./country.mjson"
+    },
+
+    "messagingChannel": {
+        "object": "./messaging-channel/messaging-channel.mjson"
+    },
+
+    "partyMessagingChannel": {
+        "object": "./messaging-channel/party-messaging-channel.mjson"
+    },
+
+    "PhoneNumber": {
+        "object": "./messaging-channel/phone-number.mjson"
+    },
+
+    "partyPhoneNumber": {
+        "object": "./messaging-channel/party-phone-number.mjson"
+    },
+
+    "partySMSNumber": {
+        "object": "./messaging-channel/party-s-m-s-number.mjson"
+    },
+
+    "InstantMessageAddress": {
+        "object": "./messaging-channel/instant-message-address.mjson"
+    },
+
+    "partyInstantMessageAddress": {
+        "object": "./messaging-channel/party-instant-message-address.mjson"
+    },
+
+    "contactForm": {
+        "object": "./messaging-channel/contact-form.mjson"
+    },
+
+    "partyContactForm": {
+        "object": "./messaging-channel/party-contact-form.mjson"
+    },
+
+    "EmailAddress": {
+        "object": "./messaging-channel/email-address.mjson"
+    },
+
+    "partyEmailAddress": {
+        "object": "./messaging-channel/party-email-address.mjson"
+    },
+
+    "organization": {
+        "object": "./party/organization.mjson"
+    },
+
+    "postalAddress": {
+        "object": "./messaging-channel/postal-address.mjson"
+    },
+
+    "partyPostalAddress": {
+        "object": "./messaging-channel/party-postal-address.mjson"
+    },
+
+    "party": {
+        "object": "./party/party.mjson"
+    },
+
+    "thing": {
+        "object": "./party/thing.mjson"
+    },
+    "tangible": {
+        "object": "./party/tangible.mjson"
+    },
+    "intangible": {
+        "object": "./party/intangible.mjson"
+    },
+    "being": {
+        "object": "./party/being.mjson"
+    },
+
+    "image": {
+        "object": "./image.mjson"
+    },
+
+    "person": {
+        "object": "./party/person.mjson"
+    },
+
+    "personSignature": {
+        "object": "./party/person-signature.mjson"
+    },
+
+    "person-name": {
+        "object": "./party/person-name.mjson"
+    },
+
+    "AuthenticationPolicy": {
+        "object": "data/service/authentication-policy"
+    },
+
+    "role": {
+        "object": "./party/role.mjson"
+    },
+
+    "gender": {
+        "object": "./party/gender.mjson"
+    },
+
+    "j-s-o-n-web-token": {
+        "object": "./authentication/j-s-o-n-web-token.mjson"
+    },
+    "o-auth-access-token": {
+        "object": "./authentication/o-auth-access-token.mjson"
+    },
+    "circle": {
+        "object": "./geo/circle.mjson"
+    },
+    "geometry": {
+        "object": "./geo/geometry.mjson"
+    },
+    "line-string": {
+        "object": "./geo/line-string.mjson"
+    },
+    "multi-line-string": {
+        "object": "./geo/multi-line-string.mjson"
+    },
+    "point": {
+        "object": "./geo/point.mjson"
+    },
+    "multi-point": {
+        "object": "./geo/multi-point.mjson"
+    },
+    "polygon": {
+        "object": "./geo/multi-polygon.mjson"
+    },
+    "multi-polygon": {
+        "object": "./geo/multi-polygon.mjson"
+    },
+    "position": {
+        "object": "./geo/position.mjson"
+    },
+
+    "RoleRanking": {
+        "object": "./party/role-ranking.mjson"
+    },
+
+    "Application": {
+        "object": "./app/application.mjson"
+    },
+    
+    "UserPool": {
+        "object": "./app/user-pool.mjson"
+    },
+
+    "AppClient": {
+        "object": "data/model/app/app-client.mjson"
+    },
+
+    "UserSession": {
+        "object": "./app/user-session.mjson"
+    },
+
+    "Identity": {
+        "object": "data/model/identity.mjson"
+    },
+
+    "UserIdentity": {
+        "object": "./app/user-identity.mjson"
+    },
+
+    "Variable": {
+        "object": "./variable.mjson"
+    },
+
+    "WebSocketSession": {
+        "object": "data/model/app/web-socket-session.mjson"
+    },
+
+    "WebSocketSessionConnection": {
+        "object": "data/model/app/web-socket-session-connection.mjson"
+    }
+}

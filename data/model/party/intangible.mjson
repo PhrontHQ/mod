@@ -1,0 +1,24 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Intangible",
+            "description": "An immaterial thing, including digital things.",
+            "propertyDescriptors": [
+           ],
+            "objectDescriptorModule": {
+                "%": "./intangible.mjson"
+            },
+            "exportName": "Intangible",
+            "module": {
+                "%": "./intangible"
+            },
+            "parent":{"@": "ThingObjectDescriptor"}
+        }
+    },
+
+    "ThingObjectDescriptor": {
+        "object": "./thing.mjson"
+    }
+
+}

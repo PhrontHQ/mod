@@ -1,0 +1,43 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "Circle",
+            "propertyDescriptors": [
+                {"@": "coordinates"},
+                {"@": "radius"}
+            ],
+            "exportName": "Circle",
+            "module": {
+                "%": "./circle"
+            },
+            "parent":{"@": "GeometryDescriptor"}
+        }
+    },
+
+    "GeometryDescriptor": {
+        "object": "./geometry.mjson"
+    },
+    
+    "PositionDescriptor": {
+        "object": "./position.mjson"
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "PositionDescriptor"}
+        }
+    },
+
+    "radius": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "radius",
+            "valueType": "number"
+        }
+    }
+
+}

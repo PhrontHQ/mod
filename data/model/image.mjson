@@ -1,0 +1,42 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Image",
+            "propertyDescriptors": [
+                {"@": "transformedSrc"},
+                {"@": "exifMetadata"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./image.mjson"
+            },
+            "exportName": "Image",
+            "module": {
+                "%": "./image"
+            },
+            "object":{"@": "ImagePrototype"},
+            "parent":{"@": "DigitalAssetDescriptor"}
+        }
+    },
+    "ImagePrototype": {
+        "object": "./image"
+    },
+    "DigitalAssetDescriptor": {
+        "object": "./digital-asset.mjson"
+    },
+    "transformedSrc": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "transformedSrc",
+            "valueType": "URL"
+        }
+    },
+    "exifMetadata": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "exifMetadata",
+            "valueType": "object"
+        }
+    }
+
+}

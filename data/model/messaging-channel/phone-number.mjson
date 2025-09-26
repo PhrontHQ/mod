@@ -1,0 +1,206 @@
+
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "PhoneNumber",
+            "propertyDescriptors": [
+                {"@": "countryCode"},
+                {"@": "nationalNumber"},
+                {"@": "extension"},
+                {"@": "supportsVoice"},
+                {"@": "supportsVoiceMessage"},
+                {"@": "supportsTextMessage"},
+                {"@": "supportsMultimediaMessage"},
+                {"@": "supportsiMessage"},
+                {"@": "supportsRichCommunication"},
+                {"@": "supportsFax"},
+                {"@": "isMobile"},
+                {"@": "supportsVideoConferencing"},
+                {"@": "supportsPaging"},
+                {"@": "supportsTextphone"},
+                {"@": "supportsRealTimeText"},
+                {"@": "partyPhoneNumbers"},
+                {"@": "partySMSNumbers"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./phone-number.mjson"
+            },
+            "exportName": "PhoneNumber",
+            "module": {
+                "%": "./phone-number"
+            },
+            "object":{"@": "phone-number"},
+            "parent":{"@": "MessagingChannelDescriptor"}
+        }
+    },
+    "phone-number": {
+        "object": "./phone-number"
+    },
+    "MessagingChannelDescriptor": {
+        "object": "./messaging-channel.mjson"
+    },
+    "countryCode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "countryCode",
+            "valueType": "string"
+        }
+    },
+    "nationalNumber": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "nationalNumber",
+            "valueType": "string"
+        }
+    },
+    "extension": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "extension",
+            "valueType": "string"
+        }
+    },
+    "supportsVoice": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsVoice",
+            "valueType": "boolean",
+            "defaultValue": true,
+            "description": "Indicates a voice telephone number"
+        }
+    },
+    "supportsVoiceMessage": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsVoiceMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports leaving a voice messages (aka voicemail)"
+        }
+    },
+    "supportsTextMessage": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsTextMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports text messages (SMS)"
+        }
+    },
+    "supportsMultimediaMessage": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsMultimediaMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports multimedia messages (MMS)"
+        }
+    },
+    "supportsiMessage": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsiMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports Apple's  iMessage (SMS)"
+        }
+    },
+    "supportsRichCommunication": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsiMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports Rich Communication Services (RCS)"
+        }
+    },
+    "supportsFax": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsFax",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates a facsimile capable telephone number"
+        }
+    },
+    "isMobile": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "isMobile",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates a cellular or mobile telephone number"
+        }
+    },
+    "supportsVideoConferencing": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsVideoConferencing",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates a video conferencing capable telephone number"
+        }
+    },
+    "supportsVideoMessage": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsVideoMessage",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates that the telephone number supports leaving a video message"
+        }
+    },
+    "supportsPaging": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsPaging",
+            "defaultValue": false,
+            "valueType": "boolean",
+            "description": "Indicates a paging capable telephone number."
+        }
+    },
+    "supportsTextphone": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsTextphone",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates a telephone number with the capabilities to handle telecommunication for people with hearing or speech difficulties. (TTY)"
+        }
+    },
+    "supportsRealTimeText": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "supportsRealTimeText",
+            "valueType": "boolean",
+            "defaultValue": false,
+            "description": "Indicates a telephone number with the capabilities to handle Real Time Text (RTT)."
+        }
+    },
+    "partyPhoneNumbers": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "partyPhoneNumbers",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PartyPhoneNumberDescriptor"}
+       }
+    },
+    "PartyPhoneNumberDescriptor": {
+        "object": "./party-phone-number.mjson"
+    },
+    "partySMSNumbers": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "partySMSNumbers",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PartySMSNumberDescriptor"}
+       }
+    },
+    "PartySMSNumberDescriptor": {
+        "object": "./party-s-m-s-number.mjson"
+    }
+
+}

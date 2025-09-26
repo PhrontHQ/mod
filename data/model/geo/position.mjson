@@ -1,0 +1,131 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Position",
+            "propertyDescriptors": [
+                    {"@": "identifier"},
+                    {"@": "projection"},
+                    { "@": "longitude"},
+                    {"@": "latitude"},
+                    {"@": "altitude"},
+                    {"@": "measure"}
+            ],
+            "propertyDescriptorGroups": {
+                "Coordinates": [
+                    {"@": "longitude"},
+                    {"@": "latitude"},
+                    {"@": "altitude"},
+                    {"@": "measure"}
+                ]
+            },
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "./position.mjson"
+            },
+            "exportName": "Position",
+            "module": {
+                "%": "./position"
+            },
+            "object":{"@": "position"}
+        }
+    },
+
+    "position": {
+        "object": "./position"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "identifier",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": false,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "string",
+            "helpKey": ""
+        }
+    },
+    "ProjectionDescriptor": {
+        "object": "./projection.mjson"
+    },
+
+    "projection": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "projection",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ProjectionDescriptor"}
+        }
+    },
+
+    "longitude": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "longitude",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": true,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "number",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    },
+    "latitude": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "latitude",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": true,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "number",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    },
+    "altitude": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "altitude",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": false,
+            "denyDelete": false,
+            "readOnly": true,
+            "valueType": "number",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    },
+    "measure": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "measure",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": false,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "number",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    }
+}

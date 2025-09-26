@@ -63,5 +63,9 @@ exports.UserIdentity = Target.specialize(/** @lends UserIdentity.prototype */ {
     },
     timeZone: {
         value: undefined
-    }
+    },
+    person: {value: undefined},
+    images: {value: undefined},
+    addresses: {value: undefined},
+
 });

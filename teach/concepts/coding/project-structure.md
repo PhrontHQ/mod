@@ -1,0 +1,55 @@
+# User Mod Project Structure
+
+An end-Mod (user-mod / UMod / 🫵Mod , EndMod) is a Mod buit to a specific end: Taking notes, todo, patient emboarding, disaster managenent, system settings, etc... And yes, it's intended for users. The expected layout is as follow
+
+- project-name
+    - core /* typically contains non-ui code that is used in different places within the project */
+    - data
+        - model /* contain  data objects / type of the domain being worked on. It might be worth setting those in their own project for reuse */
+            - invoice.js
+            - invoice.mjson
+            - insurance-policy.js
+            - insurance-policy.mjson
+            - ...
+        - navigation /* contains all data objects - sections, underlyinhg the current end-mod */
+            - main-section.mjson
+            - activity-one-section.mjson
+            - activity-two-section.mjson
+            - ...
+        - main.mjson // The serialization of data services used by the end-mod 
+    - end-mods
+        - project-name
+            - ui
+                - model
+                    - invoice
+                        - invoice.mod /* A component anchoring a collection of invoices */
+                        - invoice-details.mod /* A component showing the details of one invoice */
+                        - invoice-list-item.mod /* a component rendering one invoice within a list */
+                        - invoice-summary.mod /* a component showing the summary of one invoice */
+                    - insurance-policy
+                        - insurance-policy.mod
+                        - insurance-policy-details.mod
+                        - insurance-policy-list-item.mod
+                        - insurance-policy-summary.mod
+                - navigation
+                    - activity-one.mod
+                    - activity-two.mod
+                    - main.mod
+                - style /* contains all the visual styles available in this project */
+                    - style-a.mod
+                        - style-a.mjson
+                    - style-b.mod
+                        - style-b.js
+                        - style-b.mjson
+            - index.html
+            - package.json
+        - other-end-mod
+    - workers
+        - main
+            - data 
+                - main.mjson // The serialization of data services used by the end-mod 
+            - main-data-worker.js // A subclass of DataWorker for the project as needed
+            - main.js //The file executed by node.js as instructed in package.json
+            - package.
+        - another-worker //An example is an intake worker for data ingestion from an external source
+  - README.md

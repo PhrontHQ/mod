@@ -1,0 +1,44 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "Point",
+            "parent": {"@": "geometry"},
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "coordinates"}
+            ],
+            "exportName": "Point",
+            "module": {
+                "%": "./point"
+            }
+        }
+    },
+
+    "geometry": {
+        "object": "./geometry.mjson"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "PositionDescriptor": {
+        "object": "./position.mjson"
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "PositionDescriptor"}
+        }
+    }
+
+}

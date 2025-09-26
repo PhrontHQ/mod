@@ -1,0 +1,39 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "JSONWebToken",
+            "propertyDescriptors": [
+                {"@": "header"},
+                {"@": "claims"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./j-s-o-n-web-token.mjson"
+            },
+            "exportName": "JSONWebToken",
+            "module": {
+                "%": "./j-s-o-n-web-token"
+            },
+            "parent":{"@": "DataObjectDescriptor"}
+        }
+    },
+    "DataObjectDescriptor": {
+        "object": "../data-object.mjson"
+    },
+    "header": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "header",
+            "valueType": "object"
+        }
+    },
+    "claims": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "claims",
+            "cardinality": 1,
+            "valueType": "object"
+       }
+    }
+
+}

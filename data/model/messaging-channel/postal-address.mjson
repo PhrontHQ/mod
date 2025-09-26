@@ -1,0 +1,240 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "PostalAddress",
+            "propertyDescriptors": [
+                {"@": "addressee"},
+                {"@": "name"},
+                {"@": "firstName"},
+                {"@": "lastName"},
+                {"@": "phoneNumber"},
+                {"@": "streetAddress"},
+                {"@": "formattedAddressLines"},
+                {"@": "premise"},
+                {"@": "premiseDetails"},
+                {"@": "thoroughfare"},
+                {"@": "locality"},
+                {"@": "subLocality"},
+                {"@": "administrativeArea"},
+                {"@": "superAdministrativeArea"},
+                {"@": "subAdministrativeArea"},
+                {"@": "primaryPostalCode"},
+                {"@": "secondaryPostalCode"},
+                {"@": "country"},
+                {"@": "location"},
+                {"@": "perimeter"},
+                {"@": "timeZone"},
+                {"@": "partyPostalAddresses"}
+            ],
+            "description": "some additional references: https://docs.oracle.com/en/middleware/enterprise-data-quality/12.2.1.3/edqoh/address-verification.html, https://cloud.docs.tamr.com/docs/address-standardization-validation-and-geocoding",
+            "objectDescriptorModule": {
+                "%": "./postal-address.mjson"
+            },
+            "exportName": "PostalAddress",
+            "module": {
+                "%": "./postal-address"
+            },
+            "object":{"@": "address"},
+            "parent":{"@": "MessagingChannelDescriptor"}
+        }
+    },
+    "address": {
+        "object": "./postal-address"
+    },
+    "MessagingChannelDescriptor": {
+        "object": "./messaging-channel.mjson"
+    },
+    "addressee": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "addressee",
+            "valueType": "string"
+        }
+    },
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "valueType": "string"
+        }
+    },
+    "firstName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "firstName",
+            "valueType": "string"
+        }
+    },
+    "lastName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "lastName",
+            "valueType": "string"
+        }
+    },
+     "phoneNumber": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "phoneNumber",
+            "valueType": "object",
+            "valueDescriptor": {"@": "phoneNumberDescriptor"}
+        }
+    },
+    "phoneNumberDescriptor": {
+        "object": "./phone-number.mjson"
+    },
+    "streetAddress": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "streetAddress",
+            "valueType": "string"
+        }
+    },
+    "formattedAddressLines": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "formattedAddressLines",
+            "cardinality": -1,
+            "valueType": "string"
+       }
+    },
+    "premise": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "premise",
+            "valueType": "string"
+       }
+    },
+    "premiseDetails": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "premiseDetails",
+            "valueType": "string"
+       }
+    },
+    "thoroughfare": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "thoroughfare",
+            "valueType": "string"
+       }
+    },
+    "locality": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "locality",
+            "valueType": "string"
+       }
+    },
+    "subLocality": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "subLocality",
+            "valueType": "string",
+            "description": "Additional information associated with the location, typically defined at the city or town level, in a postal address. For example the '12E ARRONDISSEMENT' in Paris."
+       }
+    },
+
+    "administrativeArea": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "administrativeArea",
+            "valueType": "string",
+            "description": "The most common administrative division within a country (e.g., province in Canada, a state in the US or a département in France)"
+       }
+    },
+
+    "superAdministrativeArea": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "superAdministrativeArea",
+            "valueType": "string",
+            "description": "The largest administrative division within a country (e.g., region in France)"
+       }
+    },
+
+    "subAdministrativeArea": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "subAdministrativeArea",
+            "valueType": "string",
+            "description": "The smallest administrative division within a country (e.g., county in Germany or in the US, )"
+       }
+    },
+
+    "primaryPostalCode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "primaryPostalCode",
+            "valueType": "string"
+       }
+    },
+    "secondaryPostalCode": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "secondaryPostalCode",
+            "valueType": "string"
+       }
+    },
+    "country": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "country",
+            "valueType": "object",
+            "valueDescriptor": {"@": "CountryDescriptor"},
+            "isSearchable": true
+       }
+    },
+    "CountryDescriptor": {
+        "object": "../country.mjson"
+    },
+    "PointDescriptor": {
+        "object": "data/model/geo/point.mjson"
+    },
+    "location": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "location",
+            "valueType": "object",
+            "valueDescriptor": {"@": "PointDescriptor"},
+            "isSearchable": true
+        }
+    },
+    "GeometryDescriptor": {
+        "object": "data/model/geo/geometry.mjson"
+    },
+    "perimeter": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "perimeter",
+            "valueType": "object",
+            "valueDescriptor": {"@": "GeometryDescriptor"},
+            "isSearchable": true
+        }
+    },
+    "timeZone": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "timeZone",
+            "valueType": "object",
+            "valueDescriptor": {"@": "timeZone-descriptor"}
+        }
+    },
+    "timeZone-descriptor": {
+        "object": "core/date/time-zone.mjson"
+    },
+    "partyPostalAddresses": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "partyPostalAddresses",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PartyPostalAddressDescriptor"}
+       }
+    },
+    "PartyPostalAddressDescriptor": {
+        "object": "./party-postal-address.mjson"
+    }
+
+}

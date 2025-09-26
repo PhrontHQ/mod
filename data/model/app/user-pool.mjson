@@ -5,8 +5,8 @@
             "name": "UserPool",
             "propertyDescriptors": [
                 {"@": "name"},
-                {"@": "appClients"}
-
+                {"@": "appClients"},
+                {"@": "servedOrganizations"}
             ],
             "objectDescriptorModule": {
                 "%": "./user-pool.mjson"
@@ -40,6 +40,21 @@
     },
     "AppClientDescriptor": {
         "object": "./app-client.mjson"
+    },
+    
+    "servedOrganizations": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "servedOrganizations",
+            "cardinality": -1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "inversePropertyName": "userPools",
+            "description": "The parties using a UserPool"
+       }
+    },
+    "OrganizationDescriptor": {
+        "object": "../party/organization.mjson"
     }
 
 }

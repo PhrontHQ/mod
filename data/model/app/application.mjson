@@ -6,7 +6,8 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "appClients"},
-                {"@": "webSocketSessions"}
+                {"@": "webSocketSessions"},
+                {"@": "controllingOrganization"}
             ],
             "objectDescriptorModule": {
                 "%": "./application.mjson"
@@ -55,6 +56,21 @@
 
     "AppClientDescriptor": {
         "object": "./app-client.mjson"
+    },
+    
+    "controllingOrganization": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "controllingOrganization",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "inversePropertyName": "applications",
+            "description": "The party owning the application. Important for security, analytics, etc... Could be a Person, an organization, any Party subclass"
+       }
+    },
+    "OrganizationDescriptor": {
+        "object": "../party/organization.mjson"
     }
 
 }
