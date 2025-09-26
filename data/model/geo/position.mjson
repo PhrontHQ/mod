@@ -4,28 +4,19 @@
         "values": {
             "name": "Position",
             "propertyDescriptors": [
-                {
-                    "@": "identifier",
-                    "@": "longitude",
-                    "@": "latitude",
-                    "@": "altitude",
-                    "@": "measure"
-                }
+                    {"@": "identifier"},
+                    {"@": "projection"},
+                    { "@": "longitude"},
+                    {"@": "latitude"},
+                    {"@": "altitude"},
+                    {"@": "measure"}
             ],
             "propertyDescriptorGroups": {
                 "Coordinates": [
-                    {
-                        "@": "longitude"
-                    },
-                    {
-                        "@": "latitude"
-                    },
-                    {
-                        "@": "altitude"
-                    },
-                    {
-                        "@": "measure"
-                    }
+                    {"@": "longitude"},
+                    {"@": "latitude"},
+                    {"@": "altitude"},
+                    {"@": "measure"}
                 ]
             },
             "propertyValidationRules": {},
@@ -59,6 +50,20 @@
             "helpKey": ""
         }
     },
+    "ProjectionDescriptor": {
+        "object": "./projection.mjson"
+    },
+
+    "projection": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "projection",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ProjectionDescriptor"}
+        }
+    },
+
     "longitude": {
         "prototype": "core/meta/property-descriptor",
         "values": {

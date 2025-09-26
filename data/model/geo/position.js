@@ -45,6 +45,17 @@ exports.Position.prototype = Object.create({}, /** @lends Position.prototype */ 
     },
 
     /**
+     * The projection within which this position has been created. Defaults to?
+     * @type {Projection}
+     */
+    projection: {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+        value: undefined
+    },
+
+    /**
      * The global identifier for this Position.  Used during serialization to
      * uniquely identify objects.
      *
@@ -411,6 +422,11 @@ exports.Position.prototype = Object.create({}, /** @lends Position.prototype */ 
 });
 
 Object.defineProperties(exports.Position, /** @lends Position */ {
+    Projection: {
+        get: function () {
+            return require("logic/model/projection").Projection;
+        }
+    },
 
     EARTH_RADIUS: {
         value: 6371e3

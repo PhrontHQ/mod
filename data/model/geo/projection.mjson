@@ -1,0 +1,44 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Projection",
+            "propertyDescriptors": [
+                {"@": "srid"},
+                {"@": "units"}
+            ],
+            "propertyValidationRules": {},
+            "objectDescriptorModule": {
+                "%": "./projection.mjson"
+            },
+            "exportName": "Projection",
+            "module": {
+                "%": "./projection"
+            },
+            "object":{"@": "projection"}
+        }
+    },
+
+    "position": {
+        "object": "./position"
+    },
+
+    "srid": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "srid",
+            "cardinality": 1,
+            "mandatory": true,
+            "valueType": "string"
+        }
+    },
+
+    "units": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "units",
+            "cardinality": 1,
+            "valueType": "object"
+        }
+    }
+}
