@@ -1,0 +1,66 @@
+.ModDatePropertyField {
+    & input[type="date"]::-webkit-calendar-picker-indicator {
+        /* display: none; */
+        position: absolute;
+        inset: 0;              /* top/right/bottom/left: 0 */
+        width: auto;
+        height: auto;
+        margin: 0;
+        padding: 0;
+        background: transparent;
+        color: transparent;    /* hide icon but keep it clickable */
+        opacity: 0;            /* fully invisible but still receives clicks */
+        cursor: pointer;
+        z-index: 2;
+        pointer-events: auto;
+    }
+
+    & .ModDatePropertyField-control {
+        display: flex;
+        justify-content: end;
+        height: 2.5em;
+    }
+
+
+
+    input[type="date"]::-webkit-datetime-edit-year-field,
+    input[type="date"]::-webkit-datetime-edit-month-field,
+    input[type="date"]::-webkit-datetime-edit-day-field,
+    input[type="date"]::-webkit-datetime-edit-text {
+        color: transparent /* Change the color of the date parts and separators */
+    }
+
+    input[type="date"] {
+        outline: none;
+        border: none;
+        height: 2.5em; /*Based on height of ModTextField*/
+        position: absolute;
+        width: 10em;
+        top: 0;
+        right: 4px;
+        color: transparent;
+        background: transparent;
+    }
+
+    .ModDatePropertyField-chip {
+        height: 2em;
+        margin: .25em 0;
+        line-height: 1.75em;
+        text-align: center;
+        vertical-align: middle;
+        box-sizing: border-box;
+        border-radius: 1em;
+        background-color: #eee;
+        padding: 0px 12px;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .ModDatePropertyField-chip--noValue::after {
+        content: "Select";
+        position: relative;
+        width: 7.5em;
+    }
+
+
+}

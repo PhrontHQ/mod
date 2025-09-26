@@ -45,6 +45,14 @@
                         "element": {"#": "wrappedTextArea"},
                         "label": "Comments"
                     }
+                },
+
+                "wrappedDateField": {
+                    "prototype": "mod/ui/date-property-field.mod",
+                    "values": {
+                        "element": {"#": "wrappedDateField"},
+                        "label": "Start Date"
+                    }
                 }
             }
         </script>
@@ -59,9 +67,8 @@
                 </div>
                 <div data-mod-id="wrappedErrorTextField" class="Main-wrappedErrorTextField"></div>
                 <div data-mod-id="wrappedTextArea" class="Main-wrappedTextArea"></div>
-                <div data-mod-id="simpleTextAreaField" class="Main-simpleTextAreaField">
-                    <div data-mod-id="simpleTextAreaControl" data-arg="control" class="Main-simpleTextAreaControl"></div>
-                </div>
+                <div data-mod-id="wrappedDateField" class="Main-wrappedDateField"></div>
+                <input type="date"></input>
             </section>
         </div>
     </body>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="date-property-field.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "owner"},
+                "_input": {"@": "input"},
+                "_chip": {"@": "chip"}
+            }
+        },
+
+        "propertyField": {
+            "prototype": "ui/property-field.mod",
+            "values": {
+                "element": {"#": "propertyField"},
+                "label": {"<-": "@owner.label"},
+                "errorMessage": {"<-": "@owner.errorMessage"}
+            }
+        },
+
+        "input": {
+            "prototype": "ui/date-field.mod",
+            "values": {
+                "element": {"#": "input"},
+                "placeholder": {"<-": "@owner.placeholder"},
+                "value": {"<->": "@owner.value"}
+            }
+        },
+
+        "chip": {
+            "prototype": "ui/text.mod",
+            "values": {
+                "element": {"#": "chip"},
+                "value": {"<-": "@owner.value"},
+                "converter": {"=": "@owner.dateFormatConverter"},
+                "classList.has('ModDatePropertyField-chip--noValue')": {"<-": "!@owner.value.defined()"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="owner" class="ModDatePropertyField">
+        <div data-mod-id="propertyField">
+            <div data-arg="control" class="ModDatePropertyField-control">
+                <div data-mod-id="chip" class="ModDatePropertyField-chip"></div>
+                <div data-mod-id="input"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
