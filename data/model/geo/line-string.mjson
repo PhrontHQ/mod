@@ -1,0 +1,44 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "LineString",
+            "parent": {"@": "geometry"},
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "coordinates"}
+            ],
+            "exportName": "LineString",
+            "module": {
+                "%": "./line-string"
+            }
+        }
+    },
+
+    "geometry": {
+        "object": "./geometry.mjson"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "PositionDescriptor": {
+        "object": "./position.mjson"
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "cardinality": -1,
+            "valueType": "array",
+            "valueDescriptor": {"@": "PositionDescriptor"}
+        }
+    }
+
+}

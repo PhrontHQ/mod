@@ -1,0 +1,43 @@
+
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "InstantMessageAddress",
+            "propertyDescriptors": [
+                {"@": "serviceName"},
+                {"@": "userName"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./instant-message-address.mjson"
+            },
+            "exportName": "InstantMessageAddress",
+            "module": {
+                "%": "./instant-message-address"
+            },
+            "object":{"@": "InstantMessageAddress"},
+            "parent":{"@": "MessagingChannelDescriptor"}
+        }
+    },
+    "InstantMessageAddress": {
+        "object": "./instant-message-address"
+    },
+    "MessagingChannelDescriptor": {
+        "object": "./messaging-channel.mjson"
+    },
+    "serviceName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "serviceName",
+            "valueType": "string"
+        }
+    },
+    "userName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "userName",
+            "valueType": "string"
+        }
+    }
+
+}

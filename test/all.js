@@ -143,6 +143,22 @@ module.exports = require("mod/testing/run").run(require, [
     {name: "spec/meta/component-object-descriptor-spec", node: false},
     {name: "spec/meta/controller-object-descriptor-spec", node: false},
     {name: "spec/meta/event-descriptor-spec", node: false},
+
+    // Data
+    {name: "spec/geo/circle"},
+    {name: "spec/geo/geometry"},
+    {name: "spec/geo/geometry-collection"},
+    {name: "spec/geo/line-string"},
+    {name: "spec/geo/multi-line-string"},
+    {name: "spec/geo/multi-point"},
+    {name: "spec/geo/multi-polygon"},
+    {name: "spec/geo/point"},
+    {name: "spec/geo/point-2d"},
+    {name: "spec/geo/polygon"},
+    {name: "spec/geo/position"},
+    {name: "spec/geo/rect"},
+    {name: "spec/geo/size"},
+
 ]).then(function () {
     console.log('mod-testing', 'End');
 }, function (err) {

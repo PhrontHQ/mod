@@ -42,8 +42,8 @@ class List extends Array {
   var other = List.from(set);
   console.log("other:",other);
   */
-var Montage = require("../../core/core").Montage,
-    Locale = require("../../core/locale").Locale;
+var Montage = require("core/core").Montage,
+    Locale = require("core/locale").Locale;
 
 
 class LocalizedString extends String {

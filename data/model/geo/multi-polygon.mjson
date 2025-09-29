@@ -1,0 +1,44 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "properties": {
+            "name": "MultiPolygon",
+            "parent": {"@": "geometry"},
+            "propertyDescriptors": [
+                {"@": "identifier"},
+                {"@": "coordinates"}
+            ],
+            "exportName": "MultiPolygon",
+            "module": {
+                "%": "./multi-polygon"
+            }
+        }
+    },
+
+    "geometry": {
+        "object": "./geometry.mjson"
+    },
+
+    "identifier": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "identifier",
+            "valueType": "string"
+        }
+    },
+
+    "PolygonDescriptor": {
+        "object": "./polygon.mjson"
+    },
+
+    "coordinates": {
+        "prototype": "core/meta/property-descriptor",
+        "properties": {
+            "name": "coordinates",
+            "cardinality": -1,
+            "valueType": "array",
+            "valueDescriptor": {"@": "PolygonDescriptor"}
+        }
+    }
+
+}

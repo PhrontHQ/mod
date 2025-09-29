@@ -1,0 +1,53 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Role",
+            "propertyDescriptors": [
+                {"@": "name"},
+                {"@": "description"},
+                {"@": "tags"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./role.mjson"
+            },
+            "exportName": "Role",
+            "module": {
+                "%": "./role"
+            },
+            "object":{"@": "Role"},
+            "parent":{"@": "objectDescriptor"}
+        }
+    },
+    "Role": {
+        "object": "./role"
+    },
+    "objectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    },
+    "description": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "description",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    },
+    "tags": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tags",
+            "isLocalizable": true,
+            "valueType": "string",
+            "cardinality": -1
+        }
+    }
+}

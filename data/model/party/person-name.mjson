@@ -1,0 +1,90 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "PersonName",
+            "propertyDescriptors": [
+                {"@": "namePrefix"},
+                {"@": "givenName"},
+                {"@": "middleName"},
+                {"@": "familyName"},
+                {"@": "previousFamilyName"},
+                {"@": "nameSuffix"},
+                {"@": "nickname"},
+                {"@": "honorific"}
+
+            ],
+            "objectDescriptorModule": {
+                "%": "./person-name.mjson"
+            },
+            "exportName": "PersonName",
+            "module": {
+                "%": "./person-name"
+            },
+            "object":{"@": "personName"},
+            "userInterfaceDescriptorModules": {
+            }
+
+        }
+    },
+    "personName": {
+        "object": "./person-name"
+    },
+    "namePrefix": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "namePrefix",
+            "valueType": "string"
+        }
+    },
+    "givenName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "givenName",
+            "valueType": "string"
+        }
+    },
+    "middleName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "middleName",
+            "valueType": "string"
+        }
+    },
+    "familyName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "familyName",
+            "valueType": "string"
+        }
+    },
+    "previousFamilyName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "previousFamilyName",
+            "valueType": "string"
+        }
+    },
+    "nameSuffix": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "nameSuffix",
+            "valueType": "string"
+        }
+    },
+    "nickname": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "nickname",
+            "valueType": "string"
+        }
+    },
+    "honorific": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "honorific",
+            "valueType": "string"
+        }
+    }
+
+}

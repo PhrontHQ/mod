@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Container Query Card Example</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background-color: #fcfcfc;
+      }
+
+      /* Container setup */
+      .container {
+        container-type: inline-size;
+        container-name: card-container;
+        margin: auto;
+        max-width: 800px;
+      }
+
+      /* Default card layout (row/horizontal) */
+      .cardComponent {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        padding: 20px;
+        gap: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        border: 1px solid #eee;
+      }
+
+      .card-image {
+        width: 120px;
+        height: 120px;
+        background-color: #4a90e2;
+        border-radius: 12px;
+        flex-shrink: 0;
+      }
+
+      .card-content {
+        flex: 1;
+      }
+
+      .card-title {
+        margin: 0;
+        font-size: 1.5rem;
+        color: #333;
+        font-weight: 600;
+      }
+
+      @container card-container (inline-size < 600px) {
+        .cardComponent {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .card-image {
+          width: 100px;
+          height: 100px;
+          align-self: center;
+        }
+      }
+    </style>
+  </head>
+  <body class="container">
+    <div class="header">
+      <h1>Container Query Card Demo</h1>
+    </div>
+
+      <div class="cardComponent container">
+        <div class="card-image"></div>
+        <div class="card-content">
+          <h2 class="card-title">Container Query Card</h2>
+        </div>
+      </div>
+  </body>
+</html>

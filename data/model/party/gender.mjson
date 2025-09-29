@@ -1,0 +1,35 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Gender",
+            "propertyDescriptors": [
+                {"@": "name"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./gender.mjson"
+            },
+            "exportName": "Gender",
+            "module": {
+                "%": "./gender"
+            },
+            "object":{"@": "Gender"},
+            "parent":{"@": "ObjectObjectDescriptor"}
+        }
+    },
+    "Gender": {
+        "object": "./gender"
+    },
+    "ObjectObjectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    }
+
+}

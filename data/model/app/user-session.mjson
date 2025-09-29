@@ -1,13 +1,14 @@
 {
     "root": {
-        "prototype": "../../../core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "UserSession",
             "propertyDescriptors": [
                 {"@": "identity"},
                 {"@": "environment"},
                 {"@": "connectionId"},
-                {"@": "connectionTimeRange"}
+                {"@": "connectionTimeRange"},
+                {"@": "person"}
             ],
             "objectDescriptorModule": {
                 "%": "./user-session.mjson"
@@ -25,7 +26,7 @@
     },
 
     "identity": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "identity",
             "valueType": "object",
@@ -39,7 +40,7 @@
     },
 
     "environment": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "environment",
             "valueType": "object",
@@ -49,11 +50,11 @@
     },
     
     "environmentDescriptor": {
-        "object": "../../../core/environment.mjson"
+        "object": "core/environment.mjson"
     },
 
     "connectionId": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "connectionId",
             "valueType": "string"
@@ -61,7 +62,7 @@
     },
 
     "connectionTimeRange": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "connectionTimeRange",
             "valueType": "date",
@@ -70,7 +71,19 @@
         }
     },
     "rangeDescriptor": {
-        "object": "../../../core/range.mjson"
+        "object": "core/range.mjson"
+    },
+    "person": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "person",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "person_descriptor"}
+       }
+    },
+    "person_descriptor": {
+        "object": "../party/person.mjson"
     }
-   
+
 }

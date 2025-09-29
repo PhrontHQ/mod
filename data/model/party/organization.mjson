@@ -1,0 +1,125 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Organization",
+            "propertyDescriptors": [
+                {"@": "type"},
+                {"@": "parent"},
+                {"@": "suborganizations"},
+                {"@": "tags"},
+                {"@": "mainContact"},
+                {"@": "userPools"},
+                {"@": "applications"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./organization.mjson"
+            },
+            "exportName": "Organization",
+            "module": {
+                "%": "./organization"
+            },
+            "parent":{"@": "PartyDescriptor"},
+            "userInterfaceDescriptorModules": {
+                "*": {
+                    "%": "./organization-ui-descriptor.mjson"   
+                }
+            }
+
+        }
+    },
+
+    "PartyDescriptor": {
+        "object": "./party.mjson"
+    },
+
+    "type": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "type",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "typeInstances",
+            "valueDescriptor": {"@": "root"}
+        }
+    },
+    "email": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "email",
+            "valueType": "string"
+        }
+    },
+
+    "parent": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "parent",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "suborganizations",
+            "valueDescriptor": {"@": "root"}
+       }
+    },
+
+    "suborganizations": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "suborganizations",
+            "valueType": "array",
+            "cardinality": -1,
+            "inversePropertyName": "parent",
+            "valueDescriptor": {"@": "root"}
+       }
+    },
+
+    "tags": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tags",
+            "valueType": "string",
+            "cardinality": -1
+       }
+    },
+
+    "mainContact": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "mainContact",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "personDescriptor"}
+       }
+    },
+    "personDescriptor": {
+        "object": "./person.mjson"
+    },
+
+    "userPools": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "userPools",
+            "cardinality": -1,
+            "inversePropertyName": "servedOrganizations",
+            "valueDescriptor": {"@": "UserPoolDescriptor"},
+            "isSearchable": true
+        }
+    },
+    "UserPoolDescriptor": {
+        "object": "../app/user-pool.mjson"
+    },
+
+    "applications": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "applications",
+            "cardinality": -1,
+            "inversePropertyName": "controllingOrganization",
+            "valueDescriptor": {"@": "ApplicationDescriptor"}
+        }
+    },
+    "ApplicationDescriptor": {
+        "object": "../app/application.mjson"
+    }
+
+}

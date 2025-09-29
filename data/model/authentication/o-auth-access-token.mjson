@@ -1,0 +1,133 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "OAuthAccessToken",
+            "propertyDescriptors": [
+                {"@": "identity"},
+                {"@": "accessToken"},
+                {"@": "tokenType"},
+                {"@": "validityDuration"},
+                {"@": "validityRange"},
+                {"@": "scope"},
+                {"@": "refreshToken"},
+                {"@": "idToken"},
+                {"@": "refreshTokenValidityDuration"},
+                {"@": "refreshTokenValidityRange"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./o-auth-access-token.mjson"
+            },
+            "exportName": "OAuthAccessToken",
+            "module": {
+                "%": "./o-auth-access-token"
+            },
+            "parent":{"@": "DataObjectDescriptor"}
+        }
+    },
+    "DataObjectDescriptor": {
+        "object": "../data-object.mjson"
+    },
+
+    "identity": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "identity",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "IdentityDescriptor"},
+            "description": "The identity for which the token was granted"
+       }
+    },
+    "IdentityDescriptor": {
+        "object": "../identity.mjson"
+    },
+
+    "accessToken": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "accessToken",
+            "valueType": "string",
+            "description": "The requested access token. The app can use this token to authenticate to the secured resource, such as a web API."
+        }
+    },
+    "tokenType": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tokenType",
+            "valueType": "string",
+            "defaultValue": "bearer",
+            "description": "Indicates the token type value. The only type that AD FS supports is Bearer"
+       }
+    },
+    "validityDuration": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "validityDuration",
+            "valueType": "number",
+            "description": "How long the access token is valid (in seconds)."
+       }
+    },
+    "computeValidityRange": {
+        "object":"./o-auth-access-token-compute-validity-range"
+    },
+    "validityRange": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "validityRange",
+            "valueType": "date",
+            "collectionValueType": "range",
+            "definition": {
+                "args": ["validityDuration"],
+                "compute": {"@": "computeValidityRange"}
+            },
+            "description": "How long the access token is valid (in seconds)."
+       }
+    },
+    "scope": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "scope",
+            "valueType": "string",
+            "description": "The scope of access granted in the token and for what it is valid for, like 'openid'"
+       }
+    },
+    "refreshToken": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "refreshToken",
+            "valueType": "string",
+            "description": "The requested access token. The app can use this token to authenticate to the secured resource, such as a web API."
+        }
+    },
+    "idToken": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "idToken",
+            "valueType": "string",
+            "description": "The requested access token. The app can use this token to authenticate to the secured resource, such as a web API."
+        }
+    },
+    "refreshTokenValidityDuration": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "refreshTokenValidityDuration",
+            "valueType": "number",
+            "description": "How long the access token is valid (in seconds)."
+       }
+    },
+    "refreshTokenValidityRange": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "refreshTokenValidityRange",
+            "valueType": "date",
+            "collectionValueType": "range",
+            "isDerived": true,
+            "definition": {
+                "args": ["refreshTokenValidityDuration"],
+                "compute": {"@": "computeValidityRange"}
+            },
+            "description": "How long the access token is valid (in seconds)."
+       }
+    }
+}

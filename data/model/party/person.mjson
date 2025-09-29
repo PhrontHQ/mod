@@ -1,0 +1,152 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Person",
+            "description": "This should be a subclass of Being, itself a subclass of Party, when the time comes it's needed to deal with animals for example",
+            "propertyDescriptors": [
+                {"@": "name"},
+                {"@": "gender"},
+                {"@": "aliases"},
+                {"@": "preferredLocales"},
+                {"@": "tags"},
+                {"@": "userIdentities"},
+                {"@": "firstName"},
+                {"@": "lastName"},
+                {"@": "email"},
+                {"@": "phone"},
+                {"@": "signatures"}
+           ],
+            "objectDescriptorModule": {
+                "%": "./person.mjson"
+            },
+            "exportName": "Person",
+            "module": {
+                "%": "./person"
+            },
+            "parent":{"@": "BeingDescriptor"},
+            "userInterfaceDescriptorModules": {
+                "*": {
+                    "%": "./person-ui-descriptor.mjson"
+                },
+                "ui/list-item.reel": {
+                    "%": "./person-list-item-ui-descriptor.mjson"
+                },
+                "ui/cascading-list.reel": {
+                    "%": "./person-cascading-list-ui-descriptor.mjson"
+                }
+            }
+
+        }
+    },
+    "BeingDescriptor": {
+        "object": "./being.mjson"
+    },
+    "name": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "PersonNameDescriptor"}
+        }
+    },
+    "PersonNameDescriptor": {
+        "object": "./person-name.mjson"
+    },
+    "gender": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "gender",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "gender_descriptor"}
+        }
+    },
+    "gender_descriptor": {
+        "object": "./gender.mjson"
+    },
+
+    "aliases": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "aliases",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "PersonNameDescriptor"}
+        }
+    },
+
+    "preferredLocales": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "preferredLocales",
+            "cardinality": -1,
+            "valueType": "array"
+        }
+    },
+
+    "firstName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "firstName",
+            "valueType": "string"
+        }
+    },
+    "lastName": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "lastName",
+            "valueType": "string"
+        }
+    },
+    "email": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "email",
+            "valueType": "string"
+        }
+    },
+    "phone": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "phone",
+            "valueType": "string"
+        }
+    },
+
+    "tags": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tags",
+            "valueType": "string",
+            "cardinality": -1
+       }
+    },
+    "userIdentities": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "userIdentities",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {"@": "userIdentity_descriptor"},
+            "inversePropertyName": "person"
+       }
+    },
+    "userIdentity_descriptor": {
+        "object": "../app/user-identity.mjson"
+    },
+
+    "PersonSignatureDescriptor": {
+        "object": "./person-signature.mjson"
+    },
+
+    "signatures": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "signatures",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "person",
+            "valueDescriptor": {"@": "PersonSignatureDescriptor"}
+       }
+    }
+
+}

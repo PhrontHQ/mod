@@ -1,0 +1,68 @@
+@layer Mod {
+
+@scope (.Mod-Button) {
+
+
+    :scope {
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        font-weight: 600;
+        position: relative;
+
+        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+        transition: background-color .2s ease-in-out;
+        gap: 6px;
+    }
+
+    :hover {
+        cursor: pointer;
+    }
+
+    /* Main Orientation */
+
+    .mod--vertical {
+        flex-direction: column;
+    }
+
+    .mod--horizontal {
+        flex-direction: row;
+    }
+
+    /* Main Axis Direction */
+
+    .mod--horizontal.mod--end {
+        flex-direction: row-reverse;
+    }
+
+    .mod--vertical.mod--end {
+        flex-direction: column-reverse;
+    }
+
+    /* Hide Empty Elements */
+    >div:empty {
+        display: none;
+    }
+
+    /* Image Specifications */
+
+    >.ModButton-image {
+        position: relative;
+    }
+
+    >svg.ModButton-image {
+        fill: currentColor;
+    }
+
+    /* Pending State */
+
+    .mod--pending {
+        pointer-events: none;
+        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+        opacity: 0.75;
+    }
+
+    }
+}

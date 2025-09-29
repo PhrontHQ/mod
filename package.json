@@ -54,7 +54,8 @@
         "ical.js": "~1.4.0",
         "just-kebab-case": "^4.0.1",
         "object-sizeof": "^1.5.2",
-        "strange": "github:montagejs/js-strange#master"
+        "strange": "github:montagejs/js-strange#master",
+        "d3-geo": "^1.6.3"
     },
     "devDependencies": {
         "concurrently": "^3.4.0",

@@ -1,0 +1,43 @@
+
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "ContactForm",
+            "propertyDescriptors": [
+                {"@": "url"},
+                {"@": "formData"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./contact-form.mjson"
+            },
+            "exportName": "ContactForm",
+            "module": {
+                "%": "./contact-form"
+            },
+            "object":{"@": "ContactForm"},
+            "parent":{"@": "MessagingChannelDescriptor"}
+        }
+    },
+    "ContactForm": {
+        "object": "./contact-form"
+    },
+    "MessagingChannelDescriptor": {
+        "object": "./messaging-channel.mjson"
+    },
+    "url": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "url",
+            "valueType": "URL"
+        }
+    },
+    "formData": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "formData",
+            "valueType": "FormData"
+        }
+    }
+
+}

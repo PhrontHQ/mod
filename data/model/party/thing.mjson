@@ -1,0 +1,23 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "Thing",
+            "propertyDescriptors": [
+            ],
+            "objectDescriptorModule": {
+                "%": "./thing.mjson"
+            },
+            "exportName": "Thing",
+            "module": {
+                "%": "./thing"
+            },
+            "parent":{"@": "PartyDescriptor"}
+        }
+    },
+
+    "PartyDescriptor": {
+        "object": "./party.mjson"
+    }
+
+}

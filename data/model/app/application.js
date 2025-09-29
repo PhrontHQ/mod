@@ -41,5 +41,6 @@ exports.Application = DataObject.specialize(/** @lends Application.prototype */ 
     },
     userPool: {
         value: undefined
-    }
+    },
+    controllingOrganization: {value: undefined}
 });
