@@ -172,7 +172,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 isReplace = isChangeVisible && !isPush && !isPop && length,
                 isClear = isChangeVisible && !length;
             const lastRemovedComponent = minus[0];
-                
+
             // If we are preventing empty content and the last removed component is not null,
             // we push it back to the history stack.
             if (isClear && this.preventsEmptyContent && lastRemovedComponent) {
@@ -180,7 +180,7 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
                 this._history.push(lastRemovedComponent);
                 return;
             }
-            
+
             // Set appropriate classes and update the succession if necessary.
             if (isChangeVisible) {
                 this.classList[isPush ? "add" : "remove"]("mod-Succession--push");
@@ -228,20 +228,24 @@ exports.Succession = Component.specialize(/** @lends Succession.prototype */{
      * without animation. Must wait for argument component's template to be expanded as
      * parent replaces template with component's element.
      *
-     * TODO: Component's extractDomArgument("*") does not seem to be working so the
-     *       content argument must explicitly be named "content".
+     * - FIXME: Component's extractDomArgument("*") does not seem to be working so the
+     * content argument must explicitly be named "content".
+     * - FIXME: The `extractDomArgument("content")` fails to resolve the argument when it's
+     * nested within another component. As a temporary workaround, we fall back
+     * to `this.element.firstElementChild`.
      */
     enterDocument: {
         value: function (isFirstTime) {
-            var contentElement = isFirstTime && this.extractDomArgument("content"),
-                contentComponent = contentElement && contentElement.component,
-                self = this;
-            if (contentComponent) {
-                contentComponent.expandComponent().then(function () {
-                    self.history.push(contentComponent);
-                });
-            }
             if (isFirstTime) {
+                const contentElement = this.extractDomArgument("content") ?? this.element.firstElementChild;
+                const contentComponent = contentElement && contentElement.component;
+
+                if (contentComponent) {
+                    contentComponent.expandComponent().then(() => {
+                        this.history.push(contentComponent);
+                    });
+                }
+
                 this.addEventListener("buildInEnd", this);
                 this.addEventListener("buildOutEnd", this);
             }
