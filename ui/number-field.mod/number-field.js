@@ -23,7 +23,7 @@ var NumberField = exports.NumberField = TextInput.specialize({
         }
     },
 
-    hasTemplate: {value: false }
+    hasTemplate: {value: true }
 });
 
 NumberField.addAttributes(/** @lends module:"mod/ui/number-field.mod".NumberField */{

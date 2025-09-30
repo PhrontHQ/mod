@@ -1,4 +1,5 @@
 .ModDatePropertyField {
+    background: var(--visual-style-control-background-fill);
     & input[type="date"]::-webkit-calendar-picker-indicator {
         /* display: none; */
         position: absolute;
@@ -45,7 +46,7 @@
     .ModDatePropertyField-chip {
         height: 2em;
         margin: .25em 0;
-        line-height: 1.75em;
+        line-height: 2em;
         text-align: center;
         vertical-align: middle;
         box-sizing: border-box;

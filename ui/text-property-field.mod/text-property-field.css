@@ -1,4 +1,5 @@
 .ModTextPropertyField {
+    background: var(--visual-style-control-background-fill);
 
     & .controlWrapper {
 

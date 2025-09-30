@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <link rel="stylesheet" href="number-property-field.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "owner"}
+            }
+        },
+
+        "propertyField": {
+            "prototype": "ui/property-field.mod",
+            "values": {
+                "element": {"#": "propertyField"},
+                "label": {"<-": "@owner.label"},
+                "errorMessage": {"<-": "@owner.errorMessage"}
+            }
+        },
+
+        "numberField": {
+            "prototype": "ui/number-field.mod",
+            "values": {
+                "element": {"#": "numberField"},
+                "placeholder": {"<-": "@owner.placeholder"},
+                "name": {"<-": "@owner.propertyName"},
+                "value": {"<->": "@owner.value"}
+            }
+        }
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="owner" class="ModNumberPropertyField">
+        <div data-mod-id="propertyField" class="ModNumberPropertyField-propertyField">
+            <div data-mod-id="numberField" data-arg="control" class="ModNumberPropertyField-textField"></div>
+        </div>
+    </div>
+</body>
+</html>
