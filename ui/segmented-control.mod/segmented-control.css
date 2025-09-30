@@ -35,7 +35,8 @@
             position: absolute;
             top: var(--mod-segmented-control-padding);
             left: var(--mod-segmented-control-padding);
-            background: var(--visual-style-control-fill);
+            /* background: var(--visual-style-control-fill); */
+            background: var(--visual-style-control-selection-fill);
             backdrop-filter: blur(10px);
             border: 2px solid var(--visual-style-control-border-color);
             box-sizing: border-box;
