@@ -1,5 +1,5 @@
 var Size = require("mod/data/model/geo/size").Size,
-    Deserializer = require("mod/core/serialization/deserializer/mod-deserializer").MontageDeserializer,
+    Deserializer = require("mod/core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Serializer = require("mod/core/serialization/serializer/montage-serializer").MontageSerializer;
 
 describe("Size", function () {

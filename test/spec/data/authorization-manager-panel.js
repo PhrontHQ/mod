@@ -1,6 +1,6 @@
 var AuthorizationManager = require("mod/data/service/authorization-manager").AuthorizationManager,
     defaultAuthorizationManager = require("mod/data/service/authorization-manager").defaultAuthorizationManager,
-    AuthorizationManagerPanel = require("mod/ui/authorization-manager-panel.mod").AuthorizationManagerPanel,
+    AuthorizationManagerPanel = require("mod/ui/authorization/authorization-manager-panel.mod").AuthorizationManagerPanel,
     AuthorizationPanel = require("spec/data/ui/authorization/authorization-panel.mod").AuthorizationPanel,
     Authorization = require("spec/data/logic/authorization/authorization").Authorization;
 

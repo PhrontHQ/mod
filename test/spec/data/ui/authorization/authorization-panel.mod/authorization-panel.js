@@ -1,4 +1,4 @@
-var AuthorizationPanel = require("mod/ui/authorization-panel.mod").AuthorizationPanel,
+var AuthorizationPanel = require("mod/ui/authorization/authorization-panel.mod").AuthorizationPanel,
     Authorization = require("spec/data/logic/authorization/authorization").Authorization;
 
 /**

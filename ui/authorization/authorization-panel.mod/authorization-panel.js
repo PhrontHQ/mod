@@ -1,6 +1,6 @@
 var Component = require("ui/component").Component,
     AuthorizationManager = require("data/service/authorization-manager").defaultAuthorizationManager,
-    AuthorizationManagerPanel = require("ui/authorization-manager-panel.mod").AuthorizationManagerPanel,
+    AuthorizationManagerPanel = require("ui/authorization/authorization-manager-panel.mod").AuthorizationManagerPanel,
     deprecate = require("core/deprecate");
 
 /**
