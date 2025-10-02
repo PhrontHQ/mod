@@ -7,7 +7,6 @@
   * Definition
   * There's only one reality
   * Undertanding before proposing
-  * Undertanding before proposing
 * High Stakes
 * Approaches to Data Modeling
 * Classic Object Oriented Inheritance
@@ -24,3 +23,8 @@
   - ...
 - Models
   - Group ObjectDescriptors
+
+
+##External References
+- [Data Modeling 101: An Introduction](https://agiledata.org/essays/dataModeling101.html)
+- 

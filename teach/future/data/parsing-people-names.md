@@ -1,0 +1,18 @@
+# Parsing People Names
+
+- [javascript INTL local specific "person" full name parsing](https://www.google.com/search?q=javascript+INTL+local+specific+%22person%22+full+name+parsing&client=safari&sca_esv=d8b04fc949d05faa&rls=en&ei=hOCbaPyJLbSt5NoP9sXAMA&start=20&sa=N&sstk=Ac65TH4htHZC2VCbQetQG924ystMAz8W0rg6-GzLtjNkkB13_7tUQiGMx8sI4obBzeWyDYOouT0ES4EGME8EX9YVXx_jEr18s8IpetyqA96ulcA02gbtNW6WSVV4RGawFRp4&ved=2ahUKEwj824X1x4aPAxW0FlkFHfYiEAY4ChDw0wN6BAgJEBc&biw=1378&bih=959&dpr=2)
+- [parse-full-name](https://www.npmjs.com/package/parse-full-name)
+- [namefully](https://namefully.netlify.app)
+    - [npm](https://www.npmjs.com/package/namefully)
+    - [github](https://github.com/ralflorent/namefully)
+- [Foundation Locale parse Person Name](https://www.google.com/search?q=Foundation+Locale+parse+Person+Name&client=safari&sca_esv=d8b04fc949d05faa&rls=en&ei=ft2baMuvMtfZ5NoPpbu1wAg&ved=0ahUKEwjL5oGExYaPAxXXLFkFHaVdDYgQ4dUDCBA&uact=5&oq=Foundation+Locale+parse+Person+Name&gs_lp=Egxnd3Mtd2l6LXNlcnAiI0ZvdW5kYXRpb24gTG9jYWxlIHBhcnNlIFBlcnNvbiBOYW1lMgUQABjvBTIFEAAY7wUyCBAAGIAEGKIEMgUQABjvBUi1DlCqBlihDXABeAGQAQCYAb4BoAHGB6oBAzAuNrgBA8gBAPgBAZgCBaAC3QTCAgoQABiwAxjWBBhHwgIKECEYoAEYwwQYCpgDAIgGAZAGBJIHAzEuNKAHjReyBwMwLjS4B9sEwgcDMC41yAcH&sclient=gws-wiz-serp)
+- [PersonNameComponentsFormatter](https://developer.apple.com/documentation/foundation/personnamecomponentsformatter)
+- [PersonNameComponents](https://developer.apple.com/documentation/foundation/personnamecomponents)
+- [personNameComponents(from:)](https://developer.apple.com/documentation/foundation/personnamecomponentsformatter/personnamecomponents(from:))
+- [Unlocking Cultural Precision with PersonNameFormatter for iOS](https://levelup.gitconnected.com/unlocking-cultural-precision-with-personnameformatter-for-ios-f32cf592d753)
+- [Parsing a full name into its constituents](https://stackoverflow.com/questions/5596706/parsing-a-full-name-into-its-constituents)
+- [What is a practicable procedure to split an unstructured personal name into first and last names? ](https://docs.google.com/document/d/10rnx4C1lixmxAD7_moisUATxpRiTyMPzLlkMnUvzBwY/edit?tab=t.0)
+- [Personal names around the world](https://www.w3.org/International/questions/qa-personal-names#splitting)
+- [nameAPI](https://www.nameapi.org/en/manager/name-management/)
+- [yale-cultural-heritage/name-parser-model](https://huggingface.co/yale-cultural-heritage/name-parser-model)
+- [yale-cultural-heritage / name-parser-model](https://www.google.com/search?client=safari&rls=en&q=yale-cultural-heritage+%2F+name-parser-model&ie=UTF-8&oe=UTF-8)

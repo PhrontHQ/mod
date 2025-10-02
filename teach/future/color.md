@@ -34,7 +34,13 @@
         https://npmtrends.com/color.js-vs-colord-vs-culori
         
 
+    #### [CSS Color Module Level 5](https://drafts.csswg.org/css-color-5/#color-mix)
 
+    #### [contrast()](https://developer.mozilla.org/en-US/docs/Web/CSS/filter-function/contrast)
+
+
+    #### [Using color wisely](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_colors/Using_color_wisely)
+    
 
 ##Color Palettes
 

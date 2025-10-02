@@ -288,7 +288,18 @@ Borders can be filled with colors, but also with image and therefore gradients:
 - [https://www.fourzerothree.in/p/typography-variables](https://https://www.fourzerothree.in/p/typography-variables)
 
 ## References
+
+### CSS
+- [The Power of Composition with CSS Variables](https://blog.maximeheckel.com/posts/the-power-of-composition-with-css-variables/)
+- [CSS compositing and blending](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_compositing_and_blending)
+
+### Color
 - [CSS Contrast Color](https://webkit.org/blog/16929/contrast-color/)
+- [<system-color> CSS data type ](https://developer.mozilla.org/en-US/docs/Web/CSS/system-color#syntax)
 - [Apple Human Interface Guidelines for Color](https://developer.apple.com/design/human-interface-guidelines/color#Platform-considerations)
+- [Defining meaningful colors through composition](https://blog.maximeheckel.com/posts/the-power-of-composition-with-css-variables/)
+
+### Typography
+- [<text-edge> / text-box-edge](https://developer.mozilla.org/en-US/docs/Web/CSS/text-edge)
 
 
