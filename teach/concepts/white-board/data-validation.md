@@ -45,8 +45,8 @@ Their name comes from their close relationship with a property of an object bein
 
 
   ### Conventions
-  * have all property fields in one folder under /ui (TODO, not done yet) /ui/property-fields/property-field.mod,  /ui/property-fields/number-property-field.mod, etc...
-  - we coined /ui/property-fields/multiline-text-property-field.mod for a textarea and  /ui/property-fields/text-property-field.mod for a single line text field / input
+  * have all property fields in one folder under /ui /ui/property-field/property-field.mod,  /ui/property-field/number.mod, etc...
+  - we coined /ui/property-field/multiline-text.mod for a textarea and  /ui/property-field/text.mod for a single line text field / input
 
 
   ### Using the InvalidityState

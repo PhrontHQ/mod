@@ -2,7 +2,7 @@
 <html>
 <head>
     <title></title>
-    <link rel="stylesheet" href="number-property-field.css">
+    <link rel="stylesheet" href="multiline-text.css">
     <script type="text/mod-serialization">
     {
         "owner": {
@@ -20,10 +20,10 @@
             }
         },
 
-        "numberField": {
-            "prototype": "ui/number-field.mod",
+        "textArea": {
+            "prototype": "ui/text-area.mod",
             "values": {
-                "element": {"#": "numberField"},
+                "element": {"#": "textArea"},
                 "placeholder": {"<-": "@owner.placeholder"},
                 "name": {"<-": "@owner.propertyName"},
                 "value": {"<->": "@owner.value"}
@@ -33,9 +33,9 @@
     </script>
 </head>
 <body>
-    <div data-mod-id="owner" class="ModNumberPropertyField">
-        <div data-mod-id="propertyField" class="ModNumberPropertyField-propertyField">
-            <div data-mod-id="numberField" data-arg="control" class="ModNumberPropertyField-textField"></div>
+    <div data-mod-id="owner" class="ModMultilineTextPropertyField">
+        <div data-mod-id="propertyField" class="ModTextPropertyField-propertyField">
+            <div data-mod-id="textArea" data-arg="control" class="ModTextPropertyField-textArea"></div>
         </div>
     </div>
 </body>

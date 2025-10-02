@@ -1,19 +1,19 @@
-const { InternationalDateToStringFormatter } = require("../../core/converter/international-date-to-string-formatter");
+const { InternationalDateToStringFormatter } = require("../../../core/converter/international-date-to-string-formatter");
 const { PressComposer } = require("composer/press-composer");
 
 /**
- * @module "ui/date-property-field.mod"
+ * @module "ui/date.mod"
  */
 var Component = require("ui/component").Component;
 
 /**
- * @class DatePropertyField
+ * @class Date
  * @extends Component
  */
-exports.DatePropertyField = Component.specialize(/** @lends DatePropertyField.prototype */{
+exports.Date = Component.specialize(/** @lends Date.prototype */{
 
     constructor: {
-        value: function DatePropertyField() {
+        value: function Date() {
             var self = this;
             this.addOwnPropertyChangeListener("value", function (value) {
                 if (!value) {
@@ -62,7 +62,7 @@ exports.DatePropertyField = Component.specialize(/** @lends DatePropertyField.pr
 
     handlePress: {
         value: function (event) {
-            console.log("DatePropertyField.handlePress", event);
+            console.log("Date.handlePress", event);
             this._isEditMode = true;
             this._input.element.focus();
             console.log(this._input.element);
