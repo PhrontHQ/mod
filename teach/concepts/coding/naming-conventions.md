@@ -18,9 +18,9 @@ User interface components are stored in the ui directory of your Mod project and
 
 The following naming conventions apply for `.mod` directories:
 
-Component file names are always spelled in lowercase letters.
+   - Component file names are always spelled in lowercase letters.
 
-If the name uses multiple words, follow a dash-delimited `"word-word"` pattern; for example, `radio-button.mod`, or `text-field.mod`.
+   - If the name uses multiple words, follow a dash-delimited `"word-word"` pattern; for example, `radio-button.mod`, or `text-field.mod`.
 
 ### Naming
 
