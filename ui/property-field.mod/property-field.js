@@ -46,6 +46,9 @@ exports.PropertyField = class PropertyField extends Component {
             /******************
              * Basic 
              */
+            label: {
+                value: ""
+            },
 
             isLabelExternal: {
                 value: false
