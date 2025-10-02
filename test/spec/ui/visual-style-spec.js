@@ -88,6 +88,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-control-hover-fill: hsl(0, 0%, 93%);
             --visual-style-control-active-fill: hsl(211, 100%, 50%);
             --visual-style-control-focus-fill: hsl(211, 100%, 50%);
+             --visual-style-control-height: 36px;
             --visual-style-text-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-secondary-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-tertiary-fill: hsla(0, 0%, 0%, .7);
@@ -127,6 +128,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-control-hover-fill: #F00;
             --visual-style-control-active-fill: #0FF;
             --visual-style-control-focus-fill: #0FF;
+            --visual-style-control-height: 36px;
             --visual-style-text-fill: #484;
             --visual-style-text-secondary-fill: #666;
             --visual-style-text-tertiary-fill: #777;
@@ -178,6 +180,7 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-control-hover-fill: #F00;
             --visual-style-control-active-fill: hsl(211, 100%, 50%);
             --visual-style-control-focus-fill: hsl(211, 100%, 50%);
+            --visual-style-control-height: 36px;
             --visual-style-text-fill: #222;
             --visual-style-text-secondary-fill: #222;
             --visual-style-text-tertiary-fill: #222;

@@ -34,6 +34,8 @@ var PROPERTIES = [
     {name: "controlActiveFill", variable: "--visual-style-control-active-fill", backup: "controlSelectionFill"},
     {name: "controlFocusFill", variable: "--visual-style-control-focus-fill", backup: "controlActiveFill"},
 
+    {name: "controlHeight", variable: "--visual-style-control-height", defaultValue: "36px"},
+
     {name: "textFill", variable: "--visual-style-text-fill", defaultValue: "hsla(0, 0%, 0%, .7)"},
     {name: "textSecondaryFill", variable: "--visual-style-text-secondary-fill", backup: "textFill"},
     {name: "textTertiaryFill", variable: "--visual-style-text-tertiary-fill", backup: "textSecondaryFill"},
@@ -161,6 +163,7 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlFocusFill");
         this._deserializeProperty(deserializer, "controlSelectionFill");
         this._deserializeProperty(deserializer, "controlSelectionBackgroundFill");
+        this._deserializeProperty(deserializer, "controlHeight");
         this._deserializeProperty(deserializer, "textFill");
         this._deserializeProperty(deserializer, "textSecondaryFill");
         this._deserializeProperty(deserializer, "textTertiaryFill");
