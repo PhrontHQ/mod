@@ -1,0 +1,62 @@
+.ModUrlField {
+    outline: none;
+    box-sizing: border-box;
+    font-size: 100%; /* Override UA style. */
+    width: 10em;
+    height: 2.5em;
+    padding: 0 .5em;
+    vertical-align: middle;
+    border: 1px solid;
+    border-radius: .25em;
+    color: var(--visual-style-control-text-fill);
+    border-color: var(--visual-style-control-border-fill);
+    background-image: -webkit-linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,98%) );
+    background-image: -moz-linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,98%) );
+    background-image: -ms-linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,98%) );
+    background-image: linear-gradient(top, hsl(0,0%,96%), hsl(0,0%,98%) );
+    -webkit-tap-highlight-color: transparent;
+    -webkit-appearance: none; /* Removes inner shadow on iOS. */
+}
+
+
+/* States --------------------- */
+
+.ModUrlField:focus {
+    box-shadow: inset 0 0 0 1px;
+}
+
+.ModUrlField.mod--disabled {
+    opacity: .5;
+    border-style: dashed;
+    pointer-events: none;
+}
+
+.ModUrlField:invalid {
+    color: #E73525;
+}
+
+.ModUrlField[readonly] {
+    background-color: #e5e5e5;
+}
+
+
+/* Placeholder --------------------- */
+
+.ModUrlField::-webkit-input-placeholder { color: inherit; opacity: .5; }
+.ModUrlField::-moz-placeholder { color: inherit; opacity: .5; }
+.ModUrlField:-ms-input-placeholder { color: inherit; opacity: .5; }
+
+
+
+
+/* Light ---------------------------------------------------------- */
+
+
+.ModUrlField:focus {
+    border-color: hsla(0,0%,70%,1);
+    background-image: -webkit-linear-gradient(top, hsl(0,0%,92%), hsl(0,0%,94%) );
+    background-image: -moz-linear-gradient(top, hsl(0,0%,92%), hsl(0,0%,94%) );
+    background-image: -ms-linear-gradient(top, hsl(0,0%,92%), hsl(0,0%,94%) );
+    background-image: linear-gradient(top, hsl(0,0%,92%), hsl(0,0%,94%) );
+    box-shadow: inset 0 1px 3px hsla(0,0%,0%,.1), 0 1px 0 hsla(0,0%,100%,.6);
+}

@@ -1,0 +1,11 @@
+.ModUrlPropertyField {
+    background: var(--visual-style-control-background-fill);
+
+    & .controlWrapper {
+
+        & > input[type="url"].ModPropertyField-control{
+            text-align: right;
+        }
+
+    }
+}

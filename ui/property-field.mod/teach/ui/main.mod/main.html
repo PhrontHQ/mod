@@ -14,7 +14,8 @@
                 "visualStyle": {
                     "prototype": "mod/ui/visual-style.mod",
                     "values": {
-                        "textErrorFill": "#f00"
+                        "textErrorFill": "#f00",
+                        "controlBackgroundFill": "#eee"
                     }
                 },
 
@@ -61,6 +62,15 @@
                         "element": {"#": "wrappedNumberField"},
                         "label": "Age"
                     }
+                },
+
+                "wrappedUrlField": {
+                    "prototype": "mod/ui/property-field/url.mod",
+                    "values": {
+                        "element": {"#": "wrappedUrlField"},
+                        "label": "Site",
+                        "placeholder": "https://acme.com"
+                    }
                 }
             }
         </script>
@@ -78,6 +88,7 @@
                 <div data-mod-id="wrappedDateField" class="Main-wrappedDateField"></div>
                 <input type="date"></input>
                 <div data-mod-id="wrappedNumberField" class="Main-wrappedNumberField"></div>
+                <div data-mod-id="wrappedUrlField" class="Main-wrappedUrlField"></div>
             </section>
         </div>
     </body>

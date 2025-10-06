@@ -259,6 +259,7 @@ TextInput.addAttributes({
     height: null,
     list: null,
     maxlength: null,
+    minlength: null,
     multiple: {dataType: 'boolean'},
     pattern: null,
     placeholder: null,

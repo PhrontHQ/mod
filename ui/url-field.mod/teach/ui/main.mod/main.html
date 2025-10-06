@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="main.css">
+    <script type="text/mod-serialization">
+    {
+        "owner": {
+            "values": {
+                "element": {"#": "main"}
+            }
+        },
+
+        "url": {
+            "prototype": "mod/ui/url-field.mod",
+            "values": {
+                "element": {"#": "url-field"},
+                "minlength": 10,
+                "maxlength": 24,
+                "title": "My URL"
+            }
+        }
+
+    }
+    </script>
+</head>
+<body>
+    <div data-mod-id="main" class="Main">
+        <header>Teach UrlField Mod</header>
+
+        <section class="url-fields">
+            <input type="url" data-mod-id="url-field" class="url-field native"/>
+            <!-- @benoit add a custom one with content editable set to true ?-->
+
+        </section>
+
+    </div>
+</body>
+</html>
