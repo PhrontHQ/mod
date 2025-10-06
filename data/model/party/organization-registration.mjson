@@ -1,0 +1,67 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "OrganizationRegistration",
+            "description": "",
+            "propertyDescriptors": [
+                {"@": "registrarOrganization"},
+                {"@": "Identifier"},
+                {"@": "registrantOrganization"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./organization-registration.mjson"
+            },
+            "exportName": "OrganizationRegistration",
+            "module": {
+                "%": "./organization-registration"
+            },
+            "parent":{"@": "OrganizationDescriptor"},
+            "userInterfaceDescriptorModules": {
+                "*": {
+                    "%": "./organization-registration-ui-descriptor.mjson"   
+                }
+            }
+
+        }
+    },
+
+    "OrganizationDescriptor": {
+        "object": "./organization.mjson"
+    },
+
+    "RegisteredOrganizationDescriptor": {
+        "object": "./registered-organization.mjson"
+    },
+
+    "registrarOrganization": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "registrarOrganization",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "registrantOrganizationRegistrations",
+            "valueDescriptor": {"@": "RegisteredOrganizationDescriptor"},
+            "description": "Would registeringAuthority be a better name? A registered organization responsible for keeping a register and records of known organizations."
+        }
+    },
+    "registrationIdentifier": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "registrationIdentifier",
+            "valueType": "string"
+        }
+    },
+    "registrantOrganization": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "registrantOrganization",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "registrarOrganizationRegistrations",
+            "valueDescriptor": {"@": "RegisteredOrganizationDescriptor"},
+            "description": "The Organization being registered."
+        }
+    }
+
+}

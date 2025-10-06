@@ -1,0 +1,25 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "GovernmentAgency",
+            "description": "",
+            "propertyDescriptors": [
+            ],
+            "objectDescriptorModule": {
+                "%": "./government-agency.mjson"
+            },
+            "exportName": "GovernmentAgency",
+            "module": {
+                "%": "./government-agency"
+            },
+            "parent":{"@": "RegisteredOrganizationDescriptor"}
+
+        }
+    },
+
+    "RegisteredOrganizationDescriptor": {
+        "object": "./registered-organization.mjson"
+    }
+
+}

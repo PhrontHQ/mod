@@ -1,0 +1,52 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "RegisteredOrganization",
+            "description": "Represents any organization formally recorded with a government or legal authority.",
+            "propertyDescriptors": [
+                {"@": "registrantOrganizationRegistrations"},
+                {"@": "registeredOrganizations"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./registered-organization.mjson"
+            },
+            "exportName": "RegisteredOrganization",
+            "module": {
+                "%": "./registered-organization"
+            },
+            "parent":{"@": "OrganizationDescriptor"}
+
+        }
+    },
+
+    "OrganizationDescriptor": {
+        "object": "./organization.mjson"
+    },
+
+    "OrganizationRegistrationDescriptor": {
+        "object": "./organization-registration.mjson"
+    },
+
+    "registrantOrganizationRegistrations": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "registrationAuthority",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "registrarOrganization",
+            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"}
+        }
+    },
+    "registrarOrganizationRegistrations": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "registrarOrganizationRegistrations",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "registrantOrganization",
+            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"}
+        }
+    }
+
+}

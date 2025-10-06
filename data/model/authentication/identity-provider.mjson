@@ -1,0 +1,64 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "IdentityProvider",
+            "propertyDescriptors": [
+                {"@": "ownerOrganization"},
+                {"@": "tenantOrganizations"},
+                {"@": "identities"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./identity-provider.mjson"
+            },
+            "exportName": "IdentityProvider",
+            "module": {
+                "%": "./identity-provider"
+            },
+            "parent":{"@": "IntangibleDescriptor"}
+        }
+    },
+    "IntangibleDescriptor": {
+        "object": "../party/intangible.mjson"
+    },
+    "OrganizationDescriptor": {
+        "object": "../party/organization.mjson"
+    },
+    "ownerOrganization": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "ownerOrganization",
+            "cardinality": 1,
+            "valueType": "object",
+            "inversePropertyName": "ownedIdentityProviders",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "description": "The organization owning this identity provider"
+        }
+    },
+    "tenantOrganizations": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "tenantOrganizations",
+            "cardinality": -1,
+            "valueType": "object",
+            "inversePropertyName": "identityProviders",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "description": "The organizations using this identityProviders a tenantOrganizations"
+       }
+    },
+    "IdentityDescriptor": {
+        "object": "../identity.mjson"
+    },
+    "identities": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "identities",
+            "cardinality": -1,
+            "valueType": "object",
+            "inversePropertyName": "identityProvider",
+            "valueDescriptor": {"@": "IdentityDescriptor"},
+            "description": "Identitied provided by this identity provider"
+        }
+    }
+
+}

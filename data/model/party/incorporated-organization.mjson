@@ -1,0 +1,25 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "IncorporatedOrganization",
+            "description": "Represents any organization formally recorded with a government or legal authority.",
+            "propertyDescriptors": [
+            ],
+            "objectDescriptorModule": {
+                "%": "./incorporated-organization.mjson"
+            },
+            "exportName": "IncorporatedOrganization",
+            "module": {
+                "%": "./incorporated-organization"
+            },
+            "parent":{"@": "RegisteredOrganizationDescriptor"}
+
+        }
+    },
+
+    "RegisteredOrganizationDescriptor": {
+        "object": "./registered-organization.mjson"
+    }
+
+}

@@ -1,0 +1,24 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "UnregisteredOrganization",
+            "description": "",
+            "propertyDescriptors": [
+            ],
+            "objectDescriptorModule": {
+                "%": "./unregistered-organization.mjson"
+            },
+            "exportName": "UnregisteredOrganization",
+            "module": {
+                "%": "./unregistered-organization"
+            },
+            "parent":{"@": "OrganizationDescriptor"}
+
+        }
+    },
+
+    "OrganizationDescriptor": {
+        "object": "./organization.mjson"
+    }
+}
