@@ -65,11 +65,11 @@ The system handles all validation rules **asynchronously,** where validation ru
 
             // Sets the minimum length for the string value
             // Default error message: "{label} must be at least {min} characters long."
-            "min": 2,
+            "minLength": 2,
 
             // Sets the maximum length for the string value
             // Default error message: {label} cannot be more than {max} characters long.
-            "max": 128
+            "maxLength": 128
         }
     },
     "lastName": {
@@ -79,8 +79,8 @@ The system handles all validation rules **asynchronously,** where validation ru
             "label": "Last Name",
             "valueType": "string",
             "isMandatory": true,
-            "min": 2,
-            "max": 128
+            "minLength": 2,
+            "maxLength": 128
         }
     },
     "email": {
@@ -90,8 +90,8 @@ The system handles all validation rules **asynchronously,** where validation ru
             "label": "Email",
             "valueType": "email",
             "isMandatory": true,
-            "min": 5,
-            "max": 128
+            "minLength": 5,
+            "maxLength": 128
         }
     },
     "startDate": {
@@ -329,7 +329,7 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
         {
             "message": "First Name cannot be more than 128 characters...",
             "validationProperties": [{"name": "firstName", /*...*/}],
-            "rule": {"name": "max", /*...*/}
+            "rule": {"name": "maxLength", /*...*/}
         }
     ]
     ```
