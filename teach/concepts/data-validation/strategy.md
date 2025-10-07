@@ -190,6 +190,7 @@ The resulting `ValidationError` would look like this:
     "message": "First Name is required and cannot be empty.",
     "validationProperties": [
         // Array of property field descriptor instances that this rule depends on
+        // @benoit: how just an array of property names?
         {
             "name": "firstName"
             // ... (all other PropertyDescriptor properties)
@@ -243,28 +244,41 @@ The resulting `ValidationError` would look like this:
 
 #### The Complete `invalidityState` property
 
-When multiple validation rules fail on an object instance, the `invalidityState` property would contain an array of all the corresponding `ValidationError` objects.
+When multiple validation rules fail on an object instance, the `invalidityState` property is a map keyed by property name. Each key contains an array of corresponding `ValidationError` objects for that property.
 
 For an employee instance with all three errors from the examples above, its `invalidityState` would look like this:
 
 ```json
-"invalidityState": [
-  {
-    "message": "First Name is required and cannot be empty.",
-    "validationProperties": [{ "name": "firstName" }],
-    "rule": {"name": "isMandatory" }
-  },
-  {
-    "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
-    "validationProperties": [{ "name": "employeeId" }],
-    "rule": { "name": "employeeIdFormat" }
-  },
-  {
-    "message": "End date must be after the start date.",
-    "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
-    "rule": { "name": "endDateAfterStartDate" }
-  }
-]
+"invalidityState": {
+  "firstName": [
+    {
+      "message": "First Name is required and cannot be empty.",
+      "validationProperties": [{ "name": "firstName" }],
+      "rule": {"name": "isMandatory" }
+    }
+  ],
+  "employeeId": [
+    {
+      "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
+      "validationProperties": [{ "name": "employeeId" }],
+      "rule": { "name": "employeeIdFormat" }
+    }
+  ],
+  "endDate": [
+    {
+      "message": "End date must be after the start date.",
+      "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
+      "rule": { "name": "endDateAfterStartDate" }
+    }
+  ],
+  "startDate": [
+    {
+      "message": "End date must be after the start date.",
+      "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
+      "rule": { "name": "endDateAfterStartDate" }
+    }
+  ]
+}
 ```
 
 ### 3. Smart PropertyField Components
@@ -320,18 +334,20 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
     What happens if a property fails multiple rules? For example, if firstName is both empty (fails isMandatory) and too long when present (fails max):
 
     ```json
-    "invalidityState": [
-        {
-            "message": "First Name is required...",
-            "validationProperties": [{"name": "firstName", /*...*/}],
-            "rule": {"name": "isMandatory", /*...*/}
-        },
-        {
-            "message": "First Name cannot be more than 128 characters...",
-            "validationProperties": [{"name": "firstName", /*...*/}],
-            "rule": {"name": "maxLength", /*...*/}
-        }
-    ]
+    "invalidityState": {
+        "firstName": [
+            {
+                "message": "First Name is required...",
+                "validationProperties": [{"name": "firstName", /*...*/}],
+                "rule": {"name": "isMandatory", /*...*/}
+            },
+            {
+                "message": "First Name cannot be more than 128 characters...",
+                "validationProperties": [{"name": "firstName", /*...*/}],
+                "rule": {"name": "maxLength", /*...*/}
+            }
+        ]
+    }
     ```
 
     Should PropertyField display both messages, or only the first one?

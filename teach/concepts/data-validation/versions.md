@@ -81,7 +81,7 @@ Version 1 implements only core validation components with manual configuration, 
         - `validateDataObject(instance, allRules)`:
             1. **Run All Rules**: Asynchronously execute the `validate` method for each rule in `allRules` with the `instance`.
             2. **Collect Results**: Gather all `ValidationError` objects from failed validations.
-            3. **Update State**: Replace `instance.invalidityState` with the new error array, if any.
+            3. **Update State**: Replace `instance.invalidityState` with the new error map, if any.
 
 4. `PropertyField` Component Enhancements
 
@@ -112,7 +112,7 @@ Version 1 implements only core validation components with manual configuration, 
         - **Find Relevant Rules**: Filter `allRules` to include only those affecting the changed property.
         - **Execute Rules**: Run filtered rules.
         - **Process Results**: Collect errors from failed validations.
-        - **Update State**: The service retrieves the current invalidityState, removes errors for re-validated rules, adds new errors from failures, and finally updates instance.invalidityState with the modified collection.
+        - **Update State**: The service retrieves the current invalidityState, removes errors for re-validated rules, adds new errors from failures, and finally updates instance.invalidityState with the modified map.
 
 2. **`ValidationRule` & `ExpressionValidationRule`** Enhancements
 
