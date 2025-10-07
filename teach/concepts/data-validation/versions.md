@@ -122,13 +122,13 @@ Version 1 implements only core validation components with manual configuration, 
 
 3. **Automatic Context Discovery via Data-Binding**
 
-    When a UI component is bound to a data path, the system automatically performs an analysis to establish the data validation context:
+    When a UI component is bound to a data expression, the system automatically performs an analysis to establish the data validation context:
 
     1. **Binding Declaration:** Define a binding
         - **Example:** A input property text field value is bound to `value: @owner.user.email`.
-    2. **Intelligent Path Resolution:** FRB parses this path to identify three crucial elements:
+    2. **Intelligent Expression Resolution:** FRB parses this expression to identify three crucial elements:
         - **Target Instance `dataInstance`:** The object containing the property being edited (the `user` object).
-        - **Target Type **`dataType` :\*\* The `User` object descriptor.
+        - **Target Type `dataType`:** TheUser object descriptor.
         - **Target Property `dataTypeProperty`:** The name of the property itself (`email`).
 
 4. **Support** **Internationalization (i18n) for Messages & Labels**
