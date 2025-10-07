@@ -154,9 +154,9 @@ The system handles all validation rules **asynchronously,** where validation ru
 
 ### Important Note: UI Interaction and "Touched" State
 
-Validation logic must know about UI control interaction state, specifically when a control is **"touched"** (focused then blurred by user) for proper UX.
+Validation logic must know about Property Field interaction state, specifically when a Property Field is **"touched"** (focused then blurred by user) for proper UX.
 
-Indeed, for required fields, errors shouldn't appear on initial load before user interaction. Validation should only trigger _after_ the user has "touched" the control and left it in an invalid state.
+Indeed, for required fields, errors shouldn't appear on initial load before user interaction. Validation should only trigger _after_ the user has "touched" the Property Field and left it in an invalid state.
 
 `employee.touchedProperties = ["firstName", "email"]; // Like this?`
 
@@ -287,7 +287,7 @@ A set of UI components called **`PropertyField`** that wrap standard inputs (tex
 
 Each `PropertyField` components are data-aware, knowing their associated object instance (`dataInstance`) and property (`dataTypeProperty`).
 
-This lets the UI control read the `invalidityState` directly from the data object. When validation errors occur, the control automatically displays error messages and updates its appearance (e.g., showing a red border).
+This lets the Property Field read the `invalidityState` directly from the data object. When validation errors occur, the control automatically displays error messages and updates its appearance (e.g., showing a red border).
 
 #### Dynamic Discovery
 
