@@ -189,14 +189,16 @@ The resulting `ValidationError` would look like this:
 {
     "message": "First Name is required and cannot be empty.",
     "validationProperties": [
+        // Array of property field descriptor instances that this rule depends on
         {
             "name": "firstName"
             // ... (all other PropertyDescriptor properties)
         }
     ],
     "rule": {
+        // The validation rule object that caused this error
         "name": "isMandatory"
-        // ... (all other PropertyDescriptor properties)
+        // ... (all other Validation Rule properties)
     }
 }
 ```
