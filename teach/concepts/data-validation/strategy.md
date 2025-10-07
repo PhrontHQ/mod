@@ -171,7 +171,7 @@ This state maintains a structured list of all current validation failures (`Vali
 A `ValidationError` object would likely contain three key pieces of information:
 
 -   `message`: The user-facing error message, translated into the current language.
--   `dependentProperties`: An array of property object descriptor involved in the validation failure.
+-   `validationProperties`: An array of property object descriptor involved in the validation failure.
 -   `rule`: The validation rule object descriptor that failed (e.g., `isMandatory`, `min`, or a custom rule like `endDateAfterStartDate`).
 
 #### Example 1: Basic Mandatory Field Error
@@ -188,7 +188,7 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "First Name is required and cannot be empty.",
-    "dependentProperties": [
+    "validationProperties": [
         {
             "name": "firstName"
             // ... (all other PropertyDescriptor properties)
@@ -215,7 +215,7 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
-    "dependentProperties": [{ "name": "employeeId" }],
+    "validationProperties": [{ "name": "employeeId" }],
     "rule": { "name": "employeeIdFormat" }
 }
 ```
@@ -234,7 +234,7 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "End date must be after the start date.",
-    "dependentProperties": [{ "name": "startDate" }, { "name": "endDate" }],
+    "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
     "rule": { "name": "endDateAfterStartDate" }
 }
 ```
@@ -249,17 +249,17 @@ For an employee instance with all three errors from the examples above, its `in
 "invalidityState": [
   {
     "message": "First Name is required and cannot be empty.",
-    "dependentProperties": [{ "name": "firstName" }],
+    "validationProperties": [{ "name": "firstName" }],
     "rule": {"name": "isMandatory" }
   },
   {
     "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
-    "dependentProperties": [{ "name": "employeeId" }],
+    "validationProperties": [{ "name": "employeeId" }],
     "rule": { "name": "employeeIdFormat" }
   },
   {
     "message": "End date must be after the start date.",
-    "dependentProperties": [{ "name": "startDate" }, { "name": "endDate" }],
+    "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
     "rule": { "name": "endDateAfterStartDate" }
   }
 ]
@@ -321,12 +321,12 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
     "invalidityState": [
         {
             "message": "First Name is required...",
-            "dependentProperties": [{"name": "firstName", /*...*/}],
+            "validationProperties": [{"name": "firstName", /*...*/}],
             "rule": {"name": "isMandatory", /*...*/}
         },
         {
             "message": "First Name cannot be more than 128 characters...",
-            "dependentProperties": [{"name": "firstName", /*...*/}],
+            "validationProperties": [{"name": "firstName", /*...*/}],
             "rule": {"name": "max", /*...*/}
         }
     ]
