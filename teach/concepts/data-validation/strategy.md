@@ -293,7 +293,7 @@ This lets the UI control read the `invalidityState` directly from the data objec
 
 To minimize developer effort, the system automatically determines the data context by parsing FRB data binding expressions.
 
-For example, when a `PropertyField` value binds to `@owner.user.name`, the system parses this path to automatically determine:
+For example, when a `PropertyField` value binds to `@owner.user.name`, the system parses this expression to automatically determine:
 
 -   **`dataType`**: The `User` data object descriptor.
 -   **`dataTypeProperty`**: The `name` property object descriptor.
