@@ -285,7 +285,7 @@ For an employee instance with all three errors from the examples above, its `in
 
 A set of UI components called **`PropertyField`** that wrap standard inputs (text fields, number inputs, etc.) to provide labels, help text, and validation error display.
 
-Each `PropertyField` components are data-aware, knowing their associated object instance (`dataInstance`) and property (`dataTypeProperty`).
+Each `PropertyField` components are data-aware, knowing their associated object instance (`dataInstance`), their data object descriptor (`dataType`) and property (`dataTypeProperty`).
 
 This lets the Property Field read the `invalidityState` directly from the data object. When validation errors occur, the Property Field automatically displays error messages and updates its appearance (e.g., showing a red border).
 
