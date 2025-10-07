@@ -17,6 +17,12 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     // Controls whether animations should be enabled
     _shouldEnableAnimation = false;
 
+    // Tracks if we're currently resizing
+    _isResizing = false;
+
+    // Timer for resize debounce
+    _resizeTimer = null;
+
     /**
      * The path to the value within each option object.
      * If options are simple values, use 'this'.
@@ -73,12 +79,51 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     enterDocument() {
         this._cancelHandleOptionsChange = this.addRangeAtPathChangeListener("_options", this, "handleOptionsChange");
         this.addPathChangeListener("_selectedOption", this, "handleSelectionChange");
+
+        if (!this._resizeObserver && window.ResizeObserver) {
+            // Set up the ResizeObserver to trigger a redraw when the component's size changes.
+            this._resizeObserver = new ResizeObserver(this.handleResize);
+            this._resizeObserver.observe(this.element);
+        }
+
+        // Fallback for browsers that do not support ResizeObserver
+        // FIXME: In certain scenarios (e.g., within a succession),
+        // ResizeObserver may not reliably detect size changes.
+        // This fallback ensures resize events are still handled.
+        window.addEventListener("resize", this.handleResize);
     }
 
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
         this._cancelHandleOptionsChange?.();
+        this._resizeObserver?.disconnect();
+        window.removeEventListener("resize", this.handleResize);
+
+        // Clean up resize timer if it exists
+        if (this._resizeTimer) {
+            clearTimeout(this._resizeTimer);
+        }
     }
+
+    /**
+     * Handles resize events by marking the component for redraw.
+     */
+    handleResize = () => {
+        this._isResizing = true;
+
+        // Clear existing timer
+        if (this._resizeTimer) {
+            clearTimeout(this._resizeTimer);
+        }
+
+        this.needsDraw = true;
+
+        // Re-enable animations after resize stops (debounced)
+        this._resizeTimer = setTimeout(() => {
+            this._isResizing = false;
+            this.needsDraw = true;
+        }, 150); // 150ms debounce delay
+    };
 
     /**
      * Handles changes to the options array.
@@ -116,6 +161,16 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         this.needsDraw = true;
     };
 
+    /**
+     * Called before the draw cycle.
+     * Disables animations if currently resizing.
+     */
+    willDraw() {
+        if (this._isResizing && this._readyForAnimation) {
+            this.element?.classList.remove("mod--readyForAnimation");
+        }
+    }
+
     draw() {
         this._applyDisabledClass();
 
@@ -146,10 +201,22 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             segments.addEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         }
 
-        if (this._shouldEnableAnimation && !this._readyForAnimation) {
+        if (this._shouldEnableAnimation && !this._readyForAnimation && !this._isResizing) {
             // Enable animations after the initial positioning, to avoid unwanted transitions
+            // Only enable if we're not currently resizing
             this.element?.classList.add("mod--readyForAnimation");
             this._readyForAnimation = true;
+        }
+    }
+
+    /**
+     * Called after the draw cycle.
+     * Re-enables animations after resizing has stopped.
+     */
+    didDraw() {
+        if (!this._isResizing && this._readyForAnimation) {
+            // Re-enable animations after resize has stopped
+            this.element?.classList.add("mod--readyForAnimation");
         }
     }
 
