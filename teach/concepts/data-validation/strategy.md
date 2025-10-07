@@ -287,7 +287,7 @@ A set of UI components called **`PropertyField`** that wrap standard inputs (tex
 
 Each `PropertyField` components are data-aware, knowing their associated object instance (`dataInstance`) and property (`dataTypeProperty`).
 
-This lets the Property Field read the `invalidityState` directly from the data object. When validation errors occur, the control automatically displays error messages and updates its appearance (e.g., showing a red border).
+This lets the Property Field read the `invalidityState` directly from the data object. When validation errors occur, the Property Field automatically displays error messages and updates its appearance (e.g., showing a red border).
 
 #### Dynamic Discovery
 
@@ -325,8 +325,8 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
     The **Mod UI Controls** are designed to be "**reactive**". When this `invalidityState` object is updated, the following happens automatically via bindings:
 
     1. The relevant **Property Fields** are notified of the change.
-    2. Each control checks the `invalidityState` to see if there are any errors associated with the property it manages.
-    3. If an error exists, the control updates its appearance to reflect the error (e.g., showing a red border, displaying a help-text error message, etc.), providing immediate feedback to the user.
+    2. Each Property Field checks the `invalidityState` to see if there are any errors associated with the property it manages.
+    3. If an error exists, the Property Field updates its appearance to reflect the error (e.g., showing a red border, displaying a help-text error message, etc.), providing immediate feedback to the user.
 
 **Questions:**
 
