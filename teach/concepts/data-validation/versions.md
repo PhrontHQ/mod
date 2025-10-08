@@ -8,7 +8,7 @@ Version 1 implements only core validation components with manual configuration, 
     - **Properties**:
         - `name: string`: A unique identifier for the rule (e.g., `isMandatory`).
         - `message: string`: The localized message.
-        - `dependentProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `ValidationService` to know when to re-run the rule.
+        - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `ValidationService` to know when to re-run the rule.
     - **Methods**:
         - `validate(dataInstance): Promise<ValidationError | null>`:
             - Core asynchronous method all subclasses must implement.
@@ -21,10 +21,10 @@ Version 1 implements only core validation components with manual configuration, 
 
         ```js
         class ValidationRule {
-            constructor(name, message, dependentProperties) {
+            constructor(name, message, validationProperties) {
                 this.name = name;
                 this.message = message;
-                this.dependentProperties = dependentProperties;
+                this.validationProperties = validationProperties;
             }
 
             async validate(dataInstance) {
@@ -38,7 +38,7 @@ Version 1 implements only core validation components with manual configuration, 
 
     - **Purpose**: To validate a data instance against a given string expression.
     - **Properties**:
-        - Inherits `name`, `message`, and `dependentProperties` from `ValidationRule`.
+        - Inherits `name`, `message`, and `validationProperties` from `ValidationRule`.
         - `criteria: Criteria`: Object that contains an expression string to be evaluated (e.g., "endDate > startDate`"`).
     - **Methods**:
         - `validate(dataInstance): Promise<ValidationError | null>`:
@@ -50,8 +50,8 @@ Version 1 implements only core validation components with manual configuration, 
 
         ```js
         class ExpressionValidationRule extends ValidationRule {
-            constructor(name, message, dependentProperties, criteria) {
-                super(name, message, dependentProperties);
+            constructor(name, message, validationProperties, criteria) {
+                super(name, message, validationProperties);
                 this.criteria = criteria;
             }
 
