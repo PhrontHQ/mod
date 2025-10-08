@@ -171,7 +171,6 @@ This state maintains a structured list of all current validation failures (`Vali
 A `ValidationError` object would likely contain three key pieces of information:
 
 -   `message`: The user-facing error message, translated into the current language.
--   `validationProperties`: An array of property object descriptor involved in the validation failure.
 -   `rule`: The validation rule object descriptor that failed (e.g., `isMandatory`, `min`, or a custom rule like `endDateAfterStartDate`).
 
 #### Example 1: Basic Mandatory Field Error
@@ -218,7 +217,6 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
-    "validationProperties": [{ "name": "employeeId" }],
     "rule": { "name": "employeeIdFormat" }
 }
 ```
@@ -237,7 +235,6 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "End date must be after the start date.",
-    "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
     "rule": { "name": "endDateAfterStartDate" }
 }
 ```
@@ -253,28 +250,24 @@ For an employee instance with all three errors from the examples above, its `in
   "firstName": [
     {
       "message": "First Name is required and cannot be empty.",
-      "validationProperties": [{ "name": "firstName" }],
       "rule": {"name": "isMandatory" }
     }
   ],
   "employeeId": [
     {
       "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
-      "validationProperties": [{ "name": "employeeId" }],
       "rule": { "name": "employeeIdFormat" }
     }
   ],
   "endDate": [
     {
       "message": "End date must be after the start date.",
-      "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
       "rule": { "name": "endDateAfterStartDate" }
     }
   ],
   "startDate": [
     {
       "message": "End date must be after the start date.",
-      "validationProperties": [{ "name": "startDate" }, { "name": "endDate" }],
       "rule": { "name": "endDateAfterStartDate" }
     }
   ]
@@ -338,12 +331,10 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
         "firstName": [
             {
                 "message": "First Name is required...",
-                "validationProperties": [{"name": "firstName", /*...*/}],
                 "rule": {"name": "isMandatory", /*...*/}
             },
             {
                 "message": "First Name cannot be more than 128 characters...",
-                "validationProperties": [{"name": "firstName", /*...*/}],
                 "rule": {"name": "maxLength", /*...*/}
             }
         ]
