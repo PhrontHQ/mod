@@ -10,7 +10,7 @@ Version 1 implements only core validation components with manual configuration, 
         - `message: string`: The localized message.
         - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `ValidationService` to know when to re-run the rule.
     - **Methods**:
-        - `validate(dataInstance): Promise<ValidationError | null>`:
+        - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
             - Core asynchronous method all subclasses must implement.
             - Accepts the data object instance for validation.
             - Run rules in parallel using `Promise.all`.
@@ -27,9 +27,9 @@ Version 1 implements only core validation components with manual configuration, 
                 this.validationProperties = validationProperties;
             }
 
-            async validate(dataInstance) {
+            async evaluateRule(dataInstance) {
                 // This method must be implemented by subclasses.
-                throw new Error("ValidationRule.validate() must be implemented.");
+                throw new Error("ValidationRule.evaluateRule() must be implemented.");
             }
         }
         ```
@@ -41,7 +41,7 @@ Version 1 implements only core validation components with manual configuration, 
         - Inherits `name`, `message`, and `validationProperties` from `ValidationRule`.
         - `criteria: Criteria`: Object that contains an expression string to be evaluated (e.g., "endDate > startDate`"`).
     - **Methods**:
-        - `validate(dataInstance): Promise<ValidationError | null>`:
+        - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
             1. **Override** the base class method.
             2. Evaluate the `criteria` expression against the instance object.
             3. Return a `ValidationError` if the expression is false, using the rule's details.
@@ -55,7 +55,7 @@ Version 1 implements only core validation components with manual configuration, 
                 this.criteria = criteria;
             }
 
-            async validate(dataInstance) {
+            async evaluateRule(dataInstance) {
                 // delegate logic to FRB...
                 const isValid = evaluateExpression(this.criteria, dataInstance);
 
