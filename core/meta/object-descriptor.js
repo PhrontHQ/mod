@@ -31,13 +31,13 @@ var ObjectDescriptor = exports.ObjectDescriptor = class ObjectDescriptor extends
         this._eventPropertyDescriptorsTable = new Map();
         this.defineBinding("eventDescriptors", {"<-": "_eventDescriptors.concat(parent.eventDescriptors)"});
         this.defineBinding("localizablePropertyNames", {"<-": "localizablePropertyDescriptors.name"});
-       
+
         /**
          * Returns all property descriptors that have isUnique set to true
          * @property {Array<PropertyDescriptor>} value
          */
         this.defineBinding("uniquePropertyDescriptors", {"<-": "_ownPropertyDescriptors.filter{isUnique == true}.concat(parent.uniquePropertyDescriptors)"});
-        
+
     }
 }
 
@@ -153,7 +153,7 @@ ObjectDescriptor.addClassProperties({
             value = deserializer.getProperty("propertyDescriptors") || deserializer.getProperty("propertyBlueprints");
             if (value) {
                 //In case an object is deserialized several times, we merge the propertyDescriptors
-                this._ownPropertyDescriptors 
+                this._ownPropertyDescriptors
                     ? this._ownPropertyDescriptors.push.apply(this._ownPropertyDescriptors, value)
                     : this._ownPropertyDescriptors = value;
             }
@@ -246,7 +246,7 @@ ObjectDescriptor.addClassProperties({
      */
 
     description: {
-        value: undefined 
+        value: undefined
     },
 
     _name: {
@@ -649,7 +649,7 @@ ObjectDescriptor.addClassProperties({
      */
     _composedPath: {
         value: undefined
-    },    
+    },
     composedPath: {
         get: function() {
             if(!this._composedPath) {
@@ -667,7 +667,7 @@ ObjectDescriptor.addClassProperties({
                 while (nextTargetCandidate);
 
                 //Add all Services handling this object:
-                composedPath.push.apply(composedPath, dataServices);    
+                composedPath.push.apply(composedPath, dataServices);
                 composedPath.push(this.eventManager.application.mainService);
                 composedPath.push(this.eventManager.application);
             }
@@ -1499,7 +1499,7 @@ ObjectDescriptor.addClassProperties({
                 }
             }
             return messages;
-        }, "addEventBlueprint", "addEventDescriptor")
+        }, "evaluateRules", "evaluateObjectValidity")
     },
 
     objectDescriptorModuleId: require("../core")._objectDescriptorModuleIdDescriptor,
