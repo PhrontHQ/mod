@@ -63,7 +63,6 @@ Version 1 implements only core validation components with manual configuration, 
                     // Rule failed, return the error object.
                     return new ValidationError(
                       message: this.message, // Later, we should use a localization service.
-                      dependentProperties: this.dependentProperties,
                       rule: this,
                     );
                 }
@@ -100,7 +99,6 @@ Version 1 implements only core validation components with manual configuration, 
     **Properties**
 
     - `message: string`: User-facing error message for display. Future versions will use localized strings from `messageKey`.
-    - `dependentProperties: dependentProperties[]`: Property involved in the validation failure. Helps `PropertyField` components to identify relevant errors.
     - `rule: ValidationRule`: the `ValidationRule` that generated the error (e.g., `isMandatory`).
 
 ## Future Improvements
