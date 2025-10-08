@@ -3,120 +3,81 @@ const Montage = require("../core").Montage;
 const Semantics = Montage;
 // const Semantics = (require)("core/criteria/semantics").Semantics;
 const deprecate = require("../deprecate");
-const logger = require("../logger").logger("objectDescriptor");
 
 /**
  * @class PropertyValidationSemantics
  * @extends Semantics
  */
-var PropertyValidationSemantics = (exports.PropertyValidationSemantics = Semantics.specialize(
-    /** @lends PropertyValidationSemantics# */ {
-        /**
-         * Create a new semantic evaluator with the object descriptor.
-         * @function
-         * @param {ObjectDescriptor} objectDescriptor
-         * @returns itself
-         */
-        initWithObjectDescriptor: {
-            value: function (objectDescriptor) {
-                this._objectDescriptor = objectDescriptor;
-                return this;
+exports.PropertyValidationSemantics = class PropertyValidationSemantics extends Semantics {
+    static {
+        Montage.defineProperties(this.prototype, {
+            operators: {
+                ...Semantics.operators,
+                isBound: (a) => !a,
             },
-        },
-
-        _objectDescriptor: {
-            value: undefined,
-        },
-
-        /**
-         * Component description attached to this validation rule.
-         */
-        objectDescriptor: {
-            get: function () {
-                return this._objectDescriptor;
-            },
-        },
-
-        /**
-         * Compile the syntax tree into a function that can be used for evaluating
-         * this criteria.
-         * @function
-         * @param {Criteria} criteria syntax
-         * @returns function
-         */
-        compile: {
-            value: function (syntax, parents) {
-                Semantics.compile.call(this, syntax, parents);
-            },
-        },
-
-        operators: {
-            value: {
-                isBound: function (a) {
-                    return !a;
-                },
-            },
-        },
-
-        evaluators: {
-            value: {
-                isBound: function (collection, modify) {
-                    var self = this;
-                    return function (value, parameters) {
-                        value = self.count(collection(value, parameters));
+            evaluators: {
+                ...Semantics.evaluators,
+                isBound: (collection, modify) => {
+                    return (value, parameters) => {
+                        value = this.count(collection(value, parameters));
                         return modify(value, parameters);
                     };
                 },
             },
-        },
-
-        /*****************************************************************
-         * Deprecated Methods
-         */
-
-        /**
-         * @deprecated
-         * Create a new semantic evaluator with the object descriptor.
-         * @function
-         * @param {ObjectDescriptor} objectDescriptor
-         * @returns itself
-         */
-        initWithBlueprint: {
-            value: deprecate.deprecateMethod(
-                void 0,
-                function (blueprint) {
-                    return this.initWithObjectDescriptor(blueprint);
-                },
-                "initWithBlueprint",
-                "initWithObjectDescriptor"
-            ),
-        },
-
-        /**
-         * @deprecated
-         * Component description attached to this validation rule.
-         */
-        blueprint: {
-            get: deprecate.deprecateMethod(
-                void 0,
-                function () {
-                    return this._blueprint;
-                },
-                "blueprint",
-                "objectDescriptor"
-            ),
-        },
+        });
     }
-));
 
-for (var operator in Semantics.operators) {
-    if (Semantics.operators.hasOwnProperty(operator)) {
-        PropertyValidationSemantics.operators[operator] = Semantics.operators[operator];
+    /**
+     * Component description attached to this validation rule.
+     * @type {ObjectDescriptor}
+     */
+    get objectDescriptor() {
+        return this._objectDescriptor;
     }
-}
 
-for (var evaluator in Semantics.evaluators) {
-    if (Semantics.evaluators.hasOwnProperty(evaluator)) {
-        PropertyValidationSemantics.evaluators[evaluator] = Semantics.evaluators[evaluator];
+    /**
+     * Create a new semantic evaluator with the object descriptor.
+     * @param {ObjectDescriptor} objectDescriptor
+     * @returns {this}
+     */
+    initWithObjectDescriptor(objectDescriptor) {
+        this._objectDescriptor = objectDescriptor;
+        return this;
     }
-}
+
+    /**
+     * Compile the syntax tree into a function that can be used for evaluating
+     * this criteria.
+     * @param {object} syntax The parsed expression, a syntactic tree.
+     * @returns {function}
+     */
+    compile(syntax, parents) {
+        super.compile(syntax, parents);
+    }
+
+    /*****************************************************************
+     * Deprecated Methods
+     *****************************************************************/
+
+    /**
+     * @deprecated Use initWithObjectDescriptor instead.
+     * @param {ObjectDescriptor} blueprint
+     * @returns {this}
+     */
+    initWithBlueprint = deprecate.deprecateMethod(
+        void 0,
+        (blueprint) => {
+            return this.initWithObjectDescriptor(blueprint);
+        },
+        "initWithBlueprint",
+        "initWithObjectDescriptor"
+    );
+
+    /**
+     * @deprecated Use objectDescriptor instead.
+     * @type {ObjectDescriptor}
+     */
+    get blueprint() {
+        return deprecate.deprecateMethod(void 0, () => this._blueprint, "blueprint", "objectDescriptor")();
+    }
+};
