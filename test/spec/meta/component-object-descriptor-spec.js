@@ -14,7 +14,6 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
         var component2;
         var component3;
 
-
         beforeEach(function () {
             component1 = testPage.test.component1;
             component2 = testPage.test.component2;
@@ -25,12 +24,14 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             var newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
             component1.objectDescriptor = newObjectDescriptor;
             var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise.then(function (objectDescriptor) {
-                expect(newObjectDescriptor).toBeDefined();
-                expect(objectDescriptor).toBe(newObjectDescriptor);
-            }).finally(function () {
-                done();
-            });
+            objectDescriptorPromise
+                .then(function (objectDescriptor) {
+                    expect(newObjectDescriptor).toBeDefined();
+                    expect(objectDescriptor).toBe(newObjectDescriptor);
+                })
+                .finally(function () {
+                    done();
+                });
         });
 
         it("can create new property objectDescriptor", function (done) {
@@ -38,12 +39,14 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty");
             component1.objectDescriptor = newObjectDescriptor;
             var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise.then(function (objectDescriptor) {
-                var propertyDescriptor = objectDescriptor.propertyDescriptorForName("bindableProperty");
-                expect(propertyDescriptor).toBeDefined();
-            }).finally(function () {
-                done();
-            });
+            objectDescriptorPromise
+                .then(function (objectDescriptor) {
+                    var propertyDescriptor = objectDescriptor.propertyDescriptorForName("bindableProperty");
+                    expect(propertyDescriptor).toBeDefined();
+                })
+                .finally(function () {
+                    done();
+                });
         });
 
         it("can serialize the component objectDescriptor", function (done) {
@@ -59,32 +62,44 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             //
             newObjectDescriptor.addEventDescriptorNamed("action");
             //
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"), "required");
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"), "required");
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"), "required");
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"),
+                "required"
+            );
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"),
+                "required"
+            );
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"),
+                "required"
+            );
             component1.objectDescriptor = newObjectDescriptor;
 
             var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise.then(function (objectDescriptor) {
-                var serializedDescription = serializer.serializeObject(objectDescriptor);
-                expect(serializedDescription).toBeTruthy();
-            }).finally(function () {
-                done();
-            });
+            objectDescriptorPromise
+                .then(function (objectDescriptor) {
+                    var serializedDescription = serializer.serializeObject(objectDescriptor);
+                    expect(serializedDescription).toBeTruthy();
+                })
+                .finally(function () {
+                    done();
+                });
         });
 
         xit("can load the component objectDescriptor from the reel", function (done) {
             var objectDescriptorPromise = component2.objectDescriptor;
-            objectDescriptorPromise.then(function (objectDescriptor) {
-                expect(objectDescriptor).toBeTruthy();
-                // TODO test look weird requiredBindableProperty1 vs bindableProperty1
-                expect(objectDescriptor.propertyDescriptorForName("bindableProperty1")).toBeTruthy();
-                expect(objectDescriptor.propertyDescriptorForName("required")).toBeTruthy();
-            }).finally(function () {
-                done();
-            });
+            objectDescriptorPromise
+                .then(function (objectDescriptor) {
+                    expect(objectDescriptor).toBeTruthy();
+                    // TODO test look weird requiredBindableProperty1 vs bindableProperty1
+                    expect(objectDescriptor.propertyDescriptorForName("bindableProperty1")).toBeTruthy();
+                    expect(objectDescriptor.propertyDescriptorForName("required")).toBeTruthy();
+                })
+                .finally(function () {
+                    done();
+                });
         });
-
 
         it("can create validation rules", function (done) {
             var serializer = new Serializer().initWithRequire(require);
@@ -98,9 +113,18 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty4");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty5");
             //
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"), "required");
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"), "required");
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"), "required");
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"),
+                "required"
+            );
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"),
+                "required"
+            );
+            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
+                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"),
+                "required"
+            );
 
             newObjectDescriptor.addPropertyValidationRule("rule1").criteria = null;
             //            newObjectDescriptor.addPropertyValidationRule("rule1").criteria = Criteria.property("requiredBindableProperty1").isBound;
@@ -110,13 +134,15 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             component3.objectDescriptor = newObjectDescriptor;
 
             var objectDescriptorPromise = component3.objectDescriptor;
-            objectDescriptorPromise.then(function (objectDescriptor) {
-                expect(objectDescriptor).toBeTruthy();
-                var serializedDescription = serializer.serializeObject(objectDescriptor);
-                expect(serializedDescription).toBeTruthy();
-            }).finally(function () {
-                done();
-            });
+            objectDescriptorPromise
+                .then(function (objectDescriptor) {
+                    expect(objectDescriptor).toBeTruthy();
+                    var serializedDescription = serializer.serializeObject(objectDescriptor);
+                    expect(serializedDescription).toBeTruthy();
+                })
+                .finally(function () {
+                    done();
+                });
         });
 
         describe("test converter objectDescriptor", function () {
@@ -124,38 +150,41 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
 
             it("should exist", function (done) {
                 var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise.then(function (objectDescriptor) {
-                    expect(objectDescriptor).toBeTruthy();
-                }).finally(function () {
-                    done();
-                });
+                objectDescriptorPromise
+                    .then(function (objectDescriptor) {
+                        expect(objectDescriptor).toBeTruthy();
+                    })
+                    .finally(function () {
+                        done();
+                    });
             });
 
             it("should have element property objectDescriptor", function (done) {
                 var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise.then(function (objectDescriptor) {
-                    var propertyDescriptor = objectDescriptor.propertyDescriptorForName("element");
-                    expect(propertyDescriptor).toBeTruthy();
-                    expect(propertyDescriptor.valueType).toBe("string");
-                    expect(propertyDescriptor.readOnly).toBe(true);
-                }).finally(function () {
-                    done();
-                });
+                objectDescriptorPromise
+                    .then(function (objectDescriptor) {
+                        var propertyDescriptor = objectDescriptor.propertyDescriptorForName("element");
+                        expect(propertyDescriptor).toBeTruthy();
+                        expect(propertyDescriptor.valueType).toBe("string");
+                        expect(propertyDescriptor.readOnly).toBe(true);
+                    })
+                    .finally(function () {
+                        done();
+                    });
             });
 
             it("should have identifier property objectDescriptor", function (done) {
                 var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise.then(function (objectDescriptor) {
-                    var propertyDescriptor = objectDescriptor.propertyDescriptorForName("identifier");
-                    expect(propertyDescriptor).toBeTruthy();
-                    expect(propertyDescriptor.valueType).toBe("string");
-                }).finally(function () {
-                    done();
-                });
+                objectDescriptorPromise
+                    .then(function (objectDescriptor) {
+                        var propertyDescriptor = objectDescriptor.propertyDescriptorForName("identifier");
+                        expect(propertyDescriptor).toBeTruthy();
+                        expect(propertyDescriptor.valueType).toBe("string");
+                    })
+                    .finally(function () {
+                        done();
+                    });
             });
-
         });
-
     });
-
 });
