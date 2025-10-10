@@ -135,6 +135,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/data/raw-data-service" },
         { name: "spec/data/raw-data-type-mapping-spec" },
         { name: "spec/data/integration", node: false },
+        { name: "spec/data/data-validation-manager-spec" },
 
         // Meta
         { name: "spec/meta/module-object-descriptor-spec" },
