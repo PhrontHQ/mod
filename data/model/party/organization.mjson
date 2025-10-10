@@ -22,7 +22,7 @@
             "parent":{"@": "PartyDescriptor"},
             "userInterfaceDescriptorModules": {
                 "*": {
-                    "%": "./organization-ui-descriptor.mjson"   
+                    "%": "./organization-ui-descriptor.mjson"
                 }
             }
 

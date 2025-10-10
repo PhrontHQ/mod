@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "core/error/aggregate-error.mjson" },
             "exportName": "AggregateError",
             "module": { "%": "global" },
