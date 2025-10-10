@@ -4,11 +4,21 @@
         "properties": {
             "name": "Movie",
             "propertyDescriptors": [
-                {"@": "category"},
-                {"@": "isFeatured"},
-                {"@": "plotSummary"},
-                {"@": "releaseDate"},
-                {"@": "title"}
+                {
+                    "@": "category"
+                },
+                {
+                    "@": "isFeatured"
+                },
+                {
+                    "@": "plotSummary"
+                },
+                {
+                    "@": "releaseDate"
+                },
+                {
+                    "@": "title"
+                }
             ],
             "objectDescriptorModule": {
                 "%": "spec/data/logic/model/movie.mjson"
@@ -16,22 +26,35 @@
             "exportName": "Movie",
             "module": {
                 "%": "spec/data/logic/model/movie"
-            }
+            },
+            "validationRules": [
+                {
+                    "@": "titleMinLengthRule"
+                },
+                {
+                    "@": "titleMaxLengthRule"
+                },
+                {
+                    "@": "titleNoAtSignRule"
+                },
+                {
+                    "@": "releaseDateBefore2042Rule"
+                }
+            ]
         }
     },
-
     "category_descriptor": {
         "object": "spec/data/logic/model/category.mjson"
     },
-
     "category": {
         "prototype": "mod/core/meta/property-descriptor",
         "properties": {
             "name": "category",
-            "valueDescriptor": {"@": "category_descriptor"}
+            "valueDescriptor": {
+                "@": "category_descriptor"
+            }
         }
     },
-
     "isFeatured": {
         "prototype": "mod/core/meta/property-descriptor",
         "properties": {
@@ -39,19 +62,18 @@
             "valueType": "boolean"
         }
     },
-
     "plotSummary_descriptor": {
         "object": "spec/data/logic/model/plot-summary.mjson"
     },
-
     "plotSummary": {
         "prototype": "mod/core/meta/property-descriptor",
         "properties": {
             "name": "plotSummary",
-            "valueDescriptor": {"@": "plotSummary_descriptor"}
+            "valueDescriptor": {
+                "@": "plotSummary_descriptor"
+            }
         }
     },
-
     "releaseDate": {
         "prototype": "mod/core/meta/property-descriptor",
         "properties": {
@@ -59,12 +81,75 @@
             "valueType": "date"
         }
     },
-
     "title": {
         "prototype": "mod/core/meta/property-descriptor",
         "properties": {
             "name": "title",
             "valueType": "string"
+        }
+    },
+    "titleMinLengthRule": {
+        "prototype": "mod/core/meta/expression-validation-rule",
+        "values": {
+            "message": "The title must be at least 2 characters long.",
+            "name": "title",
+            "criteria": {
+                "@": "titleMinLengthRuleCriteria"
+            }
+        }
+    },
+    "titleMinLengthRuleCriteria": {
+        "prototype": "mod/core/criteria",
+        "values": {
+            "expression": "title.length >= 2"
+        }
+    },
+    "titleMaxLengthRule": {
+        "prototype": "mod/core/meta/expression-validation-rule",
+        "values": {
+            "message": "The title must be at most 32 characters long.",
+            "name": "title",
+            "criteria": {
+                "@": "titleMaxLengthRuleCriteria"
+            }
+        }
+    },
+    "titleMaxLengthRuleCriteria": {
+        "prototype": "mod/core/criteria",
+        "values": {
+            "expression": "title.length <= 32"
+        }
+    },
+    "titleNoAtSignRule": {
+        "prototype": "mod/core/meta/expression-validation-rule",
+        "values": {
+            "message": "The title cannot contain the '@' character.",
+            "name": "title",
+            "criteria": {
+                "@": "titleNoAtSignRuleCriteria"
+            }
+        }
+    },
+    "titleNoAtSignRuleCriteria": {
+        "prototype": "mod/core/criteria",
+        "values": {
+            "expression": "!title.includes('@')"
+        }
+    },
+    "releaseDateBefore2042Rule": {
+        "prototype": "mod/core/meta/expression-validation-rule",
+        "values": {
+            "message": "The release date must be before 2042.",
+            "name": "releaseDate",
+            "criteria": {
+                "@": "releaseDateBefore2042RuleCriteria"
+            }
+        }
+    },
+    "releaseDateBefore2042RuleCriteria": {
+        "prototype": "mod/core/criteria",
+        "values": {
+            "expression": "!releaseDate || releaseDate.getFullYear() < 2042"
         }
     }
 }
