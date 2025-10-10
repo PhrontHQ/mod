@@ -33,6 +33,8 @@ const Object = global.Object, //Cache for scope traversal performance
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
     ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject;
 
+const DataValidationManager = require("./data-validation-manager").DataValidationManager;
+
 require("../../core/extras/string");
 require("../../core/extras/date");
 
@@ -104,6 +106,15 @@ const DataService = exports.DataService = class DataService extends Target {
         // this._deserializer = new Deserializer();
 
         //this.addOwnPropertyChangeListener("mainService", this);
+
+        this._dataValidationManager = new DataValidationManager({
+            // TODO: Refactor tightly coupled logic between DataService and ObjectDescriptors retrieval and caching.
+            // The current implementation mixes responsibilities that should be separated.
+            // We should consider introducing an ObjectDescriptorStore class to manage object descriptors independently.
+            // This would allow both DataService and DataValidationManager (and other consumers) to access descriptors
+            // without duplicating logic or creating unnecessary dependencies.
+            getForObject: (dataInstance) => this.objectDescriptorForObject(dataInstance),
+        });
     }
 
     static {
@@ -242,6 +253,14 @@ DataService.addClassProperties(
             get: function () {
                 return defaultEventManager.application;
             },
+        },
+
+        /**
+         * The Validation Manager used by this DataService to validate data objects.
+         * @type {DataValidationManager}
+         */
+        _dataValidationManager: {
+            value: null,
         },
 
         /***************************************************************************
@@ -4812,63 +4831,71 @@ DataService.addClassProperties(
         // },
 
         /**
-         * evaluates the validity of objects and store results in invaliditySates
-         * @param {Array} objects objects whose validity needs to be evaluated
-         * @param {Map} invaliditySates a Map where the key is an object and the value a validity state offering invalidity details.
-         * @returns {Promise} Promise resolving to invaliditySates when all is complete.
+         * Asynchronously validates a collection of data instances and attaches the
+         * resulting invalidity state to each instance as a non-enumerable property.
+         *
+         * @param {Map<ObjectDescriptor, Set<object>>} objects - A map where each value is a Set of objects to evaluate.
+         * @returns {Promise<Map<object, Map<string, ValidationError[]>>>} A promise that resolves with a map where each
+         * key is an object and its value is its own invalidity state.
          */
+        _validateAndAttachInvalidityStateToObject: {
+            value: async function (objects) {
+                const dataObjectInstances = [];
 
-        _evaluateObjectValidity: {
-            value: function (object, invalidityStates) {
-                var objectDescriptorForObject = this.objectDescriptorForObject(object);
-
-                return objectDescriptorForObject.evaluateObjectValidity(object).then(
-                    function (objectInvalidityStates) {
-                        if (objectInvalidityStates.size != 0) {
-                            invalidityStates.set(object, objectInvalidityStates);
-                        }
-                        return objectInvalidityStates;
-                    },
-                    function (error) {
-                        console.error(error);
-                        reject(error);
-                    }
-                );
-            },
-        },
-
-        _evaluateObjectsValidity: {
-            value: function (objects, invalidityStates, validityEvaluationPromises) {
-                //Bones only for now
-                //It's a bit weird, createdDataObjects is a set, but changedDataObjects is a Map, but changedDataObjects has entries
-                //for createdObjects as well, so we might be able to simlify to just dealing with a Map, or send the Map keys?
-                var mapIterator = objects.values(),
-                    iObjectSet,
-                    setIterator,
-                    iObject;
-
-                while ((iObjectSet = mapIterator.next().value)) {
-                    setIterator = iObjectSet.values();
-                    while ((iObject = setIterator.next().value)) {
-                        validityEvaluationPromises.push(this._evaluateObjectValidity(iObject, invalidityStates));
+                // First, flatten the input structure into a simple array of unique data objects.
+                for (const dataObjects of objects.values()) {
+                    for (const dataObject of dataObjects) {
+                        dataObjectInstances.push(dataObject);
                     }
                 }
 
-                // return promises.length > 1 ? Promise.all(promises) : promises[0];
+                // 2. Get the validation results for all unique data objects.
+                // This returns a map of: Map<object, Map<string, ValidationError[]>>
+                const validationResults = await this._dataValidationManager.validateObjects(dataObjectInstances);
+
+                // 3. Iterate over the results and attach the invalidity state to each instance.
+                for (const [dataObject, invalidityState] of validationResults.entries()) {
+                    this._setInvalidityStateOnObject(dataObject, invalidityState);
+                }
+
+                return validationResults;
             },
         },
 
-        _dispatchObjectsInvalidity: {
-            value: function (dataObjectInvalidities) {
-                var invalidObjectIterator = dataObjectInvalidities.keys(),
-                    anInvalidObject,
-                    anInvalidityState;
+        /**
+         * Attaches an invalidity state to a data instance as a non-enumerable property.
+         * @param {object} object - The data instance to which the invalidity state will be attached.
+         * @param {Map<string, ValidationError[]>} invalidityState - The invalidity state to attach.
+         * @returns {object} The modified object with the attached invalidity state.
+         */
+        _setInvalidityStateOnObject: {
+            value: function (object, invalidityState) {
+                Object.defineProperty(object, "invalidityState", {
+                    value: invalidityState,
+                    writable: true,
+                    configurable: true,
+                    enumerable: false,
+                });
 
-                while ((anInvalidObject = invalidObjectIterator.next().value)) {
+                return object;
+            },
+        },
+
+        /**
+         * Dispatches invalidity events for each object in the provided map.
+         * @param {Map<object, Map<string, ValidationError[]>>} invalidityStates - A map where each key is an object and its value is its invalidity state.
+         * @returns {void}
+         */
+        _dispatchObjectsInvalidity: {
+            value: function (invalidityStates) {
+                const invalidObjectIterator = invalidityStates.keys();
+                let invalidObject;
+
+                while ((invalidObject = invalidObjectIterator.next().value)) {
                     this.dispatchDataEventTypeForObject(
                         DataEvent.invalid,
-                        object,
-                        dataObjectInvalidities.get(anInvalidObject)
+                        invalidObject,
+                        invalidityStates.get(invalidObject)
                     );
                 }
             },
@@ -4976,7 +5003,6 @@ DataService.addClassProperties(
          * Prepare.
          *
          */
-
         handleTransactionCreateStart: {
             value: function (transactionPrepareStartEvent) {
                 var preparingParticipant = transactionPrepareStartEvent.target,
@@ -5266,45 +5292,20 @@ DataService.addClassProperties(
                     try {
                         var deletedDataObjectsIterator,
                             operation,
-                            createTransaction,
-                            createTransactionPromise,
                             transactionObjectDescriptors = transaction.objectDescriptors,
-                            transactionObjectDescriptorArray,
-                            batchOperation,
-                            transactionOperations,
-                            dataOperationsByObject,
-                            changedDataObjectOperations = new Map(),
-                            deletedDataObjectOperations = new Map(),
-                            createOperationType = DataOperation.Type.CreateOperation,
-                            updateOperationType = DataOperation.Type.UpdateOperation,
-                            deleteOperationType = DataOperation.Type.DeleteOperation,
-                            i,
-                            countI,
                             iObject,
-                            iOperation,
-                            iOperationPromise,
-                            createdDataObjectInvalidity = new Map(),
-                            changedDataObjectInvalidity = new Map(),
-                            deletedDataObjectInvalidity = new Map(),
-                            validityEvaluationPromises = [],
-                            validityEvaluationPromise,
-                            commitTransactionOperation,
-                            commitTransactionOperationPromise,
-                            rollbackTransactionOperation,
-                            rollbackTransactionOperationPromise,
-                            createTransactionCompletedId,
-                            transactionCreate,
                             transactionPrepareEvent,
                             transactionCommitEvent;
 
-                        //We first remove from create and update objects that are also deleted:
+                        // We first remove from create and update objects that are also deleted:
                         deletedDataObjectsIterator = deletedDataObjects.values();
+
                         while ((iObject = deletedDataObjectsIterator.next().value)) {
                             createdDataObjects.delete(iObject);
                             changedDataObjects.delete(iObject);
                         }
 
-                        //If nothing to do, we bail out
+                        // If nothing to do, we bail out
                         if (
                             createdDataObjects.size === 0 &&
                             changedDataObjects.size === 0 &&
@@ -5312,64 +5313,39 @@ DataService.addClassProperties(
                         ) {
                             operation = new DataOperation();
                             operation.type = DataOperation.Type.NoOp;
-                            //console.log("saveChanges: transaction-"+this.identifier+" <- NoOp", transaction);
+                            // console.log("saveChanges: transaction-"+this.identifier+" <- NoOp", transaction);
                             resolve(operation);
                         }
 
-                        /*
-                            TODO: turn the validation phase into events:
-
-                            Right now validation is one “action” on a type of object, but would it be desirable/necessary to validate for a create vs validate for an update vs validate for a delete, so basically the type of operation would influence there kind of validation to perform. Even if the sum would be the same, if there was one validation step where you’d handle all cases because you wouldn’t know, maybe knowing the type of operation could either be an optimization as less logic might need to be run knowing the context or, it might be necessary? for example a cascade delete, is something you only want to run when you know an object is being deleted.
-
-                            What was done for access control points to this, needing to have different rules/logic depending on multiple factors and the type of operation being one.
-
-                            the immediate implication here would be to have multiple types of transactionValidate TransactionEvent vs one, like ?
-                            - transactionValidateCreate
-                            - transactionValidateUpdate
-                            - transactionValidateDelete
-                        */
-
-                        //we assess createdDataObjects's validity:
-                        self._evaluateObjectsValidity(
-                            createdDataObjects,
-                            createdDataObjectInvalidity,
-                            validityEvaluationPromises
-                        );
-
-                        //then changedDataObjects.
-                        self._evaluateObjectsValidity(
-                            changedDataObjects,
-                            changedDataObjectInvalidity,
-                            validityEvaluationPromises
-                        );
-
-                        //Finally deletedDataObjects: it's possible that some validation logic prevent an object to be deleted, like
-                        //a deny for a relationship that needs to be cleared by a user before it could be deleted.
-                        self._evaluateObjectsValidity(
-                            deletedDataObjects,
-                            deletedDataObjectInvalidity,
-                            validityEvaluationPromises
-                        );
-
-                        //TODO while we need to wait for both promises to resolve before we can check
-                        //that there are no validation issues and can proceed to save changes
-                        //it might be better to dispatch events as we go within each promise
-                        //so we don't block the main thread all at once?
-                        //Waiting has the benefit to enable a 1-shot rendering.
-                        Promise.all(validityEvaluationPromises)
-                            .then(function () {
+                        /**
+                         * TODO: Refactor validation into operation-specific events.
+                         * A single validation action is inefficient. We should split it by operation
+                         * (e.g., `validateCreate`, `validateUpdate`, `validateDelete`) to run
+                         * optimized, context-specific logic (like checking cascade-deletes only on delete).
+                         */
+                        Promise.all(
+                            // 1. Validate created objects.
+                            self._validateAndAttachInvalidityStateToObject(createdDataObjects),
+                            // 2. Validate updated objects.
+                            self._validateAndAttachInvalidityStateToObject(changedDataObjects),
+                            // 3. Validate deleted objects (e.g., check for rules that block deletion).
+                            self._validateAndAttachInvalidityStateToObject(deletedDataObjects)
+                        )
+                            .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
                                 // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
-                                self._dispatchObjectsInvalidity(changedDataObjectInvalidity);
-                                if (changedDataObjectInvalidity.size > 0) {
-                                    //Do we really need the DataService itself to dispatch another event with all invalid data together at once?
-                                    //self.mainService.dispatchDataEventTypeForObject(DataEvent.invalid, self, detail);
+                                self._dispatchObjectsInvalidity(changedInvalidityStates);
+
+                                if (changedInvalidityStates.size > 0) {
+                                    // Do we really need the DataService itself to dispatch another event with
+                                    // all invalid data together at once?
+                                    // self.mainService.dispatchDataEventTypeForObject(DataEvent.invalid, self, detail);
 
                                     var validatefailedOperation = new DataOperation();
                                     validatefailedOperation.type = DataOperation.Type.ValidateFailedOperation;
-                                    //At this point, it's the dataService
+                                    // At this point, it's the dataService
                                     validatefailedOperation.target = self.mainService;
-                                    validatefailedOperation.data = changedDataObjectInvalidity;
-                                    //Exit, can't move on
+                                    validatefailedOperation.data = changedInvalidityStates;
+                                    // Exit, can't move on
                                     resolve(validatefailedOperation);
                                 } else {
                                     return transactionObjectDescriptors;
