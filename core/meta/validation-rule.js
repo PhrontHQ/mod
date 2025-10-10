@@ -1,92 +1,28 @@
-const PropertyValidationSemantics = require("./validation-semantics").PropertyValidationSemantics;
-const Criteria = require("../criteria").Criterisa;
-const Montage = require("../core").Montage;
-const deprecate = require("../deprecate");
+const core = require("../core");
+const Montage = core.Montage;
 
 /**
- * @class PropertyValidationRule
+ * Serves as a base class for all validation rules, ensuring a consistent API
+ * for the validation service. This class is designed to be extended, not
+ * used directly.
+ *
+ * @class ValidationRule
  * @extends Montage
  */
-exports.PropertyValidationRule = class PropertyValidationRule extends Montage {
+exports.ValidationRule = class ValidationRule extends Montage {
     static {
         Montage.defineProperties(this.prototype, {
+            objectDescriptorModuleId: core._objectDescriptorModuleIdDescriptor,
+            _validationProperties: { value: null },
             _owner: { value: null },
+            _message: { value: "" },
+            _hints: { value: null },
             _name: { value: "" },
-            _criteria: { value: null },
-            _messageKey: { value: "" },
-            _propertyValidationEvaluator: { value: null },
-
-            // Descriptors required by Montage's serialization
-            objectDescriptorModuleId: require("../core")._objectDescriptorModuleIdDescriptor,
-            objectDescriptor: require("../core")._objectDescriptorDescriptor,
-            blueprintModuleId: require("../core")._objectDescriptorModuleIdDescriptor,
-            blueprint: require("../core")._objectDescriptorDescriptor,
         });
     }
 
-    /**
-     * Initialize a newly allocated object descriptor validation rule.
-     * @param {string} name - The rule's name.
-     * @param {ObjectDescriptor} objectDescriptor - The owning object descriptor.
-     * @returns {this}
-     */
-    initWithNameAndObjectDescriptor(name, objectDescriptor) {
-        this._name = name;
-        this._owner = objectDescriptor;
-        return this;
-    }
-
-    serializeSelf(serializer) {
-        serializer.setProperty("name", this.name);
-        serializer.setProperty("objectDescriptor", this.owner, "reference");
-        serializer.setProperty("criteria", this._criteria, "reference");
-        serializer.setProperty("messageKey", this.messageKey);
-        serializer.setAllValues();
-    }
-
-    deserializeSelf(deserializer) {
-        // Deserialize the property name
-        let value = deserializer.getProperty("name");
-
-        if (value !== undefined) {
-            this._name = value;
-        }
-
-        // Deserialize the object descriptor (owner)
-        value = deserializer.getProperty("objectDescriptor") || deserializer.getProperty("blueprint");
-
-        if (value !== undefined) {
-            this._owner = value;
-        }
-
-        // Backward compatibility
-        value = deserializer.getProperty("validationSelector");
-
-        if (value) {
-            this._criteria = value;
-        } else {
-            value = deserializer.getProperty("criteria");
-
-            if (value) {
-                this._criteria = value;
-            }
-        }
-
-        value = deserializer.getProperty("messageKey");
-
-        if (value !== undefined) {
-            this._messageKey = value;
-        }
-
-        // FIXME [PJYF Jan 8 2013] There is an API issue in the deserialization.
-        // We should be able to write deserializer.getProperties() instead.
-        const propertyNames = Montage.getSerializablePropertyNames(this);
-
-        for (let i = 0, l = propertyNames.length; i < l; i++) {
-            const propertyName = propertyNames[i];
-            this[propertyName] = deserializer.getProperty(propertyName);
-        }
-    }
+    // Descriptors required by Montage's serialization
+    objectDescriptor = core._objectDescriptorDescriptor;
 
     /**
      * Component description attached to this validation rule.
@@ -96,13 +32,17 @@ exports.PropertyValidationRule = class PropertyValidationRule extends Montage {
         return this._owner;
     }
 
+    set owner(value) {
+        this._owner = value;
+    }
+
     /**
-     * The identifier is the same as the name and is used to make the
-     * serialization of a ObjectDescriptor humane.
+     * The identifier of the validation rule.
      * @type {string}
      */
     get identifier() {
-        return [this.objectDescriptor.identifier, "rule", this.name].join("_");
+        // FIXME: @benoit this.objectDescriptor.identifier is undefined
+        return this.name ?? this.objectDescriptor.identifier;
     }
 
     /**
@@ -113,80 +53,81 @@ exports.PropertyValidationRule = class PropertyValidationRule extends Montage {
         return this._name;
     }
 
-    /**
-     * Criteria to evaluate to check this rule.
-     * @type {Criteria}
-     */
-    get criteria() {
-        if (!this._criteria) {
-            this._criteria = Criteria.false;
-        }
-
-        return this._criteria;
+    set name(value) {
+        this._name = value;
     }
 
-    set criteria(value) {
-        this._criteria = value;
+    get message() {
+        return this._message;
     }
 
-    /**
-     * Backward compatibility for `validationSelector`.
-     * @type {Criteria}
-     */
-    get validationSelector() {
-        return this.criteria;
+    set message(value) {
+        this._message = value || "";
     }
 
-    set validationSelector(value) {
-        this.criteria = value;
+    get validationProperties() {
+        return this._validationProperties || [];
     }
 
-    /**
-     * Message key to display when the rule fires.
-     * @type {string}
-     */
-    get messageKey() {
-        if (!this._messageKey || this._messageKey.length === 0) {
-            return this._name;
-        }
-
-        return this._messageKey;
+    set validationProperties(value) {
+        this._validationProperties = value;
     }
 
-    set messageKey(value) {
-        this._messageKey = value;
+    get hints() {
+        return this._hints;
+    }
+
+    set hints(value) {
+        this._hints = value;
     }
 
     /**
-     * Evaluates the rules based on the ObjectDescriptor and the properties.
-     * @param {object} objectInstance - The object instance to evaluate the rule for.
-     * @returns {boolean} - True if the rule fires, false otherwise.
-     */
-    evaluateRule(objectInstance) {
-        if (this._propertyValidationEvaluator === null) {
-            const propertyValidationSemantics = new PropertyValidationSemantics().initWithObjectDescriptor(
-                this.objectDescriptor
-            );
-            this._propertyValidationEvaluator = propertyValidationSemantics.compile(this.criteria.syntax);
-        }
-
-        return this._propertyValidationEvaluator(objectInstance);
-    }
-
-    /*********************************************************************
-     * Deprecated methods
-     *********************************************************************/
-
-    /**
-     * @deprecated Use `initWithNameAndObjectDescriptor` instead.
-     * @param {string} name
-     * @param {ObjectDescriptor} blueprint
+     * Initialize a newly allocated object descriptor validation rule.
+     * @param {string} name - The rule's name.
+     * @param {ObjectDescriptor} objectDescriptor - The owning object descriptor.
      * @returns {this}
      */
-    initWithNameAndBlueprint = deprecate.deprecateMethod(
-        void 0,
-        (name, blueprint) => this.initWithNameAndObjectDescriptor(name, blueprint),
-        "initWithNameAndBlueprint",
-        "initWithNameAndObjectDescriptor"
-    );
+    initWithNameAndObjectDescriptor(name, objectDescriptor) {
+        if (typeof name !== "string") {
+            throw new Error("A valid name string must be provided.");
+        }
+
+        if (!objectDescriptor) {
+            throw new Error("A valid ObjectDescriptor must be provided.");
+        }
+
+        this._name = name;
+        this._owner = objectDescriptor;
+        return this;
+    }
+
+    serializeSelf(serializer) {
+        serializer.setProperty("validationProperties", this.validationProperties, "reference");
+        serializer.setProperty("objectDescriptor", this.owner, "reference");
+        serializer.setProperty("message", this.message);
+        serializer.setProperty("hints", this.hints);
+        serializer.setProperty("name", this.name);
+        serializer.setAllValues();
+    }
+
+    deserializeSelf(deserializer) {
+        this.validationProperties = deserializer.getProperty("validationProperties");
+        this.owner = deserializer.getProperty("objectDescriptor");
+        this.message = deserializer.getProperty("message");
+        this.hints = deserializer.getProperty("hints");
+        this.name = deserializer.getProperty("name");
+    }
+
+    /**
+     * Core validation method that all subclasses must implement.
+     * It evaluates the rule against a given data object instance.
+     *
+     * @param {object} dataInstance - The data object instance to validate.
+     * @returns {Promise<ValidationError|null>} A Promise that resolves to a
+     * ValidationError object if validation fails, or null if it succeeds.
+     */
+    async evaluateRule(dataInstance) {
+        // This method must be implemented by subclasses.
+        throw new Error("ValidationRule.evaluateRule() must be implemented.");
+    }
 };
