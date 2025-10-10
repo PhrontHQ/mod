@@ -115,7 +115,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "core/tree-controller.mjson"
             },
@@ -280,7 +280,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {}
+            "validationRules": {}
         }
     }
 }

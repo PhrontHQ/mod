@@ -19,7 +19,7 @@
                     {"@": "measure"}
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "./position.mjson"
             },

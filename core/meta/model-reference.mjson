@@ -30,7 +30,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "core/meta/model-reference.mjson"
             },

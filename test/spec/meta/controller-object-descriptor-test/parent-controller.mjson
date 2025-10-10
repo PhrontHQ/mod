@@ -45,7 +45,7 @@
                 }
             ],
             "propertyDescriptorGroups": {},
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "spec/meta/controller-object-descriptor-parent/parent-controller.mjson"
             },

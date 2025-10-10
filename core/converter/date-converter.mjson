@@ -50,7 +50,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "core/converter/date-converter.mjson"
             },

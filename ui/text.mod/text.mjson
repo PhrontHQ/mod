@@ -56,7 +56,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "ui/text.mod/text.mjson"
             },

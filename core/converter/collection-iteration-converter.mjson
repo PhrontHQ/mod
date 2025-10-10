@@ -24,7 +24,7 @@
                     {"@": "map"}
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "./collection-iteration-converter.mjson"
             },

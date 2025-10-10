@@ -164,7 +164,7 @@
                 }
             ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "ui/control.mjson"
             },

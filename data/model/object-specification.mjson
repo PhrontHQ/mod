@@ -14,7 +14,7 @@
                     { "@": "criteriaDescriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./object-specification.mjson" },
             "exportName": "ObjectSpecification",
             "module": { "%": "./object-specification" },

@@ -63,7 +63,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "./module-object-descriptor.mjson"
             },

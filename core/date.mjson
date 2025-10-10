@@ -12,7 +12,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./date.mjson" },
             "exportName": "Date",
             "module": { "%": "global" },

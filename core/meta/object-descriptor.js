@@ -1,3 +1,5 @@
+const { ExpressionValidationRule } = require("./expression-validation-rule");
+
 var Montage = require("../core").Montage,
     Target = require("../target").Target,
     DerivedDescriptor = require("./derived-descriptor").DerivedDescriptor,
@@ -6,7 +8,6 @@ var Montage = require("../core").Montage,
     ModelModule = require("./model"),
     Promise = require("../promise").Promise,
     PropertyDescriptor = require("./property-descriptor").PropertyDescriptor,
-    PropertyValidationRule = require("./validation-rule").PropertyValidationRule,
     Set = require("../collections/set"),
     deprecate = require("../deprecate");
 
@@ -104,8 +105,8 @@ ObjectDescriptor.addClassProperties(
                 if (this._eventDescriptors.length > 0) {
                     serializer.setProperty("eventDescriptors", this._eventDescriptors);
                 }
-                if (this._propertyValidationRules.length > 0) {
-                    serializer.setProperty("propertyValidationRules", this._propertyValidationRules);
+                if (this._validationRules.length > 0) {
+                    serializer.setProperty("validationRules", this._validationRules);
                 }
                 if (typeof this.maxAge === "number") {
                     serializer.setProperty("maxAge", this.maxAge);
@@ -196,31 +197,31 @@ ObjectDescriptor.addClassProperties(
                         ? this._eventDescriptors.push.apply(this._eventDescriptors, value)
                         : (this._eventDescriptors = value);
                 }
-                value = deserializer.getProperty("propertyValidationRules");
+                value = deserializer.getProperty("validationRules");
                 if (value) {
-                    let _propertyValidationRules = this._propertyValidationRules;
-                    if (_propertyValidationRules && Object.keys(_propertyValidationRules) > 0) {
+                    let _validationRules = this._validationRules;
+                    if (_validationRules && Object.keys(_validationRules) > 0) {
                         for (
                             let i = 0, keys = Object.keys(value), countI = keys.length, iKey, iValue, oValue;
                             i < countI;
                             i++
                         ) {
                             iValue = value[(iKey = keys[i])];
-                            oValue = _propertyValidationRules[iKey];
+                            oValue = _validationRules[iKey];
                             if (iValue && oValue) {
                                 //Merge
                                 if (iValue instanceof Array) {
-                                    _propertyValidationRules.push.apply(_propertyValidationRules, iValue);
+                                    _validationRules.push.apply(_validationRules, iValue);
                                 } else {
                                     //Overwrite
-                                    _propertyValidationRules[iKey] = iValue;
+                                    _validationRules[iKey] = iValue;
                                 }
                             } else {
-                                _propertyValidationRules[iKey] = iValue;
+                                _validationRules[iKey] = iValue;
                             }
                         }
                     } else {
-                        this._propertyValidationRules = value;
+                        this._validationRules = value;
                     }
                 }
                 value = deserializer.getProperty("maxAge");
@@ -1366,28 +1367,28 @@ ObjectDescriptor.addClassProperties(
             },
         },
 
-        _propertyValidationRules: {
+        _validationRules: {
             value: {},
         },
 
         /**
          * Gets the list of properties validation rules.
-         * @returns {Array.<PropertyValidationRule>} copy of the list of properties
+         * @returns {Array.<ValidationRule>} copy of the list of properties
          * validation rules.
          */
-        propertyValidationRules: {
+        validationRules: {
             get: function () {
                 var propertyName,
-                    propertyValidationRules = [];
-                for (propertyName in this._propertyValidationRules) {
-                    if (this._propertyValidationRules.hasOwnProperty(propertyName)) {
-                        propertyValidationRules.push(this._propertyValidationRules[propertyName]);
+                    validationRules = [];
+                for (propertyName in this._validationRules) {
+                    if (this._validationRules.hasOwnProperty(propertyName)) {
+                        validationRules.push(this._validationRules[propertyName]);
                     }
                 }
                 if (this.parent) {
-                    propertyValidationRules = propertyValidationRules.concat(this.parent.propertyValidationRules);
+                    validationRules = validationRules.concat(this.parent.validationRules);
                 }
-                return propertyValidationRules;
+                return validationRules;
             },
         },
 
@@ -1396,13 +1397,13 @@ ObjectDescriptor.addClassProperties(
          * @param {string} name of the rule
          * @returns {PropertyDescription} property description
          */
-        propertyValidationRuleForName: {
+        validationRuleForName: {
             value: function (name) {
-                var propertyValidationRule = this._propertyValidationRules[name];
-                if (!propertyValidationRule && this.parent) {
-                    propertyValidationRule = this.parent.propertyValidationRuleForName(name);
+                var validationRule = this._validationRules[name];
+                if (!validationRule && this.parent) {
+                    validationRule = this.parent.validationRuleForName(name);
                 }
-                return propertyValidationRule;
+                return validationRule;
             },
         },
 
@@ -1412,14 +1413,14 @@ ObjectDescriptor.addClassProperties(
          * @param {string} name of the rule
          * @returns {PropertyDescription} new properties validation rule
          */
-        addPropertyValidationRule: {
+        addValidationRule: {
             value: function (name) {
-                var propertyValidationRule = this._propertyValidationRules[name];
-                if (!propertyValidationRule) {
-                    propertyValidationRule = new PropertyValidationRule().initWithNameAndObjectDescriptor(name, this);
-                    this._propertyValidationRules[name] = propertyValidationRule;
+                var validationRule = this._validationRules[name];
+                if (!validationRule) {
+                    validationRule = new ExpressionValidationRule().initWithNameAndObjectDescriptor(name, this);
+                    this._validationRules[name] = validationRule;
                 }
-                return propertyValidationRule;
+                return validationRule;
             },
         },
 
@@ -1429,74 +1430,47 @@ ObjectDescriptor.addClassProperties(
          * @param {string} name of the rule
          * @returns {PropertyDescription} removed properties validation rule
          */
-        removePropertyValidationRule: {
+        removeExpressionValidationRule: {
             value: function (name) {
-                var propertyValidationRule = this._propertyValidationRules[name];
-                if (propertyValidationRule) {
-                    delete this._propertyValidationRules[name];
+                var validationRule = this._validationRules[name];
+                if (validationRule) {
+                    delete this._validationRules[name];
                 }
-                return propertyValidationRule;
+                return validationRule;
             },
         },
 
-        _emptyValidityMap: {
-            value: new Map(),
-        },
         /**
-         * Evaluates the validity of objectInstance and collects invalidity into invalidityStates if provided, or in a
-         * new Map created, which will be the resolved value. This is done using:
+         * Evaluates the validity of objectInstance and collects validation errors. This is done using:
          * - rules set on ObjectDescriptor
          * - propertyDescriptor properties:
-         *      - mandatory: is a value there?
-         *      - readOnly: is the value changed?
-         *      - valueType, collectionValueType, valueDescriptor: Does the current value match?
-         *      - cardinality, is the current value match?
+         * - mandatory: is a value there?
+         * - readOnly: is the value changed?
+         * - valueType, collectionValueType, valueDescriptor: Does the current value match?
+         * - cardinality, is the current value match?
          *
-         * - The result needs to be a promise as some validation might need a round-trip to
-         *  backend?
-         * - The result will need to be communicated through an "invalid" event that UI componenta
-         *  will use to communicate the validity issues and their corresponding messages.
-         * - there's a combination of isues matching 1 component's designated property to edit as well
-         * as rules failing that might concern multiple ones as well.
-         * @param {Object} object instance to evaluate the rule for
-         * @returns {Array.<string>} list of message key for rule that fired. Empty
-         * array otherwise.
+         * All validation rules are executed in parallel.
+         *
+         * @param {Object} objectInstance The object instance to evaluate the rules for.
+         * @returns {Promise<Array<ValidationError>>} A promise that resolves to an array of
+         * ValidationError objects for each rule that failed. The array is empty if all rules pass.
          */
         evaluateObjectValidity: {
-            value: function (objectInstance) {
-                return Promise.resolve(this._emptyValidityMap);
+            value: async function (objectInstance) {
+                // Create an array of promises by calling evaluateRule for each validation rule.
+                const validationPromises = Object.values(this._validationRules).map((rule) =>
+                    rule.evaluateRule(objectInstance)
+                );
 
-                var name,
-                    rule,
-                    messages = [];
-                /* bypassing it all for now */
-                for (name in this._propertyValidationRules) {
-                    if (this._propertyValidationRules.hasOwnProperty(name)) {
-                        rule = this._propertyValidationRules[name];
-                        //Benoit: It's likely that some rules might be async
-                        //or we might decide to differ the ones that are async
-                        //to be run on the server instead, but right now the code
-                        //doesn't anticipate any async rule.
+                // Wait for all validation rules to complete their evaluation.
+                const validationErrors = await Promise.all(validationPromises);
 
-                        /*
-                        TODO
-                        Also to help reconciliate validation with HTML5 standards
-                        and its ValidityState object (https://developer.mozilla.org/en-US/docs/Web/API/ValidityState), or to know what key/expression failed validation, we need to return a map key/reason, and not just an array, so that each message can end-up being processed/communicated to the user by the component editing it.
-
-                        It might even make sense that each component editing a certain property of an object, or any combination of some
-                        would have to "observe/listen" to individual property validations.
-
-                        This one is meant to run on all as some rules can involve multiple properties.
-                    */
-
-                        if (rule.evaluateRule(objectInstance)) {
-                            messages.push(rule.messageKey);
-                        }
-                    }
-                }
-                return messages;
+                // Filter out the `null` errors (which indicate a passed rule)
+                // to return only the actual ValidationError objects.
+                return validationErrors.filter((error) => error !== null);
             },
         },
+
         /**
          * Evaluates the rules based on the object and the properties.
          * @param {Object} object instance to evaluate the rule for
@@ -1506,37 +1480,7 @@ ObjectDescriptor.addClassProperties(
         evaluateRules: {
             value: deprecate.deprecateMethod(
                 void 0,
-                function (objectInstance) {
-                    var name,
-                        rule,
-                        messages = [];
-
-                    for (name in this._propertyValidationRules) {
-                        if (this._propertyValidationRules.hasOwnProperty(name)) {
-                            rule = this._propertyValidationRules[name];
-                            //Benoit: It's likely that some rules might be async
-                            //or we might decide to differ the ones that are async
-                            //to be run on the server instead, but right now the code
-                            //doesn't anticipate any async rule.
-
-                            /*
-                        TODO
-                        Also to help reconciliate validation with HTML5 standards
-                        and its ValidityState object (https://developer.mozilla.org/en-US/docs/Web/API/ValidityState), or to know what key/expression failed validation, we need to return a map key/reason, and not just an array, so that each message can end-up being processed/communicated to the user by the component editing it.
-
-                        It might even make sense that each component editing a certain property of an object, or any combination of some
-                        would have to "observe/listen" to individual property validations.
-
-                        This one is meant to run on all as some rules can involve multiple properties.
-                    */
-
-                            if (rule.evaluateRule(objectInstance)) {
-                                messages.push(rule.messageKey);
-                            }
-                        }
-                    }
-                    return messages;
-                },
+                (objectInstance) => this.evaluateObjectValidity(objectInstance),
                 "evaluateRules",
                 "evaluateObjectValidity"
             ),
