@@ -16,7 +16,7 @@
                     { "@": "fetchLimitDescriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./data-query.mjson" },
             "exportName": "DataQuery",
             "module": { "%": "./data-query" },

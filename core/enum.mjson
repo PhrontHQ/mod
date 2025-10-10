@@ -17,7 +17,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./enum.mjson" },
             "exportName": "Enum",
             "module": { "%": "./enum" },

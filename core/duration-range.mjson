@@ -51,7 +51,7 @@
                 { "@": "bounds_property_descriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./duration-range.mjson" },
             "exportName": "Range",
             "module": { "%": "./range" },

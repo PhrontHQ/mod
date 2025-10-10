@@ -118,7 +118,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": {
                 "%": "core/converter/number-converter.mjson"
             },

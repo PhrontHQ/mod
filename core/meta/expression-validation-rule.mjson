@@ -1,0 +1,50 @@
+{
+    "expression_validation_rule_criteria": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "criteria",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": 1,
+            "mandatory": true,
+            "denyDelete": false,
+            "readOnly": true,
+            "valueType": "object",
+            "valueObjectPrototypeName": "Criteria",
+            "valueObjectModuleId": "core/criteria",
+            "enumValues": [],
+            "helpKey": "The criteria expression to evaluate for this validation rule."
+        }
+    },
+    "ValidationRuleDescriptor": {
+        "object": "./validation-rule.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/validation-rule.mjson",
+        "values": {
+            "name": "ExpressionValidationRule",
+            "customPrototype": false,
+            "propertyDescriptors": [
+                {
+                    "@": "expression_validation_rule_criteria"
+                }
+            ],
+            "propertyDescriptorGroups": {
+                "expression-validation-rule": [
+                    {
+                        "@": "expression_validation_rule_criteria"
+                    }
+                ]
+            },
+            "objectDescriptorModule": {
+                "%": "core/meta/expression-validation-rule.mjson"
+            },
+            "exportName": "ExpressionValidationRule",
+            "module": {
+                "%": "core/meta/expression-validation-rule"
+            },
+            "parent":{"@": "ValidationRuleDescriptor"}
+        }
+    }
+}
