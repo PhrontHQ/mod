@@ -1,67 +1,47 @@
-/* <copyright>
- </copyright> */
-var Montage = require("mod/core/core").Montage;
-var TestPageLoader = require("mod-testing/testpageloader").TestPageLoader;
-var Component = require("mod/ui/component").Component;
-var Criteria = require("mod/core/criteria").Criteria;
-var ObjectDescriptor = require("mod/core/meta/object-descriptor").ObjectDescriptor;
-var Promise = require("mod/core/promise").Promise;
-var Serializer = require("mod/core/serialization/serializer/montage-serializer").MontageSerializer;
+const Serializer = require("mod/core/serialization/serializer/montage-serializer").MontageSerializer;
+const ObjectDescriptor = require("mod/core/meta/object-descriptor").ObjectDescriptor;
+const TestPageLoader = require("mod-testing/testpageloader").TestPageLoader;
+const Component = require("mod/ui/component").Component;
 
-TestPageLoader.queueTest("component-object-descriptor-test/component-object-descriptor-test", function (testPage) {
-    describe("meta/component-object-descriptor-spec", function () {
-        var component1;
-        var component2;
-        var component3;
+TestPageLoader.queueTest("component-object-descriptor-test/component-object-descriptor-test", (testPage) => {
+    describe("meta/component-object-descriptor-spec", () => {
+        let component1, component2, component3;
 
-        beforeEach(function () {
+        beforeEach(() => {
             component1 = testPage.test.component1;
             component2 = testPage.test.component2;
             component3 = testPage.test.component3;
         });
 
-        it("can create new objectDescriptor", function (done) {
-            var newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
+        it("can create a new objectDescriptor", async () => {
+            const newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
             component1.objectDescriptor = newObjectDescriptor;
-            var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise
-                .then(function (objectDescriptor) {
-                    expect(newObjectDescriptor).toBeDefined();
-                    expect(objectDescriptor).toBe(newObjectDescriptor);
-                })
-                .finally(function () {
-                    done();
-                });
+            const objectDescriptor = await component1.objectDescriptor;
+
+            expect(newObjectDescriptor).toBeDefined();
+            expect(objectDescriptor).toBe(newObjectDescriptor);
         });
 
-        it("can create new property objectDescriptor", function (done) {
-            var newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
+        it("can create a new property objectDescriptor", async () => {
+            const newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty");
             component1.objectDescriptor = newObjectDescriptor;
-            var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise
-                .then(function (objectDescriptor) {
-                    var propertyDescriptor = objectDescriptor.propertyDescriptorForName("bindableProperty");
-                    expect(propertyDescriptor).toBeDefined();
-                })
-                .finally(function () {
-                    done();
-                });
+            const objectDescriptor = await component1.objectDescriptor;
+            const propertyDescriptor = objectDescriptor.propertyDescriptorForName("bindableProperty");
+
+            expect(propertyDescriptor).toBeDefined();
         });
 
-        it("can serialize the component objectDescriptor", function (done) {
-            var serializer = new Serializer().initWithRequire(require);
+        it("can serialize the component objectDescriptor", async () => {
+            const serializer = new Serializer().initWithRequire(require);
+            const newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
 
-            var newObjectDescriptor = new ObjectDescriptor().initWithName(component1.identifier);
-            //
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty1");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty2");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty3");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty4");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty5");
-            //
             newObjectDescriptor.addEventDescriptorNamed("action");
-            //
             newObjectDescriptor.addPropertyDescriptorToGroupNamed(
                 newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"),
                 "required"
@@ -76,43 +56,32 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             );
             component1.objectDescriptor = newObjectDescriptor;
 
-            var objectDescriptorPromise = component1.objectDescriptor;
-            objectDescriptorPromise
-                .then(function (objectDescriptor) {
-                    var serializedDescription = serializer.serializeObject(objectDescriptor);
-                    expect(serializedDescription).toBeTruthy();
-                })
-                .finally(function () {
-                    done();
-                });
+            const objectDescriptor = await component1.objectDescriptor;
+            const serializedDescription = serializer.serializeObject(objectDescriptor);
+
+            expect(serializedDescription).toBeTruthy();
         });
 
-        xit("can load the component objectDescriptor from the reel", function (done) {
-            var objectDescriptorPromise = component2.objectDescriptor;
-            objectDescriptorPromise
-                .then(function (objectDescriptor) {
-                    expect(objectDescriptor).toBeTruthy();
-                    // TODO test look weird requiredBindableProperty1 vs bindableProperty1
-                    expect(objectDescriptor.propertyDescriptorForName("bindableProperty1")).toBeTruthy();
-                    expect(objectDescriptor.propertyDescriptorForName("required")).toBeTruthy();
-                })
-                .finally(function () {
-                    done();
-                });
+        xit("can load the component objectDescriptor from the reel", async () => {
+            const objectDescriptor = await component2.objectDescriptor;
+
+            expect(objectDescriptor).toBeTruthy();
+            // TODO test look weird requiredBindableProperty1 vs bindableProperty1
+            expect(objectDescriptor.propertyDescriptorForName("bindableProperty1")).toBeTruthy();
+            expect(objectDescriptor.propertyDescriptorForName("required")).toBeTruthy();
         });
 
-        it("can create validation rules", function (done) {
-            var serializer = new Serializer().initWithRequire(require);
+        it("can create validation rules", async () => {
+            const serializer = new Serializer().initWithRequire(require);
+            const newObjectDescriptor = new ObjectDescriptor().initWithName(component3.identifier);
 
-            var newObjectDescriptor = new ObjectDescriptor().initWithName(component3.identifier);
             expect(newObjectDescriptor).toBeTruthy();
-            //
+
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty1");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty2");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty3");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty4");
             newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty5");
-            //
             newObjectDescriptor.addPropertyDescriptorToGroupNamed(
                 newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"),
                 "required"
@@ -126,64 +95,38 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
                 "required"
             );
 
-            newObjectDescriptor.addPropertyValidationRule("rule1").criteria = null;
-            //            newObjectDescriptor.addPropertyValidationRule("rule1").criteria = Criteria.property("requiredBindableProperty1").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule2").criteria = Criteria.property("requiredBindableProperty2").isBound;
-            //            newObjectDescriptor.addPropertyValidationRule("rule3").criteria = Criteria.property("requiredBindableProperty3").isBound;
-
+            newObjectDescriptor.addValidationRule("rule1").criteria = null;
             component3.objectDescriptor = newObjectDescriptor;
 
-            var objectDescriptorPromise = component3.objectDescriptor;
-            objectDescriptorPromise
-                .then(function (objectDescriptor) {
-                    expect(objectDescriptor).toBeTruthy();
-                    var serializedDescription = serializer.serializeObject(objectDescriptor);
-                    expect(serializedDescription).toBeTruthy();
-                })
-                .finally(function () {
-                    done();
-                });
+            const objectDescriptor = await component3.objectDescriptor;
+            expect(objectDescriptor).toBeTruthy();
+            const serializedDescription = serializer.serializeObject(objectDescriptor);
+            expect(serializedDescription).toBeTruthy();
         });
 
-        describe("test converter objectDescriptor", function () {
-            var component = new Component();
+        describe("test converter objectDescriptor", () => {
+            const component = new Component();
 
-            it("should exist", function (done) {
-                var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise
-                    .then(function (objectDescriptor) {
-                        expect(objectDescriptor).toBeTruthy();
-                    })
-                    .finally(function () {
-                        done();
-                    });
+            it("should exist", async () => {
+                const objectDescriptor = await component.objectDescriptor;
+                expect(objectDescriptor).toBeTruthy();
             });
 
-            it("should have element property objectDescriptor", function (done) {
-                var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise
-                    .then(function (objectDescriptor) {
-                        var propertyDescriptor = objectDescriptor.propertyDescriptorForName("element");
-                        expect(propertyDescriptor).toBeTruthy();
-                        expect(propertyDescriptor.valueType).toBe("string");
-                        expect(propertyDescriptor.readOnly).toBe(true);
-                    })
-                    .finally(function () {
-                        done();
-                    });
+            it("should have an 'element' property object descriptor", async () => {
+                const objectDescriptor = await component.objectDescriptor;
+                const propertyDescriptor = objectDescriptor.propertyDescriptorForName("element");
+
+                expect(propertyDescriptor).toBeTruthy();
+                expect(propertyDescriptor.valueType).toBe("string");
+                expect(propertyDescriptor.readOnly).toBe(true);
             });
 
-            it("should have identifier property objectDescriptor", function (done) {
-                var objectDescriptorPromise = component.objectDescriptor;
-                objectDescriptorPromise
-                    .then(function (objectDescriptor) {
-                        var propertyDescriptor = objectDescriptor.propertyDescriptorForName("identifier");
-                        expect(propertyDescriptor).toBeTruthy();
-                        expect(propertyDescriptor.valueType).toBe("string");
-                    })
-                    .finally(function () {
-                        done();
-                    });
+            it("should have an 'identifier' property object descriptor", async () => {
+                const objectDescriptor = await component.objectDescriptor;
+                const propertyDescriptor = objectDescriptor.propertyDescriptorForName("identifier");
+
+                expect(propertyDescriptor).toBeTruthy();
+                expect(propertyDescriptor.valueType).toBe("string");
             });
         });
     });
