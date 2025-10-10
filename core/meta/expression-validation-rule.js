@@ -16,6 +16,11 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
         });
     }
 
+    /**
+     * The `Criteria` object containing the expression to be evaluated for this
+     * validation rule.
+     * @type {Criteria}
+     */
     get criteria() {
         return this._criteria;
     }
@@ -24,12 +29,20 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
         this._criteria = value;
     }
 
+    /**
+     * Serializes the expression validation rule
+     * @param {Serializer} serializer - The serializer instance.
+     */
     serializeSelf(serializer) {
         super.serializeSelf(serializer);
         serializer.setProperty("criteria", this._criteria, "reference");
         serializer.setAllValues();
     }
 
+    /**
+     * Deserializes the expression validation rule
+     * @param {Deserializer} deserializer - The deserializer instance.
+     */
     deserializeSelf(deserializer) {
         super.deserializeSelf(deserializer);
         this._criteria = deserializer.getProperty("criteria");

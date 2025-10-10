@@ -4,6 +4,7 @@ const Montage = core.Montage;
 /**
  * Serves as a base class for all validation rules, ensuring a consistent API
  * for the validation service. This class is designed to be extended, not
+
  * used directly.
  *
  * @class ValidationRule
@@ -21,11 +22,14 @@ exports.ValidationRule = class ValidationRule extends Montage {
         });
     }
 
-    // Descriptors required by Montage's serialization
+    /**
+     * The object descriptor for this validation rule,
+     * required by Montage's serialization.
+     * @type {ObjectDescriptor}
+     */
     objectDescriptor = core._objectDescriptorDescriptor;
 
     /**
-     * Component description attached to this validation rule.
      * @type {ObjectDescriptor}
      */
     get owner() {
@@ -41,12 +45,13 @@ exports.ValidationRule = class ValidationRule extends Montage {
      * @type {string}
      */
     get identifier() {
-        // FIXME: @benoit this.objectDescriptor.identifier is undefined
+        // FIXME: @Benoit this.objectDescriptor.identifier is undefined
         return this.name ?? this.objectDescriptor.identifier;
     }
 
     /**
      * Name of the property being described.
+     * FIXME: @Benoit should this be `identifier`?
      * @type {string}
      */
     get name() {
@@ -57,6 +62,10 @@ exports.ValidationRule = class ValidationRule extends Montage {
         this._name = value;
     }
 
+    /**
+     * The error message to display when validation fails.
+     * @type {string}
+     */
     get message() {
         return this._message;
     }
@@ -65,6 +74,11 @@ exports.ValidationRule = class ValidationRule extends Montage {
         this._message = value || "";
     }
 
+    /**
+     * An array of property names that this validation rule depends on. Changes
+     * to these properties may trigger re-validation.
+     * @type {Array<string>}
+     */
     get validationProperties() {
         return this._validationProperties || [];
     }
@@ -73,6 +87,11 @@ exports.ValidationRule = class ValidationRule extends Montage {
         this._validationProperties = value;
     }
 
+    /**
+     * A collection of hints or suggestions to provide additional context or
+     * guidance to the user when validation fails.
+     * @type {Object}
+     */
     get hints() {
         return this._hints;
     }
@@ -101,6 +120,10 @@ exports.ValidationRule = class ValidationRule extends Montage {
         return this;
     }
 
+    /**
+     * Serializes the validation rule's properties using the provided serializer.
+     * @param {Serializer} serializer - The serializer instance.
+     */
     serializeSelf(serializer) {
         serializer.setProperty("validationProperties", this.validationProperties, "reference");
         serializer.setProperty("objectDescriptor", this.owner, "reference");
@@ -110,6 +133,10 @@ exports.ValidationRule = class ValidationRule extends Montage {
         serializer.setAllValues();
     }
 
+    /**
+     * Deserializes the validation rule's properties using the provided deserializer.
+     * @param {Deserializer} deserializer - The deserializer instance.
+     */
     deserializeSelf(deserializer) {
         this.validationProperties = deserializer.getProperty("validationProperties");
         this.owner = deserializer.getProperty("objectDescriptor");
