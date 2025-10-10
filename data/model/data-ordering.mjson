@@ -30,7 +30,7 @@
                     { "@": "orderDescriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": {},
             "objectDescriptorModule": { "%": "./data-ordering.mjson" },
             "exportName": "DataOrdering",
             "module": { "%": "./data-ordering" },
