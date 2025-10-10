@@ -4,11 +4,12 @@ Version 1 implements only core validation components with manual configuration, 
 
 1. **Base `ValidationRule` Class**
 
-    - **Purpose**: To serve as a blueprint for all validation rules. It ensures each rule has a consistent API for the `ValidationService` to use.
+    - **Purpose**: To serve as a blueprint for all validation rules. It ensures each rule has a consistent API for the `DataValidationManager` to use.
     - **Properties**:
         - `name: string`: A unique identifier for the rule (e.g., `isMandatory`).
         - `message: string`: The localized message.
-        - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `ValidationService` to know when to re-run the rule.
+        - `hints: string[]`: An array of strings providing additional guidance or suggestions related to the data validation process.
+        - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `DataValidationManager` to know when to re-run the rule.
     - **Methods**:
         - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
             - Core asynchronous method all subclasses must implement.
@@ -73,7 +74,7 @@ Version 1 implements only core validation components with manual configuration, 
         }
         ```
 
-3. `ValidationService`
+3. `DataValidationManager`
 
     - **Purpose**: This service orchestrates the validation process by triggering rules and updating the `invalidityState` property on data objects.
     - **Methods**:
@@ -103,7 +104,7 @@ Version 1 implements only core validation components with manual configuration, 
 
 ## Future Improvements
 
-1. `ValidationService` Enhancements
+1. `DataValidationManager` Enhancements
 
     - **Methods**:
       `validateProperty(instance, propertyName, allRules)`:
