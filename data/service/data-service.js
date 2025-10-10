@@ -5170,12 +5170,10 @@ DataService.addClassProperties(
         },
 
         /*
-        When it gets time to add/handle timeouts:
-
-        https://advancedweb.hu/how-to-add-timeout-to-a-promise-in-javascript/
-
-    */
-
+         * When it gets time to add/handle timeouts:
+         *
+         * https://advancedweb.hu/how-to-add-timeout-to-a-promise-in-javascript/
+         */
         discardChanges: {
             value: function () {
                 this.createdDataObjects.clear();
@@ -5347,29 +5345,24 @@ DataService.addClassProperties(
                         //so we don't block the main thread all at once?
                         //Waiting has the benefit to enable a 1-shot rendering.
                         Promise.all(validityEvaluationPromises)
-                            .then(
-                                function () {
-                                    // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
-                                    self._dispatchObjectsInvalidity(changedDataObjectInvalidity);
-                                    if (changedDataObjectInvalidity.size > 0) {
-                                        //Do we really need the DataService itself to dispatch another event with all invalid data together at once?
-                                        //self.mainService.dispatchDataEventTypeForObject(DataEvent.invalid, self, detail);
+                            .then(function () {
+                                // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
+                                self._dispatchObjectsInvalidity(changedDataObjectInvalidity);
+                                if (changedDataObjectInvalidity.size > 0) {
+                                    //Do we really need the DataService itself to dispatch another event with all invalid data together at once?
+                                    //self.mainService.dispatchDataEventTypeForObject(DataEvent.invalid, self, detail);
 
-                                        var validatefailedOperation = new DataOperation();
-                                        validatefailedOperation.type = DataOperation.Type.ValidateFailedOperation;
-                                        //At this point, it's the dataService
-                                        validatefailedOperation.target = self.mainService;
-                                        validatefailedOperation.data = changedDataObjectInvalidity;
-                                        //Exit, can't move on
-                                        resolve(validatefailedOperation);
-                                    } else {
-                                        return transactionObjectDescriptors;
-                                    }
-                                },
-                                function (error) {
-                                    reject(error);
+                                    var validatefailedOperation = new DataOperation();
+                                    validatefailedOperation.type = DataOperation.Type.ValidateFailedOperation;
+                                    //At this point, it's the dataService
+                                    validatefailedOperation.target = self.mainService;
+                                    validatefailedOperation.data = changedDataObjectInvalidity;
+                                    //Exit, can't move on
+                                    resolve(validatefailedOperation);
+                                } else {
+                                    return transactionObjectDescriptors;
                                 }
-                            )
+                            }, reject)
                             .then(function (_transactionObjectDescriptors) {
                                 var operationCount =
                                         createdDataObjects.size + changedDataObjects.size + deletedDataObjects.size,
