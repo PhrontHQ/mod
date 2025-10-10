@@ -125,6 +125,7 @@ The system handles all validation rules **asynchronously,** where validation ru
         "prototype": "mod/core/validation/expression-validation-rule",
         "values": {
             "message": "Employee ID must be in the format 'E' followed by 5 digits (e.g., E12345).",
+            "name": "employeeId",
             "criteria": { "@": "employeeIdFormatCriteria" }
         }
     },
@@ -139,6 +140,8 @@ The system handles all validation rules **asynchronously,** where validation ru
         "prototype": "mod/core/validation/expression-validation-rule",
         "values": {
             "message": "End date must be after the start date.",
+            "name": "enDate",
+            "validationProperties": ["startDate"],
             "criteria": { "@": "endDateAfterStartDateCriteria" }
         }
     },
@@ -151,14 +154,6 @@ The system handles all validation rules **asynchronously,** where validation ru
     }
 }
 ```
-
-### Important Note: UI Interaction and "Touched" State
-
-Validation logic must know about Property Field interaction state, specifically when a Property Field is **"touched"** (focused then blurred by user) for proper UX.
-
-Indeed, for required fields, errors shouldn't appear on initial load before user interaction. Validation should only trigger _after_ the user has "touched" the Property Field and left it in an invalid state.
-
-`employee.touchedProperties = ["firstName", "email"]; // Like this?`
 
 ### **2. Invalidity State**
 
@@ -320,25 +315,3 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
     1. The relevant **Property Fields** are notified of the change.
     2. Each Property Field checks the `invalidityState` to see if there are any errors associated with the property it manages.
     3. If an error exists, the Property Field updates its appearance to reflect the error (e.g., showing a red border, displaying a help-text error message, etc.), providing immediate feedback to the user.
-
-**Questions:**
-
-1.  Multiple Errors Per Property:
-    What happens if a property fails multiple rules? For example, if firstName is both empty (fails isMandatory) and too long when present (fails max):
-
-    ```json
-    "invalidityState": {
-        "firstName": [
-            {
-                "message": "First Name is required...",
-                "rule": {"name": "isMandatory", /*...*/}
-            },
-            {
-                "message": "First Name cannot be more than 128 characters...",
-                "rule": {"name": "maxLength", /*...*/}
-            }
-        ]
-    }
-    ```
-
-    Should PropertyField display both messages, or only the first one?
