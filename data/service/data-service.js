@@ -1076,12 +1076,6 @@ DataService.addClassProperties(
             },
         },
 
-        _objectDescriptorForType: {
-            value: function (type) {
-                return this.objectDescriptorForType(type);
-            },
-        },
-
         _constructorToObjectDescriptorMap: {
             value: new Map(),
         },
