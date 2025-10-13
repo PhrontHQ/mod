@@ -4,9 +4,9 @@ This spec outlines a centralized data validation system that works across client
 
 ## Core Architecture
 
-The system is built on three main components:
+The system is built on several main components:
 
-### **1. Validation Rules**
+### 1. Validation Rules
 
 Validation rules are defined on `ObjectDescriptors` using a `validationRules` property, providing a centralized definition of validation constraints.
 
@@ -14,9 +14,83 @@ This supports both simple, single-property rules (e.g., "age must be a positive 
 
 Additionally, the system can automatically generate basic rules from the property-descriptor schema (such as type-checking or required fields) and will be added to the `validationRules` property on the `ObjectDescriptors` object.
 
-The system handles all validation rules **asynchronously,** where validation rules return Promises. The validation engine waits for resolution, and failures add errors to the object's `invalidityState`.
+The system handles all validation rules **asynchronously**, where validation rules return Promises. The validation engine waits for resolution, and failures add errors to the object's `invalidityState`.
 
-**Example**:
+#### Implementation
+
+1. **Base `ValidationRule` Class**
+
+    - **Purpose**: To serve as a blueprint for all validation rules. It ensures each rule has a consistent API for the `DataValidationManager` to use.
+    - **Properties**:
+        - `name: string`: A unique identifier for the rule (e.g., `isMandatory`).
+        - `message: string`: The localized message.
+        - `hints: string[]`: An array of strings providing additional guidance or suggestions related to the data validation process.
+        - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `DataValidationManager` to know when to re-run the rule.
+    - **Methods**:
+        - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
+            - Core asynchronous method all subclasses must implement.
+            - Accepts the data object instance for validation.
+            - Run rules in parallel using `Promise.all`.
+            - Returns a **Promise** resolving to either:
+                - A `ValidationError` object (validation fails)
+                - `null` (validation succeeds)
+    - **Pseudo-code for the base class**
+
+        ```js
+        class ValidationRule {
+            constructor(name, message, validationProperties) {
+                this.name = name;
+                this.message = message;
+                this.validationProperties = validationProperties;
+            }
+
+            async evaluateRule(dataInstance) {
+                // This method must be implemented by subclasses.
+                throw new Error("ValidationRule.evaluateRule() must be implemented.");
+            }
+        }
+        ```
+
+2. **`ExpressionValidationRule` Subclass (extends `ValidationRule`)**
+
+    - **Purpose**: To validate a data instance against a given string expression.
+    - **Properties**:
+        - Inherits `name`, `message`, `hints` and `validationProperties` from `ValidationRule`.
+        - `criteria: Criteria`: Object that contains an expression string to be evaluated (e.g., "endDate > startDate`"`).
+    - **Methods**:
+        - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
+            1. **Override** the base class method.
+            2. Evaluate the `criteria` expression against the instance object.
+            3. Return a `ValidationError` if the expression is false, using the rule's details.
+            4. Return `null` if the expression evaluates to true.
+    - **Pseudo-code for the subclass**
+
+        ```js
+        class ExpressionValidationRule extends ValidationRule {
+            constructor(name, message, validationProperties, criteria) {
+                super(name, message, validationProperties);
+                this.criteria = criteria;
+            }
+
+            async evaluateRule(dataInstance) {
+                // delegate logic to FRB...
+                const isValid = evaluateExpression(this.criteria, dataInstance);
+
+                if (!isValid) {
+                    // Rule failed, return the error object.
+                    return new ValidationError(
+                      message: this.message, // Later, we should use a localization service.
+                      rule: this,
+                    );
+                }
+
+                // Rule passed.
+                return null;
+           }
+        }
+        ```
+
+#### Example
 
 ```json
 {
@@ -155,18 +229,18 @@ The system handles all validation rules **asynchronously,** where validation ru
 }
 ```
 
-### **2. Invalidity State**
+### 2. Invalidity State
 
 When a data object fails validation, it is not rejected right away. Instead, validation errors are stored in a special `invalidityState` property on the object instance itself.
 
 This state maintains a structured list of all current validation failures (`ValidationError`), specifying which properties are involved and why they're invalid. This approach allows the application to function with temporarily invalid data until the user makes corrections.
 
-#### ValidationError
+### 3. ValidationError
 
 A `ValidationError` object would likely contain three key pieces of information:
 
--   `message`: The user-facing error message, translated into the current language.
--   `rule`: The validation rule object descriptor that failed (e.g., `isMandatory`, `min`, or a custom rule like `endDateAfterStartDate`).
+-   `message: string`: The user-facing error message, translated into the current language.
+-   `rule: ValidationRule`: The validation rule object descriptor that failed (e.g., `isMandatory`, `min`, or a custom rule like `endDateAfterStartDate`).
 
 #### Example 1: Basic Mandatory Field Error
 
@@ -236,9 +310,9 @@ The resulting `ValidationError` would look like this:
 
 #### The Complete `invalidityState` property
 
-When multiple validation rules fail on an object instance, the `invalidityState` property is a map keyed by property name. Each key contains an array of corresponding `ValidationError` objects for that property.
+The `invalidityState` property is a map where each key is a property name, and the value is an array of `ValidationError` objects for that property. This structure allows multiple validation errors to be tracked per property.
 
-For an employee instance with all three errors from the examples above, its `invalidityState` would look like this:
+For example, if an employee instance has errors on `firstName`, `employeeId`, `startDate`, and `endDate`, its `invalidityState` would look like:
 
 ```json
 "invalidityState": {
@@ -269,7 +343,17 @@ For an employee instance with all three errors from the examples above, its `in
 }
 ```
 
-### 3. Smart PropertyField Components
+### 4. `DataValidationManager`
+
+This service orchestrates the validation process by triggering rules and updating the `invalidityState` property on data objects.
+
+-   **Methods**:
+    -   `validateDataObject(instance, allRules)`:
+        1. **Run All Rules**: Asynchronously execute the `validate` method for each rule in `allRules` with the `instance`.
+        2. **Collect Results**: Gather all `ValidationError` objects from failed validations.
+        3. **Update State**: Replace `instance.invalidityState` with the new error map, if any.
+
+### 5. Smart PropertyField Components
 
 A set of UI components called **`PropertyField`** that wrap standard inputs (text fields, number inputs, etc.) to provide labels, help text, and validation error display.
 
@@ -283,15 +367,17 @@ To minimize developer effort, the system automatically determines the data conte
 
 For example, when a `PropertyField` value binds to `@owner.user.name`, the system parses this expression to automatically determine:
 
--   **`dataType`**: The `User` data object descriptor.
--   **`dataTypeProperty`**: The `name` property object descriptor.
--   **`dataInstance`**: The specific `user` instance being edited.
+-   `dataInstances: object[]`: A collection of data instances for editing. Enables a component to modify the same property across multiple objects (though most use cases will involve a single object).
+-   `dataInstance: object` : A convenience getter/setter that simplifies access to to `dataInstances[0]`.
+-   `dataType: ObjectDescriptor`: The object descriptor that defines the schema for the `dataInstance`.
+-   `dataTypeProperty: PropertyDescriptor`: The property descriptor within the `dataType` that this field edits (e.g., the `firstName` property descriptor).
+-   `isTouched: boolean`: Initialized to `false`. Indicates whether the field has been interacted with by the user.
 
 #### Manual Override
 
 Dynamic discovery, can be **overridden** when needed. Developers can manually specify `dataType`, `dataTypeProperty`, and `dataInstance` for complex scenarios where automatic detection is insufficient, providing control without losing the system's convenience.
 
-## Validation Flow
+#### Validation Flow
 
 1. **User Input & Immediate Model Update**
 
@@ -315,3 +401,35 @@ Dynamic discovery, can be **overridden** when needed. Developers can manually sp
     1. The relevant **Property Fields** are notified of the change.
     2. Each Property Field checks the `invalidityState` to see if there are any errors associated with the property it manages.
     3. If an error exists, the Property Field updates its appearance to reflect the error (e.g., showing a red border, displaying a help-text error message, etc.), providing immediate feedback to the user.
+
+## Future Improvements
+
+1. `DataValidationManager` Enhancements
+
+    - **Methods**:
+      `validateProperty(instance, propertyName, allRules)`:
+        - **Find Relevant Rules**: Filter `allRules` to include only those affecting the changed property.
+        - **Execute Rules**: Run filtered rules.
+        - **Process Results**: Collect errors from failed validations.
+        - **Update State**: The service retrieves the current invalidityState, removes errors for re-validated rules, adds new errors from failures, and finally updates instance.invalidityState with the modified map.
+
+2. **`ValidationRule` & `ExpressionValidationRule`** Enhancements
+
+    - **Methods**:
+      `validationProperties()`
+        - Implement a `validationProperties()` method that returns a Set of dependent properties that the rule depends on.
+
+3. **Automatic Context Discovery via Data-Binding**
+
+    When a UI component is bound to a data expression, the system automatically performs an analysis to establish the data validation context:
+
+    1. **Binding Declaration:** Define a binding
+        - **Example:** A input property text field value is bound to `value: @owner.user.email`.
+    2. **Intelligent Expression Resolution:** FRB parses this expression to identify three crucial elements:
+        - **Target Instance `dataInstance`:** The object containing the property being edited (the `user` object).
+        - **Target Type `dataType`:** TheUser object descriptor.
+        - **Target Property `dataTypeProperty`:** The name of the property itself (`email`).
+
+4. **Support** **Internationalization (i18n) for Messages & Labels**
+
+    To support full translation, validation messages and UI component labels will use Localized String Data Objects.
