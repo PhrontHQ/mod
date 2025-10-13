@@ -25,7 +25,7 @@ The system handles all validation rules **asynchronously**, where validation ru
         - `name: string`: A unique identifier for the rule (e.g., `isMandatory`).
         - `message: string`: The localized message.
         - `hints: string[]`: An array of strings providing additional guidance or suggestions related to the data validation process.
-        - `validationProperties: PropertyDescriptor[]`: An array of property descriptor objects that this rule depends on. This wiil be used for the `DataValidationManager` to know when to re-run the rule.
+        - `validationProperties: string[]`: An array of property name that this rule depends on. This wiil be used for the `DataValidationManager` to know when to re-run the rule.
     - **Methods**:
         - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
             - Core asynchronous method all subclasses must implement.
@@ -256,14 +256,7 @@ The resulting `ValidationError` would look like this:
 ```json
 {
     "message": "First Name is required and cannot be empty.",
-    "validationProperties": [
-        // Array of property field descriptor instances that this rule depends on
-        // @benoit: how just an array of property names?
-        {
-            "name": "firstName"
-            // ... (all other PropertyDescriptor properties)
-        }
-    ],
+    "validationProperties": ["firstName"],
     "rule": {
         // The validation rule object that caused this error
         "name": "isMandatory"
