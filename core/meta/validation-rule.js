@@ -50,8 +50,7 @@ exports.ValidationRule = class ValidationRule extends Montage {
     }
 
     /**
-     * Name of the property being described.
-     * FIXME: @Benoit should this be `identifier`?
+     * Name of the validation rule.
      * @type {string}
      */
     get name() {
@@ -64,6 +63,8 @@ exports.ValidationRule = class ValidationRule extends Montage {
 
     /**
      * The error message to display when validation fails.
+     * TODO: This should support templating to include dynamic values.
+     * FRB, or i18n keys?
      * @type {string}
      */
     get message() {
