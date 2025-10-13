@@ -1,4 +1,3 @@
-
 var Montage = require("./core").Montage;
 
 var parse = require("./frb/parse"),
@@ -10,826 +9,902 @@ var parse = require("./frb/parse"),
     compile = require("./frb/compile-evaluator"),
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator;
 
-var Criteria = exports.Criteria = Montage.specialize({
+var Criteria = (exports.Criteria = Montage.specialize(
+    {
+        name: {
+            value: null,
+        },
 
-    name: {
-        value: null
-    },
+        _expression: {
+            value: null,
+        },
 
-    _expression: {
-        value: null
-    },
-
-    /**
-     * returns Criteria's expression, which is not expected to change after being
-     * initialized
-     *
-     * @type {string}
-     */
-    expression: {
-        get: function() {
-            return this._expression || (
-                this._syntax
-                    ? (this._expression = stringify(this._syntax))
-                    : this._expression
+        /**
+         * returns Criteria's expression, which is not expected to change after being
+         * initialized
+         *
+         * @type {string}
+         */
+        expression: {
+            get: function () {
+                return (
+                    this._expression || (this._syntax ? (this._expression = stringify(this._syntax)) : this._expression)
                 );
+            },
+            set: function (value) {
+                if (value !== this._expression) {
+                    this._reset();
+                    this._expression = value;
+                }
+            },
         },
-        set: function(value) {
-            if(value !== this._expression) {
-                this._reset();
-                this._expression = value;
-            }
-        }
-    },
-    /**
-     * @type {object}
-     */
-    _parameters: {
-        value: undefined
-    },
-    parameters: {
-        get: function() {
-            return this._parameters;
+        /**
+         * @type {object}
+         */
+        _parameters: {
+            value: undefined,
         },
-        set: function(value) {
-            if(value !== this._parameters) {
-                this._parameters = value;
-            }
-        }
-    },
-
-    _reset: {
-        value: function() {
-            this._expression = null;
-            this._compiledSyntax = null;
-
-            //Reset qualifiedProperties cache
-            this._qualifiedProperties = null;
-
-            this._syntax = null;
-        }
-    },
-
-    /**
-     * @private
-     * @type {object}
-     */
-    _syntax: {
-        value: null
-    },
-    /**
-     * The parsed expression, a syntactic tree.
-     * Now mutable to avoid creating new objects when appropriate
-     *
-     * @type {object}
-     */
-    syntax: {
-        get: function() {
-            return this._syntax || (this._syntax = parse(this._expression));
+        parameters: {
+            get: function () {
+                return this._parameters;
+            },
+            set: function (value) {
+                if (value !== this._parameters) {
+                    this._parameters = value;
+                }
+            },
         },
-        set: function(value) {
-            if(value !== this._syntax) {
-                //We need to reset:
-                this._reset();
-                this._syntax = value;
-            }
 
-        }
-    },
-    _compiledSyntax: {
-        value: null
-    },
-    /**
-     * The compiled expression, a function, that is used directly for evaluation.
-     *
-     * @type {function}
-     */
-   compiledSyntax: {
-        get: function() {
-            return this._compiledSyntax || (this._compiledSyntax = compile(this.syntax));
-        }
-    },
+        _reset: {
+            value: function () {
+                this._expression = null;
+                this._compiledSyntax = null;
 
-    /**
-     * Initialize a Criteria with a syntax, the expression parsed.
-     *
-     * @method
-     * @returns {Criteria} - The Criteria initialized.
-     */
-    initWithSyntax: {
-        value: function (syntax, parameters, scopeComponents) {
-            this._syntax = syntax;
-            this.parameters = parameters;
+                //Reset qualifiedProperties cache
+                this._qualifiedProperties = null;
 
-            if(scopeComponents) {
-                this._setScopeComponents(scopeComponents);
-            }
-            return this;
-        }
-    },
+                this._syntax = null;
+            },
+        },
 
-    /**
-     * Initialize a Criteria with a syntax, the expression parsed.
-     *
-     * @method
-     * @returns {Criteria} - The Criteria initialized.
-     */
-    initWithCompiledSyntax: {
-        value: function (compiledSyntax, parameters, scopeComponents) {
-            this._compiledSyntax = compiledSyntax;
-            this.parameters = parameters;
+        /**
+         * @private
+         * @type {object}
+         */
+        _syntax: {
+            value: null,
+        },
+        /**
+         * The parsed expression, a syntactic tree.
+         * Now mutable to avoid creating new objects when appropriate
+         *
+         * @type {object}
+         */
+        syntax: {
+            get: function () {
+                return this._syntax || (this._syntax = parse(this._expression));
+            },
+            set: function (value) {
+                if (value !== this._syntax) {
+                    //We need to reset:
+                    this._reset();
+                    this._syntax = value;
+                }
+            },
+        },
+        _compiledSyntax: {
+            value: null,
+        },
+        /**
+         * The compiled expression, a function, that is used directly for evaluation.
+         *
+         * @type {function}
+         */
+        compiledSyntax: {
+            get: function () {
+                return this._compiledSyntax || (this._compiledSyntax = compile(this.syntax));
+            },
+        },
 
-            if(scopeComponents) {
-                this._setScopeComponents(scopeComponents);
-            }
-            return this;
-        }
-    },
+        /**
+         * Initialize a Criteria with a syntax, the expression parsed.
+         *
+         * @method
+         * @returns {Criteria} - The Criteria initialized.
+         */
+        initWithSyntax: {
+            value: function (syntax, parameters, scopeComponents) {
+                this._syntax = syntax;
+                this.parameters = parameters;
 
+                if (scopeComponents) {
+                    this._setScopeComponents(scopeComponents);
+                }
+                return this;
+            },
+        },
 
-    /**
-     * Initialize a Criteria with an expression as string representation
-     *
-     * for example expression: "(firstName= $firstName) && (lastName = $lastName)"
-     *             parameters: {
-     *                  "firstName": "Han",
-     *                  "lastName": "Solo"
-     *             }
-     *
-     * @method
-     * @argument {string} expression - A string representaton of the criteria
-     *                                  expected to be a valid Montage expression.
-     * @argument {object} parameters - Optional object containing value for an expressions' prameters
-     *
-     * @returns {Criteria} - The Criteria initialized.
-     */
-    initWithExpression: {
-        value: function (expression,parameters) {
-            this._expression = expression;
-            this.parameters = parameters;
-            return this;
-        }
-    },
+        /**
+         * Initialize a Criteria with a syntax, the expression parsed.
+         *
+         * @method
+         * @returns {Criteria} - The Criteria initialized.
+         */
+        initWithCompiledSyntax: {
+            value: function (compiledSyntax, parameters, scopeComponents) {
+                this._compiledSyntax = compiledSyntax;
+                this.parameters = parameters;
 
-    /**
-     * Backward compatibility with selector.js
-     *
-     * @type {function}
-     */
-   initWithPath: {
-        value: function (path) {
-            return this.initWithExpression(path);
-        }
-    },
+                if (scopeComponents) {
+                    this._setScopeComponents(scopeComponents);
+                }
+                return this;
+            },
+        },
 
+        /**
+         * Initialize a Criteria with an expression as string representation
+         *
+         * for example expression: "(firstName= $firstName) && (lastName = $lastName)"
+         *             parameters: {
+         *                  "firstName": "Han",
+         *                  "lastName": "Solo"
+         *             }
+         *
+         * @method
+         * @argument {string} expression - A string representaton of the criteria
+         *                                  expected to be a valid Montage expression.
+         * @argument {object} parameters - Optional object containing value for an expressions' prameters
+         *
+         * @returns {Criteria} - The Criteria initialized.
+         */
+        initWithExpression: {
+            value: function (expression, parameters) {
+                this._expression = expression;
+                this.parameters = parameters;
+                return this;
+            },
+        },
 
-    criteriaWithParameters: {
-        value: function (parameters) {
-            var clone = (new this.constructor).initWithExpression(this.expression);
-            clone.parameters = parameters;
-            return clone;
-        }
-    },
+        /**
+         * Backward compatibility with selector.js
+         *
+         * @type {function}
+         */
+        initWithPath: {
+            value: function (path) {
+                return this.initWithExpression(path);
+            },
+        },
 
-    clone: {
-        value: function () {
-            var clone = (new this.constructor);
+        criteriaWithParameters: {
+            value: function (parameters) {
+                var clone = new this.constructor().initWithExpression(this.expression);
+                clone.parameters = parameters;
+                return clone;
+            },
+        },
 
-            if(this.name) {
-                clone.name = this.name;
-            }
+        clone: {
+            value: function () {
+                var clone = new this.constructor();
 
-            if(this._expression) {
-                clone._expression = this._expression;
-            }
-            if(this._syntax) {
-                clone._syntax = Object.clone(this._syntax);
-            }
-            if(this._compiledSyntax) {
-                clone._compiledSyntax = this._compiledSyntax;
-            }
-            if(this._parameters) {
-                clone._parameters = Object.clone(this._parameters,1);
-            }
-            if(this.__scope) {
-                clone.__scope = Object.clone(this.__scope);
-            }
+                if (this.name) {
+                    clone.name = this.name;
+                }
 
-            if(this._predicateFunction) {
-                clone._predicateFunction = this._predicateFunction;
-            }
+                if (this._expression) {
+                    clone._expression = this._expression;
+                }
+                if (this._syntax) {
+                    clone._syntax = Object.clone(this._syntax);
+                }
+                if (this._compiledSyntax) {
+                    clone._compiledSyntax = this._compiledSyntax;
+                }
+                if (this._parameters) {
+                    clone._parameters = Object.clone(this._parameters, 1);
+                }
+                if (this.__scope) {
+                    clone.__scope = Object.clone(this.__scope);
+                }
 
-            return clone;
-        }
+                if (this._predicateFunction) {
+                    clone._predicateFunction = this._predicateFunction;
+                }
 
-    },
+                return clone;
+            },
+        },
 
-    serializeSelf: {
-        value: function (serializer) {
-            if(this.name) {
-                serializer.setProperty("name", this.name);
-            }
-            serializer.setProperty("expression", this._expression || (this._expression = stringify(this.syntax)));
-            serializer.setProperty("parameters", this.parameters);
-        }
-    },
+        serializeSelf: {
+            value: function (serializer) {
+                if (this.name) {
+                    serializer.setProperty("name", this.name);
+                }
+                serializer.setProperty("expression", this._expression || (this._expression = stringify(this.syntax)));
+                serializer.setProperty("parameters", this.parameters);
+            },
+        },
 
-    deserializeSelf: {
-        value: function (deserializer) {
-            var value;
+        deserializeSelf: {
+            value: function (deserializer) {
+                var value;
 
-            value = deserializer.getProperty("name");
-            if (value !== undefined) {
-                this.name = value;
-            }
+                value = deserializer.getProperty("name");
+                if (value !== undefined) {
+                    this.name = value;
+                }
 
-            value = deserializer.getProperty("expression") || deserializer.getProperty("path");
-            if (value !== void 0) {
-                this._expression = value;
-
-                /*
-                    If our expression has references to other objects in the serialization, we need to build them into our scope so we can evaluate
-                */
-                if(value.includes("@")) {
-                    var componentIterator = new SyntaxInOrderIterator(this.syntax, "component"),
-                        iLabel, iValue,
-                        scopeComponents = new Map(),
-                        currentSyntax;
+                value = deserializer.getProperty("expression") || deserializer.getProperty("path");
+                if (value !== void 0) {
+                    this._expression = value;
 
                     /*
+                    If our expression has references to other objects in the serialization, we need to build them into our scope so we can evaluate
+                */
+                    if (value.includes("@")) {
+                        var componentIterator = new SyntaxInOrderIterator(this.syntax, "component"),
+                            iLabel,
+                            iValue,
+                            scopeComponents = new Map(),
+                            currentSyntax;
+
+                        /*
                         It's called components because that was the initial reason this was created, serialization was first used in .mods, for component templates.
                     */
-                    this._setScopeComponents(scopeComponents);
-                    //Alias get to the method name that frb complile-evaluator expects:
-                    scopeComponents.getObjectByLabel = scopeComponents.get;
+                        this._setScopeComponents(scopeComponents);
+                        //Alias get to the method name that frb complile-evaluator expects:
+                        scopeComponents.getObjectByLabel = scopeComponents.get;
 
-                    while ((currentSyntax = componentIterator.next("component").value)) {
-                        iLabel = currentSyntax.label;
-                        iValue = deserializer.getObjectByLabel(iLabel);
+                        while ((currentSyntax = componentIterator.next("component").value)) {
+                            iLabel = currentSyntax.label;
+                            iValue = deserializer.getObjectByLabel(iLabel);
 
-                        scopeComponents.set(iLabel,iValue);
+                            scopeComponents.set(iLabel, iValue);
+                        }
+                    }
+                }
+                value = deserializer.getProperty("parameters");
+                if (value !== void 0) {
+                    this.parameters = value;
+                }
+            },
+        },
+
+        /**
+         * Returns true if otherCriteria matches a subset of the receiver's syntax.
+         * This needs to be smart enough to account for inline values vs parameters,
+         * which when evaluated would lead to the same result
+         *
+         * This is tested with this like 'isType == true && $.has(code)' and otherCriteria like 'isType == true'
+         * But this case should also return true if otherCriteria is like 'isType == $.blah' with parameters {blah: true}
+         * So the simple logic
+         *
+         *      equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)
+         *
+         * Is going to have to be more involved I think
+         *
+         * @method
+         * @returns {Boolean} - true if the equivalent of otherCriteria is found within the receiver's syntax, false otherwise
+         */
+        includes: {
+            value: function (otherCriteria) {
+                let isIncluded = false,
+                    syntaxIterator = new SyntaxInOrderIterator(this.syntax),
+                    otherCriteriaSyntaxIterator,
+                    otherCriteriaCurrentIteration,
+                    equals = Object.equals,
+                    otherCriteriaCurrentSyntax,
+                    currentIteration,
+                    currentSyntax = this.syntax,
+                    innerCurrentIteration,
+                    innerCurrentSyntax;
+
+                while (
+                    (currentIteration = syntaxIterator.next(undefined, currentSyntax)) &&
+                    currentIteration.done !== true
+                ) {
+                    currentSyntax = currentIteration.value;
+                    //console.log(JSON.stringify(currentSyntax));
+
+                    otherCriteriaSyntaxIterator = new SyntaxInOrderIterator(otherCriteria.syntax);
+                    innerCurrentSyntax = currentSyntax;
+                    while (
+                        (otherCriteriaCurrentIteration = otherCriteriaSyntaxIterator.next()) &&
+                        otherCriteriaCurrentIteration.done !== true
+                    ) {
+                        if (!equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)) {
+                            break;
+                        } else {
+                            innerCurrentIteration = syntaxIterator.next(undefined, currentSyntax);
+                            innerCurrentSyntax = innerCurrentIteration.value;
+                        }
                     }
 
-                }
-            }
-            value = deserializer.getProperty("parameters");
-            if (value !== void 0) {
-                this.parameters = value;
-            }
-        }
-    },
-
-    /**
-     * Returns true if otherCriteria matches a subset of the receiver's syntax.
-     * This needs to be smart enough to account for inline values vs parameters, 
-     * which when evaluated would lead to the same result
-     * 
-     * This is tested with this like 'isType == true && $.has(code)' and otherCriteria like 'isType == true'
-     * But this case should also return true if otherCriteria is like 'isType == $.blah' with parameters {blah: true}
-     * So the simple logic 
-     * 
-     *      equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)
-     * 
-     * Is going to have to be more involved I think
-     *
-     * @method
-     * @returns {Boolean} - true if the equivalent of otherCriteria is found within the receiver's syntax, false otherwise
-     */
-    includes: {
-        value: function (otherCriteria) {
-            let isIncluded = false,
-                syntaxIterator = new SyntaxInOrderIterator(this.syntax),
-                otherCriteriaSyntaxIterator,
-                otherCriteriaCurrentIteration,
-                equals = Object.equals,
-                otherCriteriaCurrentSyntax,
-                currentIteration,
-                currentSyntax = this.syntax,
-                innerCurrentIteration,
-                innerCurrentSyntax;
-
-
-            while ((currentIteration = syntaxIterator.next(undefined,currentSyntax)) && currentIteration.done !== true) {
-                currentSyntax = currentIteration.value;
-                //console.log(JSON.stringify(currentSyntax));
-
-                otherCriteriaSyntaxIterator = new SyntaxInOrderIterator(otherCriteria.syntax);
-                innerCurrentSyntax = currentSyntax;
-                while((otherCriteriaCurrentIteration = otherCriteriaSyntaxIterator.next()) && otherCriteriaCurrentIteration.done !== true) {
-                    if(!equals(otherCriteriaCurrentIteration.value, innerCurrentSyntax)) {
+                    if (otherCriteriaCurrentIteration.done === true) {
+                        isIncluded = true;
                         break;
-                    } else {
-                        innerCurrentIteration = syntaxIterator.next(undefined, currentSyntax);
-                        innerCurrentSyntax = innerCurrentIteration.value;
                     }
                 }
 
-                if(otherCriteriaCurrentIteration.done === true) {
-                    isIncluded = true;
-                    break;
-                }
-            }
+                return isIncluded;
+            },
+        },
 
-            return isIncluded;
-        }
-    },
+        contains: {
+            value: function (otherCriteria) {
+                return this.includes(otherCriteria);
+            },
+        },
 
-    contains: {
-        value: function (otherCriteria) {
-            return this.includes(otherCriteria);
-        }   
-    },
-
-    equals: {
-        value: function (otherCriteria) {
-            if(this._expression && otherCriteria._expression) {
-                if(
-                    (this._expression === otherCriteria._expression) &&
-                    Object.equals(this.parameters, otherCriteria.parameters)
-                ) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if(this._syntax && otherCriteria._syntax) {
-                if(
-                    Object.equals(this._syntax, otherCriteria._syntax) &&
-                    Object.equals(this.parameters, otherCriteria.parameters)
-                ) {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else if(
+        equals: {
+            value: function (otherCriteria) {
+                if (this._expression && otherCriteria._expression) {
+                    if (
+                        this._expression === otherCriteria._expression &&
+                        Object.equals(this.parameters, otherCriteria.parameters)
+                    ) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else if (this._syntax && otherCriteria._syntax) {
+                    if (
+                        Object.equals(this._syntax, otherCriteria._syntax) &&
+                        Object.equals(this.parameters, otherCriteria.parameters)
+                    ) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else if (
                     //This will force an eventual stringification of a syntax
-                    (this.expression === otherCriteria.expression) &&
+                    this.expression === otherCriteria.expression &&
                     Object.equals(this.parameters, otherCriteria.parameters)
                 ) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-    },
-    __scope: {
-        value: null
-    },
-    _scope: {
-        get: function() {
-            return this.__scope || (this.__scope = new Scope());
-        }
-    },
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+        },
+        __scope: {
+            value: null,
+        },
+        _scope: {
+            get: function () {
+                return this.__scope || (this.__scope = new Scope());
+            },
+        },
 
-    /**
-     * WONKY: scope's components are a map to object's by labels created in a serialization
-     * where a criteria was created or setup. We don't have an easy way to add the getObjectByLabel
-     * aliased method to get on the map as it's not typically exposed.
-     * Scope object from frb doesn't have a setter for components and since it's never been a need so far
-     * in bindings, which is performance sensitive, we're solving it here for now.
-     *
-     * @private
-     * @type {function}
-     */
+        /**
+         * WONKY: scope's components are a map to object's by labels created in a serialization
+         * where a criteria was created or setup. We don't have an easy way to add the getObjectByLabel
+         * aliased method to get on the map as it's not typically exposed.
+         * Scope object from frb doesn't have a setter for components and since it's never been a need so far
+         * in bindings, which is performance sensitive, we're solving it here for now.
+         *
+         * @private
+         * @type {function}
+         */
 
-    _setScopeComponents: {
-        value: function(components /* Map */) {
-            /*
+        _setScopeComponents: {
+            value: function (components /* Map */) {
+                /*
                 It's called components because that was the initial reason this was created, serialization was first used in .mods, for component templates.
             */
-            this._scope.components = components;
-            //Alias get to the method name that frb complile-evaluator expects:
-            components.getObjectByLabel = components.get;
-        }
-    },
-    evaluate: {
-        value: function (value, parameters) {
-            this._scope.parameters = parameters || this.parameters;
-            this._scope.value = value;
-            return this.compiledSyntax(this._scope);
-        }
-    },
+                this._scope.components = components;
+                //Alias get to the method name that frb complile-evaluator expects:
+                components.getObjectByLabel = components.get;
+            },
+        },
+        evaluate: {
+            value: function (value, parameters) {
+                this._scope.parameters = parameters || this.parameters;
+                this._scope.value = value;
+                return this.compiledSyntax(this._scope);
+            },
+        },
 
+        /**
+         * Returns a function that performs evaluate on the criteria, allowing it to be used in array.filter for example.
+         *
+         * @method
+         *
+         * @returns {function} - boolean wether the criteria qualifies a value on propertyName.
+         */
 
-    /**
-     * Returns a function that performs evaluate on the criteria, allowing it to be used in array.filter for example.
-     *
-     * @method
-     *
-     * @returns {function} - boolean wether the criteria qualifies a value on propertyName.
-     */
+        _predicateFunction: {
+            value: undefined,
+        },
 
-    _predicateFunction: {
-        value: undefined
-    },
+        predicateFunction: {
+            get: function () {
+                var self = this;
+                return (
+                    this._predicateFunction ||
+                    (this._predicateFunction = function (value) {
+                        return self.evaluate(value);
+                    })
+                );
+            },
+        },
 
-    predicateFunction: {
-        get: function () {
-            var self = this;
-            return this._predicateFunction || (
-                this._predicateFunction = function(value) {
-                    return self.evaluate(value);
-                }
-            );
-        }
-    },
+        _qualifiedProperties: {
+            value: undefined,
+        },
+        /**
+         * returns all properties used in criteria's expression/syntax
+         *
+         * @property {string}
+         */
+        qualifiedProperties: {
+            get: function () {
+                return (
+                    this._qualifiedProperties || (this._qualifiedProperties = syntaxProperties(this.syntax).flatten())
+                );
+            },
+        },
 
-    _qualifiedProperties: {
-        value: undefined
-    },
-    /**
-     * returns all properties used in criteria's expression/syntax
-     *
-     * @property {string}
-     */
-    qualifiedProperties: {
-        get: function() {
-            return this._qualifiedProperties || (this._qualifiedProperties = syntaxProperties(this.syntax).flatten());
-        }
-    },
+        /**
+         * Walks a criteria's syntactic tree to assess if one of more an expression
+         * involving propertyName.
+         *
+         * @method
+         * @argument {string} propertyName - a propertyName.
+         *
+         * @returns {boolean} - boolean wether the criteri qualifies a value on propertyName.
+         */
 
-    /**
-     * Walks a criteria's syntactic tree to assess if one of more an expression
-     * involving propertyName.
-     *
-     * @method
-     * @argument {string} propertyName - a propertyName.
-     *
-     * @returns {boolean} - boolean wether the criteri qualifies a value on propertyName.
-     */
+        syntaxesQualifyingPropertyName: {
+            value: function (propertyName) {
+                console.warn("syntaxesQualifyingPropertyName() implementation missing");
+            },
+        },
 
-    syntaxesQualifyingPropertyName: {
-        value: function(propertyName) {
-            console.warn("syntaxesQualifyingPropertyName() implementation missing");
-        }
-    },
+        /**
+         * Walks a criteria's syntax to assess if one of it contains an expression
+         * involving propertyName.
+         *
+         * @method
+         * @argument {string} propertyName - a propertyName.
+         *
+         * @returns {boolean} - boolean wether the criteri qualifies a value on propertyName.
+         */
 
-    /**
-     * Walks a criteria's syntax to assess if one of it contains an expression
-     * involving propertyName.
-     *
-     * @method
-     * @argument {string} propertyName - a propertyName.
-     *
-     * @returns {boolean} - boolean wether the criteri qualifies a value on propertyName.
-     */
+        doesQualifyPropertyName: {
+            value: function (propertyName) {
+                console.warn("doesQualifyPropertyName() implementation missing");
+            },
+        },
 
-    doesQualifyPropertyName: {
-        value: function(propertyName) {
-            console.warn("doesQualifyPropertyName() implementation missing");
-        }
-    },
+        /**
+         * Walks a criteria's syntax and prefix all root properties
+         * with the provided prefix.
+         *
+         * Only tested for adding "proA.propB" to something like
+         *
+         * propC == $propC && propD == $propD
+         *
+         * leading to:
+         *
+         * proA.propB.propC == $propC && proA.propB.propD == $propD
+         *
+         * FIXME: prefixing "A.name == 'Blah' && name == 'Bleh'"
+         * with "originDataSnapshot.OriginDataServiceName"
+         * ends up as:
+         * "originDataSnapshot.OriginDataServiceName[originDataSnapshot.OriginDataServiceName.A.name] == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
+         *
+         * instead of
+         * "originDataSnapshot.OriginDataServiceName.A.name == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
+         *
+         * @method
+         * @argument {string} prefixExpression - an frb expression.
+         *
+         * @returns {Criteria} - the new criteria
+         */
+        criteriaPrefixedWithExpression: {
+            value: function (prefixExpression) {
+                // let expectedPrefixedExpression = 'originDataSnapshot.gspas.plantSeq == $.plantSeq && originDataSnapshot.gspas.plantNodeId == $.plantNodeId',
+                //     mockExtendedSyntax = {
+                //         "type":"property",
+                //         "args":[
+                //             {
+                //                 "type":"property",
+                //                 "args":[
+                //                     {
+                //                         "type":"property",
+                //                         "args":[
+                //                             {"type":"value"},
+                //                             {
+                //                                 "type":"literal",
+                //                                 "value":"originDataSnapshot"
+                //                             }
+                //                         ]
+                //                     },
+                //                     {
+                //                         "type":"literal",
+                //                         "value":"gspas"
+                //                     }
+                //                 ]
+                //             },
+                //             {
+                //                 "type":"literal",
+                //                 "value":"plantSeq"
+                //             }
+                //         ]
+                //     };
 
+                var prefixedSyntax = structuredClone(this.syntax),
+                    componentIterator = new SyntaxInOrderIterator(prefixedSyntax, "property"),
+                    iValue,
+                    currentIteration,
+                    currentSyntax;
 
-    /**
-     * Walks a criteria's syntax and prefix all root properties
-     * with the provided prefix.
-     * 
-     * Only tested for adding "proA.propB" to something like
-     * 
-     * propC == $propC && propD == $propD
-     * 
-     * leading to: 
-     * 
-     * proA.propB.propC == $propC && proA.propB.propD == $propD
-     * 
-     * FIXME: prefixing "A.name == 'Blah' && name == 'Bleh'"
-     * with "originDataSnapshot.OriginDataServiceName"
-     * ends up as:
-     * "originDataSnapshot.OriginDataServiceName[originDataSnapshot.OriginDataServiceName.A.name] == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
-     * 
-     * instead of 
-     * "originDataSnapshot.OriginDataServiceName.A.name == 'Blah' && originDataSnapshot.OriginDataServiceName.name == 'Bleh'"
-     *
-     * @method
-     * @argument {string} prefixExpression - an frb expression.
-     *
-     * @returns {Criteria} - the new criteria 
-     */
-    criteriaPrefixedWithExpression: {
-        value: function(prefixExpression) {
-            // let expectedPrefixedExpression = 'originDataSnapshot.gspas.plantSeq == $.plantSeq && originDataSnapshot.gspas.plantNodeId == $.plantNodeId',
-            //     mockExtendedSyntax = {
-            //         "type":"property",
-            //         "args":[
-            //             {
-            //                 "type":"property",
-            //                 "args":[
-            //                     {
-            //                         "type":"property",
-            //                         "args":[
-            //                             {"type":"value"},
-            //                             {
-            //                                 "type":"literal",
-            //                                 "value":"originDataSnapshot"
-            //                             }
-            //                         ]
-            //                     },
-            //                     {
-            //                         "type":"literal",
-            //                         "value":"gspas"
-            //                     }
-            //                 ]
-            //             },
-            //             {
-            //                 "type":"literal",
-            //                 "value":"plantSeq"
-            //             }
-            //         ]
-            //     };
+                while ((currentIteration = componentIterator.next("property")) && currentIteration.done !== true) {
+                    let currentSyntax = currentIteration.value;
 
-            var prefixedSyntax = structuredClone(this.syntax),
-                componentIterator = new SyntaxInOrderIterator(prefixedSyntax, "property"),
-                iValue,
-                currentIteration,
-                currentSyntax;
+                    if (currentSyntax.args[0].type === "parameters") continue;
 
-            while ((currentIteration = componentIterator.next("property")) && currentIteration.done !== true) {
-                let currentSyntax = currentIteration.value;
-
-                if(currentSyntax.args[0].type === "parameters") continue;
-
-                let prefixSyntax = parse(prefixExpression),
-                    currentSyntaxParent = componentIterator.parent(currentSyntax),
-                    currentSyntaxArgs = currentSyntax.args,
-                    prefixedPropertySyntax = {
-                        "type":"property",
-                        "args":[]
-                    };
+                    let prefixSyntax = parse(prefixExpression),
+                        currentSyntaxParent = componentIterator.parent(currentSyntax),
+                        currentSyntaxArgs = currentSyntax.args,
+                        prefixedPropertySyntax = {
+                            type: "property",
+                            args: [],
+                        };
                     //Setup new prefixedPropertySyntax
                     prefixedPropertySyntax.args[0] = prefixSyntax;
-                    if(currentSyntax.args[0].type === "value") {
+                    if (currentSyntax.args[0].type === "value") {
                         prefixedPropertySyntax.args[1] = currentSyntax.args[1];
                     } else {
                         prefixedPropertySyntax.args[1] = currentSyntax;
                     }
 
-
                     //Replace currentSyntax in parent with it:
                     let parentSyntaxArgIndex = currentSyntaxParent.args[0] === currentSyntax ? 0 : 1;
                     currentSyntaxParent.args[parentSyntaxArgIndex] = prefixedPropertySyntax;
 
-                /*
+                    /*
                     currentSyntaxParent.args[0] === currentSyntax is true on loop 1
                     So we'd want to replace currentSyntaxParent.args[0] with prefixSyntax,
                     and then extend prefixSyntax with currentSyntax
                 */
 
-                //console.log(currentSyntax);
-                
-            }
-
-            // console.log("prefixedSyntax: ", prefixedSyntax);
-            // console.log("prefixedExpression: ", stringify(prefixedSyntax));
-
-            return Criteria.withSyntax(prefixedSyntax, this.parameters);
-        }
-    },
-
-
-    /**
-     * Walks a criteria's syntax:
-     *  - replace $ parameter by {key:value}
-     *  - alias own's parameter keys if conclicting with
-     *
-     * for example expression: "(firstName= $firstName) && (lastName = $lastName)"
-     *             parameters: {
-     *                  "firstName": "Han",
-     *                  "lastName": "Solo"
-     *             }
-     *
-     * @method
-     * @argument {object} aliasedParameters - an object containg parameters that the receiver needs to become compatible with.
-     * @argument {object} parameterCounters - an object containing a paramater root name and an incremented integer
-     *                                      used to build a unique key as close to author's intent
-     *
-     * @returns {Criteria} - The Criteria initialized.
-     */
-
-    __syntaxByAliasingSyntaxWithParameters: {
-        value: function (aliasedSyntax, parameterArg, parameterArgIndex, otherArg, otherArgIndex, aliasedParameters, parameterCounter, _thisParameters) {
-            var aliasedParameter;
-
-            if (otherArg.type !== "literal") {
-
-                //We replace $ syntax by the $key/$.key syntax:
-                aliasedSyntaxparameterArg = {};
-                aliasedSyntaxparameterArg.type = "property";
-                aliasedParameter = "p"+(++parameterCounter.value);
-                aliasedSyntaxparameterArg.args = [
-                    {
-                        "type":"parameters"
-                    },
-                    {
-                        "type":"literal",
-                        "value": aliasedParameter
-                    }
-                ];
-                aliasedSyntax.args[parameterArgIndex] = aliasedSyntaxparameterArg;
-                aliasedSyntax.args[otherArgIndex] = this._syntaxByAliasingSyntaxWithParameters(otherArg, aliasedParameters, parameterCounter, _thisParameters);
-
-                //and we register the criteria's parameter _thisParameters under the new key;
-                aliasedParameters[aliasedParameter] = _thisParameters;
-            } else {
-                //We need to make sure there's no conflict with aliasedParameters
-                parameter = otherArg.value;
-                parameterValue = _thisParameters[parameter];
-                if(aliasedParameters.hasOwnProperty(parameter) && aliasedParameters[parameter] !== parameterValue) {
-                    aliasedParameter = parameter+(++parameterCounter.value);
-                    aliasedParameters[aliasedParameter] = parameterValue;
-                } else {
-                    aliasedParameter = parameter;
+                    //console.log(currentSyntax);
                 }
-                aliasedSyntax.args[parameterArgIndex] = {
-                        "type":"parameters"
-                };
 
-                aliasedSyntax.args[otherArgIndex] = {
-                        "type":"literal",
-                        "value":aliasedParameter
-                };
-                aliasedParameters[aliasedParameter] = parameterValue;
-            }
+                // console.log("prefixedSyntax: ", prefixedSyntax);
+                // console.log("prefixedExpression: ", stringify(prefixedSyntax));
 
-        }
-    },
+                return Criteria.withSyntax(prefixedSyntax, this.parameters);
+            },
+        },
 
-    __syntaxByAliasingSyntaxWithScopeComponents: {
-        value: function (aliasedSyntax, parameterArg, parameterArgIndex, otherArg, otherArgIndex, aliasedParameters, parameterCounter, _thisParameters) {
-            var aliasedParameter;
+        /**
+         * Walks a criteria's syntax:
+         *  - replace $ parameter by {key:value}
+         *  - alias own's parameter keys if conclicting with
+         *
+         * for example expression: "(firstName= $firstName) && (lastName = $lastName)"
+         *             parameters: {
+         *                  "firstName": "Han",
+         *                  "lastName": "Solo"
+         *             }
+         *
+         * @method
+         * @argument {object} aliasedParameters - an object containg parameters that the receiver needs to become compatible with.
+         * @argument {object} parameterCounters - an object containing a paramater root name and an incremented integer
+         *                                      used to build a unique key as close to author's intent
+         *
+         * @returns {Criteria} - The Criteria initialized.
+         */
 
-            if (otherArg.type !== "literal") {
+        __syntaxByAliasingSyntaxWithParameters: {
+            value: function (
+                aliasedSyntax,
+                parameterArg,
+                parameterArgIndex,
+                otherArg,
+                otherArgIndex,
+                aliasedParameters,
+                parameterCounter,
+                _thisParameters
+            ) {
+                var aliasedParameter;
 
-                //We replace $ syntax by the $key/$.key syntax:
-                aliasedSyntaxparameterArg = {};
-                aliasedSyntaxparameterArg.type = "property";
-                aliasedParameter = "p"+(++parameterCounter.value);
-                aliasedSyntaxparameterArg.args = [
-                    {
-                        "type":"parameters"
-                    },
-                    {
-                        "type":"literal",
-                        "value": aliasedParameter
-                    }
-                ];
-                aliasedSyntax.args[parameterArgIndex] = aliasedSyntaxparameterArg;
-                aliasedSyntax.args[otherArgIndex] = this._syntaxByAliasingSyntaxWithParameters(otherArg, aliasedParameters, parameterCounter, _thisParameters);
+                if (otherArg.type !== "literal") {
+                    //We replace $ syntax by the $key/$.key syntax:
+                    aliasedSyntaxparameterArg = {};
+                    aliasedSyntaxparameterArg.type = "property";
+                    aliasedParameter = "p" + ++parameterCounter.value;
+                    aliasedSyntaxparameterArg.args = [
+                        {
+                            type: "parameters",
+                        },
+                        {
+                            type: "literal",
+                            value: aliasedParameter,
+                        },
+                    ];
+                    aliasedSyntax.args[parameterArgIndex] = aliasedSyntaxparameterArg;
+                    aliasedSyntax.args[otherArgIndex] = this._syntaxByAliasingSyntaxWithParameters(
+                        otherArg,
+                        aliasedParameters,
+                        parameterCounter,
+                        _thisParameters
+                    );
 
-                //and we register the criteria's parameter _thisParameters under the new key;
-                aliasedParameters[aliasedParameter] = _thisParameters;
-            } else {
-                //We need to make sure there's no conflict with aliasedParameters
-                parameter = otherArg.value;
-                parameterValue = _thisParameters[parameter];
-                if(aliasedParameters.hasOwnProperty(parameter) && aliasedParameters[parameter] !== parameterValue) {
-                    aliasedParameter = parameter+(++parameterCounter.value);
-                    aliasedParameters[aliasedParameter] = parameterValue;
+                    //and we register the criteria's parameter _thisParameters under the new key;
+                    aliasedParameters[aliasedParameter] = _thisParameters;
                 } else {
-                    aliasedParameter = parameter;
-                }
-                aliasedSyntax.args[parameterArgIndex] = {
-                        "type":"parameters"
-                };
-
-                aliasedSyntax.args[otherArgIndex] = {
-                        "type":"literal",
-                        "value":aliasedParameter
-                };
-                aliasedParameters[aliasedParameter] = parameterValue;
-            }
-
-        }
-    },
-
-
-    _syntaxByAliasingSyntaxWithParameters: {
-        value: function (syntax, aliasedParameters, parameterCounter, _thisParameters, aliasedScopeComponents, _thisScopeComponents, scopeComponentTranslation) {
-            var aliasedSyntax = {},
-                syntaxKeys = Object.keys(syntax),
-                i, iKey,
-                syntaxArg0 = syntax.args && syntax.args[0],
-                aliasedSyntaxArg0,
-                syntaxArg1 = syntax.args && syntax.args[1],
-                aliasedSyntaxArg1,
-                parameter,
-                parameterValue,
-                aliasedParameter;
-
-            for(i=0;(iKey = syntaxKeys[i]);i++) {
-
-
-                if(iKey === "args") {
-                    aliasedSyntax.args = [];
-
-                    if(syntaxArg0.type === "parameters") {
-                        this.__syntaxByAliasingSyntaxWithParameters(aliasedSyntax, syntaxArg0, 0, syntaxArg1, 1, aliasedParameters, parameterCounter, _thisParameters, aliasedScopeComponents, _thisScopeComponents, scopeComponentTranslation);
-
-                        // if (syntaxArg1.type !== "literal") {
-
-                        //     //We replace $ syntax by the $key/$.key syntax:
-                        //     aliasedSyntaxArg0 = {};
-                        //     aliasedSyntaxArg0.type = "property";
-                        //     aliasedParameter = "parameter"+(++parameterCounter);
-                        //     aliasedSyntaxArg0.args = [
-                        //         {
-                        //             "type":"parameters"
-                        //         },
-                        //         {
-                        //             "type":"literal",
-                        //             "value": aliasedParameter
-                        //         }
-                        //     ];
-                        //     aliasedSyntax.args[0] = aliasedSyntaxArg0;
-                        //     aliasedSyntax.args[1] = this._syntaxByAliasingSyntaxWithParameters(syntaxArg1, aliasedParameters, parameterCounter, _thisParameters);
-
-                        //     //and we register the criteria's parameter _thisParameters under the new key;
-                        //     aliasedParameters[aliasedParameter] = _thisParameters;
-                        // } else {
-                        //     //We need to make sure there's no conflict with aliasedParameters
-                        //     parameter = syntaxArg1.value;
-                        //     parameterValue = _thisParameters[parameter];
-                        //     if(aliasedParameters.hasOwnProperty(parameter) && aliasedParameters[parameter] !== parameterValue) {
-                        //         aliasedParameter = parameter+(++parameterCounter);
-                        //         aliasedParameters[aliasedParameter] = parameterValue;
-                        //     } else {
-                        //         aliasedParameter = parameter;
-                        //     }
-                        //     aliasedSyntax.args[0] = {
-                        //             "type":"parameters"
-                        //     };
-
-                        //     aliasedSyntax.args[1] = {
-                        //             "type":"literal",
-                        //             "value":aliasedParameter
-                        //     };
-                        //     aliasedParameters[aliasedParameter] = parameterValue;
-                        // }
-
-                    }
-                    else if(syntaxArg1 && syntaxArg1.type === "parameters") {
-                        this.__syntaxByAliasingSyntaxWithParameters(aliasedSyntax, syntaxArg1, 1, syntaxArg0, 0, aliasedParameters, parameterCounter, _thisParameters, aliasedScopeComponents, _thisScopeComponents, scopeComponentTranslation);
-
+                    //We need to make sure there's no conflict with aliasedParameters
+                    parameter = otherArg.value;
+                    parameterValue = _thisParameters[parameter];
+                    if (
+                        aliasedParameters.hasOwnProperty(parameter) &&
+                        aliasedParameters[parameter] !== parameterValue
+                    ) {
+                        aliasedParameter = parameter + ++parameterCounter.value;
+                        aliasedParameters[aliasedParameter] = parameterValue;
                     } else {
-                        if(syntaxArg0) {
-                            aliasedSyntax.args[0] = this._syntaxByAliasingSyntaxWithParameters(syntaxArg0, aliasedParameters, parameterCounter, _thisParameters, aliasedScopeComponents, _thisScopeComponents, scopeComponentTranslation);
-                        }
-
-                        if(syntaxArg1) {
-                            aliasedSyntax.args[1] = this._syntaxByAliasingSyntaxWithParameters(syntaxArg1, aliasedParameters, parameterCounter, _thisParameters, aliasedScopeComponents, _thisScopeComponents, scopeComponentTranslation);
-                        }
+                        aliasedParameter = parameter;
                     }
+                    aliasedSyntax.args[parameterArgIndex] = {
+                        type: "parameters",
+                    };
+
+                    aliasedSyntax.args[otherArgIndex] = {
+                        type: "literal",
+                        value: aliasedParameter,
+                    };
+                    aliasedParameters[aliasedParameter] = parameterValue;
+                }
+            },
+        },
+
+        __syntaxByAliasingSyntaxWithScopeComponents: {
+            value: function (
+                aliasedSyntax,
+                parameterArg,
+                parameterArgIndex,
+                otherArg,
+                otherArgIndex,
+                aliasedParameters,
+                parameterCounter,
+                _thisParameters
+            ) {
+                var aliasedParameter;
+
+                if (otherArg.type !== "literal") {
+                    //We replace $ syntax by the $key/$.key syntax:
+                    aliasedSyntaxparameterArg = {};
+                    aliasedSyntaxparameterArg.type = "property";
+                    aliasedParameter = "p" + ++parameterCounter.value;
+                    aliasedSyntaxparameterArg.args = [
+                        {
+                            type: "parameters",
+                        },
+                        {
+                            type: "literal",
+                            value: aliasedParameter,
+                        },
+                    ];
+                    aliasedSyntax.args[parameterArgIndex] = aliasedSyntaxparameterArg;
+                    aliasedSyntax.args[otherArgIndex] = this._syntaxByAliasingSyntaxWithParameters(
+                        otherArg,
+                        aliasedParameters,
+                        parameterCounter,
+                        _thisParameters
+                    );
+
+                    //and we register the criteria's parameter _thisParameters under the new key;
+                    aliasedParameters[aliasedParameter] = _thisParameters;
                 } else {
+                    //We need to make sure there's no conflict with aliasedParameters
+                    parameter = otherArg.value;
+                    parameterValue = _thisParameters[parameter];
+                    if (
+                        aliasedParameters.hasOwnProperty(parameter) &&
+                        aliasedParameters[parameter] !== parameterValue
+                    ) {
+                        aliasedParameter = parameter + ++parameterCounter.value;
+                        aliasedParameters[aliasedParameter] = parameterValue;
+                    } else {
+                        aliasedParameter = parameter;
+                    }
+                    aliasedSyntax.args[parameterArgIndex] = {
+                        type: "parameters",
+                    };
 
-                    if(iKey === "type" && syntax.type === "component") {
-                        var label = syntax.label,
-                            newLabel = label,
-                            _thisScopeComponentsLabelValue,
-                            aliasedScopeComponentsLabelValue;
+                    aliasedSyntax.args[otherArgIndex] = {
+                        type: "literal",
+                        value: aliasedParameter,
+                    };
+                    aliasedParameters[aliasedParameter] = parameterValue;
+                }
+            },
+        },
 
-                        if(!(aliasedScopeComponentsLabelValue = aliasedScopeComponents.get(label))) {
+        _syntaxByAliasingSyntaxWithParameters: {
+            value: function (
+                syntax,
+                aliasedParameters,
+                parameterCounter,
+                _thisParameters,
+                aliasedScopeComponents,
+                _thisScopeComponents,
+                scopeComponentTranslation
+            ) {
+                var aliasedSyntax = {},
+                    syntaxKeys = Object.keys(syntax),
+                    i,
+                    iKey,
+                    syntaxArg0 = syntax.args && syntax.args[0],
+                    aliasedSyntaxArg0,
+                    syntaxArg1 = syntax.args && syntax.args[1],
+                    aliasedSyntaxArg1,
+                    parameter,
+                    parameterValue,
+                    aliasedParameter;
 
-                            aliasedScopeComponents.set(label, (_thisScopeComponentsLabelValue = _thisScopeComponents.get(label)));
-                            scopeComponentTranslation.set(_thisScopeComponentsLabelValue,label);
+                for (i = 0; (iKey = syntaxKeys[i]); i++) {
+                    if (iKey === "args") {
+                        aliasedSyntax.args = [];
 
-                        } else if((_thisScopeComponentsLabelValue = _thisScopeComponents.get(label)) !== aliasedScopeComponentsLabelValue) {
-                            /*
+                        if (syntaxArg0.type === "parameters") {
+                            this.__syntaxByAliasingSyntaxWithParameters(
+                                aliasedSyntax,
+                                syntaxArg0,
+                                0,
+                                syntaxArg1,
+                                1,
+                                aliasedParameters,
+                                parameterCounter,
+                                _thisParameters,
+                                aliasedScopeComponents,
+                                _thisScopeComponents,
+                                scopeComponentTranslation
+                            );
+
+                            // if (syntaxArg1.type !== "literal") {
+
+                            //     //We replace $ syntax by the $key/$.key syntax:
+                            //     aliasedSyntaxArg0 = {};
+                            //     aliasedSyntaxArg0.type = "property";
+                            //     aliasedParameter = "parameter"+(++parameterCounter);
+                            //     aliasedSyntaxArg0.args = [
+                            //         {
+                            //             "type":"parameters"
+                            //         },
+                            //         {
+                            //             "type":"literal",
+                            //             "value": aliasedParameter
+                            //         }
+                            //     ];
+                            //     aliasedSyntax.args[0] = aliasedSyntaxArg0;
+                            //     aliasedSyntax.args[1] = this._syntaxByAliasingSyntaxWithParameters(syntaxArg1, aliasedParameters, parameterCounter, _thisParameters);
+
+                            //     //and we register the criteria's parameter _thisParameters under the new key;
+                            //     aliasedParameters[aliasedParameter] = _thisParameters;
+                            // } else {
+                            //     //We need to make sure there's no conflict with aliasedParameters
+                            //     parameter = syntaxArg1.value;
+                            //     parameterValue = _thisParameters[parameter];
+                            //     if(aliasedParameters.hasOwnProperty(parameter) && aliasedParameters[parameter] !== parameterValue) {
+                            //         aliasedParameter = parameter+(++parameterCounter);
+                            //         aliasedParameters[aliasedParameter] = parameterValue;
+                            //     } else {
+                            //         aliasedParameter = parameter;
+                            //     }
+                            //     aliasedSyntax.args[0] = {
+                            //             "type":"parameters"
+                            //     };
+
+                            //     aliasedSyntax.args[1] = {
+                            //             "type":"literal",
+                            //             "value":aliasedParameter
+                            //     };
+                            //     aliasedParameters[aliasedParameter] = parameterValue;
+                            // }
+                        } else if (syntaxArg1 && syntaxArg1.type === "parameters") {
+                            this.__syntaxByAliasingSyntaxWithParameters(
+                                aliasedSyntax,
+                                syntaxArg1,
+                                1,
+                                syntaxArg0,
+                                0,
+                                aliasedParameters,
+                                parameterCounter,
+                                _thisParameters,
+                                aliasedScopeComponents,
+                                _thisScopeComponents,
+                                scopeComponentTranslation
+                            );
+                        } else {
+                            if (syntaxArg0) {
+                                aliasedSyntax.args[0] = this._syntaxByAliasingSyntaxWithParameters(
+                                    syntaxArg0,
+                                    aliasedParameters,
+                                    parameterCounter,
+                                    _thisParameters,
+                                    aliasedScopeComponents,
+                                    _thisScopeComponents,
+                                    scopeComponentTranslation
+                                );
+                            }
+
+                            if (syntaxArg1) {
+                                aliasedSyntax.args[1] = this._syntaxByAliasingSyntaxWithParameters(
+                                    syntaxArg1,
+                                    aliasedParameters,
+                                    parameterCounter,
+                                    _thisParameters,
+                                    aliasedScopeComponents,
+                                    _thisScopeComponents,
+                                    scopeComponentTranslation
+                                );
+                            }
+                        }
+                    } else {
+                        if (iKey === "type" && syntax.type === "component") {
+                            var label = syntax.label,
+                                newLabel = label,
+                                _thisScopeComponentsLabelValue,
+                                aliasedScopeComponentsLabelValue;
+
+                            if (!(aliasedScopeComponentsLabelValue = aliasedScopeComponents.get(label))) {
+                                aliasedScopeComponents.set(
+                                    label,
+                                    (_thisScopeComponentsLabelValue = _thisScopeComponents.get(label))
+                                );
+                                scopeComponentTranslation.set(_thisScopeComponentsLabelValue, label);
+                            } else if (
+                                (_thisScopeComponentsLabelValue = _thisScopeComponents.get(label)) !==
+                                aliasedScopeComponentsLabelValue
+                            ) {
+                                /*
                                 There's already a value for label in aliasedScopeComponents, but it's not the same as the one in _thisScopeComponents.
 
                                 So we need to alias it.
                             */
 
-                            /* Do we have a new label for that value? */
-                            newLabel = scopeComponentTranslation.get(_thisScopeComponentsLabelValue);
+                                /* Do we have a new label for that value? */
+                                newLabel = scopeComponentTranslation.get(_thisScopeComponentsLabelValue);
 
-                            var newLabelAliasedScopeComponentsValue;
-                            if(!newLabel) {
-                                newLabel = (label+(scopeComponentTranslation.size+1));
-                                scopeComponentTranslation.set(_thisScopeComponentsLabelValue,newLabel);
+                                var newLabelAliasedScopeComponentsValue;
+                                if (!newLabel) {
+                                    newLabel = label + (scopeComponentTranslation.size + 1);
+                                    scopeComponentTranslation.set(_thisScopeComponentsLabelValue, newLabel);
+                                }
+
+                                newLabelAliasedScopeComponentsValue = aliasedScopeComponents.get(newLabel);
+                                if (!newLabelAliasedScopeComponentsValue) {
+                                    aliasedScopeComponents.set(newLabel, _thisScopeComponentsLabelValue);
+                                }
+                                //debug, but that shouldn't happen:
+                                else if (newLabelAliasedScopeComponentsValue !== _thisScopeComponentsLabelValue) {
+                                    throw (
+                                        "aliasedScopeComponents already has a different value for new label '" +
+                                        newLabel +
+                                        "`"
+                                    );
+                                }
                             }
 
-                            newLabelAliasedScopeComponentsValue = aliasedScopeComponents.get(newLabel);
-                            if(!newLabelAliasedScopeComponentsValue) {
-                                aliasedScopeComponents.set(newLabel,_thisScopeComponentsLabelValue);
-                            }
-                            //debug, but that shouldn't happen:
-                            else if(newLabelAliasedScopeComponentsValue !== _thisScopeComponentsLabelValue) {
-                                throw "aliasedScopeComponents already has a different value for new label '"+newLabel+"`";
-                            }
+                            aliasedSyntax["type"] = syntax.type;
+                            aliasedSyntax["label"] = newLabel;
+
+                            //We've processed the whole syntax, no need to iterate further on it.
+                            break;
+                        } else {
+                            aliasedSyntax[iKey] = syntax[iKey];
                         }
-
-                        aliasedSyntax["type"] = syntax.type;
-                        aliasedSyntax["label"] = newLabel;
-
-                        //We've processed the whole syntax, no need to iterate further on it.
-                        break;
-
-                    } else {
-                        aliasedSyntax[iKey] = syntax[iKey];
                     }
                 }
-            }
 
-            /*
+                /*
                                     JSON.stringify(d.syntax)
                                     //$key.has(id)", {"key":"123"}
                                     {
@@ -885,121 +960,136 @@ var Criteria = exports.Criteria = Montage.specialize({
                                     }
 
             */
-            return aliasedSyntax;
-        }
+                return aliasedSyntax;
+            },
+        },
+
+        syntaxByAliasingSyntaxWithParameters: {
+            value: function (aliasedParameters, aliasedScopeComponents, scopeComponentTranslation, parameterCounters) {
+                return this._syntaxByAliasingSyntaxWithParameters(
+                    this.syntax,
+                    aliasedParameters,
+                    parameterCounters || { value: 0 },
+                    this.parameters,
+                    aliasedScopeComponents,
+                    this._scope.components,
+                    scopeComponentTranslation
+                );
+            },
+        },
+
+        /**
+         * TODO:
+         * Analyze the syntactic tree of a criteria to find what parameter values
+         * apply to a property name used in the criteria expression, and which operator.
+         *
+         * This is particularyly useful when one need to apply the criteria to actual data.
+         *
+         * @method
+         * @returns {Array{ { "value": "operator"}}}
+         */
+
+        parameterValuesAndOperatorsForPropertyName: {
+            value: function (propertyName) {
+                throw "Implementation Missing. Time to roll your sleeves ;-)";
+            },
+        },
+
+        /**
+         * @function
+         */
+        toString: {
+            value: function () {
+                return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters) : ""}`;
+            },
+        },
     },
+    {
+        forObjectsLike: {
+            value: function (object) {
+                var properties = Object.keys(object),
+                    expression = "",
+                    i,
+                    iKey,
+                    iValue,
+                    j,
+                    jValue,
+                    jExpression,
+                    jKey;
 
-    syntaxByAliasingSyntaxWithParameters: {
-        value: function (aliasedParameters, aliasedScopeComponents, scopeComponentTranslation, parameterCounters) {
-            return this._syntaxByAliasingSyntaxWithParameters(this.syntax, aliasedParameters, parameterCounters||{value:0}, this.parameters, aliasedScopeComponents, this._scope.components, scopeComponentTranslation);
-        }
-    },
+                for (i = 0; (iKey = properties[i]); i++) {
+                    iValue = object[iKey];
+                    if (Array.isArray(iValue)) {
+                        jExpression = "";
 
-    /**
-     * TODO:
-     * Analyze the syntactic tree of a criteria to find what parameter values 
-     * apply to a property name used in the criteria expression, and which operator.
-     * 
-     * This is particularyly useful when one need to apply the criteria to actual data.
-     *
-     * @method
-     * @returns {Array{ { "value": "operator"}}}
-     */
+                        for (j = 0; (jValue = iValue[j]); j++) {
+                            jKey = iKey;
+                            jKey += j;
 
-    parameterValuesAndOperatorsForPropertyName: {
-        value: function(propertyName) {
-            throw "Implementation Missing. Time to roll your sleeves ;-)"
-        }
-    },
+                            if (jExpression.length > 0) {
+                                jExpression += " && ";
+                            }
+                            jExpression += iKey;
+                            jExpression += ".has($";
+                            jExpression += jKey;
+                            jExpression += ")";
 
-    /**
-     * @function
-     */
-    toString: {
-        value: function () {
-            return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters) : ""}`;
-        }
-    }
-    
-
-},{
-    forObjectsLike: {
-        value: function(object) {
-            var properties = Object.keys(object),
-                expression = "",
-                i, iKey, iValue,
-                j, jValue, jExpression, jKey;
-
-            for(i=0;(iKey = properties[i]);i++) {
-                iValue = object[iKey];
-                if(Array.isArray(iValue)) {
-                    jExpression = "";
-
-                    for(j=0;(jValue = iValue[j]);j++) {
-                        jKey = iKey;
-                        jKey += j;
-
-                        if(jExpression.length > 0) {
-                            jExpression += " && ";
+                            //Now alias the value on object;
+                            object[jKey] = jValue;
                         }
-                        jExpression += iKey;
-                        jExpression += ".has($";
-                        jExpression += jKey;
-                        jExpression += ")";
 
-                        //Now alias the value on object;
-                        object[jKey] = jValue;
-                    }
+                        if (expression.length > 0) {
+                            expression += " && ";
+                        }
+                        expression += jExpression;
+                    } else {
+                        if (expression.length > 0) {
+                            expression += " && ";
+                        }
 
-                    if(expression.length > 0) {
-                        expression += " && ";
+                        expression += iKey;
+                        expression += "== $";
+                        expression += iKey;
                     }
-                    expression += jExpression;
                 }
-                else {
-                    if(expression.length > 0) {
-                        expression += " && ";
-                    }
 
-                    expression += iKey;
-                    expression += "== $";
-                    expression += iKey;
-                }
-            }
+                return new this().initWithExpression(expression, object);
+            },
+        },
 
-            return (new this).initWithExpression(expression,object);
-        }
-    },
-
-    withExpression: {
-        value: function(expression,parameters) {
-            return (new this).initWithExpression(expression,parameters);
-        }
-    },
-    withSyntax: {
-        value: function(syntax,parameters) {
-            return (new this).initWithSyntax(syntax,parameters);
-        }
-    },
-    _thatEvaluatesToTrue: {
-        value: undefined
-    },
-    thatEvaluatesToTrue: {
-        get: function() {
-            return this._thatEvaluatesToTrue || (this._thatEvaluatesToTrue = new Criteria().initWithExpression("true"))
-        }
-    },
-    _thatEvaluatesToFalse: {
-        value: undefined
-    },
-    thatEvaluatesToFalse: {
-        get: function() {
-            return this._thatEvaluatesToFalse || (this._thatEvaluatesToFalse = new Criteria().initWithExpression("false"))
-        }
+        withExpression: {
+            value: function (expression, parameters) {
+                return new this().initWithExpression(expression, parameters);
+            },
+        },
+        withSyntax: {
+            value: function (syntax, parameters) {
+                return new this().initWithSyntax(syntax, parameters);
+            },
+        },
+        _thatEvaluatesToTrue: {
+            value: undefined,
+        },
+        thatEvaluatesToTrue: {
+            get: function () {
+                return (
+                    this._thatEvaluatesToTrue || (this._thatEvaluatesToTrue = new Criteria().initWithExpression("true"))
+                );
+            },
+        },
+        _thatEvaluatesToFalse: {
+            value: undefined,
+        },
+        thatEvaluatesToFalse: {
+            get: function () {
+                return (
+                    this._thatEvaluatesToFalse ||
+                    (this._thatEvaluatesToFalse = new Criteria().initWithExpression("false"))
+                );
+            },
+        },
     }
-
-
-});
+));
 
 function _combinedCriteriaFromArguments(type, receiver, _arguments) {
     // var args = Array.prototype.map.call(_arguments, function (argument) {
@@ -1012,26 +1102,38 @@ function _combinedCriteriaFromArguments(type, receiver, _arguments) {
     //     }
     // });
     var args = [],
-        isInstanceReceiver = (typeof receiver === "object"),
+        isInstanceReceiver = typeof receiver === "object",
         combinedSyntax = {
             type: type,
-            args: []
+            args: [],
         },
-        parameterCounters = {value:0},
+        parameterCounters = { value: 0 },
         // parameters = isInstanceReceiver ? receiver.parameters : null,
-        i = 0, argument, countI,
-        j, countJ, argumentParameters, argumentParametersKeys, argumentParameter,
+        i = 0,
+        argument,
+        countI,
+        j,
+        countJ,
+        argumentParameters,
+        argumentParametersKeys,
+        argumentParameter,
         aliasedParameters = {},
-        aliasedScopeComponents = new Map,
-        scopeComponentTranslation = new Map;
+        aliasedScopeComponents = new Map(),
+        scopeComponentTranslation = new Map();
 
     //When called from aCriteria.and("b") pattern
-    if(isInstanceReceiver) {
-        combinedSyntax.args.push(receiver.syntaxByAliasingSyntaxWithParameters(aliasedParameters, aliasedScopeComponents, scopeComponentTranslation, parameterCounters));
+    if (isInstanceReceiver) {
+        combinedSyntax.args.push(
+            receiver.syntaxByAliasingSyntaxWithParameters(
+                aliasedParameters,
+                aliasedScopeComponents,
+                scopeComponentTranslation,
+                parameterCounters
+            )
+        );
     }
 
-
-    for(countI = _arguments.length; (i<countI) ; i++ ) {
+    for (countI = _arguments.length; i < countI; i++) {
         argument = _arguments[i];
         if (typeof argument === "string") {
             //If it's a string, there can't really be a parameter argument with it's likely safe to just parse it
@@ -1040,13 +1142,19 @@ function _combinedCriteriaFromArguments(type, receiver, _arguments) {
             //We alias anyway, as there could be an need in subsequent arguments.
             //if that's too expensive we can do a quick first pass to avoid creating new syntaxes.
             //at the same time, it might be safer that the new combined criteria has it's own independent syntactic tree.
-            combinedSyntax.args.push(argument.syntaxByAliasingSyntaxWithParameters(aliasedParameters, aliasedScopeComponents, scopeComponentTranslation, parameterCounters));
+            combinedSyntax.args.push(
+                argument.syntaxByAliasingSyntaxWithParameters(
+                    aliasedParameters,
+                    aliasedScopeComponents,
+                    scopeComponentTranslation,
+                    parameterCounters
+                )
+            );
 
             // if(argumentParameters = argument.parameters) {
             //     if(parameters) {
 
-
-                    /*
+            /*
                         Both sides have parameters. We need to merge them, but we could have on either the case where one parameter is like
                         {
                             paramKey1: paramValue1,
@@ -1076,63 +1184,67 @@ function _combinedCriteriaFromArguments(type, receiver, _arguments) {
 
                     */
 
-
-                //     argumentParametersKeys = Object.keys(argumentParameters);
-                //     for(j=0, countJ = argumentParametersKeys.length;(argumentParameter = argumentParametersKeys[j]); j++) {
-                //         if(argumentParameter in parameters) {
-                //             if(argumentParameters[argumentParameter] !== parameters[argumentParameter]) {
-                //                 /*
-                //                     TODO: In this situation, argument.parameters and argument.syntax needs to be walked to replace the confliciting symbols by a different unique one. In the mean time, flag it until we need to address that.
-                //                 */
-                //                 throw "!!! Criteria combined with "+type+" both have a parameter named the same but with different values but there is no aliasing implemented to guard against this so they don't conflic";
-                //             }
-                //             //Otherwise, nothing to do, same parameter with same value on both sides
-                //         } else {
-                //             //Move argumentParameter to parameters:
-                //             parameters[argumentParameter] = argumentParameters[argumentParameter];
-                //         }
-                //     }
-                // } else {
-                //     //this didn't have a parameter, so we use the first one as the combined one.
-                //     parameters = argumentParameters;
-                // }
+            //     argumentParametersKeys = Object.keys(argumentParameters);
+            //     for(j=0, countJ = argumentParametersKeys.length;(argumentParameter = argumentParametersKeys[j]); j++) {
+            //         if(argumentParameter in parameters) {
+            //             if(argumentParameters[argumentParameter] !== parameters[argumentParameter]) {
+            //                 /*
+            //                     TODO: In this situation, argument.parameters and argument.syntax needs to be walked to replace the confliciting symbols by a different unique one. In the mean time, flag it until we need to address that.
+            //                 */
+            //                 throw "!!! Criteria combined with "+type+" both have a parameter named the same but with different values but there is no aliasing implemented to guard against this so they don't conflic";
+            //             }
+            //             //Otherwise, nothing to do, same parameter with same value on both sides
+            //         } else {
+            //             //Move argumentParameter to parameters:
+            //             parameters[argumentParameter] = argumentParameters[argumentParameter];
+            //         }
+            //     }
+            // } else {
+            //     //this didn't have a parameter, so we use the first one as the combined one.
+            //     parameters = argumentParameters;
+            // }
             //}
-
         } else if (typeof argument === "object") {
             combinedSyntax.args.push(argument);
         }
 
-        if(combinedSyntax.args.length === 2 && ((i+1) < countI)) {
+        if (combinedSyntax.args.length === 2 && i + 1 < countI) {
             combinedSyntax = {
                 type: type,
-                args: [combinedSyntax]
-            }
+                args: [combinedSyntax],
+            };
         }
     }
 
-
-        return new (isInstanceReceiver ? receiver.constructor : receiver)().initWithSyntax(combinedSyntax, aliasedParameters, aliasedScopeComponents);
+    return new (isInstanceReceiver ? receiver.constructor : receiver)().initWithSyntax(
+        combinedSyntax,
+        aliasedParameters,
+        aliasedScopeComponents
+    );
 }
 
 // generate methods on Criteria for each of the tokens of the language.
 // support invocation both as class and instance methods like
 // Criteria.and("a", "b") and aCriteria.and("b")
 var CriteriaPrototype = Criteria.prototype;
-operatorTypes.forEach(function (value,operator, operatorTypes) {
-    if(operator === "and" || operator === "or") {
+operatorTypes.forEach(function (value, operator, operatorTypes) {
+    if (operator === "and" || operator === "or") {
         Montage.defineProperty(CriteriaPrototype, operator, {
             value: function () {
                 return _combinedCriteriaFromArguments(operator, this, arguments);
-            }
+            },
         });
         Montage.defineProperty(Criteria, operator, {
             value: function () {
-                return _combinedCriteriaFromArguments(operator, this, arguments.length === 1 && Array.isArray(arguments[0]) ? arguments[0] : arguments);
-            }
+                return _combinedCriteriaFromArguments(
+                    operator,
+                    this,
+                    arguments.length === 1 && Array.isArray(arguments[0]) ? arguments[0] : arguments
+                );
+            },
         });
-    }
-    else {
-        if(!operator in CriteriaPrototype) {
+    } else {
+        if (!operator in CriteriaPrototype) {
             Montage.defineProperty(CriteriaPrototype, operator, {
                 value: function () {
                     var args = Array.prototype.map.call(arguments, function (argument) {
@@ -1145,15 +1257,15 @@ operatorTypes.forEach(function (value,operator, operatorTypes) {
                         }
                     });
                     // invoked as instance method
-                    return new (this.constructor)().initWithSyntax({
+                    return new this.constructor().initWithSyntax({
                         type: operator,
-                        args: [this.syntax].concat(args)
+                        args: [this.syntax].concat(args),
                     });
-                }
+                },
             });
         }
 
-        if(!operator in Criteria) {
+        if (!operator in Criteria) {
             Montage.defineProperty(Criteria, operator, {
                 value: function () {
                     var args = Array.prototype.map.call(arguments, function (argument) {
@@ -1168,11 +1280,10 @@ operatorTypes.forEach(function (value,operator, operatorTypes) {
                     // invoked as class method
                     return new this().initWithSyntax({
                         type: operator,
-                        args: args
+                        args: args,
                     });
-                }
+                },
             });
-
         }
     }
 });
