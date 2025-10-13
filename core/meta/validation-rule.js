@@ -76,8 +76,7 @@ exports.ValidationRule = class ValidationRule extends Montage {
     }
 
     /**
-     * An array of property names that this validation rule depends on. Changes
-     * to these properties may trigger re-validation.
+     * An array of property names that this validation rule depends on.
      * @type {Array<string>}
      */
     get validationProperties() {
