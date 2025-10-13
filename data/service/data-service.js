@@ -5323,14 +5323,14 @@ DataService.addClassProperties(
                          * (e.g., `validateCreate`, `validateUpdate`, `validateDelete`) to run
                          * optimized, context-specific logic (like checking cascade-deletes only on delete).
                          */
-                        Promise.all(
+                        Promise.all([
                             // 1. Validate created objects.
                             self._validateAndAttachInvalidityStateToObject(createdDataObjects),
                             // 2. Validate updated objects.
                             self._validateAndAttachInvalidityStateToObject(changedDataObjects),
                             // 3. Validate deleted objects (e.g., check for rules that block deletion).
-                            self._validateAndAttachInvalidityStateToObject(deletedDataObjects)
-                        )
+                            self._validateAndAttachInvalidityStateToObject(deletedDataObjects),
+                        ])
                             .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
                                 // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
                                 self._dispatchObjectsInvalidity(changedInvalidityStates);
