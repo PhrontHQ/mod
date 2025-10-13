@@ -30,6 +30,25 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
     }
 
     /**
+     * An array of property names that this validation rule depends on.
+     * @override
+     * @type {Array<string>}
+     */
+    get validationProperties() {
+        // FIXME: does not work as expected, the entire path is parsed, e.g. "address.city"
+        // and return ["address", "city"]. It should return ["address"]
+        return this.criteria?.qualifiedProperties || [];
+    }
+
+    /**
+     * @override
+     * @type {Array<string>}
+     */
+    set validationProperties(value) {
+        super.validationProperties = value;
+    }
+
+    /**
      * Serializes the expression validation rule
      * @param {Serializer} serializer - The serializer instance.
      */
@@ -50,7 +69,7 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
 
     /**
      * Evaluates the criteria expression against the data instance.
-     *
+     * @override
      * @param {object} dataInstance - The data object instance to validate.
      * @returns {Promise<ValidationError|null>} A Promise that resolves to a
      * `ValidationError` object if the expression is falsy, or `null` if it is truthy.
