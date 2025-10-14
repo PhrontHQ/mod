@@ -3,6 +3,7 @@
         "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Organization",
+            "description": "https://schema.org/Organization has it specialize thing. We could/should too or intangible",
             "propertyDescriptors": [
                 {"@": "type"},
                 {"@": "parent"},
@@ -10,7 +11,9 @@
                 {"@": "tags"},
                 {"@": "mainContact"},
                 {"@": "userPools"},
-                {"@": "applications"}
+                {"@": "applications"},
+                {"@": "identityProviders"},
+                {"@": "ownedIdentityProviders"}
             ],
             "objectDescriptorModule": {
                 "%": "./organization.mjson"
@@ -109,6 +112,10 @@
         "object": "../app/user-pool.mjson"
     },
 
+    "ApplicationDescriptor": {
+        "object": "../app/application.mjson"
+    },
+
     "applications": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -118,8 +125,32 @@
             "valueDescriptor": {"@": "ApplicationDescriptor"}
         }
     },
-    "ApplicationDescriptor": {
-        "object": "../app/application.mjson"
+
+    "IdentityProviderDescriptor": {
+        "object": "../authentication/identity-provider.mjson"
+    },
+
+    "identityProviders": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "identityProviders",
+            "cardinality": -1,
+            "inversePropertyName": "ownerOrganization",
+            "valueDescriptor": {"@": "IdentityProviderDescriptor"},
+            "description": "The identityProviders a company uses to provide identity to its users. Those would likely be multi tenant services provided by the like of Google, Microsoft etc..."
+        }
+    },
+
+    "ownedIdentityProviders": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "ownedIdentityProviders",
+            "cardinality": -1,
+            "inversePropertyName": "ownerOrganization",
+            "valueDescriptor": {"@": "IdentityProviderDescriptor"},
+            "description": "The identityProviders a company owns, for itself, and/or provide to others."
+        }
     }
+
 
 }

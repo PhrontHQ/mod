@@ -5,6 +5,7 @@
             "name": "Identity",
             "propertyDescriptors": [
                 {"@": "provider"},
+                {"@": "ownerOrganization"},
                 {"@": "applicationIdentifier"},
                 {"@": "applicationCredentials"},
                 {"@": "scope"},
@@ -27,15 +28,34 @@
     "DataObjectDescriptor": {
         "object": "./data-object.mjson"
     },
+    "IdentityProviderDescriptor": {
+        "object": "./authentication/identity-provider.mjson"
+    },
     "provider": {
         "prototype": "../../core/meta/property-descriptor",
         "values": {
             "name": "scope",
             "cardinality": -1,
             "valueType": "object",
-            "valueDescriptor": {"@": "DataObjectDescriptor"},
-            "description": "The organization providing an identity to a user"
+            "valueDescriptor": {"@": "IdentityProviderDescriptor"},
+            "inversePropertyName": "identities",
+            "description": "The IdentityProvider that issued this identity"
        }
+    },
+    "OrganizationDescriptor": {
+        "object": "./party/organization.mjson"
+    },
+    "ownerOrganization": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "ownerOrganization",
+            "cardinality": 1,
+            "valueType": "object",
+            "inversePropertyName": "ownedIdentityProviders",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "definition": "provider.ownerOrganization",
+            "description": "The organization owning this identity's provider"
+        }
     },
     "applicationIdentifier": {
         "prototype": "../../core/meta/property-descriptor",
