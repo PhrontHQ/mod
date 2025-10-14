@@ -135,6 +135,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/data/raw-data-service" },
         { name: "spec/data/raw-data-type-mapping-spec" },
         { name: "spec/data/integration", node: false },
+        { name: "spec/data/data-validation-manager-spec" },
 
         // Meta
         { name: "spec/meta/module-object-descriptor-spec" },
@@ -144,6 +145,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/meta/component-object-descriptor-spec", node: false },
         { name: "spec/meta/controller-object-descriptor-spec", node: false },
         { name: "spec/meta/event-descriptor-spec", node: false },
+        { name: "spec/meta/expression-validation-rule-spec" },
 
         // Data
         { name: "spec/geo/circle" },
