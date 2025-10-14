@@ -61,13 +61,17 @@ exports.DataValidationManager = class DataValidationManager {
             // Group validation errors by rule name.
             for (const validationError of validationErrors) {
                 const { rule } = validationError;
-                const ruleName = rule.name;
 
-                if (!invalidityState.has(ruleName)) {
-                    invalidityState.set(ruleName, []);
+                // A single rule can be associated with multiple properties.
+                const associatedProperties = rule.validationProperties || [];
+
+                for (const propertyName of associatedProperties) {
+                    if (!invalidityState.has(propertyName)) {
+                        invalidityState.set(propertyName, []);
+                    }
+
+                    invalidityState.get(propertyName).push(validationError);
                 }
-
-                invalidityState.get(ruleName).push(validationError);
             }
         } catch (error) {
             // Log the error for debugging but re-throw to let the caller handle it.
