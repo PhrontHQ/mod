@@ -105,7 +105,7 @@
         "values": {
             "name": "idToken",
             "valueType": "string",
-            "description": "The requested access token. The app can use this token to authenticate to the secured resource, such as a web API."
+            "description": "The requested id token. The app can use this token to authenticate to the secured resource, such as a web API."
         }
     },
     "refreshTokenValidityDuration": {
