@@ -23,7 +23,7 @@ A user's "activity" is the record / receipt of what they have done over time
 
 * A history, log, of all actions they’ve taken, interactions they’ve had within the app, and the resulting data operations.
 
-#### A user's "activityMap" would be showing how the activity mops to components used at the time.
+#### A user's "activityMap" would be showing how the activity maps to components used at the time.
 
 ##### Activity Map: The "What" Users Do**
 
