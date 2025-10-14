@@ -1,0 +1,27 @@
+
+{
+    "root": {
+        "value": [
+           {"@": "CCorporationType"},
+           {"@": "SCorporationType"}
+        ]
+    },
+
+    "CCorporationType": {
+        "prototype": "data/model/party/incorporated-organization",
+        "values": {
+            "name": "C Corporation",
+            "isType": true,
+            "identifier": "0199bd85-f986-700a-859d-851ccaeb16b4"
+        }
+    },
+
+    "SCorporationType": {
+        "prototype": "data/model/party/incorporated-organization",
+        "values": {
+            "name": "S Corporation",
+            "isType": true,
+            "identifier": "0199bd86-3e35-72bd-b7b0-dcba6b5cb4c8"
+        }
+    }
+}

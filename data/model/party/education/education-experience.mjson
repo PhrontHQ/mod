@@ -1,0 +1,104 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "EducationExperience",
+            "propertyDescriptors": [
+                {"@": "person"},
+                {"@": "title"},
+                {"@": "type"},
+                {"@": "typeInstances"},
+                {"@": "institution"},
+                {"@": "timeRange"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./education-experience.mjson"
+            },
+            "exportName": "EducationExperience",
+            "module": {
+                "%": "./education-experience"
+            },
+            "object":{"@": "EducationExperience"},
+            "parent":{"@": "ObjectObjectDescriptor"}
+        }
+    },
+    "EducationExperience": {
+        "object": "./education-experience"
+    },
+    "ObjectObjectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+
+    "PersonDescriptor": {
+        "object": "./party/person.mjson"
+    },
+    "person": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "person",
+            "cardinality": 1,
+            "valueType": "object",
+            "inversePropertyName": "educationExperiences",
+            "valueDescriptor": {"@": "PersonDescriptor"},
+            "description": "The person who owns that EducationExperience"
+        }
+    },
+
+    "title": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "title",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    },
+    "OrganizationDescriptor": {
+        "object": "./party/organization.mjson"
+    },
+    "institution": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "institution",
+            "cardinality": 1,
+            "valueType": "object",
+            "inversePropertyName": "ownedIdentityProviders",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "definition": "provider.ownerOrganization",
+            "description": "The organization owning this identity's provider"
+        }
+    },
+    "type": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "type",
+            "valueDescriptor": {"@": "root"},
+            "inversePropertyName": "typeInstances",
+            "description": "The reference to what would be an object's prototype in JavaScript: A unique instance of parent class that defines common characteristics for all objects of that type"
+        }
+    },
+    "typeInstances": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "typeInstances",
+            "valueType": "array",
+            "cardinality": -1,
+            "inversePropertyName": "type",
+            "valueDescriptor": {"@": "root"},
+            "description": "All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false"
+        }
+    },
+    "timeRange": {
+        "prototype": "../../../core/meta/property-descriptor",
+        "values": {
+            "name": "timeRange",
+            "valueType": "date",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "range_descriptor"}
+        }
+    },
+    "range_descriptor": {
+        "object": "core/range.mjson"
+    } 
+
+
+}
