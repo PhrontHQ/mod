@@ -5,7 +5,6 @@
             "name": "Role",
             "propertyDescriptors": [
                 {"@": "name"},
-                {"@": "description"},
                 {"@": "tags"}
             ],
             "objectDescriptorModule": {
@@ -29,14 +28,6 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "name",
-            "isLocalizable": true,
-            "valueType": "string"
-        }
-    },
-    "description": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "description",
             "isLocalizable": true,
             "valueType": "string"
         }
