@@ -15,7 +15,8 @@
                 {"@": "lastName"},
                 {"@": "email"},
                 {"@": "phone"},
-                {"@": "signatures"}
+                {"@": "signatures"},
+                {"@": "educationExperiences"}
            ],
             "objectDescriptorModule": {
                 "%": "./person.mjson"
@@ -146,6 +147,21 @@
             "cardinality": -1,
             "inversePropertyName": "person",
             "valueDescriptor": {"@": "PersonSignatureDescriptor"}
+       }
+    },
+
+    "EducationExperienceDescriptor": {
+        "object": "./education/education-experience.mjson"
+    },
+
+    "educationExperiences": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "educationExperiences",
+            "valueType": "object",
+            "cardinality": -1,
+            "inversePropertyName": "person",
+            "valueDescriptor": {"@": "EducationExperienceDescriptor"}
        }
     }
 
