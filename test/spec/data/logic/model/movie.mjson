@@ -92,7 +92,7 @@
         "prototype": "mod/core/meta/expression-validation-rule",
         "values": {
             "message": "The title must be at least 2 characters long.",
-            "name": "title",
+            "owner": {"@": "root"},
             "criteria": {
                 "@": "titleMinLengthRuleCriteria"
             }
@@ -108,7 +108,7 @@
         "prototype": "mod/core/meta/expression-validation-rule",
         "values": {
             "message": "The title must be at most 32 characters long.",
-            "name": "title",
+            "owner": {"@": "root"},
             "criteria": {
                 "@": "titleMaxLengthRuleCriteria"
             }
@@ -124,7 +124,7 @@
         "prototype": "mod/core/meta/expression-validation-rule",
         "values": {
             "message": "The title cannot contain the '@' character.",
-            "name": "title",
+            "owner": {"@": "root"},
             "criteria": {
                 "@": "titleNoAtSignRuleCriteria"
             }
@@ -140,7 +140,7 @@
         "prototype": "mod/core/meta/expression-validation-rule",
         "values": {
             "message": "The release date must be before 2042.",
-            "name": "releaseDate",
+            "owner": {"@": "root"},
             "criteria": {
                 "@": "releaseDateBefore2042RuleCriteria"
             }

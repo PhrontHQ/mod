@@ -75,6 +75,16 @@ exports.ValidationRule = class ValidationRule extends Montage {
         this._message = value || "";
     }
 
+    get ownPropertyNames() {
+        if (this._ownPropertyNames) return this._ownPropertyNames;
+        if (!this.owner) return [];
+
+        const ownProperties = this.owner.ownPropertyDescriptors.map(({ name }) => name);
+        this._ownPropertyNames = ownProperties;
+
+        return this._ownPropertyNames;
+    }
+
     /**
      * An array of property names that this validation rule depends on.
      * @type {Array<string>}
@@ -126,7 +136,7 @@ exports.ValidationRule = class ValidationRule extends Montage {
      */
     serializeSelf(serializer) {
         serializer.setProperty("validationProperties", this.validationProperties, "reference");
-        serializer.setProperty("objectDescriptor", this.owner, "reference");
+        serializer.setProperty("owner", this.owner, "reference");
         serializer.setProperty("message", this.message);
         serializer.setProperty("hints", this.hints);
         serializer.setProperty("name", this.name);
@@ -139,8 +149,8 @@ exports.ValidationRule = class ValidationRule extends Montage {
      */
     deserializeSelf(deserializer) {
         this.validationProperties = deserializer.getProperty("validationProperties");
-        this.owner = deserializer.getProperty("objectDescriptor");
         this.message = deserializer.getProperty("message");
+        this.owner = deserializer.getProperty("owner");
         this.hints = deserializer.getProperty("hints");
         this.name = deserializer.getProperty("name");
     }

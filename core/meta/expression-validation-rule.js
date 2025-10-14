@@ -35,9 +35,11 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
      * @type {Array<string>}
      */
     get validationProperties() {
-        // FIXME: does not work as expected, the entire path is parsed, e.g. "address.city"
-        // and return ["address", "city"]. It should return ["address"]
-        return this.criteria?.qualifiedProperties || [];
+        if (this._validationProperties) return this._validationProperties;
+
+        // Cache the result for future calls.
+        this._validationProperties = this._computeValidationProperties();
+        return this._validationProperties;
     }
 
     /**
@@ -45,7 +47,7 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
      * @type {Array<string>}
      */
     set validationProperties(value) {
-        super.validationProperties = value;
+        // Read-only, do nothing.
     }
 
     /**
@@ -90,5 +92,20 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
 
         // Rule passed.
         return null;
+    }
+
+    /**
+     * Computes the list of property names that this validation rule depends on.
+     * @returns {Array<string>} An array of property names.
+     */
+    _computeValidationProperties() {
+        // Get the list of qualified properties from the criteria.
+        // FIXME: does not work as expected, the entire path is parsed, e.g. "address.city"
+        // and return ["address", "city"]. It should return ["address"]
+        const qualifiedProperties = this.criteria?.qualifiedProperties || [];
+
+        return qualifiedProperties.filter((property) => {
+            return this.ownPropertyNames.includes(property);
+        });
     }
 };
