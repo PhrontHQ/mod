@@ -18,6 +18,7 @@
                 {"@": "templateName"},
                 {"@": "templateDescription"},
                 {"@": "templateInstances"},
+                {"@": "existenceTimeRange"},
                 {"@": "creationDate"},
                 {"@": "creatorIdentity"},
                 {"@": "modificationDate"},
@@ -190,17 +191,31 @@
         }
     },
 
+
+    "range_descriptor": {
+        "object": "core/range.mjson"
+    },
+    "existenceTimeRange": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "existenceTimeRange",
+            "valueType": "date",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "range_descriptor"},
+            "description": "Everything has a beginning and an end. This represnet the lifespan of the real-world object modeled. For a Person it would be that date of birth amd of death. The creationDate is when the digital object representing that person was created. Different"
+        }
+    },
+
     "DateDescriptor": {
         "object": "core/date.mjson"
     },
-
     "creationDate": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "creationDate",
             "valueDescriptor": {"@": "DateDescriptor"},
             "mandatory": true,
-            "description": "The time a data object was created"
+            "description": "The time a data object was created, from a programmatic stand point. We're missing the date the object is deleted / descactivated / decommisioned as we wouldn't delete it physically anymore. Which could also means removing from the main branch and move it to the 'void'/deleted branch"
         }
     },
 
