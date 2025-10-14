@@ -41,7 +41,8 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "givenName",
-            "valueType": "string"
+            "valueType": "string",
+            "description": "aka first name"
         }
     },
     "middleName": {
