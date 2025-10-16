@@ -6,7 +6,7 @@
             "description": "Represents any organization formally recorded with a government or legal authority.",
             "propertyDescriptors": [
                 {"@": "registrantOrganizationRegistrations"},
-                {"@": "registeredOrganizations"}
+                {"@": "registrarOrganizationRegistrations"}
             ],
             "objectDescriptorModule": {
                 "%": "./registered-organization.mjson"
@@ -31,11 +31,12 @@
     "registrantOrganizationRegistrations": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "registrationAuthority",
+            "name": "registrantOrganizationRegistrations",
             "valueType": "object",
             "cardinality": -1,
             "inversePropertyName": "registrarOrganization",
-            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"}
+            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"},
+            "description": "As an authorithy providing registration to others, the registrations of regsitrant organization"
         }
     },
     "registrarOrganizationRegistrations": {
@@ -45,7 +46,8 @@
             "valueType": "object",
             "cardinality": -1,
             "inversePropertyName": "registrantOrganization",
-            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"}
+            "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"},
+            "description": "the registrations of this organization through various registrar / authorities"
         }
     }
 

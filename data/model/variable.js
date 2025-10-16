@@ -25,5 +25,11 @@ exports.Variable = Intangible.specialize(/** @lends Variable.prototype */ {
     },
     type: {
         value: undefined
+    },
+    valueExpression: {
+        value: undefined
+    },
+    valueExpressionScope: {
+        value: undefined
     }
 });

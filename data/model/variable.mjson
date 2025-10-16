@@ -6,7 +6,9 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "displayName"},
-                {"@": "type"}
+                {"@": "type"},
+                {"@": "valueExpression"},
+                {"@": "valueExpressionScope"}
             ],
             "objectDescriptorModule": {
                 "%":"./variable.mjson"
@@ -54,5 +56,27 @@
     },
     "typeDescriptor": {
         "object": "core/meta/module-object-descriptor.mjson"
+    },
+    "valueExpression": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "valueExpression",
+            "valueType": "string",
+            "description": "The expression to evaluate on valueExpressionScope object to evaluate the variable's value"
+        }
+    },
+    "DataObjectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+    "valueExpressionScope": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "valueExpressionScope",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "DataObjectDescriptor"},
+            "description": "The scope object, high level, to be secialized, on which the expression is to be evaluated to produce a value for this variable"
+        }
     }
+
 }

@@ -30,7 +30,7 @@
     },
 
     "PersonDescriptor": {
-        "object": "./party/person.mjson"
+        "object": "../person.mjson"
     },
     "person": {
         "prototype": "core/meta/property-descriptor",
@@ -53,7 +53,7 @@
         }
     },
     "OrganizationDescriptor": {
-        "object": "./party/organization.mjson"
+        "object": "../organization.mjson"
     },
     "institution": {
         "prototype": "core/meta/property-descriptor",
@@ -88,7 +88,7 @@
         }
     },
     "timeRange": {
-        "prototype": "../../../core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "timeRange",
             "valueType": "date",
