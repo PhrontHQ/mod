@@ -4,33 +4,31 @@ var Being = require("./being").Being;
  * @extends Being
  */
 
-
- /*
-    Postgresql range. To find the current/active jobs/positions, we need to filter employmentHistory to kep those
-    for which their existenceTimeRange upper bound is infinite, or if "now" overlaps with it, which would work for contracts
-    for which the end is known.
-
-    https://www.postgresql.org/docs/9.3/functions-range.html
-    upper_inf(anyrange)	boolean	is the upper bound infinite?	upper_inf('(,)'::daterange)	true
-
-    @>	contains element	'[2011-01-01,2011-03-01)'::tsrange @> '2011-01-10'::timestamp	true
-
+/*
+ *   Postgresql range. To find the current/active jobs/positions, we need to filter employmentHistory to kep those
+ *   for which their existenceTimeRange upper bound is infinite, or if "now" overlaps with it, which would work for contracts
+ *   for which the end is known.
+ *
+ *   https://www.postgresql.org/docs/9.3/functions-range.html
+ *   upper_inf(anyrange)	boolean	is the upper bound infinite?	upper_inf('(,)'::daterange)	true
+ *
+ *   @>	contains element	'[2011-01-01,2011-03-01)'::tsrange @> '2011-01-10'::timestamp	true
+ *
  */
-
-
-exports.Person = Being.specialize(/** @lends Person.prototype */ {
+/** @lends Person.prototype */
+exports.Person = Being.specialize({
     constructor: {
         value: function Person() {
             this.super();
             return this;
-        }
+        },
     },
 
     /**
      * name
-     * 
+     *
      * Overrides Party's name that is just a String
-     * 
+     *
      * An instance of PersonName, an object that encapsulates the components
      * of a person's name in an extendable, object-oriented manner.
      * It is used to specify a person's name by providing the components
@@ -40,7 +38,7 @@ exports.Person = Being.specialize(/** @lends Person.prototype */ {
      * @property {PersonName}
      */
     name: {
-        value: undefined
+        value: undefined,
     },
 
     /**
@@ -55,10 +53,10 @@ exports.Person = Being.specialize(/** @lends Person.prototype */ {
      * @property {PersonName}
      */
     gender: {
-        value: undefined
+        value: undefined,
     },
 
-     /**
+    /**
      * aliases
      *
      * An array of PersonName objects. Individuals may have one
@@ -73,33 +71,32 @@ exports.Person = Being.specialize(/** @lends Person.prototype */ {
      * @property {PersonName[]}
      */
     aliases: {
-        value: undefined
+        value: undefined,
     },
 
     preferredLocales: {
-        value: undefined
+        value: undefined,
     },
 
     firstName: {
-        value: undefined
+        value: undefined,
     },
     lastName: {
-        value: undefined
+        value: undefined,
     },
     email: {
-        value: undefined
+        value: undefined,
     },
     phone: {
-        value: undefined
+        value: undefined,
     },
     image: {
-        value: undefined
+        value: undefined,
     },
     tags: {
-        value: undefined
+        value: undefined,
     },
     userIdentities: {
-        value: undefined
-    }
-
+        value: undefined,
+    },
 });
