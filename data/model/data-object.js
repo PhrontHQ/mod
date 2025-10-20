@@ -1,3 +1,4 @@
+const defaultApplication = require("core/application").application;
 const DataEvent = require("./data-event").DataEvent;
 const Date = require("core/extras/date").Date;
 const Montage = require("core/core").Montage;
@@ -16,6 +17,12 @@ const Target = require("core/target").Target;
  * We could then later build a UI to do the same visually.
  */
 exports.DataObject = class DataObject extends Target {
+    constructor() {
+        super();
+        defaultApplication.mainService.mergeDataObject(this);
+        return this;
+    }
+
     static {
         Montage.defineProperties(this.prototype, {
             /**
