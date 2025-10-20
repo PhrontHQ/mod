@@ -46,6 +46,30 @@ var Montage = require("core/core").Montage,
     Locale = require("core/locale").Locale;
 
 
+/**
+ * A LocalizedString encapsulate the localized version of a string in multiple languages. 
+ * 
+ * The main use is to leverage the user's prefered language and have it behave as a regular string. But
+ * the internal representation is as follow:
+ * 
+ *  {
+ *      "en": {
+ *          "US": "Network Interface"
+ *      },
+ *      "fr": {
+ *          "FR": "Interface Réseau"
+ *      }
+ * }
+ * 
+ * 
+ * @class
+ * @extends external:String
+ */
+
+
+
+
+
 class LocalizedString extends String {
     //ES2019
     //#localization = "blue";
