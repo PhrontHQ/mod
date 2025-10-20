@@ -2,73 +2,74 @@ const { Montage } = require("core/core");
 const { Being } = require("./being");
 
 /**
+ * Represents a human individual, extending the base 'Being' class
+ * with properties specific to a person, such as name, gender, and aliases.
  * @class Person
  * @extends Being
- *
- * Postgresql range. To find the current/active jobs/positions, we need to filter employmentHistory to kep those
- * for which their existenceTimeRange upper bound is infinite, or if "now" overlaps with it, which would work for contracts
- * for which the end is known.
- *
- * https://www.postgresql.org/docs/9.3/functions-range.html
- * upper_inf(anyrange)    boolean is the upper bound infinite?    upper_inf('(,)'::daterange) true
- *
- * @> contains element    '[2011-01-01,2011-03-01)'::tsrange @> '2011-01-10'::timestamp   true
- *
  */
 exports.Person = class Person extends Being {
     static {
         Montage.defineProperties(this.prototype, {
             /**
-             * name
-             *
-             * Overrides Party's name that is just a String
-             *
-             * An instance of PersonName, an object that encapsulates the components
-             * of a person's name in an extendable, object-oriented manner.
-             * It is used to specify a person's name by providing the components
-             * comprising a full name: given name, middle name, family name, prefix,
-             * suffix, nickname, and phonetic representation.
-             *
+             * Encapsulates the components of a person's full name.
+             * Overrides Party's string-based name.
              * @property {PersonName}
+             * @public
+             * @override
              */
             name: { value: undefined },
 
             /**
-             * gender
-             *
-             * A Person's gender. We're going to use
-             * - Male
-             * - Female
-             * - Other
-             * - Undisclosed
-             *
-             * @property {PersonName}
+             * A Person's gender.
+             * @property {"Male"|"Female"|"Other"|"Undisclosed"}
+             * @public
              */
             gender: { value: undefined },
 
             /**
-             * aliases
-             *
-             * An array of PersonName objects. Individuals may have one
-             * or more valid names, or aliases. This may be the result of
-             * adopting a new name in conjunction with a life event,
-             * such as marriage. For example, the name “Marie Curie”
-             * could have the corresponding alias “Maria Salomea Skłodowska.”
-             * Because each alias represents a separate name, an individual with
-             * one or more aliases would be modeled by a corresponding of number
-             * of PersonName objects, each representing a single alias.
-             *
+             * An array of additional or alternative names (aliases)
+             * for the person, such as a name from before marriage.
              * @property {PersonName[]}
+             * @public
+             * @override
              */
             aliases: { value: undefined },
+
+            /**
+             * An array of BCP 47 locale identifiers (e.g., "en-US")
+             * representing the person's language preferences.
+             * @property {string[]}
+             * @public
+             */
             preferredLocales: { value: undefined },
-            firstName: { value: undefined },
-            lastName: { value: undefined },
-            email: { value: undefined },
-            phone: { value: undefined },
-            image: { value: undefined },
+
+            /**
+             * An array of strings used for categorization.
+             * @property {string[]}
+             * @public
+             */
             tags: { value: undefined },
+
+            /**
+             * An array of linked user accounts or identities.
+             * @property {UserIdentity[]}
+             * @public
+             */
             userIdentities: { value: undefined },
+
+            /**
+             * An array of PersonSignatureDescriptor representing the person's digital signatures.
+             * @property {PersonSignatureDescriptor[]}
+             * @public
+             */
+            signatures: { value: undefined },
+
+            /**
+             * An array of PersonEducationExperience representing the person's educational background.
+             * @property {PersonEducationExperience[]}
+             * @public
+             */
+            educationExperiences: { value: undefined },
         });
     }
 };

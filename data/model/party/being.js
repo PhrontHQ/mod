@@ -1,29 +1,14 @@
-var Party = require("./party").Party;
+const Party = require("./party").Party;
 
 /**
+ * Represents a living entity, such as a person or animal.
  * @class Being
- * @extends Party
+ * @extends {Party}
+ *
+ * TODO: Add `availability` to model active/working hours.
+ * Needs to support recurring weekly schedules, including:
+ * - Time zone specification.
+ * - An array of time ranges (slots) per day.
+ * - Different schedules for different days (e.g., Mon-Fri vs. Sat).
  */
-
-
- /*
-
- TODO: add timeRanges to model Operating Hours	Operating hours	Specifies a time zone and associated time slots for a branch or office location.
-
- There could be a morningOperationTimeRange,
- A range of "days" can have an array of ranges of operating hours
-
- That should give us enough flexibility
-
- */
-
-
-exports.Being = Party.specialize(/** @lends Being.prototype */ {
-    constructor: {
-        value: function Being() {
-            this.super();
-            return this;
-        }
-    }
-
-});
+exports.Being = class Being extends Party {};
