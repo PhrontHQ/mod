@@ -1,6 +1,6 @@
 {
 
     "root": {
-        "object": "./ordering-rule"
+        "object": "./ordering-rule.mjson"
     }
 }

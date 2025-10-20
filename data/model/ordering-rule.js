@@ -36,7 +36,8 @@ var orderingDirections = [
     "Ascending",
     "Descending"
 ];
-exports.OrderingDirection = OrderingDirection = new Enum().initWithMembersAndValues(orderingDirections,orderingDirections);
+const OrderingDirection = new Enum().initWithMembersAndValues(orderingDirections,orderingDirections);
+exports.OrderingDirection = OrderingDirection;
 //Backward compatibility:
 exports.OrderType = OrderingDirection;
 
@@ -110,11 +111,11 @@ exports.OrderingRule = Montage.specialize(/** @lends OrderingRule.prototype */ {
     },
 
     Ascending: {
-        value: OrderType.Ascending
+        value: OrderingDirection.Ascending
     },
 
     Descending: {
-        value: OrderType.Descending
+        value: OrderingDirection.Descending
     },
 
     ASCENDING: {
