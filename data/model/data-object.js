@@ -1,78 +1,66 @@
-const   Montage = require("../../core/core").Montage,
-        Target = require("../../core/target").Target,
-        DataEvent = require("./data-event").DataEvent,
-        Date = require("core/extras/date").Date;
+const DataEvent = require("./data-event").DataEvent;
+const Date = require("core/extras/date").Date;
+const Montage = require("core/core").Montage;
+const Target = require("core/target").Target;
 
 /**
  * @class DataObject
- * @extends Montage
+ * @extends Target
+ *
+ * Need to be able to set creationDate when an instance is created by
+ * the DataService. Not when the instance is created by the constructor.
+ *
+ * A proposal is to have a "datacreate" or "create" event whose target is
+ * the new instance. That is listened to by some code that does it.
+ *
+ * We could then later build a UI to do the same visually.
  */
-
-
- /*
-    Need to be able to set creationDate when an instance is created by
-    the DataService. Not when the instance is created by the constructor.
-
-    A proposal is to have a "datacreate" or "create" event whose target is
-    the new instance. That is listened to by some code that does it.
-
-    We could then later build a UI to do the same visually.
-*/
-
 exports.DataObject = class DataObject extends Target {
-
-    constructor() {
-        super()
-    }
-
     static {
-
         Montage.defineProperties(this.prototype, {
-
             /**
              * The full moduleId of the object, starting by the name of the package it belongs to
              *
              * @property {Object}
              * @default null
              */
-            fullModuleId: { value: undefined},
+            fullModuleId: { value: undefined },
 
             /**
-             * Stores the latest known data snapshot from an origin service it was imported from. 
+             * Stores the latest known data snapshot from an origin service it was imported from.
              * An entry per origin data service contains the data snapshot from that origin
              *
              * @property {Object}
              * @default null
              */
-            originDataSnapshot: { value: undefined},
+            originDataSnapshot: { value: undefined },
 
-            
             /**
              * The primaryKey from a different system a Data Object may have come from originally
              *
              * @property {Object}
              * @default null
              */
-            originId: { value: undefined},
+            originId: { value: undefined },
 
             /**
-             * If true, indicates that an instance is used by others as their type, 
-             * which is the equivalent of the role of the prototype in JavaScript: 
+             * If true, indicates that an instance is used by others as their type,
+             * which is the equivalent of the role of the prototype in JavaScript:
              * an object one derived from
              *
              * @property {boolean}
              * @default false
              */
-            isType: { value: false},
+            isType: { value: false },
 
             /**
-             * The reference to what would be an object's prototype in JavaScript: 
+             * The reference to what would be an object's prototype in JavaScript:
              * A unique instance of parent class that defines common characteristics for all objects of that type
              *
              * @property {Object}
              * @default undefined
              */
-            type: { value: false},
+            type: { value: false },
 
             /**
              * All instances of this class and/or subclasses that are also used as types
@@ -80,7 +68,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            subtypes: { value: false},
+            subtypes: { value: false },
 
             /**
              * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
@@ -88,7 +76,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            typeInstances: { value: false},
+            typeInstances: { value: false },
 
             /**
              * If true, indicates that an instance is used by others as a source of default values
@@ -96,16 +84,16 @@ exports.DataObject = class DataObject extends Target {
              * @property {String}
              * @default undefined
              */
-            isTemplate: { value: false},
+            isTemplate: { value: false },
 
             /**
-             * The reference to another obect of the same class that acts as a template, 
+             * The reference to another obect of the same class that acts as a template,
              * providing default values
              *
              * @property {Object}
              * @default undefined
              */
-            template: { value: false},
+            template: { value: false },
 
             /**
              * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false
@@ -113,7 +101,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Array<Object>}
              * @default undefined
              */
-            templateInstances: { value: false},
+            templateInstances: { value: false },
 
             /**
              * The description of what a data object is
@@ -121,7 +109,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {String}
              * @default undefined
              */
-            description: { value: undefined},
+            description: { value: undefined },
 
             /**
              * The time a data object was created
@@ -129,7 +117,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Date}
              * @default undefined
              */
-            creationDate: { value: undefined},
+            creationDate: { value: undefined },
 
             // /**
             //  * The identity of the user who created a data object.
@@ -140,7 +128,6 @@ exports.DataObject = class DataObject extends Target {
             //  */
             // creationIdentity: { value: undefined},
 
-
             /**
              * The last time a data object was modified
              * WOULD BE BETTER HANDLED AS PART OD HAVING A LOG THAT RECORDS OVER TIME
@@ -148,7 +135,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Date}
              * @default undefined
              */
-            modificationDate: { value: undefined},
+            modificationDate: { value: undefined },
 
             // /**
             //  * The identity of the user who last modified a data object. This would be better as
@@ -166,7 +153,7 @@ exports.DataObject = class DataObject extends Target {
              * @property {Date}
              * @default undefined
              */
-            publicationDate: { value: undefined},
+            publicationDate: { value: undefined },
 
             // /**
             //  * The identity of the user who last published a data object, as in getting getting "live"
@@ -178,15 +165,14 @@ exports.DataObject = class DataObject extends Target {
             // publisherIdentity: { value: undefined}
 
             /**
-             * states wether a data object is allowed to change. This has implication to prevent changes 
-             * - Object.freeze() and not tracking changes, as well as fetching those first from previous 
+             * states wether a data object is allowed to change. This has implication to prevent changes
+             * - Object.freeze() and not tracking changes, as well as fetching those first from previous
              * fetch if they've been fetched already.
              *
              * @property {boolean}
              * @default true
              */
-            isReadOnly: { value: false},
-
+            isReadOnly: { value: false },
         });
     }
 
@@ -194,34 +180,29 @@ exports.DataObject = class DataObject extends Target {
         return Date.date;
     }
 
-
     deserializeSelf(deserializer) {
-        if(super.deserializeSelf) {
+        if (super.deserializeSelf) {
             super.deserializeSelf(deserializer);
         }
 
-
-        /*
-            Can't use this unless we know that this.objectDescriptor is available to us
-        */
-        if(this.objectDescriptor) {
+        // Can't use this unless we know that this.objectDescriptor is available to us
+        if (this.objectDescriptor) {
             let propertyDescriptors = this.objectDescriptor.propertyDescriptors;
 
-            //for (let i=0, iPropertyDescriptor = 0, iValue, countI = propertyDescriptors.length; i < countI; i++) {
+            // for (let i=0, iPropertyDescriptor = 0, iValue, countI = propertyDescriptors.length; i < countI; i++) {
             for (let iPropertyDescriptor of propertyDescriptors) {
-                if(deserializer.hasProperty(iPropertyDescriptor.name)) {
+                if (deserializer.hasProperty(iPropertyDescriptor.name)) {
                     this[iPropertyDescriptor.name] = deserializer.getProperty(iPropertyDescriptor.name);
                 }
                 // let iValue = deserializer.getProperty(iPropertyDescriptor.name);
                 // if (iValue !== void 0) {
                 //     this[iPropertyDescriptor.name] = iValue;
                 // }
-            }    
-        } 
-        /*
-            Backward compatibility, only run if we don't have an objectDescriptor
-        */
-        else {
+            }
+        } else {
+            /*
+             * Backward compatibility, only run if we don't have an objectDescriptor
+             */
             var value;
             value = deserializer.getProperty("originId");
             if (value !== void 0) {
@@ -231,7 +212,7 @@ exports.DataObject = class DataObject extends Target {
             if (value !== void 0) {
                 this.originDataSnapshot = value;
             }
-    
+
             value = deserializer.getProperty("isType");
             if (value !== void 0) {
                 this.isType = value;
@@ -240,7 +221,7 @@ exports.DataObject = class DataObject extends Target {
             if (value !== void 0) {
                 this.isTemplate = value;
             }
-    
+
             value = deserializer.getProperty("description");
             if (value !== void 0) {
                 this.description = value;
@@ -257,51 +238,47 @@ exports.DataObject = class DataObject extends Target {
             if (value !== void 0) {
                 this.publicationDate = value;
             }
-    
         }
-
-
     }
 
     serializeSelf(serializer) {
-        if(this.originId) {
+        if (this.originId) {
             serializer.setProperty("originId", this.originId);
         }
-        if(this.originDataSnapshot) {
+        if (this.originDataSnapshot) {
             serializer.setProperty("originDataSnapshot", this.originDataSnapshot);
         }
-        
-        if(this.isType !== undefined) {
+
+        if (this.isType !== undefined) {
             serializer.setProperty("isType", this.isType);
         }
-        if(this.isTemplate !== undefined) {
+        if (this.isTemplate !== undefined) {
             serializer.setProperty("isTemplate", this.isTemplate);
         }
 
-        if(this.description) {
+        if (this.description) {
             serializer.setProperty("description", this.description);
         }
-        if(this.creationDate) {
+        if (this.creationDate) {
             serializer.setProperty("creationDate", this.creationDate);
         }
-        if(this.modificationDate) {
+        if (this.modificationDate) {
             serializer.setProperty("modificationDate", this.modificationDate);
         }
-        if(this.publicationDate) {
+        if (this.publicationDate) {
             serializer.setProperty("publicationDate", this.publicationDate);
         }
     }
 
-    /*
-        This class methods are polymorphic, which poses a problem.
-        Object needs to receive create events from Object instances and all instances inheriting from Object.
-
-        So it needs to listen to dataService and filter, which is a bit wasteful
-        or we could propagate the event with nextTarget to go through the propertyDescriptor hierarchy and then Object can listen only on it's Object Descriptor.
-
-        BUT as these methds are inherited when declared in specializes, the handle methods are a problem.
-
-    */
+    /**
+     * This class methods are polymorphic, which poses a problem.
+     * Object needs to receive create events from Object instances and all instances inheriting from Object.
+     *
+     * So it needs to listen to dataService and filter, which is a bit wasteful
+     * or we could propagate the event with nextTarget to go through the propertyDescriptor hierarchy and then Object can listen only on it's Object Descriptor.
+     *
+     * BUT as these methds are inherited when declared in specializes, the handle methods are a problem.
+     */
 
     /**
      * prepareToHandleDataEvents helps register lazily prepare DO's custom logic.
@@ -309,18 +286,17 @@ exports.DataObject = class DataObject extends Target {
      * @param {DataEvent} event the first event triggering the prepareToHandleDataEvents
      */
 
-    static prepareToHandleDataEvents (event) {
-        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create,this,false);
+    static prepareToHandleDataEvents(event) {
+        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create, this, false);
     }
 
     static handleCreate(event) {
         // if(event.dataObject instanceof this) {
-            event.dataObject.creationDate = event.dataObject.modificationDate = new Date();
+        event.dataObject.creationDate = event.dataObject.modificationDate = new Date();
         // }
     }
 
     static handleUpdate(event) {
         event.dataObject.modificationDate = new Date();
     }
-
-}
+};
