@@ -11,10 +11,6 @@
                 {"@": "preferredLocales"},
                 {"@": "tags"},
                 {"@": "userIdentities"},
-                {"@": "firstName"},
-                {"@": "lastName"},
-                {"@": "email"},
-                {"@": "phone"},
                 {"@": "signatures"},
                 {"@": "educationExperiences"}
            ],
@@ -81,35 +77,6 @@
             "name": "preferredLocales",
             "cardinality": -1,
             "valueType": "array"
-        }
-    },
-
-    "firstName": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "firstName",
-            "valueType": "string"
-        }
-    },
-    "lastName": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "lastName",
-            "valueType": "string"
-        }
-    },
-    "email": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "email",
-            "valueType": "string"
-        }
-    },
-    "phone": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "phone",
-            "valueType": "string"
         }
     },
 
