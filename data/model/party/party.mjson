@@ -6,7 +6,6 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "aliases"},
-                {"@": "existenceTimeRange"},
                 {"@": "postalAddresses"},
                 {"@": "emailAddresses"},
                 {"@": "phoneNumbers"},
@@ -45,18 +44,6 @@
             "cardinality": -1,
             "isSearchable": true
         }
-    },
-    "existenceTimeRange": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "existenceTimeRange",
-            "valueType": "date",
-            "cardinality": 1,
-            "valueDescriptor": {"@": "range_descriptor"}
-        }
-    },
-    "range_descriptor": {
-        "object": "core/range.mjson"
     },
     "postalAddresses": {
         "prototype": "core/meta/property-descriptor",
