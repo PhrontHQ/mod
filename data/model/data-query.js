@@ -148,10 +148,15 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
     /**
      * An array of DataOrdering objects which, combined, define the order
      * desired for the data in the set specified by this query.
-     *
+     * 
+     * orderingRules!!!!
+     * 
      * @type {Array}
      */
-    orderings: {
+    _orderingRules: {
+        value: undefined
+    },
+    orderingRules: {
         get: function () {
             /*
                 Benoit, could break backward compatibility but it doesn't look like we relied on this. No point creating an empty attay just for checking if orderings have been set on a data query.
@@ -159,15 +164,25 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             // if (!this._orderings) {
             //     this._orderings = [];
             // }
-            return this._orderings;
+            return this._orderingRules;
         },
-        set: function (orderings) {
-            this._orderings = orderings;
+        set: function (orderingRules) {
+            this._orderingRules = orderingRules;
         }
     },
 
-    _orderings: {
-        value: undefined
+    /**
+     * Backward compatibility
+     * 
+     * @type {Array}
+     */
+    orderings: {
+        get: function () {
+            return this.orderingRules;
+        },
+        set: function (orderings) {
+            this.orderingRules = orderings;
+        }
     },
 
     /**
