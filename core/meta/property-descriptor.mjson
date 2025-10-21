@@ -147,6 +147,22 @@
             "helpKey": ""
         }
     },
+    "property_orderingRules": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "orderingRules",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": -1,
+            "mandatory": false,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "object",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    },
     "property_valueObjectPrototypeName": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -271,99 +287,41 @@
             "name": "PropertyDescriptor",
             "customPrototype": false,
             "propertyDescriptors": [
-                {
-                    "@": "property_name"
-                },
-                {
-                    "@": "property_owner"
-                },
-                {
-                    "@": "property_cardinality"
-                },
-                {
-                    "@": "property_valueType"
-                },
-                {
-                    "@": "property_valueDescriptor"
-                },
-                {
-                    "@": "property_collectionValueType"
-                },
-                {
-                    "@": "property_valueObjectPrototypeName"
-                },
-                {
-                    "@": "property_valueObjectModuleId"
-                },
-                {
-                    "@": "property_mandatory"
-                },
-                {
-                    "@": "property_denyDelete"
-                },
-                {
-                    "@": "property_readOnly"
-                },
-                {
-                    "@": "property_enumValues"
-                },
-                {
-                    "@": "property_isSerializable"
-                },
-                {
-                    "@": "property_isLocalizable"
-                },
-                {
-                    "@": "property_helpKey"
-                }
+                {"@": "property_name"},
+                {"@": "property_owner"},
+                {"@": "property_cardinality"},
+                {"@": "property_valueType"},
+                {"@": "property_valueDescriptor"},
+                {"@": "property_collectionValueType"},
+                {"@": "property_valueObjectPrototypeName"},
+                {"@": "property_valueObjectModuleId"},
+                {"@": "property_orderingRules"},
+                {"@": "property_mandatory"},
+                {"@": "property_denyDelete"},
+                {"@": "property_readOnly"},
+                {"@": "property_enumValues"},
+                {"@": "property_isSerializable"},
+                {"@": "property_isLocalizable"},
+                {"@": "property_helpKey"}
             ],
             "propertyDescriptorGroups": {
                 "property-descriptor": [
-                    {
-                        "@": "property_name"
-                    },
-                    {
-                        "@": "property_owner"
-                    },
-                    {
-                        "@": "property_cardinality"
-                    },
-                    {
-                        "@": "property_valueType"
-                    },
-                    {
-                        "@": "property_valueDescriptor"
-                    },
-                    {
-                        "@": "property_collectionValueType"
-                    },
-                    {
-                        "@": "property_valueObjectPrototypeName"
-                    },
-                    {
-                        "@": "property_valueObjectModuleId"
-                    },
-                    {
-                        "@": "property_mandatory"
-                    },
-                    {
-                        "@": "property_denyDelete"
-                    },
-                    {
-                        "@": "property_readOnly"
-                    },
-                    {
-                        "@": "property_enumValues"
-                    },
-                    {
-                        "@": "property_isSerializable"
-                    },
-                    {
-                        "@": "property_isLocalizable"
-                    },
-                   {
-                        "@": "property_helpKey"
-                    }
+                    {"@": "property_name"},
+                    {"@": "property_owner"},
+                    {"@": "property_cardinality"},
+                    {"@": "property_valueType"},
+                    {"@": "property_valueDescriptor"},
+                    {"@": "property_collectionValueType"},
+                    {"@": "property_valueObjectPrototypeName"},
+                    {"@": "property_valueObjectModuleId"},
+                    {"@": "property_orderingRules"},
+                    {"@": "property_mandatory"},
+                    {"@": "property_denyDelete"},
+                    {"@": "property_readOnly"},
+                    {"@": "property_enumValues"},
+                    {"@": "property_isSerializable"},
+                    {"@": "property_isLocalizable"},
+                    {"@": "property_helpKey"}
                 ]
             },
             "propertyValidationRules": {},

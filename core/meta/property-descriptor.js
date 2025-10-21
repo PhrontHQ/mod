@@ -56,7 +56,6 @@ var Defaults = {
     helpKey: "",
     isLocalizable: false,
     isSearchable: false,
-    isOrdered: false,
     isUnique: false,
     isOneWayEncrypted: false,
     isSerializable: true,
@@ -171,13 +170,12 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._setPropertyWithDefaults(serializer, "isLocalizable", this.isLocalizable);
             this._setPropertyWithDefaults(serializer, "isSerializable", this.isSerializable);
             this._setPropertyWithDefaults(serializer, "isSearchable", this.isSearchable);
-            this._setPropertyWithDefaults(serializer, "isOrdered", this.isOrdered);
             if(this.hasOwnProperty("_isDerived")) {
                 this._setPropertyWithDefaults(serializer, "isDerived", this._isDerived);
             }
 
-            if(this.dataOrderings) {
-                serializer.setProperty("dataOrderings", this.dataOrderings);
+            if(this._orderingRules) {
+                serializer.setProperty("orderingRules", this._orderingRules);
             }
 
             this._setPropertyWithDefaults(serializer, "isUnique", this.isUnique);
@@ -243,16 +241,15 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._overridePropertyWithDefaults(deserializer, "isLocalizable");
             this._overridePropertyWithDefaults(deserializer, "isSerializable");
             this._overridePropertyWithDefaults(deserializer, "isSearchable");
-            this._overridePropertyWithDefaults(deserializer, "isOrdered");
 
             value = deserializer.getProperty("isDerived");
             if (value !== void 0) {
                 this._isDerived = value;
             }
 
-            value = deserializer.getProperty("dataOrderings");
+            value = deserializer.getProperty("orderingRules");
             if (value !== void 0) {
-                this.dataOrderings = value;
+                this.orderingRules = value;
             }
 
             this._overridePropertyWithDefaults(deserializer, "isUnique");
@@ -497,19 +494,41 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      * @default false
      */
     isOrdered: {
-        value: Defaults.isOrdered
+        get: function() {
+            if(this._orderingRules === null) {
+                return false;
+            } else {
+                return (this._orderingRules.length > 0);
+            }
+        }
     },
 
     /**
      * allows to specify how the values of a relationship should be ordered.
-     * The array of DataOrderings objects
+     * The array of OrderingRules objects
      *
      *
-     * @type {Array <DataOrdering>}
-     * @default null
+     * @type {Array <OrderingRules>}
+     * @default [], when asked
      */
-    dataOrderings: {
+    _orderingRules: {
         value: null
+    },
+    orderingRules: {
+        get: function() {
+            if(!this._orderingRules) {
+                this._orderingRules = [];
+            }
+        },
+        set: function(value) {
+            if(value !== this._orderingRules) {
+                if(!this._orderingRules) {
+                    this._orderingRules = value;
+                } else {
+                    this._orderingRules.splice(0, this._orderingRules.length, ...value);
+                }
+            }
+        }
     },
 
 
