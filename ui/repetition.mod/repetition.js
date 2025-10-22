@@ -2174,6 +2174,7 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
                 iteration.active = false;
 
                 if (!iteration.selected) {
+                    // If we are at max selection length, we need to ignore this selection
                     if (this.selectedIndexes.length == this.maxSelectionLength) {
                         this._ignoreSelection();
                         return;
@@ -2183,6 +2184,7 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
                     }
 
                 } else if (this.allowsMultipleSelection) {
+                    // If we are at min selection length, we need to ignore this deselection
                     if (this.selectedIndexes.length == this.minSelectionLength) {
                         this._ignoreSelection();
                         return;
