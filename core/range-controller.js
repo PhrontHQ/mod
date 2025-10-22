@@ -192,15 +192,16 @@ Object.defineProperty(_RangeSelection.prototype, "swap_or_push", {
         var diff = plus.length - minus.length;
         var newLength = Math.max(this.length + diff, start + plus.length);
 
+        // If we are at max selection length, we need to ignore this selection
         if ( typeof this.rangeController.maxSelectionLength === "number" &&
             newLength > this.rangeController.maxSelectionLength) 
         {
-            console.log("exceeding maxSelectionLength");
             return EMPTY_ARRAY;
-        } else if ( typeof this.rangeController.minSelectionLength === "number" &&
+        } 
+        // If we are at min selection length, we need to ignore this deselection
+        else if ( typeof this.rangeController.minSelectionLength === "number" &&
             newLength < this.rangeController.minSelectionLength)
         {
-            console.log("exceeding minSelectionLength");
             return EMPTY_ARRAY;
         }
 
