@@ -606,6 +606,19 @@ describe("meta/object-descriptor-spec", () => {
                 // The only error should be about the title.
                 expect(validationErrors[0].message).toBe("The title must be at least 2 characters long.");
             });
+
+            it("should return multiple errors when both the title and releaseDate are invalid", async () => {
+                // Setup & Execute: Title is too short AND releaseDate is in the future.
+                const validationErrors = await movieDescriptor.evaluateObjectValidity({
+                    title: "A", // Invalid (too short)
+                    releaseDate: new Date("2050-01-01"), // Invalid (after 2042)
+                });
+
+                // Assert
+                expect(validationErrors.length).toBe(2);
+                expect(validationErrors[0].message).toBe("The title must be at least 2 characters long.");
+                expect(validationErrors[1].message).toBe("The release date must be before 2042.");
+            });
         });
     });
 });

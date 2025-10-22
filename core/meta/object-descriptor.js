@@ -1413,7 +1413,7 @@ ObjectDescriptor.addClassProperties(
          * @param {string} name of the rule
          * @returns {PropertyDescription} new properties validation rule
          */
-        addValidationRule: {
+        addExpressionValidationRule: {
             value: function (name) {
                 var validationRule = this._validationRules[name];
                 if (!validationRule) {
@@ -1458,16 +1458,25 @@ ObjectDescriptor.addClassProperties(
         evaluateObjectValidity: {
             value: async function (objectInstance) {
                 // Create an array of promises by calling evaluateRule for each validation rule.
-                const validationPromises = Object.values(this._validationRules).map((rule) =>
-                    rule.evaluateRule(objectInstance)
-                );
+                const validationPromises = [];
+                const rules = Object.values(this._validationRules);
 
-                // Wait for all validation rules to complete their evaluation.
-                const validationErrors = await Promise.all(validationPromises);
+                for (let i = 0, length = rules.length; i < length; i++) {
+                    validationPromises.push(rules[i].evaluateRule(objectInstance));
+                }
 
-                // Filter out the `null` errors (which indicate a passed rule)
-                // to return only the actual ValidationError objects.
-                return validationErrors.filter((error) => error !== null);
+                // Wait for all validation rules to complete and filter results
+                return Promise.all(validationPromises).then((validationErrors) => {
+                    const actualErrors = [];
+
+                    for (let j = 0, errLength = validationErrors.length; j < errLength; j++) {
+                        // Filter out the `null` errors (which indicate a passed rule)
+                        if (validationErrors[j] !== null) {
+                            actualErrors.push(validationErrors[j]);
+                        }
+                    }
+                    return actualErrors;
+                });
             },
         },
 

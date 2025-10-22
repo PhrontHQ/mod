@@ -2,7 +2,7 @@ const { ExpressionValidationRule } = require("mod/core/meta/expression-validatio
 const { ValidationError } = require("mod/core/error/validation-error");
 const { Criteria } = require("mod/core/criteria");
 
-describe("logic/validation/expression-validation-rule-spec", () => {
+describe("ExpressionValidationRule", () => {
     let rule;
 
     // Set up a new rule instance before each test.
