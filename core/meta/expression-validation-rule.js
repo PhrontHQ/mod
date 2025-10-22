@@ -38,7 +38,7 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
         if (this._validationProperties) return this._validationProperties;
 
         // Cache the result for future calls.
-        this._validationProperties = this._computeValidationProperties();
+        this._validationProperties = this._findValidationProperties();
         return this._validationProperties;
     }
 
@@ -98,10 +98,10 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
     }
 
     /**
-     * Computes the list of property names that this validation rule depends on.
+     * Finds the list of property names that this validation rule depends on.
      * @returns {Array<string>} An array of property names.
      */
-    _computeValidationProperties() {
+    _findValidationProperties() {
         // Get the list of qualified properties from the criteria.
         // FIXME: does not work as expected, the entire path is parsed, e.g. "address.city"
         // and return ["address", "city"]. It should return ["address"]
