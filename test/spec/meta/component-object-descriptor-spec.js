@@ -95,7 +95,7 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
                 "required"
             );
 
-            newObjectDescriptor.addValidationRule("rule1").criteria = null;
+            newObjectDescriptor.addExpressionValidationRule("rule1").criteria = null;
             component3.objectDescriptor = newObjectDescriptor;
 
             const objectDescriptor = await component3.objectDescriptor;

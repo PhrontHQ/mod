@@ -72,26 +72,29 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
     /**
      * Evaluates the criteria expression against the data instance.
      * @override
+     * @async
      * @param {object} dataInstance - The data object instance to validate.
      * @returns {Promise<ValidationError|null>} A Promise that resolves to a
      * `ValidationError` object if the expression is falsy, or `null` if it is truthy.
+     * NOTE: we use Promise here to be ready for future async criteria evaluations.
      */
-    async evaluateRule(dataInstance) {
+    evaluateRule(dataInstance) {
         try {
             const isValid = this.criteria.evaluate(dataInstance);
 
             if (!isValid) {
                 // Rule failed, return the error object.
-                return new ValidationError(this.message, this);
+                const error = new ValidationError().initWithMessageAndRule(this.message, this);
+                return Promise.resolve(error);
             }
+
+            // Rule passed.
+            return Promise.resolve(null);
         } catch (error) {
             console.error(`Error evaluating expression for rule "${this.name}": ${this.criteria.expression}`, error);
             // An expression that throws an error is a developer mistake; treat as passing.
-            return null;
+            return Promise.resolve(null);
         }
-
-        // Rule passed.
-        return null;
     }
 
     /**

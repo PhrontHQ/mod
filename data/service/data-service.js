@@ -33,8 +33,6 @@ const Object = global.Object, //Cache for scope traversal performance
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
     ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject;
 
-const DataValidationManager = require("./data-validation-manager").DataValidationManager;
-
 require("../../core/extras/string");
 require("../../core/extras/date");
 
@@ -106,15 +104,6 @@ const DataService = exports.DataService = class DataService extends Target {
         // this._deserializer = new Deserializer();
 
         //this.addOwnPropertyChangeListener("mainService", this);
-
-        this._dataValidationManager = new DataValidationManager({
-            // TODO: Refactor tightly coupled logic between DataService and ObjectDescriptors retrieval and caching.
-            // The current implementation mixes responsibilities that should be separated.
-            // We should consider introducing an ObjectDescriptorStore class to manage object descriptors independently.
-            // This would allow both DataService and DataValidationManager (and other consumers) to access descriptors
-            // without duplicating logic or creating unnecessary dependencies.
-            getForObject: (dataInstance) => this.objectDescriptorForObject(dataInstance),
-        });
     }
 
     static {
@@ -253,14 +242,6 @@ DataService.addClassProperties(
             get: function () {
                 return defaultEventManager.application;
             },
-        },
-
-        /**
-         * The Validation Manager used by this DataService to validate data objects.
-         * @type {DataValidationManager}
-         */
-        _dataValidationManager: {
-            value: null,
         },
 
         /***************************************************************************
@@ -4838,27 +4819,67 @@ DataService.addClassProperties(
          * @returns {Promise<Map<object, Map<string, ValidationError[]>>>} A promise that resolves with a map where each
          * key is an object and its value is its own invalidity state.
          */
-        _validateAndAttachInvalidityStateToObject: {
-            value: async function (objects) {
-                const dataObjectInstances = [];
+        _buildInvalidityStateForObjects: {
+            value: function (objects) {
+                const validationPromises = [];
 
-                // First, flatten the input structure into a simple array of unique data objects.
                 for (const dataObjects of objects.values()) {
                     for (const dataObject of dataObjects) {
-                        dataObjectInstances.push(dataObject);
+                        const promise = this._getInvalidityStateForObject(dataObject).then((invalidityState) => {
+                            this._setInvalidityStateOnObject(dataObject, invalidityState);
+                            return [dataObject, invalidityState];
+                        });
+
+                        validationPromises.push(promise);
                     }
                 }
 
-                // 2. Get the validation results for all unique data objects.
-                // This returns a map of: Map<object, Map<string, ValidationError[]>>
-                const validationResults = await this._dataValidationManager.validateObjects(dataObjectInstances);
+                return Promise.all(validationPromises).then((resolvedPairs) => {
+                    return new Map(resolvedPairs);
+                });
+            },
+        },
 
-                // 3. Iterate over the results and attach the invalidity state to each instance.
-                for (const [dataObject, invalidityState] of validationResults.entries()) {
-                    this._setInvalidityStateOnObject(dataObject, invalidityState);
-                }
+        /**
+         * Asynchronously evaluates the validity of a single object and groups any errors by rule name.
+         *
+         * @param {object} object - The object to evaluate.
+         * @returns {Promise<Map<string, ValidationError[]>>} A promise that resolves with the object's
+         * invalidity state. An empty map signifies a valid object.
+         */
+        _getInvalidityStateForObject: {
+            value: function (object) {
+                const invalidityState = new Map();
+                const objectDescriptor = this.objectDescriptorForObject(object);
 
-                return validationResults;
+                return objectDescriptor
+                    .evaluateObjectValidity(object)
+                    .then((validationErrors) => {
+                        // Group validation errors by rule name.
+                        for (let i = 0, length = validationErrors.length; i < length; i++) {
+                            const validationError = validationErrors[i];
+                            const rule = validationError.rule;
+                            // A single rule can be associated with multiple properties.
+                            const associatedProperties = rule.validationProperties || [];
+
+                            for (let j = 0, propsLength = associatedProperties.length; j < propsLength; j++) {
+                                const propertyName = associatedProperties[j];
+
+                                if (!invalidityState.has(propertyName)) {
+                                    invalidityState.set(propertyName, []);
+                                }
+
+                                invalidityState.get(propertyName).push(validationError);
+                            }
+                        }
+
+                        return invalidityState;
+                    })
+                    .catch((error) => {
+                        // Log the error for debugging but re-throw to let the caller handle it.
+                        console.error(`Error evaluating validity for object:`, object, error);
+                        throw error;
+                    });
             },
         },
 
@@ -5325,11 +5346,11 @@ DataService.addClassProperties(
                          */
                         Promise.all([
                             // 1. Validate created objects.
-                            self._validateAndAttachInvalidityStateToObject(createdDataObjects),
+                            self._buildInvalidityStateForObjects(createdDataObjects),
                             // 2. Validate updated objects.
-                            self._validateAndAttachInvalidityStateToObject(changedDataObjects),
+                            self._buildInvalidityStateForObjects(changedDataObjects),
                             // 3. Validate deleted objects (e.g., check for rules that block deletion).
-                            self._validateAndAttachInvalidityStateToObject(deletedDataObjects),
+                            self._buildInvalidityStateForObjects(deletedDataObjects),
                         ])
                             .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
                                 // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
