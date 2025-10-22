@@ -192,6 +192,16 @@ Object.defineProperty(_RangeSelection.prototype, "swap_or_push", {
         var diff = plus.length - minus.length;
         var newLength = Math.max(this.length + diff, start + plus.length);
 
+        if ( typeof this.rangeController.maxSelectionLength === "number" &&
+            newLength > this.rangeController.maxSelectionLength) 
+        {
+            return EMPTY_ARRAY;
+        } else if ( typeof this.rangeController.minSelectionLength === "number" &&
+            newLength < this.rangeController.minSelectionLength)
+        {
+            return EMPTY_ARRAY;
+        }
+
         if (!this.rangeController.allowsMultipleSelection && newLength > 1) {
             // use the last-supplied item as the sole element of the set
             var last = plus.length ? plus[plus.length-1] : this.one();
@@ -273,6 +283,8 @@ var RangeController = exports.RangeController = Montage.specialize( /** @lends R
             this.deselectInvisibleContent = false;
             this.clearSelectionOnOrderChange = false;
             this.avoidsEmptySelection = false;
+            this.minSelectionLength = 0;
+            this.maxSelectionLength = Infinity;
 
             // The following establishes a pipeline for projecting the
             // underlying content into organizedContent.
@@ -400,6 +412,22 @@ var RangeController = exports.RangeController = Montage.specialize( /** @lends R
      * @property {boolean}
      */
     allowsMultipleSelection: {value: false},
+
+    /**
+     * The minimum number of items that must be selected.
+     *
+     * @default 0
+     * @property {number}
+     */
+    minSelectionLength: {value: 0},
+
+    /**
+     * The maximum number of items that can be selected.
+     *
+     * @default Infinity
+     * @property {number}
+     */
+    maxSelectionLength: {value: Infinity},
 
     // Properties managed by the controller
     // ------------------------------------
