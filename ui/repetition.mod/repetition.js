@@ -1102,7 +1102,8 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
             // XXX Note: Any property added to initialize in constructor must
             // also be accounted for in _teardownIterationTemplate to reset the
             // repetition.
-
+            this.minSelectionLength = 0;
+            this.maxSelectionLength = Infinity;
             this.contentController = null;
             this.organizedContent = [];
             this.defineBinding("_controllerOrganizedContent", {
@@ -2173,10 +2174,22 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
                 iteration.active = false;
 
                 if (!iteration.selected) {
+                    if (this.selectedIndexes.length == this.maxSelectionLength) {
+                        this._ignoreSelection();
+                        return;
+                    }
+                    else {
                     iteration.selected = true;
+                    }
 
                 } else if (this.allowsMultipleSelection) {
-                    iteration.selected = false;
+                    if (this.selectedIndexes.length == this.minSelectionLength) {
+                        this._ignoreSelection();
+                        return;
+                    }
+                    else {
+                        iteration.selected = false;
+                    }
                 }
             }
 
