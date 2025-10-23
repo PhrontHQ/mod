@@ -32,7 +32,7 @@
                 }
             ],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "spec/meta/controller-object-descriptor-test/child-controller.mjson"
             },

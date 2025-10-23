@@ -1,0 +1,52 @@
+{
+    "root": {
+        "prototype": "mod/core/meta/module-object-descriptor",
+        "properties": {
+            "name": "AnimatedMovie",
+            "parent":{"@": "MovieDescriptor"},
+            "propertyDescriptors": [
+                {
+                    "@": "animationStyle"
+                }
+            ],
+            "objectDescriptorModule": {
+                "%": "spec/data/logic/model/animated-movie.mjson"
+            },
+            "exportName": "AnimatedMovie",
+            "module": {
+                "%": "spec/data/logic/model/animated-movie"
+            },
+            "validationRules": [
+                {
+                    "@": "animationStyleRule"
+                }
+            ]
+        }
+    },
+    "MovieDescriptor": {
+        "object": "./movie.mjson"
+    },
+    "animationStyle": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "properties": {
+            "name": "animationStyle",
+            "valueType": "string"
+        }
+    },
+    "animationStyleRule": {
+        "prototype": "mod/core/meta/expression-validation-rule",
+        "values": {
+            "message": "Animation style must be either '2d' or '3d'.",
+            "owner": {"@": "root"},
+            "criteria": {
+                "@": "animationStyleRuleCriteria"
+            }
+        }
+    },
+    "animationStyleRuleCriteria": {
+        "prototype": "mod/core/criteria",
+        "values": {
+            "expression": "animationStyle == '2d' || animationStyle == '3d'"
+        }
+    }
+}

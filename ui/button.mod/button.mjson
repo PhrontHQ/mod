@@ -208,7 +208,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "ui/button.mod/button.mjson"
             },

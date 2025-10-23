@@ -55,7 +55,7 @@
                     { "@": "nextTargetDescriptor" }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "./target.mjson" },
             "exportName": "Target",
             "module": { "%": "./target" },

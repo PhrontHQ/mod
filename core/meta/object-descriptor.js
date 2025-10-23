@@ -27,6 +27,7 @@ var ObjectDescriptor = (exports.ObjectDescriptor = class ObjectDescriptor extend
         super();
         // this._eventDescriptors = [];
         this._ownPropertyDescriptors = [];
+        this._ownValidationRules = [];
 
         this._propertyDescriptorGroups = {};
         this._eventPropertyDescriptorsTable = new Map();
@@ -48,18 +49,6 @@ ObjectDescriptor.addClassProperties(
         FileExtension: {
             value: ".mjson",
         },
-
-        // constructor: {
-        //     value: function ObjectDescriptor() {
-        //         // this._eventDescriptors = [];
-        //         this._ownPropertyDescriptors = [];
-
-        //         this._propertyDescriptorGroups = {};
-        //         this._eventPropertyDescriptorsTable = new Map();
-        //         this.defineBinding("eventDescriptors", {"<-": "_eventDescriptors.concat(parent.eventDescriptors)"});
-        //         this.defineBinding("localizablePropertyNames", {"<-": "localizablePropertyDescriptors.name"});
-        //     }
-        // },
 
         /**
          * @function
@@ -105,8 +94,8 @@ ObjectDescriptor.addClassProperties(
                 if (this._eventDescriptors.length > 0) {
                     serializer.setProperty("eventDescriptors", this._eventDescriptors);
                 }
-                if (this._validationRules.length > 0) {
-                    serializer.setProperty("validationRules", this._validationRules);
+                if (this._ownValidationRules && this._ownValidationRules.length > 0) {
+                    serializer.setProperty("validationRules", this._ownValidationRules);
                 }
                 if (typeof this.maxAge === "number") {
                     serializer.setProperty("maxAge", this.maxAge);
@@ -122,6 +111,7 @@ ObjectDescriptor.addClassProperties(
             value: function (deserializer) {
                 var value, model, parentReference;
                 value = deserializer.getProperty("name");
+
                 if (value !== void 0) {
                     this._name = value;
                 }
@@ -197,33 +187,18 @@ ObjectDescriptor.addClassProperties(
                         ? this._eventDescriptors.push.apply(this._eventDescriptors, value)
                         : (this._eventDescriptors = value);
                 }
+
+                // Validation Rules
                 value = deserializer.getProperty("validationRules");
+
                 if (value) {
-                    let _validationRules = this._validationRules;
-                    if (_validationRules && Object.keys(_validationRules) > 0) {
-                        for (
-                            let i = 0, keys = Object.keys(value), countI = keys.length, iKey, iValue, oValue;
-                            i < countI;
-                            i++
-                        ) {
-                            iValue = value[(iKey = keys[i])];
-                            oValue = _validationRules[iKey];
-                            if (iValue && oValue) {
-                                //Merge
-                                if (iValue instanceof Array) {
-                                    _validationRules.push.apply(_validationRules, iValue);
-                                } else {
-                                    //Overwrite
-                                    _validationRules[iKey] = iValue;
-                                }
-                            } else {
-                                _validationRules[iKey] = iValue;
-                            }
-                        }
-                    } else {
-                        this._validationRules = value;
-                    }
+                    // In case an object is deserialized several times, we merge the validationRules
+                    this._ownValidationRules
+                        ? this._ownValidationRules.push.apply(this._ownValidationRules, value)
+                        : (this._ownValidationRules = value);
                 }
+
+                // maxAge
                 value = deserializer.getProperty("maxAge");
                 if (value) {
                     this.maxAge = value;
@@ -1368,7 +1343,7 @@ ObjectDescriptor.addClassProperties(
         },
 
         _validationRules: {
-            value: {},
+            value: null,
         },
 
         /**
@@ -1378,65 +1353,21 @@ ObjectDescriptor.addClassProperties(
          */
         validationRules: {
             get: function () {
-                var propertyName,
-                    validationRules = [];
-                for (propertyName in this._validationRules) {
-                    if (this._validationRules.hasOwnProperty(propertyName)) {
-                        validationRules.push(this._validationRules[propertyName]);
+                if (!this._validationRules) {
+                    const validationRules = [];
+
+                    for (let propertyName in this._ownValidationRules) {
+                        validationRules.push(this._ownValidationRules[propertyName]);
                     }
-                }
-                if (this.parent) {
-                    validationRules = validationRules.concat(this.parent.validationRules);
-                }
-                return validationRules;
-            },
-        },
 
-        /**
-         * Returns the properties validation rule for that name
-         * @param {string} name of the rule
-         * @returns {PropertyDescription} property description
-         */
-        validationRuleForName: {
-            value: function (name) {
-                var validationRule = this._validationRules[name];
-                if (!validationRule && this.parent) {
-                    validationRule = this.parent.validationRuleForName(name);
-                }
-                return validationRule;
-            },
-        },
+                    if (this.parent) {
+                        validationRules.push(...this.parent.validationRules);
+                    }
 
-        /**
-         * Add a new properties validation rule .
-         * @function
-         * @param {string} name of the rule
-         * @returns {PropertyDescription} new properties validation rule
-         */
-        addExpressionValidationRule: {
-            value: function (name) {
-                var validationRule = this._validationRules[name];
-                if (!validationRule) {
-                    validationRule = new ExpressionValidationRule().initWithNameAndObjectDescriptor(name, this);
-                    this._validationRules[name] = validationRule;
+                    this._validationRules = validationRules;
                 }
-                return validationRule;
-            },
-        },
 
-        /**
-         * Remove the properties validation rule  for the name.
-         * @function
-         * @param {string} name of the rule
-         * @returns {PropertyDescription} removed properties validation rule
-         */
-        removeExpressionValidationRule: {
-            value: function (name) {
-                var validationRule = this._validationRules[name];
-                if (validationRule) {
-                    delete this._validationRules[name];
-                }
-                return validationRule;
+                return this._validationRules;
             },
         },
 
@@ -1459,7 +1390,7 @@ ObjectDescriptor.addClassProperties(
             value: async function (objectInstance) {
                 // Create an array of promises by calling evaluateRule for each validation rule.
                 const validationPromises = [];
-                const rules = Object.values(this._validationRules);
+                const rules = Object.values(this.validationRules);
 
                 for (let i = 0, length = rules.length; i < length; i++) {
                     validationPromises.push(rules[i].evaluateRule(objectInstance));

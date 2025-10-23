@@ -82,7 +82,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/model.mjson"
             },

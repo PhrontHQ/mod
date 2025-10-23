@@ -349,7 +349,7 @@
                 ]
 
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "ui/component.mjson"
             },

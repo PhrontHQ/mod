@@ -12,7 +12,7 @@
             },
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/date-to-date-input-string-converter.mjson"
             },

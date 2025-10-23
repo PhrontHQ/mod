@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/error/u-r-i-error.mjson" },
             "exportName": "URIError",
             "module": { "%": "global" },

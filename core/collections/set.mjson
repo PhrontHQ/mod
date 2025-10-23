@@ -12,7 +12,7 @@
                 "all": [
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "../collections/set.mjson" },
             "exportName": "Set",
             "module": { "%": "global" },

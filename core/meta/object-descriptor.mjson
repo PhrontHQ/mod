@@ -203,7 +203,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/object-descriptor.mjson"
             }

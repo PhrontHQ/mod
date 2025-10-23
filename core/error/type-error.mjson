@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/error/type-error.mjson" },
             "exportName": "TypeError",
             "module": { "%": "global" },

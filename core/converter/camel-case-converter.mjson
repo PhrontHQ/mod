@@ -12,7 +12,7 @@
             },
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/camel-case-converter.mjson"
             },

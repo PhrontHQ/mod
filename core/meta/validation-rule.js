@@ -1,5 +1,5 @@
-const core = require("../core");
-const Montage = core.Montage;
+const Montage = require("core/core").Montage;
+const Target = require("core/target").Target;
 
 /**
  * Serves as a base class for all validation rules, ensuring a consistent API
@@ -10,10 +10,9 @@ const Montage = core.Montage;
  * @class ValidationRule
  * @extends Montage
  */
-exports.ValidationRule = class ValidationRule extends Montage {
+exports.ValidationRule = class ValidationRule extends Target {
     static {
         Montage.defineProperties(this.prototype, {
-            objectDescriptorModuleId: core._objectDescriptorModuleIdDescriptor,
             _validationProperties: { value: null },
             _owner: { value: null },
             _message: { value: "" },
@@ -21,13 +20,6 @@ exports.ValidationRule = class ValidationRule extends Montage {
             _name: { value: "" },
         });
     }
-
-    /**
-     * The object descriptor for this validation rule,
-     * required by Montage's serialization.
-     * @type {ObjectDescriptor}
-     */
-    objectDescriptor = core._objectDescriptorDescriptor;
 
     /**
      * @type {ObjectDescriptor}
@@ -38,15 +30,6 @@ exports.ValidationRule = class ValidationRule extends Montage {
 
     set owner(value) {
         this._owner = value;
-    }
-
-    /**
-     * The identifier of the validation rule.
-     * @type {string}
-     */
-    get identifier() {
-        // FIXME: @Benoit this.objectDescriptor.identifier is undefined
-        return this.name ?? this.objectDescriptor.identifier;
     }
 
     /**

@@ -30,7 +30,7 @@
                     { "@": "orderDescriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "propertyvalidationRules": [],
             "objectDescriptorModule": { "%": "./ordering-rule.mjson" },
             "exportName": "OrderingRule",
             "module": { "%": "./ordering-rule" },

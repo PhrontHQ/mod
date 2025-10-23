@@ -112,7 +112,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/promise-controller.mjson"
             },

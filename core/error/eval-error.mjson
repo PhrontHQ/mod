@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/error/eval-error.mjson" },
             "exportName": "EvalError",
             "module": { "%": "global" },

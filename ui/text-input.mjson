@@ -6,7 +6,7 @@
             "customPrototype": false,
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "ui/text-input.mjson"
             },

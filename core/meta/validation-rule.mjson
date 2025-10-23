@@ -128,7 +128,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/validation-rule.mjson"
             },
