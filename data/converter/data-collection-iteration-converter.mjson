@@ -8,7 +8,7 @@
             "name": "CollectionIterationConverter",
             "customPrototype": false,
             "parent": {"@": "parentDescriptor"},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "./data-collection-iteration-converter.mjson"
             },

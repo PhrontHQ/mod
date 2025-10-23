@@ -41,7 +41,7 @@
                 }
             ],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/expression-converter.mjson"
             },

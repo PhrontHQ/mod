@@ -36,7 +36,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "blueprintModule": {
                 "%": "core/meta/association-blueprint.mjson"
             },

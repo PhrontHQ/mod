@@ -33,7 +33,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/bytes-converter.mjson"
             },

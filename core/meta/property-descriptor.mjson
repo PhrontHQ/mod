@@ -366,7 +366,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/property-descriptor.mjson"
             },

@@ -5,6 +5,7 @@ var DataService = require("mod/data/service/data-service").DataService,
     RawDataService = require("mod/data/service/raw-data-service").RawDataService,
     defaultEventManager = require("mod/core/event/event-manager").defaultEventManager;
 
+const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mjson").montageObject;
 const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObject;
 
 describe("A DataService", function () {
@@ -454,18 +455,23 @@ describe("A DataService", function () {
     xit("has a mainService class variable that needs to be further tested", function () {});
 
     describe("saveObject()", () => {
+        let animatedMovieService;
         let movieService;
         let mainService;
         let movie;
+        let animatedMovie;
 
         beforeEach(async () => {
             mainService = new DataService();
             defaultEventManager.application.mainService = mainService;
 
             movieService = new RawDataService();
+            animatedMovieService = new RawDataService();
             await mainService.registerChildService(movieService, movieDescriptor);
+            await mainService.registerChildService(animatedMovieService, AnimatedMovieDescriptor);
 
             movie = mainService.createDataObject(movieDescriptor);
+            animatedMovie = mainService.createDataObject(AnimatedMovieDescriptor);
         });
 
         describe("Single Object Validation on saveChanges()", () => {
@@ -585,6 +591,31 @@ describe("A DataService", function () {
                 // Assert final invalid state
                 expect(movie.invalidityState.size).toBe(1);
                 expect(movie.invalidityState.has("title")).toBe(true);
+            });
+
+            it("should report errors for an invalid title and invalid animationStyle", async () => {
+                // Setup:
+                movie.title = "A Valid Title";
+                animatedMovie.title = "T"; // Invalid: too short
+                animatedMovie.animationStyle = "Live Action"; // Invalid: not '2d' or '3d'
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(animatedMovie.invalidityState.size).toBe(2); // One entry for each invalid property.
+                expect(animatedMovie.invalidityState.has("title")).toBe(true);
+                expect(animatedMovie.invalidityState.has("animationStyle")).toBe(true);
+
+                // Verify title error
+                const titleErrors = animatedMovie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(1);
+                expect(titleErrors[0].message).toContain("at least 2 characters");
+
+                // Verify animationStyle error
+                const styleErrors = animatedMovie.invalidityState.get("animationStyle");
+                expect(styleErrors.length).toBe(1);
+                expect(styleErrors[0].message).toBe("Animation style must be either '2d' or '3d'.");
             });
         });
     });

@@ -36,7 +36,7 @@
                     {"@": "valuesConverter"}
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/key-value-array-to-map-converter.mjson"
             },

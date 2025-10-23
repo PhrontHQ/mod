@@ -108,7 +108,7 @@ exports.ExpressionValidationRule = class ExpressionValidationRule extends Valida
         const qualifiedProperties = this.criteria?.qualifiedProperties || [];
 
         return qualifiedProperties.filter((property) => {
-            return this.ownPropertyNames.includes(property);
+            return this.owner.propertyDescriptorNames.includes(property);
         });
     }
 };

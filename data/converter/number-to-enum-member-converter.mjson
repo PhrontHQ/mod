@@ -10,7 +10,7 @@
             "parent": {"@": "RawValueToObjectConverterDescriptor"},
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "./number-to-enum-member-converter.mjson"
             },

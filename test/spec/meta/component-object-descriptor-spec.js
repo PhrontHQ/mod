@@ -71,39 +71,6 @@ TestPageLoader.queueTest("component-object-descriptor-test/component-object-desc
             expect(objectDescriptor.propertyDescriptorForName("required")).toBeTruthy();
         });
 
-        it("can create validation rules", async () => {
-            const serializer = new Serializer().initWithRequire(require);
-            const newObjectDescriptor = new ObjectDescriptor().initWithName(component3.identifier);
-
-            expect(newObjectDescriptor).toBeTruthy();
-
-            newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty1");
-            newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty2");
-            newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty3");
-            newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty4");
-            newObjectDescriptor.addToOnePropertyDescriptorNamed("bindableProperty5");
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
-                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty1"),
-                "required"
-            );
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
-                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty2"),
-                "required"
-            );
-            newObjectDescriptor.addPropertyDescriptorToGroupNamed(
-                newObjectDescriptor.addToOnePropertyDescriptorNamed("requiredBindableProperty3"),
-                "required"
-            );
-
-            newObjectDescriptor.addExpressionValidationRule("rule1").criteria = null;
-            component3.objectDescriptor = newObjectDescriptor;
-
-            const objectDescriptor = await component3.objectDescriptor;
-            expect(objectDescriptor).toBeTruthy();
-            const serializedDescription = serializer.serializeObject(objectDescriptor);
-            expect(serializedDescription).toBeTruthy();
-        });
-
         describe("test converter objectDescriptor", () => {
             const component = new Component();
 

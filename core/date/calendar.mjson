@@ -19,7 +19,7 @@
                 { "@": "longitude" }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/date/calendar.mjson" },
             "exportName": "Calendar",
             "module": { "%": "core/date/calendar" },

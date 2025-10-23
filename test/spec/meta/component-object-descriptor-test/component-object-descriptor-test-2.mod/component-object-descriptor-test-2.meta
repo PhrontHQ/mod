@@ -163,7 +163,7 @@
                     }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {},
             "exportName": "ComponentObjectDescriptorTest2",
             "module": {

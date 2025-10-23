@@ -19,7 +19,7 @@
                 { "@": "longitude" }
                 ]
             },
-            "validationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "./time-zone.mjson" },
             "exportName": "TimeZone",
             "module": { "%": "./time-zone" },
