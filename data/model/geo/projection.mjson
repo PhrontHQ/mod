@@ -7,7 +7,7 @@
                 {"@": "srid"},
                 {"@": "units"}
             ],
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "./projection.mjson"
             },

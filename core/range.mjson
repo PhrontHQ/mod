@@ -45,7 +45,7 @@
                 { "@": "bounds_property_descriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "./range.mjson" },
             "exportName": "Range",
             "module": { "%": "./range" },

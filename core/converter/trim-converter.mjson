@@ -1,6 +1,6 @@
 {
     "converter_descriptor": {
-        "object": "core/converter/converter.mjson"    
+        "object": "core/converter/converter.mjson"
     },
     "root": {
         "prototype": "core/meta/module-object-descriptor",
@@ -12,7 +12,7 @@
             },
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/trim-converter.mjson"
             },

@@ -28,7 +28,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "./converter.mjson"
             },

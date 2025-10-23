@@ -1,0 +1,45 @@
+{
+    "root": {
+        "prototype": "core/meta/validation-rule.mjson",
+        "values": {
+            "name": "ExpressionValidationRule",
+            "customPrototype": false,
+            "propertyDescriptors": [
+                {
+                    "@": "expression_validation_rule_criteria"
+                }
+            ],
+            "propertyDescriptorGroups": {
+                "expression-validation-rule": [
+                    {
+                        "@": "expression_validation_rule_criteria"
+                    }
+                ]
+            },
+            "objectDescriptorModule": {
+                "%": "core/meta/expression-validation-rule.mjson"
+            },
+            "exportName": "ExpressionValidationRule",
+            "module": {
+                "%": "core/meta/expression-validation-rule"
+            },
+            "parent":{"@": "ValidationRuleDescriptor"}
+        }
+    },
+    "ValidationRuleDescriptor": {
+        "object": "./validation-rule.mjson"
+    },
+    "criteria": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "criteria",
+            "isMandatory": true,
+            "valueType": "object",
+            "valueDescriptor": {"@": "CriteriaDescriptor"},
+            "helpKey": "The criteria expression to evaluate for this validation rule."
+        }
+    },
+    "CriteriaDescriptor": {
+        "object": "core/criteria.mjson"
+    }
+}

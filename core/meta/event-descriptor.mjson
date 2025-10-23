@@ -87,7 +87,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/event-descriptor.mjson"
             },

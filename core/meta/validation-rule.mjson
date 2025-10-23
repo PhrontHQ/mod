@@ -2,7 +2,7 @@
     "owner_reference": {
         "object": "core/meta/object-descriptor.mjson"
     },
-    "validation_rule_object_descriptor_name": {
+    "validation_rule_name": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "name",
@@ -18,7 +18,7 @@
             "helpKey": ""
         }
     },
-    "validation_rule_owner_object_descriptor": {
+    "validation_rule_owner": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "objectDescriptor",
@@ -37,28 +37,28 @@
             }
         }
     },
-    "validation_rule_object_descriptor_criteria": {
+    "validation_rule_validationProperties": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "criteria",
+            "name": "validationProperties",
             "objectDescriptor": {
                 "@": "root"
             },
-            "cardinality": 1,
+            "cardinality": -1,
             "mandatory": false,
             "denyDelete": false,
             "readOnly": false,
             "valueType": "object",
-            "valueObjectPrototypeName": "Criteria",
-            "valueObjectModuleId": "core/criteria",
+            "valueObjectPrototypeName": "ValidationRule",
+            "valueObjectModuleId": "core/meta/validation-rule",
             "enumValues": [],
             "helpKey": ""
         }
     },
-    "validation_rule_object_descriptor_messageKey": {
+    "validation_rule_message": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "messageKey",
+            "name": "message",
             "objectDescriptor": {
                 "@": "root"
             },
@@ -71,42 +71,64 @@
             "helpKey": ""
         }
     },
+    "validation_rule_hints": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "hints",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "cardinality": -1,
+            "mandatory": false,
+            "denyDelete": false,
+            "readOnly": false,
+            "valueType": "object",
+            "enumValues": [],
+            "helpKey": ""
+        }
+    },
     "root": {
         "prototype": "core/meta/module-object-descriptor",
         "values": {
-            "name": "PropertyValidationRule",
+            "name": "ValidationRule",
             "customPrototype": false,
             "propertyDescriptors": [
                 {
-                    "@": "validation_rule_object_descriptor_name"
+                    "@": "validation_rule_name"
                 },
                 {
-                    "@": "validation_rule_owner_object_descriptor"
+                    "@": "validation_rule_owner"
                 },
                 {
-                    "@": "validation_rule_object_descriptor_criteria"
+                    "@": "validation_rule_validationProperties"
                 },
                 {
-                    "@": "validation_rule_object_descriptor_messageKey"
+                    "@": "validation_rule_message"
+                },
+                {
+                    "@": "validation_rule_hints"
                 }
             ],
             "propertyDescriptorGroups": {
                 "validation-rule-object-descriptor": [
                     {
-                        "@": "validation_rule_object_descriptor_name"
+                        "@": "validation_rule_name"
                     },
                     {
-                        "@": "validation_rule_owner_object_descriptor"
+                        "@": "validation_rule_owner"
                     },
                     {
-                        "@": "validation_rule_object_descriptor_criteria"
+                        "@": "validation_rule_validationProperties"
                     },
                     {
-                        "@": "validation_rule_object_descriptor_messageKey"
+                        "@": "validation_rule_message"
+                    },
+                    {
+                        "@": "validation_rule_hints"
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/validation-rule.mjson"
             },

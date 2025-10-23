@@ -12,7 +12,7 @@
             },
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/string-to-substring-converter.mjson"
             },

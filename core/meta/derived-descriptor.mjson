@@ -82,7 +82,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/derived-descriptor.mjson"
             },
