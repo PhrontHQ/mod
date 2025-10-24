@@ -42,7 +42,7 @@
                 {"@": "position"},
                 {"@": "gender"},
                 {"@": "EducationExperience"},
-                
+
                 {"@": "j-s-o-n-web-token"},
                 {"@": "o-auth-access-token"},
                 {"@": "circle"},
@@ -60,8 +60,6 @@
                 {"@": "UserPool"},
                 {"@": "AppClient"},
                 {"@": "UserSession"},
-                {"@": "Identity"},
-                {"@": "UserIdentity"},
                 {"@": "WebSocketSession"},
                 {"@": "WebSocketSessionConnection"}
 
@@ -263,14 +261,6 @@
 
     "UserSession": {
         "object": "./app/user-session.mjson"
-    },
-
-    "Identity": {
-        "object": "data/model/identity.mjson"
-    },
-
-    "UserIdentity": {
-        "object": "./app/user-identity.mjson"
     },
 
     "Variable": {
