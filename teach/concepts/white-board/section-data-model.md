@@ -1,25 +1,20 @@
 Work in progress to define the data model underlying a task-based mod, formally known as an app
 
-We start by stating that an application data object (I'd like to avoid the word application...) is typically partitioned in sections. So [Application]Section is a data object modeling a piece of an app
+We start by stating that a UserExperience data object is typically partitioned in sections. So UserExperienceSection is a data object modeling a piece of an app
 
-Section alone is too vague, for the super class. After that we're going to deal with named instances'
+UserExperienceSection is the super class. After that we're going to deal with named instances, like "OnboardingSection" or "DashboardSection", etc...
 
-> LayoutSection? Does "Layout" apply to the overall information architecture, is a synonym / term used by non-technical people? if it is, could we use "LayoutSection" ?
-
-> DataSection?
-
-> ContentSection?
-
-The downside of "Layout" is that it is also used to talk about the spatial positioning of user interface elements...
+UserExperienceSection feels a better name than ContentSection
 
 A mod has
 
-- a tree/graph of sections - the data model, which should be able to editable by user or AI
+- a UserExperience
+- a UserExperience's tree/graph of sections - the data model, which should be able to editable by user or AI
 - a tree of ui components that render the sections
 
 Notes: We want in the future the ability for a user, or a user's AI agent, to modlulate what component renders what section, down ultimaterly to individual controls used to render/edit properties
 
-A user's "activity" is the record / receipt of what they have done over time
+A user's "activity" is the record / receipt of what they have done over time. It could also be calles Trail - as in leaving a trail.
 
 * A history, log, of all actions they’ve taken, interactions they’ve had within the app, and the resulting data operations.
 
