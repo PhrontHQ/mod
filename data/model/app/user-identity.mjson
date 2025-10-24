@@ -5,6 +5,7 @@
             "name": "UserIdentity",
             "propertyDescriptors": [
                 {"@": "username"},
+                {"@": "accessToken"},
                 {"@": "password"},
                 {"@": "session"},
                 {"@": "accountConfirmationCode"},
@@ -20,7 +21,7 @@
                 {"@": "mfaCode"},
                 {"@": "locale"},
                 {"@": "timeZone"},
-                {"@": "person"},
+                {"@": "user"},
                 {"@": "images"},
                 {"@": "addresses"}
             ],
@@ -45,6 +46,20 @@
             "valueType": "string"
         }
     },
+    "accessToken": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "accessToken",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "AccessTokenDescriptor"},
+            "inversePropertyName": "identity"
+       }
+    },
+    "AccessTokenDescriptor": {
+        "object": "../authentication/o-auth-access-token.mjson"
+    },
+
     "password": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -192,10 +207,10 @@
     "addresses_descriptor": {
         "object": "../messaging-channel/postal-address.mjson"
     },
-    "person": {
+    "user": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "person",
+            "name": "user",
             "valueType": "object",
             "cardinality": 1,
             "valueDescriptor": {"@": "personDescriptor"},
