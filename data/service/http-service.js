@@ -96,57 +96,6 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
     }
 
 
-    /**
-     * Fetch an identity using an identityQuery expected to be set on the data service
-     *
-     * @type {Promise<Identity>}
-     */
-    fetchIdentity() {
-
-
-        // console.warn("fetchIdentity() this.currentEnvironment is ", this.currentEnvironment);
-        // console.warn("fetchIdentity() this.hasOwnProperty('_connection') is ", this.hasOwnProperty('_connection'));
-        // console.warn("fetchIdentity() Object.getOwnPropertyDescriptor(this, 'connection') is ", Object.getOwnPropertyDescriptor(this, 'connection'));
-
-
-        if(!this.identityQuery) {
-            throw "Can't perform fetchIdentity() because this.identityQuery isn't available";
-        }
-
-        return this.mainService.fetchData(this.identityQuery)
-        .then(result => {
-            if(result.length === 1) {
-                /*
-                    It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
-                    and equip SecretManager data services with the ability to handle Identity, and give them a mapping
-                    to how the raw data is stored in the secret. Let's get this working and clean it up later. 
-                */
-                let applicationIdentifier = result[0].value.applicationIdentifier,
-                    applicationCredentials =  result[0].value.applicationCredentials;
-
-                if(applicationIdentifier && applicationCredentials) {
-                    let identity = new Identity();
-
-                    identity.applicationIdentifier = applicationIdentifier;
-                    identity.applicationCredentials = applicationCredentials;
-
-                    this.identity = identity; 
-                    return this.identity;                          
-                } else {
-                    throw ("Unnable to ceate an idendity from fetched secret: "+ result);
-                }
-            } else {
-                throw ("Unnable to find a secret matching query " + this.identityQuery);
-
-            }
-        })
-        .catch(error => {
-            console.warn("fetchIdentity failed:", error);
-            return null;
-        })
-
-
-    }
 
     handleReadOperation(readOperation) {
         let readOperationCompletionPromise;
@@ -206,11 +155,27 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         if(this.authenticationPolicy && this.authenticationPolicy === AuthenticationPolicy.UP_FRONT) {
             let identityPromise;
 
-            if(!this.identity) {
-                identityPromise = this.fetchIdentity();
-            } else {
+            /*
+                An HTTP Service typically needs an identity to get some kind of access token.
+                If it's meant to use a user's identity, it shouldn't have one set on it, nor an 
+                identity query.
+                
+                It's more likey for a data service being executed in a Worker to have it's own client identity. 
+            */
+
+            /*
+                Wether one was assigned straight or already obtained via fetchIdentity()
+            */
+            if(this.identity) {
                 identityPromise = Promise.resolve(this.identity);
             }
+            else if(this.identityQuery) {
+                identityPromise = this.fetchIdentity();
+            } else {
+                identityPromise = Promise.resolve(readOperation.identity);
+            }
+
+            
 
             /*
                 if we don't have a token or if it's expired (this.accessToken.remainingValidityDuration is negative), 
@@ -221,6 +186,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         //    if(this.accessToken) {
         //         console.debug("this.accessToken.remainingValidityDuration is "+ this.accessToken.remainingValidityDuration +" ms");
         //    }
+
+            if(this.identity || this.identityQuery) {
+
+            }
             if(!this.accessToken || this.accessToken.remainingValidityDuration < 2000) {
 
                 if(this.accessToken) {
@@ -255,7 +224,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 })
                 .catch(error => {
                     let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-                    console.error(error);
+                    console.error("Identity promise failed with error", error);
                     return responseOperation;
                 });
 

@@ -4849,6 +4849,78 @@ RawDataService.addClassProperties({
         }
     },
 
+    _identityPromise: {
+        value: undefined
+    },
+
+        /**
+     * Fetch an identity using an identityQuery expected to be set on the data service
+     *
+     * @type {Promise<Identity>}
+     */
+    fetchIdentity() {
+
+
+        // console.warn("fetchIdentity() this.currentEnvironment is ", this.currentEnvironment);
+        // console.warn("fetchIdentity() this.hasOwnProperty('_connection') is ", this.hasOwnProperty('_connection'));
+        // console.warn("fetchIdentity() Object.getOwnPropertyDescriptor(this, 'connection') is ", Object.getOwnPropertyDescriptor(this, 'connection'));
+
+
+        if(!this.identityQuery) {
+            throw "Can't perform fetchIdentity() because this.identityQuery isn't available";
+        }
+
+        return this.mainService.fetchData(this.identityQuery)
+        .then(result => {
+            if(result.length === 1) {
+                /*
+                    It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
+                    and equip SecretManager data services with the ability to handle Identity, and give them a mapping
+                    to how the raw data is stored in the secret. Let's get this working and clean it up later. 
+                */
+                let applicationIdentifier = result[0].value.applicationIdentifier,
+                    applicationCredentials =  result[0].value.applicationCredentials;
+
+                if(applicationIdentifier && applicationCredentials) {
+                    let identity = new Identity();
+
+                    identity.applicationIdentifier = applicationIdentifier;
+                    identity.applicationCredentials = applicationCredentials;
+
+                    this.identity = identity; 
+                    return this.identity;                          
+                } else {
+                    throw ("Unnable to ceate an idendity from fetched secret: "+ result);
+                }
+            } else {
+                throw ("Unnable to find a secret matching query " + this.identityQuery);
+
+            }
+        })
+        .catch(error => {
+            console.warn("fetchIdentity failed:", error);
+            return null;
+        })
+    },
+
+    identityPromise: {
+        get: function () {
+            if(this._identityPromise === undefined) {
+                //We most likely know it from the start so we wrap it up:
+                if(this.identity) {
+                    this._identityPromise = Promise.resolve(this.identity);
+                } else {
+                    this._identityPromise = this.fetchIdentity();
+                }
+
+            } else if(this._identityPromise = null) {
+                console.warn("RawDataService "+this.identifier+" doesn't have it's own identity and therefore will never have an identityPromise");
+            }
+            return this._identityPromise;
+        }
+    },
+
+
 
     /**
      * The access token delivered once an identity has been authorized
