@@ -3,6 +3,7 @@
         "prototype": "data/service/fetch-resource-data-mapping",
         "values": {
             "objectDescriptor": {"@": "UserIdentityDescriptor"},
+            "description": "meant to be the basic, standard-based, mapping every o-auth service should be compatible with",
             "rawDataPrimaryKeys":["username"],
             "objectMapping": {
                 "rules": {
