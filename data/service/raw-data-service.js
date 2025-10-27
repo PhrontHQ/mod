@@ -242,9 +242,9 @@ RawDataService.addClassProperties({
                 this.connection = value;
             }
 
-            value = deserializer.getProperty("promisesReadOperationCompletion");
+            value = deserializer.getProperty("promisesReadCompletionOperation");
             if (value) {
-                this.promisesReadOperationCompletion = value;
+                this.promisesReadCompletionOperation = value;
             }
 
             
@@ -2761,17 +2761,17 @@ RawDataService.addClassProperties({
      ***************************************************************************/
 
     /**
-     * By default, raw data sercvices handling a readOperation don't return a promise, 
+     * By default, raw data services handling a readOperation don't return a promise, 
      * which triggers the event manager to continue the propagation when that promise settles.
      * 
-     * If promisesReadOperationCompletion is set to true, a RawDataService has to return a promise that resolves
+     * If promisesReadCompletionOperation is set to true, a RawDataService has to return a promise that resolves
      * to the operation following the read, a readCompletedOperation / readCompletedOperation or a readFailedOperation
      *
      *
      * @property {Boolean}
      */
 
-    promisesReadOperationCompletion: {
+    promisesReadCompletionOperation: {
         value: false
     },
 

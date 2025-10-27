@@ -118,7 +118,9 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             this._handleReadOperation(readOperation);
         }
 
-        if(this.promisesReadOperationCompletion) {
+        //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
+        //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
+        if(this.promisesReadCompletionOperation) {
             return readOperationCompletionPromise;
         }
 
@@ -143,7 +145,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject;
 
 
-        if(this.promisesReadOperationCompletion) {
+        if(this.promisesReadCompletionOperation) {
             readOperationCompletionPromiseResolvers = Promise.withResolvers();
             readOperationCompletionPromise = readOperationCompletionPromiseResolvers.promise;
             readOperationCompletionPromiseResolve = readOperationCompletionPromiseResolvers.resolve;

@@ -16,7 +16,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
 * until all individual DataServices have tried, and if nothing found, the matching query's DataStream would then be resolved.
 *
 * We might want to have the ability to try serially for cost reasons 
-* ----> by setting individual data service's "promisesReadOperationCompletion" property to true
+* ----> by setting individual data service's "promisesReadCompletionOperation" property to true
 * to avoid to call metered/expensive API if a result is found early.
 * We migh also want the ability to cancel, which stop[Immediate]Propagation help do
 *
