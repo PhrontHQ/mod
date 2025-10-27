@@ -1,0 +1,27 @@
+
+{
+    "root": {
+        "value": [
+           {"@": "ParentRole"},
+           {"@": "TeacherRole"},
+           {"@": "MentorRole"},
+           {"@": "RoleModel"}
+        ]
+    },
+
+    "ParentRole": {
+        "object": "data/instance/party/roles/019a2465-195a-7ad3-8d49-27c9c9e51a6a.mjson"
+    },
+
+    "TeacherRole": {
+        "object": "data/instance/party/roles/019a2465-948c-7206-899f-edc19aaa2b87.mjson"
+    },
+
+    "MentorRole": {
+        "object": "data/instance/party/roles/019a2465-bfb6-7b0e-944b-408c65455356.mjson"
+    },
+
+    "RoleModel": {
+        "object": "data/instance/party/roles/019a2465-ea40-7b12-a7dc-e4610d2440d1.mjson"
+    }
+}

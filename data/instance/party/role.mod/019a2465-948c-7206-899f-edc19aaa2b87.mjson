@@ -1,0 +1,9 @@
+{
+    "root": {
+        "prototype": "data/model/party/role",
+        "values": {
+            "identifier": "019a2465-948c-7206-899f-edc19aaa2b87",
+            "name": "Teacher"
+        }
+    }
+}

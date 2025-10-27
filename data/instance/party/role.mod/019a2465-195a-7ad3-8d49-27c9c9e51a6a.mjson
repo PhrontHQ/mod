@@ -1,0 +1,9 @@
+{
+    "root": {
+        "prototype": "data/model/party/role",
+        "values": {
+            "identifier": "019a2465-195a-7ad3-8d49-27c9c9e51a6a",
+            "name": "Parent"
+        }
+    }
+}

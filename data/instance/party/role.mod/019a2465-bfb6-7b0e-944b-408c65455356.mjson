@@ -1,0 +1,9 @@
+{
+    "root": {
+        "prototype": "data/model/party/role",
+        "values": {
+            "identifier": "019a2465-bfb6-7b0e-944b-408c65455356",
+            "name": "Mentor"
+        }
+    }
+}

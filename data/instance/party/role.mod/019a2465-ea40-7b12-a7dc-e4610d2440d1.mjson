@@ -1,0 +1,9 @@
+{
+    "root": {
+        "prototype": "data/model/party/role",
+        "values": {
+            "identifier": "019a2465-ea40-7b12-a7dc-e4610d2440d1",
+            "name": "Role Model"
+        }
+    }
+}
