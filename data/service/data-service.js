@@ -1312,9 +1312,19 @@ DataService.addClassProperties(
                 type = type instanceof ObjectDescriptor ? type : this.objectDescriptorForType(type);
                 //services = this._childServicesByType.get(type) || this._childServicesByType.get(null);
                 services = this._childServicesByType.get(type);
+                /*  
+                    Fixing bug were a catch-all data service, one that states it handles all by having no type
+                    could end up multiple times in  services as the following block was executed at every call with the same type argument.
+
+                    So freezing the array storing the results in this._childServicesByType allows us to know we
+                    don't need to do it again
+                */
                 if (services) {
                     let catchAllServices = this._childServicesByType.get(null);
-                    if (catchAllServices) services.push(...catchAllServices);
+                    if (catchAllServices  && !Object.isFrozen(services)) {
+                        services.push(...catchAllServices);
+                        Object.freeze(services);
+                    }
                 } else {
                     services = this._childServicesByType.get(null);
                 }
