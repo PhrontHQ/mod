@@ -1,0 +1,26 @@
+{
+    "root": {
+        "value": [
+           {"@": "DiplomaType"},
+           {"@": "CertificateType"}
+        ]
+    },
+
+    "DiplomaType": {
+        "prototype": "data/model/party/education/education-experience",
+        "values": {
+            "name": "Diploma",
+            "isType": true,
+            "identifier": "0199bd86-914e-7c60-907b-e6cc88ab5001"
+        }
+    },
+
+    "CertificateType": {
+        "prototype": "data/model/party/education/education-experience",
+        "values": {
+            "name": "Certificate",
+            "isType": true,
+            "identifier": "0199bd86-c4e9-769c-9771-0f06dc973e12"
+        }
+    }
+}
