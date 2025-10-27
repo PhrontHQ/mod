@@ -179,13 +179,23 @@ function toHex(value) {
 const generateUUIDv7Buffer = new Uint8Array(16);
 
 /**
+ * Generate a new UUID v7 when called.
+ * 
+ * UUID introduce the formal use of time to increase index performance in databases by insuring
+ * UUIDS created close in time stay close in indexes.
+ * 
  * UUID with hyphens/dashes are considered the full version.
  * The trimmed version is the same without hyphens/dashes 
  * 
  * PostgreSQL can take input in both but only return 
  * uuids as string in their full representation.
+ * 
+ * @method
+ * @argument {Date} aDate - A date to be used to generate the UUID. If not passed wiull use Date.now()
+ * @argument {Boolean} isFull - Optional flag. If true, retuens a UUID with hyphens/dashes, considered the full version.
+ *                              if false, returns the trimmed version, the same without hyphens/dashes 
+ *
  */
-
 function generateUUIDv7(aDate, isFull) {
     // random bytes
     const value = generateUUIDv7Buffer;
