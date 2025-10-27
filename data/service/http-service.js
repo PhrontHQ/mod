@@ -101,11 +101,15 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         let readOperationCompletionPromise;
 
         /*
+            This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
+            When that promise resolves, then we check if readOperation.defaultPrevented, if yes, the we don't handle it, otherwise we proceed.
+
             Wonky, WIP: needs to work without a delegate actually implementing it.
             And a RawDataService shouldn't know about all that boilerplate
 
             Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
             it might be simpler, but probably a bit less efficient
+
         */
         readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
         if(readOperationCompletionPromise) {
