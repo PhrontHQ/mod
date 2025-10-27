@@ -1,4 +1,5 @@
-var DataObject = require("data/model/data-object").DataObject;
+const DataObject = require("data/model/data-object").DataObject;
+const Montage = require("core/core").Montage;
 
 /**
  * @class Country
@@ -14,33 +15,33 @@ var DataObject = require("data/model/data-object").DataObject;
  *
  *
  */
-
-
-exports.Country = DataObject.specialize(/** @lends Collection.prototype */ {
-
-    iso3166_1_alpha2Ccode: {
-        value: undefined
-    },
-    iso3166_1_alpha3Code: {
-        value: undefined
-    },
-    iso3166_1_numericCode: {
-        value: undefined
-    },
-    geometry: {
-        value: undefined
-    },
-    officialStateName: {
-        value: undefined
-    },
-    name: {
-        value: undefined
-    },
-    phoneCode: {
-        value: undefined
-    },
-    timeZones: {
-        value: undefined
+exports.Country = class Country extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            iso3166_1_alpha2Code: {
+                value: undefined,
+            },
+            iso3166_1_alpha3Code: {
+                value: undefined,
+            },
+            iso3166_1_numericCode: {
+                value: undefined,
+            },
+            geometry: {
+                value: undefined,
+            },
+            officialStateName: {
+                value: undefined,
+            },
+            name: {
+                value: undefined,
+            },
+            phoneCode: {
+                value: undefined,
+            },
+            timeZones: {
+                value: undefined,
+            },
+        });
     }
-
-});
+};

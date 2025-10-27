@@ -1,32 +1,26 @@
 /**
-    @module mod/data/model/app/authorization/j-s-o-n-web-token
+    @module mod/data/model/authentication/j-s-o-n-web-token
 */
-
-var DataObject = require("../data-object").DataObject;
+const DataObject = require("../data-object").DataObject;
+const Montage = require("core/core").Montage;
 
 /**
  * @class JSONWebToken
  * @extends DataObject
  *
+ * Reasources
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-openid-connect-oauth-flows-scenarios
+ *
  */
-
-/*
-    Reasources
-    https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-openid-connect-oauth-flows-scenarios
-
-*/
-
-exports.JSONWebToken = DataObject.specialize(/** @lends JSONWebToken.prototype */ {
-    constructor: {
-        value: function() {
-            this.super();
-            return this;
-        }
-    },
-    header: {
-        value: undefined
-    },
-    claims: {
-        value: undefined
+exports.JSONWebToken = class JSONWebToken extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            header: {
+                value: undefined,
+            },
+            claims: {
+                value: undefined,
+            },
+        });
     }
-});
+};

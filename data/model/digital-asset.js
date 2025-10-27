@@ -1,4 +1,5 @@
-var DataObject = require("data/model/data-object").DataObject;
+const DataObject = require("data/model/data-object").DataObject;
+const Montage = require("core/core").Montage;
 
 /**
  * @class DigitalAsset
@@ -6,7 +7,7 @@ var DataObject = require("data/model/data-object").DataObject;
  * @extends DataObject
  */
 
- /*
+/*
     Storing the possibly public URL of an asset served by s3:
 
     https://stackoverflow.com/questions/44400227/how-to-get-the-url-of-a-file-on-aws-s3-using-aws-sdk
@@ -18,8 +19,7 @@ var DataObject = require("data/model/data-object").DataObject;
     https://stackoverflow.com/questions/44160422/aws-s3-get-object-using-url
  */
 
-
- /*
+/*
  attachment
 "attachment": "R0lGODlhAQABAPABAP///wAAACH5Ow==\n"
 A base64-encoded image.
@@ -78,36 +78,33 @@ https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html#VirtualHosti
 
 */
 
-
-exports.DigitalAsset = DataObject.specialize(/** @lends DigitalAsset.prototype */ {
-    constructor: {
-        value: function DigitalAsset() {
-            this.super();
-            return this;
-        }
-    },
-    description: {
-        value: undefined
-    },
-    content: {
-        value: undefined
-    },
-    contentType: {
-        value: undefined
-    },
-    contentLength: {
-        value: undefined
-    },
-    metadata: {
-        value: undefined
-    },
-    location: {
-        value: undefined
-    },
-    secureLocation: {
-        value: undefined
-    },
-    secureLocationExpirationDate: {
-        value: undefined
+exports.DigitalAsset = class DigitalAsset extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            description: {
+                value: undefined,
+            },
+            content: {
+                value: undefined,
+            },
+            contentType: {
+                value: undefined,
+            },
+            contentLength: {
+                value: undefined,
+            },
+            metadata: {
+                value: undefined,
+            },
+            location: {
+                value: undefined,
+            },
+            secureLocation: {
+                value: undefined,
+            },
+            secureLocationExpirationDate: {
+                value: undefined,
+            },
+        });
     }
-});
+};

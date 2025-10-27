@@ -3,31 +3,52 @@
 */
 
 const DataObject = require("../data-object").DataObject;
+const Montage = require("core/core").Montage;
+
 /**
  * @class OAuthAccessToken
  * @extends DataObject
  *
+ * Resources
+ * https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-openid-connect-oauth-flows-scenarios
+ *
  */
+exports.OAuthAccessToken = class OAuthAccessToken extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            identity: {
+                value: undefined,
+            },
+            accessToken: {
+                value: undefined,
+            },
+            tokenType: {
+                value: undefined,
+            },
+            validityDuration: {
+                value: undefined,
+            },
 
-/*
-    Reasources
-    https://learn.microsoft.com/en-us/windows-server/identity/ad-fs/overview/ad-fs-openid-connect-oauth-flows-scenarios
-
-*/
-
-exports.OAuthAccessToken = DataObject.specialize(/** @lends OAuthAccessToken.prototype */ {
-    identity: {
-        value: undefined
-    },
-    accessToken: {
-        value: undefined
-    },
-    tokenType: {
-        value: undefined
-    },
-    validityDuration: {
-        value: undefined
-    },
+            validityRange: {
+                value: undefined,
+            },
+            scope: {
+                value: undefined,
+            },
+            refreshToken: {
+                value: undefined,
+            },
+            idToken: {
+                value: undefined,
+            },
+            refreshTokenValidityDuration: {
+                value: undefined,
+            },
+            refreshTokenValidityRange: {
+                value: undefined,
+            },
+        });
+    }
 
     /**
      * Returns the number of millisecond for which a token is valid.
@@ -35,30 +56,10 @@ exports.OAuthAccessToken = DataObject.specialize(/** @lends OAuthAccessToken.pro
      *
      * @property
      * @readonly
-     * @returns {Number} Arrat of relevant propertyDescriptors
+     * @returns {Number} Array of relevant propertyDescriptors
      */
-    remainingValidityDuration: {
-        get: function() {
-            return this.validityRange.end.valueOf() - Date.now();
-        }
-    },
 
-    validityRange: {
-        value: undefined
-    },
-    scope: {
-        value: undefined
-    },
-    refreshToken: {
-        value: undefined
-    },
-    idToken: {
-        value: undefined
-    },
-    refreshTokenValidityDuration: {
-        value: undefined
-    },
-    refreshTokenValidityRange: {
-        value: undefined
+    get remainingValidityDuration() {
+        return this.validityRange.end.valueOf() - Date.now();
     }
-});
+};
