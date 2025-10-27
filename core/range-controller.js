@@ -198,12 +198,6 @@ Object.defineProperty(_RangeSelection.prototype, "swap_or_push", {
         {
             return EMPTY_ARRAY;
         } 
-        // If we are at min selection length, we need to ignore this deselection
-        else if ( typeof this.rangeController.minSelectionLength === "number" &&
-            newLength < this.rangeController.minSelectionLength)
-        {
-            return EMPTY_ARRAY;
-        }
 
         if (!this.rangeController.allowsMultipleSelection && newLength > 1) {
             // use the last-supplied item as the sole element of the set
@@ -286,7 +280,6 @@ var RangeController = exports.RangeController = Montage.specialize( /** @lends R
             this.deselectInvisibleContent = false;
             this.clearSelectionOnOrderChange = false;
             this.avoidsEmptySelection = false;
-            this.minSelectionLength = 0;
             this.maxSelectionLength = Infinity;
 
             // The following establishes a pipeline for projecting the
