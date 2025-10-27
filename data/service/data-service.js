@@ -1,4 +1,5 @@
-var Montage = require("../../core/core").Montage,
+const Object = global.Object, //Cache for scope traversal performance
+    Montage = require("../../core/core").Montage,
     Target = require("../../core/target").Target,
     defaultEventManager = require("../../core/event/event-manager").defaultEventManager,
     ObjectDescriptor = require("../../core/meta/object-descriptor").ObjectDescriptor,
