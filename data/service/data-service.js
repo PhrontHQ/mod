@@ -2444,6 +2444,13 @@ DataService.addClassProperties(
 
         childServicesFetchObjectProperty: {
             value: function (object, propertyName, isObjectCreated) {
+
+                //Workaround for now:
+                if(object.dataIdentifier.dataService) {
+                    return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated);
+                }
+
+
                 throw "Data Services with multiple child services per ObjectDescriptor have to implement this method";
                 //     /*
                 //         If there's more than one, we're entering the realm of decisions about how to deal with them.
