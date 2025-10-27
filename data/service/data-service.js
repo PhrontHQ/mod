@@ -3,7 +3,6 @@ const Object = global.Object, //Cache for scope traversal performance
     Target = require("../../core/target").Target,
     defaultEventManager = require("../../core/event/event-manager").defaultEventManager,
     ObjectDescriptor = require("../../core/meta/object-descriptor").ObjectDescriptor,
-    DataService,
     AuthorizationManager = require("./authorization-manager").defaultAuthorizationManager,
     AuthorizationPolicy = require("./authorization-policy").AuthorizationPolicy,
     AuthenticationPolicy = require("./authentication-policy").AuthenticationPolicy,
@@ -70,7 +69,7 @@ AuthenticationPolicy.OnFirstFetchAuthenticationPolicy = AuthenticationPolicy.ON_
  * @class
  * @extends external:Montage
  */
-DataService = exports.DataService = class DataService extends Target {
+const DataService = exports.DataService = class DataService extends Target {
     /** @lends DataService */
     constructor() {
         super();
