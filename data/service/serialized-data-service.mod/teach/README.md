@@ -46,7 +46,7 @@ All instances of a single data type are stored in one .mjson file.
         "value": [{ "@": "US" }, { "@": "FR" }]
     },
     "US": {
-        "prototype": "data/geo/country.mjson",
+        "prototype": "mod/data/model/country",
         "values": {
             "isCode366": "US",
             "name": "United States",
@@ -55,7 +55,7 @@ All instances of a single data type are stored in one .mjson file.
         }
     },
     "FR": {
-        "prototype": "data/geo/country.mjson",
+        "prototype": "mod/data/model/country",
         "values": {
             "isCode366": "FR",
             "name": "France",
@@ -155,3 +155,7 @@ Index file `data/instance/party/roles.mod` point to:
 ### 4.1. Internal Data Handling
 
 When a `readOperation` is received, the service must be able to filter data based on the operation's criteria.
+
+### 4.2. Output Strategy (Context-Dependent)
+
+The service must return data differently depending on the client's execution context.
