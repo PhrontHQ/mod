@@ -38,7 +38,7 @@ All instances of a single data type are stored in one .mjson file.
 
 **Example:**
 
-`data/instance/geo/countries.mjson` contains all `Country` objects.
+`data/instance/countries.mjson` contains all `Country` objects.
 
 ```json
 {
@@ -150,12 +150,81 @@ Index file `data/instance/party/roles.mod` point to:
 -   High file-count, which can be difficult to manage.
 -   Requires a two-step lookup (index, then file).
 
-## 4. Service Implementation & Behavior
+## 4. Single File per Type request flow
 
-### 4.1. Internal Data Handling
+### Scenario
+
+A client requests a complete list of `Country` objects (for example, to populate a dropdown). To fulfill this, it triggers a `readOperation` targeting the `Country` type.
+
+#### Steps
+
+##### 1. Request received
+
+A client executes a read operation:
+
+```js
+import { montageObject as Country } from "mod/data/model/country.mjson";
+
+async function _loadCountries() {
+    const mainService = this.application.mainService;
+    this.countries = await mainService.fetchData(Country);
+}
+```
+
+This ultimately triggers `SerializedDataService.handleReadOperation(readOperation)` method.
+The `readOperation.target` will be the `Country` object/type.
+
+##### 2. Service Validates Request
+
+```js
+if (!this.handlesType(readOperation.target)) {
+    return;
+}
+```
+
+:question: Questions:
+
+1. Does the service check whether it supports a given type? If so, how and where are supported types registered?
+
+##### 3. File Location
+
+Our service needs to know which file to open for the Country type.
+
+:question: Questions:
+
+1. How do we find the file related to a type? Should we use a map?
+
+##### 4. File Deserialization
+
+The service now reads `data/instance/countries.mjson` from the disk using `fs.readFile`;
+
+It parses the `.mjson` content containing all Country instances ("US", "FR", etc.) and a "root" key pointing to them.
+
+The service would deserialize these objects into "real" DataObjects using Mod deserializer.
+
+##### 5. Data Filtering
+
+:warning: Not implemented yet!
+
+One of our service's job is also to filter the full list of deserialized objects. The readOperation might have criteria (e.g., where `name == "France"`).
+
+If the criteria was for `"France"`, it would find the `"FR"` object. If there were no criteria, it would return the full list of countries.
+
+##### 6. Data Returned
+
+This is the final step `responseOperation.target.dispatchEvent(responseOperation)`:
+Our data service bundles the filtered results into a responseOperation. Then, It dispatches this response, which sends the data back to the client that originally asked for it.
+
+## 5. Service Implementation & Behavior
+
+### 5.1. Internal Data Handling
 
 When a `readOperation` is received, the service must be able to filter data based on the operation's criteria.
 
-### 4.2. Output Strategy (Context-Dependent)
+:warning: TODO
+
+### 5.2. Output Strategy (Context-Dependent)
 
 The service must return data differently depending on the client's execution context.
+
+:warning: TODO
