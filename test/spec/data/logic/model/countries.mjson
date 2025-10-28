@@ -1,0 +1,56 @@
+{
+    "root": {
+        "value": [
+            { "@": "US" },
+            { "@": "FR" },
+            { "@": "DE" },
+            { "@": "IT" },
+            { "@": "JP" }
+        ]
+    },
+    "US": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "US",
+            "name": "United States",
+            "capital": "Washington, D.C.",
+            "population": 331900000
+        }
+    },
+    "FR": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "FR",
+            "name": "France",
+            "capital": "Paris",
+            "population": 68606000
+        }
+    },
+    "DE": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "DE",
+            "name": "Germany",
+            "capital": "Berlin",
+            "population": 83200000
+        }
+    },
+    "IT": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "IT",
+            "name": "Italy",
+            "capital": "Rome",
+            "population": 59100000
+        }
+    },
+    "JP": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "JP",
+            "name": "Japan",
+            "capital": "Tokyo",
+            "population": 125700000
+        }
+    }
+}
