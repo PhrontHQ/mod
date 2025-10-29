@@ -618,7 +618,7 @@ Component.addClassProperties(
      * @type {Object<string:Element>}
      * @private
      */
-    boundTemplateParameters: {
+    templateArgumentByParameter: {
         value: void 0
     },
 
@@ -2631,7 +2631,6 @@ Component.addClassProperties(
             if ((validation = this._validateTemplateArguments(templateArguments, parameters))) {
                 throw validation;
             }
-            // debugger;
             for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
                     let parameterElement = parameters[key];
@@ -2693,7 +2692,7 @@ Component.addClassProperties(
                     }
                 }
             }
-            this.boundTemplateParameters = boundParameters;
+            this.templateArgumentByParameter = boundParameters;
         }
     },
 
