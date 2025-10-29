@@ -11,7 +11,8 @@
                 "decorator": {"@": "decorator"},
                 "compositionDecorator": {"@": "compositionDecorator"},
                 "compositionDecoratorMore": {"@": "compositionDecoratorMore"},
-                "parameters": {"@": "parameters"}
+                "parameters": {"@": "parameters"},
+                "parametersDefault": {"@": "parametersDefault"}
             }
         },
         "application": {
@@ -46,6 +47,13 @@
             "values": {
                 "element": {"#": "parameters"}
             }
+        },
+
+        "parametersDefault": {
+            "prototype": "spec/ui/drawing/component/parameters-default.mod",
+            "values": {
+                "element": {"#": "parametersDefault"}
+            }
         }
     }</script>
 </head>
@@ -68,5 +76,7 @@
         <span data-arg="one">One</span>
         <span data-arg="two">Two</span>
     </div>
+
+    <div data-mod-id="parametersDefault"></div>
 </body>
 </html>
