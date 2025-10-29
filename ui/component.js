@@ -599,6 +599,29 @@ Component.addClassProperties(
         value: void 0
     },
 
+
+    /**
+     * Object whose key/values are the parameters requested in this component's template
+     * and their bound elements. 
+     * - The key of each pair will be the name provided to data-param=""
+     * 
+     * - The value of each pair will be one of the following
+     *   1. The element provided as a data-arg="" in the component that serializes this one
+     *   2. The element provided as the default to the data-param. The default is set in one of two ways:
+     *        1. Defining a component on the element with data-param (e.g. <div data-mod-id="defaultComponent" data-param="requested-parameter">)
+     *        2. Nesting an element (or component) inside the data-param element. For example
+     *            <div data-param="requested-parameter">
+     *                 <h2> This is static content to be used as the default for requested-parameter</h2>
+     *            </div> 
+     *   3. Null if the data-arg is not provided and the data-param does not have a default
+     * 
+     * @type {Object<string:Element>}
+     * @private
+     */
+    templateArgumentByParameter: {
+        value: void 0
+    },
+
     /**
      * The gate controlling the canDraw() response of the component.
      * @type {Gate}
@@ -801,7 +824,6 @@ Component.addClassProperties(
                 candidate.removeAttribute(DOM_ARG_ATTRIBUTE);
                 domArguments[name] = candidate;
             }
-
             this._domArguments = domArguments;
         }
     },
@@ -2603,18 +2625,17 @@ Component.addClassProperties(
         value: function () {
             let parameters = this._templateDocumentPart ? this._templateDocumentPart.parameters : null;
             let templateArguments = this._domArguments;
+            let boundParameters = parameters ? Object.assign({}, parameters) : undefined;
             let validation;
 
             if ((validation = this._validateTemplateArguments(templateArguments, parameters))) {
                 throw validation;
             }
-
             for (let key in parameters) {
                 if (parameters.hasOwnProperty(key)) {
                     let parameterElement = parameters[key];
                     let argument = templateArguments ? templateArguments[key] : void 0;
                     let contents;
-
                     if ((key === "*") /** || (key === "each") */) {
                         if (this._element.childElementCount === 0 &&
                             !(this._element.firstChild &&
@@ -2657,19 +2678,21 @@ Component.addClassProperties(
                                 contentsClassList.add(classList[i]);
                             }
                         }
-
+                        boundParameters[key] = contents;
                         const components = this._findAndDetachComponentsFromNode(contents, []);
                         parameterElement.parentNode.replaceChild(contents, parameterElement);
 
                         for (let component of components) {
                             component.attachToParentComponent();
                         }
-                    } else {
+                    } else if (!parameterElement.component && parameterElement.childElementCount === 0) {
                         // Remove the parameter element if there is no argument for it.
                         parameterElement.parentNode?.removeChild(parameterElement);
+                        boundParameters[key] = null;
                     }
                 }
             }
+            this.templateArgumentByParameter = boundParameters;
         }
     },
 

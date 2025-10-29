@@ -140,6 +140,33 @@ TestPageLoader.queueTest("firstdraw-template-parameters", {src: "spec/ui/drawing
            expect(item1.textContent).toBe("One");
            expect(item2.textContent).toBe("Two");
        });
+
+        it("should remove param when no dom argument is provided and it has no default", function (done) {
+            var parameters = templateParametersTestPage.test.parametersDefault,
+               element = parameters.element,
+               item1 = element.querySelector(".item1 > span");
+
+            expect(item1).toBe(null);
+            done();
+        });
+
+        it("should use default parameter content when it is nested in param element", function (done) {
+            var parameters = templateParametersTestPage.test.parametersDefault,
+               element = parameters.element,
+               item2 = element.querySelector(".item2 > span");
+
+            expect(item2.textContent).toBe("Static Content");
+            done();
+        });
+
+        it("should use default parameter content when param element is a component", function (done) {
+            var parameters = templateParametersTestPage.test.parametersDefault,
+               element = parameters.element,
+               item3 = element.querySelector(".item3");
+
+            expect(item3.textContent).toBe("Dynamic Content");
+            done();
+        });
    });
 });
 

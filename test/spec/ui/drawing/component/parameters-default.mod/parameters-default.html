@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parameters</title>
+    <script type="text/mod-serialization">{
+        "owner": {
+            "values": {
+                "element": {"#": "parameters"}
+            }
+        },
+        "item3": {
+            "prototype": "mod/ui/text.mod",
+            "values": {
+                "element": {"#": "item3"},
+                "value": "Dynamic Content"
+            }
+        }
+    }</script>
+</head>
+<body>
+    <div data-mod-id="parameters" class="parameters-default">
+        <ul>
+            <li class="item1"><span data-param="one"></span></li>
+            <li class="item2" data-param="two">
+                 <span>Static Content</span>
+            </li>
+            <li class="item3" data-mod-id="item3" data-param="three"></li>
+        </ul>
+    </div>
+</body>
+</html>
