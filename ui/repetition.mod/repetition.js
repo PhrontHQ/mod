@@ -2182,8 +2182,7 @@ var Repetition = exports.Repetition = Component.specialize(/** @lends Repetition
                     }
 
                 } else if (this.allowsMultipleSelection) {
-                    // If we are at min selection length, we need to ignore this deselection
-                        iteration.selected = false;
+                    iteration.selected = false;
                 }
             }
 

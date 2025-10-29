@@ -410,14 +410,6 @@ var RangeController = exports.RangeController = Montage.specialize( /** @lends R
     allowsMultipleSelection: {value: false},
 
     /**
-     * The minimum number of items that must be selected.
-     *
-     * @default 0
-     * @property {number}
-     */
-    minSelectionLength: {value: 0},
-
-    /**
      * The maximum number of items that can be selected.
      *
      * @default Infinity
