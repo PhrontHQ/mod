@@ -2507,7 +2507,8 @@ Component.addClassProperties(
             this._element = template;
             if (element.hasAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE)) {
                 value = element.getAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
-                this.parentComponent.templateArgumentByParameter[value] = template;
+                if (this.parentComponent.templateArgumentByParameter)
+                    this.parentComponent.templateArgumentByParameter[value] = template;
                 //TODO Assess whether it would be more performant to track processed dom args 
                 // in the parent in pure JS rather than the arg element in the DOM
                 element.removeAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
