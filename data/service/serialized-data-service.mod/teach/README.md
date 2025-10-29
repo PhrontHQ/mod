@@ -2,11 +2,7 @@
 
 ## 1. Overview
 
-The `SerializedDataService` is responsible for reading and serving data objects that are deserialized from `.mjson` (Mod serialization) files.
-
-Its primary function is to provide a consistent read-only interface for static and instance-level data. It must handle data requests (`readOperation`) from clients, retrieve the appropriate serialized data, deserialize it, and return it in the correct format.
-
-A core requirement is to ensure all read operations are idempotent, which is achieved through mandatory UUIDs for all serialized objects.
+The `SerializedDataService` is responsible for reading and serving data objects that are deserialized from `.mjson` (Mod JSON serialization) files.
 
 ## 2. Core Requirements
 
@@ -16,7 +12,7 @@ All data served by this service **MUST** be stored in the `.mjson` serialization
 
 ### 2.2. Object Identification & Idempotency
 
-To ensure that repeated deserialization operations are idempotent (i.e., they do not create duplicate objects), every serialized object instance **MUST** have a persistent `UUID v7` assigned as its identifier.
+To ensure that repeated deserialization operations are idempotent, every serialized object instance **MUST** have a persistent `UUID v7` assigned as its identifier.
 
 This UUID must be generated and stored manually in the `.mjson` file.
 
@@ -209,6 +205,10 @@ The service would deserialize these objects into "real" DataObjects using Mod de
 One of our service's job is also to filter the full list of deserialized objects. The readOperation might have criteria (e.g., where `name == "France"`).
 
 If the criteria was for `"France"`, it would find the `"FR"` object. If there were no criteria, it would return the full list of countries.
+
+```js
+let dataObjectsMatchingCriteria = allDataObjects.filter(readOperation.criteria.predicateFunction);
+```
 
 ##### 6. Data Returned
 
