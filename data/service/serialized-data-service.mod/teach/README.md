@@ -1,76 +1,230 @@
 # SerializedDataService
 
-A Data Service meant to return data objects serialized in Mod serialization file - .mjson
-Those data objects need to have a UUID assigned as their identifier in their serialization 
-to ensure repeated execution is idempotent.
+## 1. Overview
 
-## Generating UUIDs
+The `SerializedDataService` is responsible for reading and serving data objects that are deserialized from `.mjson` (Mod JSON serialization) files.
 
-We use UUID v7. The best way is to use this:
+## 2. Core Requirements
 
-const uuid = require("core/uuid");
-uuid.generate(undefined,true) -> '019a245c-1467-73c0-9c0e-c6e76846030f'
+### 2.1. Data Format
 
-And store it manually in the serialization
+All data served by this service **MUST** be stored in the `.mjson` serialization format.
 
+### 2.2. Object Identification & Idempotency
 
-## Serializing Object by Object vs Serializing all together
+To ensure that repeated deserialization operations are idempotent, every serialized object instance **MUST** have a persistent `UUID v7` assigned as its identifier.
 
-We either serialize all instances in one file per type, or we index/list them in one file and point to one file per instance. Pro/cons on both, to be experimented with. The second route is shown in data/instance/party/role.mod - meant to start that conversation.
+This UUID must be generated and stored manually in the `.mjson` file.
 
-data/instance/party/education/education-experience.mjson shows them all in one file.
+**Implementation**: Use the mod CLI command to generate this identifier:
 
-What we need to test is if we can deserialize something like this:
+```bash
+mod uuid generate
+```
 
-    "DiplomaType": {
-        "object": "data/instance/party/education/education-experience.mjson[DiplomaType]"
+This will output a UUID v7, e.g., _`019a245c-1467-73c0-9c0e-c6e76846030f`_
+
+## 3. Storage & Referencing Strategy
+
+We support two storage patterns for object instances in .mjson files. The right choice depends on access patterns and operational constraints: a single “all-in-one” file simplifies browsing and management but can cause large file loads, while an indexed per-instance layout makes single-object access and explicit file-based references efficient at the cost of many files and a two-step lookup. Choose the former for small or frequently browsed datasets; choose the latter for large datasets, frequent single-object reads.
+
+### 3.1. Option 1: Single File per Type (All-in-One)
+
+All instances of a single data type are stored in one .mjson file.
+
+**Example:**
+
+`data/instance/countries.mjson` contains all `Country` objects.
+
+```json
+{
+    "root": {
+        "value": [{ "@": "US" }, { "@": "FR" }]
     },
-
-In a similar way we can with symbols on exports in JS files. If that works already, or we make it work, then we can have references in objects' serialized properties to objects of different types stored in another file, without having to store objects in indidual files.
-
-Store objects in indidual files might still be beneficial if they are rarely fetched all together, like a TimeZone: each user lives in one and we'll need that one. Few end-mods / user-mods will need to fetch all time zones.
-
-
-In any case, internally, SerializedDataService will have to maintain an array of all instances so it can filter them with readOperation's criteria in order to handle a readOperation
-
-
-## Returning raw data vs data
-
-If the client behind the readOperation is in the same process, it's possible to do the following since SerializedDataService has natively access to DataObjects: 
-
-    handleReadOperation: {
-        value: function (readOperation) {
-            //Find the matching stream
-            let stream = this.contextForPendingDataOperation(readOperation) || readOperation.dataStream;
-            let myResultObjects; //To be obtained by filtering an array with all instances of readOperation.target with readOperation's criteria
-
-            //myResultObjects would have be made aware to the mainService with mainService.mergeDataObject(anObject) - see  Merging Data Objects that have been deserizalized bellow
-
-            stream.addData(myResultObjects);
-            this.unregisterPendingDataOperation(readOperation);
+    "US": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "US",
+            "name": "United States",
+            "capital": "Washington, D.C.",
+            "population": 331900000
+        }
+    },
+    "FR": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "isCode366": "FR",
+            "name": "France",
+            "capital": "Paris",
+            "population": 68606000
         }
     }
+}
+```
 
-However, if SerializedDataService runs in the workel while the client is in a browser, there won't be a stream to find and SerializedDataService needs to return data with a read completed operation, converting data objects to raw data, anc caching that result as seen in the rough example bellow:
+**Pros:**
 
-    _mapDataObjectsToRawDataPromises(dataObjects, rawDataPromises) {
-        for (let aDataObject of dataObjects) {
-            let mapping = this.mappingForObjectDescriptor(aDataObject.objectDescriptor);
-            rawDataPromises.push(mapping.mapObjectToRawData(aDataObject, {})
-            .then((rawData) => {
-                let primaryKey = this.primaryKeyForTypeRawData(aDataObject.objectDescriptor, rawData);
-                this._rawDataByObjectDescriptor(aDataObject.objectDescriptor).set(primaryKey, rawData);
-            }));
+-   Fewer files to manage.
+-   Easy to browse all instances of a type.
+
+**Cons:**
+
+-   Potentially large file loads, even if only one object is needed.
+
+### 3.2. Option 2: Indexed Individual Files
+
+:warning: Not implemented yet!
+
+An index file (e.g., `roles.mod`) lists all instances, but each instance is stored in its own separate .mjson file.
+This file acts as a directory or a map. Its purpose is to tell the `SerializedDataService` where to find the data for a specific instance
+
+**Examples:**
+
+Index file `data/instance/party/roles.mod` point to:
+
+-   `data/instance/party/roles/admin.mjson`
+-   `data/instance/party/roles/user.mjson`
+
+**1. The Index File:**
+
+```json
+// File: data/instance/party/roles.mod
+{
+    "root": {
+        "admin": "data/instance/party/roles/admin.mjson",
+        "user": "data/instance/party/roles/user.mjson",
+        "guest": "data/instance/party/roles/guest.mjson"
+    }
+}
+```
+
+**2. Admin Role:**
+
+```json
+// File: data/instance/party/roles/admin.mjson
+{
+    "root": {
+        "value": { "@": "AdminRole" }
+    },
+    "AdminRole": {
+        "prototype": "data/party/role.mjson",
+        "values": {
+            "uuid": "019a245c-1467-73c0-9c0e-c6e76846030f",
+            "name": "Administrator",
+            "permissions": ["create_users", "delete_content", "manage_settings"]
         }
     }
+}
+```
 
-## Merging Data Objects that have been deserizalized
+**3. User Role:**
 
-Those Objects, if added straigt to a Stream needs to have been merged into the mainService with 
+```json
+// File: data/instance/party/roles/user.mjson
+{
+    "root": {
+        "value": { "@": "UserRole" }
+    },
+    "UserRole": {
+        "prototype": "data/party/role.mjson",
+        "values": {
+            "uuid": "019a245d-5b8a-79a0-8a12-b7c86a5d041e",
+            "name": "Standard User",
+            "permissions": ["create_content", "edit_own_content"]
+        }
+    }
+}
+```
 
-mainService.mergeDataObject(anObject) - see merge-data-object-example.js (non functional, use as pseudo code) for pointers
+**Pros:**
 
+-   Efficiently load a single object (e.g., fetching one TimeZone for a user).
+-   Clear, explicit file-based referencing.
 
-## serialized-data-objects.mjson
+**Cons:**
 
-A file to put a collection to test - contains a copy of data/instance/party/education/education-experience.mjson right now to fill-in
+-   High file-count, which can be difficult to manage.
+-   Requires a two-step lookup (index, then file).
+
+## 4. Single File per Type request flow
+
+### Scenario
+
+A client requests a complete list of `Country` objects (for example, to populate a dropdown). To fulfill this, it triggers a `readOperation` targeting the `Country` type.
+
+#### Steps
+
+##### 1. Request received
+
+A client executes a read operation:
+
+```js
+import { montageObject as Country } from "mod/data/model/country.mjson";
+
+async function _loadCountries() {
+    const mainService = this.application.mainService;
+    this.countries = await mainService.fetchData(Country);
+}
+```
+
+This ultimately triggers `SerializedDataService.handleReadOperation(readOperation)` method.
+The `readOperation.target` will be the `Country` object/type.
+
+##### 2. Service Validates Request
+
+```js
+if (!this.handlesType(readOperation.target)) {
+    return;
+}
+```
+
+:question: Questions:
+
+1. Does the service check whether it supports a given type? If so, how and where are supported types registered?
+
+##### 3. File Location
+
+Our service needs to know which file to open for the Country type.
+
+:question: Questions:
+
+1. How do we find the file related to a type? Should we use a map?
+
+##### 4. File Deserialization
+
+The service now reads `data/instance/countries.mjson` from the disk using `fs.readFile`;
+
+It parses the `.mjson` content containing all Country instances ("US", "FR", etc.) and a "root" key pointing to them.
+
+The service would deserialize these objects into "real" DataObjects using Mod deserializer.
+
+##### 5. Data Filtering
+
+:warning: Not implemented yet!
+
+One of our service's job is also to filter the full list of deserialized objects. The readOperation might have criteria (e.g., where `name == "France"`).
+
+If the criteria was for `"France"`, it would find the `"FR"` object. If there were no criteria, it would return the full list of countries.
+
+```js
+let dataObjectsMatchingCriteria = allDataObjects.filter(readOperation.criteria.predicateFunction);
+```
+
+##### 6. Data Returned
+
+This is the final step `responseOperation.target.dispatchEvent(responseOperation)`:
+Our data service bundles the filtered results into a responseOperation. Then, It dispatches this response, which sends the data back to the client that originally asked for it.
+
+## 5. Service Implementation & Behavior
+
+### 5.1. Internal Data Handling
+
+When a `readOperation` is received, the service must be able to filter data based on the operation's criteria.
+
+:warning: TODO
+
+### 5.2. Output Strategy (Context-Dependent)
+
+The service must return data differently depending on the client's execution context.
+
+:warning: TODO
