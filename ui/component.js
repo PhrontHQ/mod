@@ -2704,6 +2704,9 @@ Component.addClassProperties(
                         // Remove the parameter element if there is no argument for it.
                         parameterElement.parentNode?.removeChild(parameterElement);
                         boundParameters[key] = null;
+                    } else {
+                        parameterElement.setAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE, key);
+                        boundParameters[key] = parameterElement;
                     }
                 }
             }
