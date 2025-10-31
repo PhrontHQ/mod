@@ -1,4 +1,8 @@
-var MessagingChannel = require("./messaging-channel").MessagingChannel;
+/**
+ * @module mod/data/model/messaging-channel/instant-message-address
+ */
+const MessagingChannel = require("./messaging-channel").MessagingChannel;
+const Montage = require("core/core").Montage;
 
 /**
  * @class InstantMessageAddress
@@ -14,25 +18,18 @@ var MessagingChannel = require("./messaging-channel").MessagingChannel;
  * - an in-app messaging, either when user is in-App or async via service-worker.
  *
  */
-
-
-exports.InstantMessageAddress = MessagingChannel.specialize(/** @lends InstantMessageAddress.prototype */ {
-    constructor: {
-        value: function InstantMessageAddress() {
-            this.super();
-            //console.log("Phront MessagingChannel created");
-            return this;
-        }
-    },
-
-    serviceName: {
-        value: undefined
-    },
-    userName: {
-        value: undefined
-    },
-    provider: {
-        value: undefined
+exports.InstantMessageAddress = class InstantMessageAddress extends MessagingChannel {
+    static {
+        Montage.defineProperties(this.prototype, {
+            serviceName: {
+                value: undefined,
+            },
+            userName: {
+                value: undefined,
+            },
+            provider: {
+                value: undefined,
+            },
+        });
     }
-
-});
+};

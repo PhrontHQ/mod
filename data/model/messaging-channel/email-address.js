@@ -1,4 +1,8 @@
-var MessagingChannel = require("./messaging-channel").MessagingChannel;
+/**
+ * @module mod/data/model/messaging-channel/email-address
+ */
+const MessagingChannel = require("./messaging-channel").MessagingChannel;
+const Montage = require("core/core").Montage;
 
 /**
  * @class EmailAddress
@@ -14,25 +18,18 @@ var MessagingChannel = require("./messaging-channel").MessagingChannel;
  * - an in-app messaging, either when user is in-App or async via service-worker.
  *
  */
-
-
-exports.EmailAddress = MessagingChannel.specialize(/** @lends EmailAddress.prototype */ {
-    constructor: {
-        value: function EmailAddress() {
-            this.super();
-            //console.log("Phront MessagingChannel created");
-            return this;
-        }
-    },
-
-    email: {
-        value: undefined
-    },
-    userName: {
-        value: undefined
-    },
-    domain: {
-        value: undefined
+exports.EmailAddress = class EmailAddress extends MessagingChannel {
+    static {
+        Montage.defineProperties(this.prototype, {
+            email: {
+                value: undefined,
+            },
+            userName: {
+                value: undefined,
+            },
+            domain: {
+                value: undefined,
+            },
+        });
     }
-
-});
+};

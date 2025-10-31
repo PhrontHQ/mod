@@ -1,4 +1,8 @@
-var DataObject = require("data/model/data-object").DataObject;
+/**
+ * @module mod/data/model/messaging-channel/messaging-channel
+ */
+const DataObject = require("../data-object").DataObject;
+const Montage = require("core/core").Montage;
 
 /**
  * @class MessagingChannel
@@ -14,28 +18,21 @@ var DataObject = require("data/model/data-object").DataObject;
  * - an in-app messaging, either when user is in-App or async via service-worker.
  *
  */
-
-
-exports.MessagingChannel = DataObject.specialize(/** @lends MessagingChannel.prototype */ {
-    constructor: {
-        value: function MessagingChannel() {
-            this.super();
-            //console.log("Phront MessagingChannel created");
-            return this;
-        }
-    },
-
-    label: {
-        value: undefined
-    },
-    preferredForParties: {
-        value: undefined
-    },
-    description: {
-        value: undefined
-    },
-    tags: {
-        value: undefined
+exports.MessagingChannel = class MessagingChannel extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            label: {
+                value: undefined,
+            },
+            preferredForParties: {
+                value: undefined,
+            },
+            description: {
+                value: undefined,
+            },
+            tags: {
+                value: undefined,
+            },
+        });
     }
-
-});
+};

@@ -1,12 +1,13 @@
 /**
-    @module phront/data/main.mod/model/aws/secret
-*/
+ * @module phront/data/main.mod/model/aws/secret
+ */
 
-var DataObject = require("../data-object").DataObject;
+const DataObject = require("../data-object").DataObject;
+const Montage = require("core/core").Montage;
 
 /**
  * @class Application
- * @extends Application
+ * @extends DataObject
  *
  * An application is an instance of a project configured to run for a certain organization.
  *
@@ -15,32 +16,30 @@ var DataObject = require("../data-object").DataObject;
  * Needs to add source project aspects - like the GitHub project URL/ID
  *
  */
-
-exports.Application = DataObject.specialize(/** @lends Application.prototype */ {
-    constructor: {
-        value: function Application() {
-            this.super();
-            return this;
-        }
-    },
-
-    name: {
-        value: undefined
-    },
-    identifier: {
-        value: undefined
-    },
-    credentials: {
-        value: undefined
-    },
-    controllingParty: {
-        value: undefined
-    },
-    appClients: {
-        value: undefined
-    },
-    userPool: {
-        value: undefined
-    },
-    controllingOrganization: {value: undefined}
-});
+exports.Application = class Application extends DataObject {
+    static {
+        Montage.defineProperties(this.prototype, {
+            name: {
+                value: undefined,
+            },
+            identifier: {
+                value: undefined,
+            },
+            credentials: {
+                value: undefined,
+            },
+            controllingParty: {
+                value: undefined,
+            },
+            appClients: {
+                value: undefined,
+            },
+            userPool: {
+                value: undefined,
+            },
+            controllingOrganization: {
+                value: undefined,
+            },
+        });
+    }
+};
