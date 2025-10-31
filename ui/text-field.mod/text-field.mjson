@@ -54,7 +54,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "ui/text-field.mod/text-field.mjson"
             },

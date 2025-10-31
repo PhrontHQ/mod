@@ -12,7 +12,7 @@
             },
             "propertyDescriptors": [],
             "propertyDescriptorGroups": {},
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "./i-s-o-8601-duration-string-to-duration-converter.mjson"
             },

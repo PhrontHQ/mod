@@ -130,7 +130,7 @@
     "property_validation_rules": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "propertyValidationRules",
+            "name": "validationRules",
             "objectDescriptor": {
                 "@": "root"
             },
@@ -203,7 +203,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/object-descriptor.mjson"
             }

@@ -193,7 +193,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "ui/flow.mod/flow.mjson"
             },

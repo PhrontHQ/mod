@@ -20,12 +20,12 @@ The system handles all validation rules **asynchronously**, where validation ru
 
 1. **Base `ValidationRule` Class**
 
-    - **Purpose**: To serve as a blueprint for all validation rules. It ensures each rule has a consistent API for the `DataValidationManager` to use.
+    - **Purpose**: To serve as a blueprint for all validation rules.
     - **Properties**:
         - `name: string`: A unique identifier for the rule (e.g., `isMandatory`).
         - `message: string`: The localized message.
         - `hints: string[]`: An array of strings providing additional guidance or suggestions related to the data validation process.
-        - `validationProperties: string[]`: An array of property name that this rule depends on. This wiil be used for the `DataValidationManager` to know when to re-run the rule.
+        - `validationProperties: string[]`: An array of property name that this rule depends on.
     - **Methods**:
         - `evaluateRule(dataInstance): Promise<ValidationError | null>`:
             - Core asynchronous method all subclasses must implement.
@@ -335,16 +335,6 @@ For example, if an employee instance has errors on `firstName`, `employeeId`, `s
   ]
 }
 ```
-
-### 4. `DataValidationManager`
-
-This service orchestrates the validation process by triggering rules and updating the `invalidityState` property on data objects.
-
--   **Methods**:
-    -   `validateDataObject(instance, allRules)`:
-        1. **Run All Rules**: Asynchronously execute the `validate` method for each rule in `allRules` with the `instance`.
-        2. **Collect Results**: Gather all `ValidationError` objects from failed validations.
-        3. **Update State**: Replace `instance.invalidityState` with the new error map, if any.
 
 ### 5. Smart PropertyField Components
 
