@@ -4510,9 +4510,84 @@ Component.addClassProperties(
                 this.needsDraw = true;
             }
         }
-    }
+    },
 
+    /**
+     * Retrieves CSS property values with intelligent component-aware lookup and fallback strategies.
+     *
+     * This method provides a sophisticated CSS property retrieval system that automatically
+     * generates component-scoped custom property names and implements a cascading fallback
+     * strategy. It caches computed styles for performance optimization and supports both
+     * custom CSS properties and standard CSS properties.
+     *
+     * The lookup follows this priority order:
+     * 1. Prefixed custom property: `--{prefix}-{component-name}-{property-name}`
+     * 2. Unprefixed custom property: `--{component-name}-{property-name}`
+     * 3. Raw CSS property: `{property-name}`
+     *
+     * @method getCSSPropertyValue
+     * @memberof Component
+     * @param {string} propertyName - The CSS property name to retrieve. Must be a non-empty string.
+     * @param {boolean} [useCustomProperties=true] - Whether to enable custom property lookup.
+     *   When false, only retrieves the raw CSS property value directly.
+     * @param {string} [prefix="mod"] - The prefix to use for custom properties.
+     *   Set to empty string or null to disable prefixed property lookup.
+     * @returns {string|null} The trimmed CSS property value, or null if the property is not found
+     *   or has no value. Empty strings are converted to null.
+     * @throws {Error} Throws an error if propertyName is not a string.
+     *
+     * @example
+     * // Basic usage - looks for component-scoped custom properties
+     * // For component "MyButton" and property "background-color":
+     * // 1. --mod-my-button-background-color
+     * // 2. --my-button-background-color
+     * // 3. background-color
+     * const bgColor = this.getCSSPropertyValue('background-color');
+     *
+     * @example
+     * // Disable custom properties - raw CSS property only
+     * const display = this.getCSSPropertyValue('display', false);
+     * // Returns: display property value directly, no custom property lookup
+     */
+    getCSSPropertyValue: {
+        value: function getCSSPropertyValue(propertyName, useCustomProperties = true, prefix = "mod") {
+            if (!String.isString(propertyName) || propertyName.length === 0) {
+                throw new Error('Property name must be a non-empty string');
+            }
 
+            // A live CSSStyleDeclaration object, which updates automatically
+            // when the element's styles are changed.
+            this._elementStyles = this._elementStyles || (this._elementStyles = getComputedStyle(this.element));
+
+            // If custom properties are disabled, just return the raw property
+            if (!useCustomProperties) {
+                return this._elementStyles.getPropertyValue(propertyName)?.trim() || null;
+            }
+
+            // Build component-specific names
+            const componentName = this.constructor.name.toKebabCase();
+            const unprefixedProperty = `${componentName}-${propertyName}`;
+            let propertyValue = null;
+
+            // 1. Prefixed property
+            if (String.isString(prefix) && prefix.length > 0) {
+                const prefixedProperty = `--${prefix}-${unprefixedProperty}`;
+                propertyValue = this._elementStyles.getPropertyValue(prefixedProperty);
+            }
+
+            // 2. Unprefixed property
+            if (!propertyValue) {
+                propertyValue = this._elementStyles.getPropertyValue(`--${unprefixedProperty}`);
+            }
+
+            // 3. Fallback to the raw property name
+            if (!propertyValue) {
+                propertyValue = this._elementStyles.getPropertyValue(propertyName);
+            }
+
+            return propertyValue?.trim() || null;
+        }
+    },
 });
 
 /**
