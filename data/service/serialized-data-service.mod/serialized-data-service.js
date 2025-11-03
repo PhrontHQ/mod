@@ -27,13 +27,24 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         // data operations, verify here whether this service should handle the operation.
         if (!this.handlesType(readOperation.target)) return;
 
-        const { location, require } = this.map.get(readOperation.target);
+        let location, _require;
+        if (this.map.has(readOperation.target)) {
+            location = this.map.get(readOperation.target).location;
+            _require = this.map.get(readOperation.target).require;
+        } else {
+            location = this.dataModuleId;
+            _require = require;
+            debugger;
+        }
+        
 
-        if (!location || !require) {
+        if (!location || !_require) {
             throw new Error(`No location or require registered for type ${readOperation.target.name}`);
         }
 
-        return require
+        console.log("SerializedDataService.handleReadOperation");
+
+        return _require
             .async(location)
             .then((module) => {
                 if (!module || !module.montageObject) {
@@ -71,5 +82,35 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         responseOperation.propagationPromise.then(() => {
             readOperationCompletionPromiseResolve?.(responseOperation);
         });
+    }
+
+    static {
+
+        RawDataService.defineProperties(SerializedDataService.prototype, {
+
+            _defaultDataModuleId: {
+                value: "./data.mjson"
+            },
+
+            dataModuleId: {
+                value: undefined
+            },
+
+            deserializeSelf: {
+                value: function (deserializer) {
+                    RawDataService.prototype.deserializeSelf.call(this, deserializer);
+                    let value = deserializer.getProperty("dataModuleId");
+                    if (value) {
+                        this.dataModuleId = value;
+                    }
+                    console.log("SerializedDatService.dataModuleId", this.dataModuleId);
+                    if (!this.dataModuleId) {
+                        debugger;
+                    }
+                }
+            }
+
+        })
+
     }
 };
