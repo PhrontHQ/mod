@@ -1,20 +1,7 @@
-var PartyMessagingChannel = require("./party-messaging-channel").PartyMessagingChannel;
+const PartyMessagingChannel = require("./party-messaging-channel").PartyMessagingChannel;
 
 /**
- *
- * @class PartyPhoneNumber
+ * @class PartyPostalAddress
  * @extends PartyMessagingChannel
- *
  */
-
-
-exports.PartyPostalAddress = PartyMessagingChannel.specialize(/** @lends PartyPostalAddress.prototype */ {
-    constructor: {
-        value: function PartyPostalAddress() {
-            this.super();
-            //console.log("Phront PartyPostalAddress created");
-            return this;
-        }
-    }
-
-});
+exports.PartyPostalAddress = class PartyPostalAddress extends PartyMessagingChannel {};

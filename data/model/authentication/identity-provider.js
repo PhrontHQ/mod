@@ -1,30 +1,22 @@
 /**
-    @module mod/data/model/app/authorization/j-s-o-n-web-token
-*/
-
-var Intangible = require("../party/intangible").Intangible;
+ * @module mod/data/model/authentication/identity-provider
+ */
+const Intangible = require("../party/intangible").Intangible;
+const Montage = require("../../../core/core").Montage;
 
 /**
  * @class IdentityProvider
  * @extends Intangible
- *
  */
-
-/*
-
-*/
-
-exports.IdentityProvider = Intangible.specialize(/** @lends JSONWebToken.prototype */ {
-    constructor: {
-        value: function IdentityProvider() {
-            this.super();
-            return this;
-        }
-    },
-    ownerOrganization: {
-        value: undefined
-    },
-    tenantOrganizations: {
-        value: undefined
+exports.IdentityProvider = class IdentityProvider extends Intangible {
+    static {
+        Montage.defineProperties(this.prototype, {
+            ownerOrganization: {
+                value: undefined,
+            },
+            tenantOrganizations: {
+                value: undefined,
+            },
+        });
     }
-});
+};
