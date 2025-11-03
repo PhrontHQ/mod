@@ -2,7 +2,7 @@
  * @module mod/data/model/messaging-channel/postal-address
  */
 const MessagingChannel = require("./messaging-channel").MessagingChannel;
-const Montage = require("../../core/core").Montage;
+const Montage = require("core/core").Montage;
 
 /**
  * @class Address

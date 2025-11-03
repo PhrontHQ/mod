@@ -2,7 +2,7 @@
  * @module mod/data/model/messaging-channel/party-messaging-channel
  */
 const DataObject = require("../data-object").DataObject;
-const Montage = require("../../core/core").Montage;
+const Montage = require("core/core").Montage;
 
 /**
  * @class PartyMessagingChannel
