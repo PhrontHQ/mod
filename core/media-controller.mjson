@@ -252,7 +252,7 @@
                     }
                 ]
             },
-            "propertyValidationRules": {
+            "validationRules": {
             }
         }
     }

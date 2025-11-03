@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/error/reference-error.mjson" },
             "exportName": "ReferenceError",
             "module": { "%": "global" },

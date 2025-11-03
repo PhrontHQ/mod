@@ -39,7 +39,7 @@
                     { "@": "syntaxDescriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "./criteria.mjson" },
             "exportName": "Criteria",
             "module": { "%": "./criteria" },

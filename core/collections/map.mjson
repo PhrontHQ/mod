@@ -12,7 +12,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "../collections/map.mjson" },
             "exportName": "Map",
             "module": { "%": "global" },

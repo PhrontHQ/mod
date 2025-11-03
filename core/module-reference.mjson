@@ -24,7 +24,7 @@
                 { "@": "id_descriptor" }
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/module-reference.mjson" },
             "exportName": "ModuleReference",
             "module": { "%": "core/module-reference" },

@@ -12,7 +12,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/object.mjson" },
             "exportName": "Object",
             "module": { "%": "global" },

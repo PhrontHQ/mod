@@ -144,6 +144,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/meta/component-object-descriptor-spec", node: false },
         { name: "spec/meta/controller-object-descriptor-spec", node: false },
         { name: "spec/meta/event-descriptor-spec", node: false },
+        { name: "spec/meta/expression-validation-rule-spec" },
 
         // Data
         { name: "spec/geo/circle" },

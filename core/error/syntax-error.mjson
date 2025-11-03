@@ -15,7 +15,7 @@
                 "all": [
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": { "%": "core/error/syntax-error.mjson" },
             "exportName": "SyntaxError",
             "module": { "%": "global" },

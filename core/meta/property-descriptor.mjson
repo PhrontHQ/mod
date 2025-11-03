@@ -324,7 +324,7 @@
                     {"@": "property_helpKey"}
                 ]
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/meta/property-descriptor.mjson"
             },

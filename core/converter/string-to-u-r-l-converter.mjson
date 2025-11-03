@@ -14,7 +14,7 @@
             ],
             "propertyDescriptorGroups": {
             },
-            "propertyValidationRules": {},
+            "validationRules": [],
             "objectDescriptorModule": {
                 "%": "core/converter/string-to-u-r-l-converter.mjson"
             },

@@ -5,8 +5,10 @@ var DataService = require("mod/data/service/data-service").DataService,
     RawDataService = require("mod/data/service/raw-data-service").RawDataService,
     defaultEventManager = require("mod/core/event/event-manager").defaultEventManager;
 
-describe("A DataService", function() {
+const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mjson").montageObject;
+const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObject;
 
+describe("A DataService", function () {
     it("can be created", function () {
         expect(new DataService()).toBeDefined();
     });
@@ -33,14 +35,20 @@ describe("A DataService", function() {
         DataService.mainService = undefined;
         parent = new RawDataService();
         parent.NAME = "PARENT";
-        parent.jasmineToString = function () { return "PARENT"; };
+        parent.jasmineToString = function () {
+            return "PARENT";
+        };
         defaultEventManager.application.mainService = parent;
         child = new RawDataService();
         child.NAME = "CHILD";
-        child.jasmineToString = function () { return "CHILD"; };
+        child.jasmineToString = function () {
+            return "CHILD";
+        };
         grandchild = new RawDataService();
         grandchild.NAME = "GRANDCHILD";
-        grandchild.jasmineToString = function () { return "GRANDCHILD"; };
+        grandchild.jasmineToString = function () {
+            return "GRANDCHILD";
+        };
         parent.addChildService(child);
         child.addChildService(grandchild);
 
@@ -70,27 +78,55 @@ describe("A DataService", function() {
         var toString, Types, objects, Child, children, parent;
 
         // Define test types with ObjectDescriptors.
-        toString = function () { return "TYPE-" + this.id; };
-        Types = [0, 1, 2, 3].map(function () { return function () {}; });
-        Types.forEach(function (type) { type.TYPE = new DataObjectDescriptor(); });
-        Types.forEach(function (type) { type.TYPE.jasmineToString = toString; });
-        Types.forEach(function (type, index) { type.TYPE.id = index; });
+        toString = function () {
+            return "TYPE-" + this.id;
+        };
+        Types = [0, 1, 2, 3].map(function () {
+            return function () {};
+        });
+        Types.forEach(function (type) {
+            type.TYPE = new DataObjectDescriptor();
+        });
+        Types.forEach(function (type) {
+            type.TYPE.jasmineToString = toString;
+        });
+        Types.forEach(function (type, index) {
+            type.TYPE.id = index;
+        });
 
         // Define test objects for each of the test types.
-        toString = function () { return "OBJECT-" + this.id; };
-        objects = Types.map(function (type) { return new type(); });
-        objects.forEach(function (object) { object.jasmineToString = toString; });
-        objects.forEach(function (object, index) { object.id = index; });
+        toString = function () {
+            return "OBJECT-" + this.id;
+        };
+        objects = Types.map(function (type) {
+            return new type();
+        });
+        objects.forEach(function (object) {
+            object.jasmineToString = toString;
+        });
+        objects.forEach(function (object, index) {
+            object.id = index;
+        });
 
         // Create test children with unique identifiers to help with debugging.
-        toString = function () { return "CHILD-" + this.id; };
-        children = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function () { return new RawDataService(); });
-        children.forEach(function (child) { child.jasmineToString = toString; });
-        children.forEach(function (child, index) { child.id = index; });
+        toString = function () {
+            return "CHILD-" + this.id;
+        };
+        children = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function () {
+            return new RawDataService();
+        });
+        children.forEach(function (child) {
+            child.jasmineToString = toString;
+        });
+        children.forEach(function (child, index) {
+            child.id = index;
+        });
 
         // Define a variety of types for the test children. Children with an
         // undefined, null, or empty types array will be "all types" children.
-        children.forEach(function (child) { Object.defineProperty(child, "types", {writable: true}); });
+        children.forEach(function (child) {
+            Object.defineProperty(child, "types", { writable: true });
+        });
         children[0].types = [Types[0].TYPE];
         children[1].types = [Types[0].TYPE];
         children[2].types = [Types[1].TYPE];
@@ -104,8 +140,12 @@ describe("A DataService", function() {
 
         // Create a service with the desired children.
         parent = new DataService();
-        parent.jasmineToString = function () { return "PARENT"; };
-        children.forEach(function (child) { parent.addChildService(child); });
+        parent.jasmineToString = function () {
+            return "PARENT";
+        };
+        children.forEach(function (child) {
+            parent.addChildService(child);
+        });
 
         // Verify the initial parents, types, and type-to-child mapping.
         expect(parent.parentService).toBeUndefined();
@@ -359,59 +399,224 @@ describe("A DataService", function() {
         // Create the main service
         parent = new RawDataService();
         parent.NAME = "PARENT";
-        parent.jasmineToString = function () { return "PARENT"; };
+        parent.jasmineToString = function () {
+            return "PARENT";
+        };
 
         // Create a child with regular sync types
-        syncChild = new RawDataService;
+        syncChild = new RawDataService();
         Object.defineProperty(syncChild, "types", {
             get: function () {
                 return [type];
-            }
+            },
         });
 
         // Create a child with an async types property
-        asyncChild = new RawDataService;
+        asyncChild = new RawDataService();
         Object.defineProperty(asyncChild, "types", {
             get: function () {
                 return Promise.resolve([type]);
-            }
+            },
         });
 
         // Test that parent references are added and removed correctly
         registerPromises = [syncChild, asyncChild].map(function (c) {
             return parent.registerChildService(c);
         });
-        Promise.all(registerPromises).then(function () {
-            expect(syncChild.parentService).toBe(parent);
-            expect(asyncChild.parentService).toBe(parent);
-            unregisterPromises = [syncChild, asyncChild].map(function (c) {
-                return parent.unregisterChildService(c);
-            });
+        Promise.all(registerPromises)
+            .then(function () {
+                expect(syncChild.parentService).toBe(parent);
+                expect(asyncChild.parentService).toBe(parent);
+                unregisterPromises = [syncChild, asyncChild].map(function (c) {
+                    return parent.unregisterChildService(c);
+                });
 
-            return Promise.all(unregisterPromises);
-        })
-        .then(function () {
-            expect(syncChild.parentService).toBeUndefined();
-            expect(asyncChild.parentService).toBeUndefined();
-            done();
-        });
+                return Promise.all(unregisterPromises);
+            })
+            .then(function () {
+                expect(syncChild.parentService).toBeUndefined();
+                expect(asyncChild.parentService).toBeUndefined();
+                done();
+            });
     });
 
     it("has a fetchData() method", function () {
         expect(new DataService().fetchData).toEqual(jasmine.any(Function));
     });
 
-    xit("has a fetchData() method that uses the passed in stream when one is specified", function () {
-    });
+    xit("has a fetchData() method that uses the passed in stream when one is specified", function () {});
 
-    xit("has a fetchData() method that creates and return a new stream when none is passed in", function () {
-    });
+    xit("has a fetchData() method that creates and return a new stream when none is passed in", function () {});
 
-    xit("has a fetchData() method that sets its stream's criteria", function () {
-    });
+    xit("has a fetchData() method that sets its stream's criteria", function () {});
 
     xit("has a registerService() method that needs to be further tested", function () {});
 
     xit("has a mainService class variable that needs to be further tested", function () {});
 
+    describe("saveObject()", () => {
+        let animatedMovieService;
+        let movieService;
+        let mainService;
+        let movie;
+        let animatedMovie;
+
+        beforeEach(async () => {
+            mainService = new DataService();
+            defaultEventManager.application.mainService = mainService;
+
+            movieService = new RawDataService();
+            animatedMovieService = new RawDataService();
+            await mainService.registerChildService(movieService, movieDescriptor);
+            await mainService.registerChildService(animatedMovieService, AnimatedMovieDescriptor);
+
+            movie = mainService.createDataObject(movieDescriptor);
+            animatedMovie = mainService.createDataObject(AnimatedMovieDescriptor);
+        });
+
+        describe("Single Object Validation on saveChanges()", () => {
+            it("should validate an object with a valid title", async () => {
+                // Setup: A valid title.
+                movie.title = "Inception";
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(movie.invalidityState).toBeDefined();
+                expect(movie.invalidityState.size).toBe(0);
+            });
+
+            it("should invalidate an object with a title that is too short", async () => {
+                // Setup:
+                movie.title = "A";
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(movie.invalidityState.size).toBe(1);
+                expect(movie.invalidityState.has("title")).toBe(true);
+                const titleErrors = movie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(1);
+                expect(titleErrors[0].message).toContain("at least 2 characters");
+            });
+
+            it("should invalidate an object with a title containing forbidden characters", async () => {
+                // Setup:
+                movie.title = "Movie@Title";
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(movie.invalidityState.size).toBe(1);
+                expect(movie.invalidityState.has("title")).toBe(true);
+                const titleErrors = movie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(1);
+                expect(titleErrors[0].message).toContain("cannot contain the '@'");
+            });
+
+            it("should report multiple errors for a single property that violates multiple rules", async () => {
+                // Setup: The title is both too short and contains an invalid character.
+                movie.title = "@";
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(movie.invalidityState.size).toBe(1);
+                expect(movie.invalidityState.has("title")).toBe(true);
+                const titleErrors = movie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(2);
+
+                // Check that both expected error messages are present.
+                expect(titleErrors.some((err) => err.message.includes("at least 2 characters"))).toBe(true);
+                expect(titleErrors.some((err) => err.message.includes("cannot contain the '@'"))).toBe(true);
+            });
+
+            it("should report errors for multiple invalid properties on the same object", async () => {
+                // Setup:
+                movie.title = "T"; // Invalid: too short
+                movie.releaseDate = new Date("2050-01-01"); // Invalid: in the future
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(movie.invalidityState.size).toBe(2); // One entry for each invalid property.
+                expect(movie.invalidityState.has("title")).toBe(true);
+                expect(movie.invalidityState.has("releaseDate")).toBe(true);
+
+                // Verify title error
+                const titleErrors = movie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(1);
+                expect(titleErrors[0].message).toContain("at least 2 characters");
+
+                // Verify releaseDate error
+                const dateErrors = movie.invalidityState.get("releaseDate");
+                expect(dateErrors.length).toBe(1);
+                expect(dateErrors[0].message).toContain("before 2042");
+            });
+
+            it("should clear the invalidity state after correcting a property and saving again", async () => {
+                // Setup: Make the object invalid first.
+                movie.title = "T";
+                await mainService.saveChanges();
+
+                // Assert initial invalid state
+                expect(movie.invalidityState.size).toBe(1);
+                expect(movie.invalidityState.has("title")).toBe(true);
+
+                // Execute: Correct the property and save again.
+                movie.title = "The Corrected Title";
+                await mainService.saveChanges();
+
+                // Assert final valid state
+                expect(movie.invalidityState.size).toBe(0);
+            });
+
+            it("should add to the invalidity state after making a valid object invalid", async () => {
+                // Setup: Start with a valid object.
+                movie.title = "A Valid Title";
+                await mainService.saveChanges();
+
+                // Assert initial valid state
+                expect(movie.invalidityState.size).toBe(0);
+
+                // Execute: Make the property invalid and save again.
+                movie.title = "T";
+                await mainService.saveChanges();
+
+                // Assert final invalid state
+                expect(movie.invalidityState.size).toBe(1);
+                expect(movie.invalidityState.has("title")).toBe(true);
+            });
+
+            it("should report errors for an invalid title and invalid animationStyle", async () => {
+                // Setup:
+                movie.title = "A Valid Title";
+                animatedMovie.title = "T"; // Invalid: too short
+                animatedMovie.animationStyle = "Live Action"; // Invalid: not '2d' or '3d'
+
+                // Execute:
+                await mainService.saveChanges();
+
+                // Assert:
+                expect(animatedMovie.invalidityState.size).toBe(2); // One entry for each invalid property.
+                expect(animatedMovie.invalidityState.has("title")).toBe(true);
+                expect(animatedMovie.invalidityState.has("animationStyle")).toBe(true);
+
+                // Verify title error
+                const titleErrors = animatedMovie.invalidityState.get("title");
+                expect(titleErrors.length).toBe(1);
+                expect(titleErrors[0].message).toContain("at least 2 characters");
+
+                // Verify animationStyle error
+                const styleErrors = animatedMovie.invalidityState.get("animationStyle");
+                expect(styleErrors.length).toBe(1);
+                expect(styleErrors[0].message).toBe("Animation style must be either '2d' or '3d'.");
+            });
+        });
+    });
 });
