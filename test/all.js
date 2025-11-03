@@ -160,6 +160,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/geo/position" },
         { name: "spec/geo/rect" },
         { name: "spec/geo/size" },
+        { name: "spec/data/serialized-data-service.spec" },
     ])
     .then(
         function () {
