@@ -1113,7 +1113,7 @@ RawDataService.addClassProperties({
                 We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
                 We'll need to find a way to optimize down to a single lookup if we can
             */
-            if(mapping.needsRawDataTypeIdentificationCriteria) {
+            if (mapping?.needsRawDataTypeIdentificationCriteria) {
                 type = mapping.objectTypeForRawData(rawData);
             }
 
