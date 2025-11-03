@@ -34,7 +34,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         } else {
             location = this.dataModuleId;
             _require = require;
-            debugger;
         }
         
 
@@ -102,10 +101,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     let value = deserializer.getProperty("dataModuleId");
                     if (value) {
                         this.dataModuleId = value;
-                    }
-                    console.log("SerializedDatService.dataModuleId", this.dataModuleId);
-                    if (!this.dataModuleId) {
-                        debugger;
                     }
                 }
             }
