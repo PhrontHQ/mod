@@ -1,5 +1,5 @@
-var Montage = require("../../core/core").Montage;
-   //DataObject = require("./data-object").DataObject;
+const Montage = require("../../core/core").Montage,
+   DataObject = require("./data-object").DataObject;
 
 /**
  * An Identity represents an object that defined who is using the app.
@@ -9,7 +9,7 @@ var Montage = require("../../core/core").Montage;
  * @class
  * @extends external:DataObject
  */
-const Identity = exports.Identity = class Identity extends Montage /** @lends Identity */ {
+const Identity = exports.Identity = class Identity extends DataObject /** @lends Identity */ {
 
     static {
 
