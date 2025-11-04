@@ -51,6 +51,11 @@ async function idify(filename) {
 
     // Iterate over all top-level keys in the JSON object
     for (const key of Object.keys(data)) {
+        // Skip the 'root' object
+        if (key === "root") {
+            continue;
+        }
+
         const obj = data[key];
 
         // Check for an identifier under 'obj.values'
@@ -62,6 +67,8 @@ async function idify(filename) {
                 console.log(`  -  ✅  Added identifier to "${key}": ${newId}\n`);
                 modified = true;
             }
+        } else {
+            console.log(`  -  ℹ️  Skipping "${key}" (no 'values' property found).\n`);
         }
     }
 
