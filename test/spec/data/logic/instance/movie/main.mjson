@@ -1,0 +1,24 @@
+{
+    "root": {
+        "value": [
+            {"@": "toyStory"},
+            {"@": "theShining"}
+        ]
+    },
+
+    "toyStory": {
+        "prototype": "spec/data/logic/model/movie",
+        "values": {
+            "title": "Toy Story",
+            "releaseDate": "11/22/1995"
+        }
+    },
+
+    "theShining": {
+        "prototype": "spec/data/logic/model/movie",
+        "values": {
+            "title": "The Shining",
+            "releaseDate": "05/23/1980"
+        }
+    }
+}

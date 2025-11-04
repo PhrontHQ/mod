@@ -1,5 +1,6 @@
 const RawDataService = require("../raw-data-service").RawDataService,
-    { DataObject } = require("../../model/data-object");
+    { DataObject } = require("../../model/data-object"),
+    { KebabCaseConverter } = require("core/converter/kebab-case-converter");
 
 /**
  * @class SerializedDataService
@@ -8,7 +9,7 @@ const RawDataService = require("../raw-data-service").RawDataService,
 exports.SerializedDataService = class SerializedDataService extends RawDataService {
     constructor() {
         super();
-        this.map = new Map();
+        this._typeToLocation = new Map();
     }
 
     // FIXME: this method is temporary, for testing purposes only
@@ -17,10 +18,15 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             throw new Error("Both location and require must be provided");
         }
 
-        this.map.set(dataType, {
+        this._typeToLocation.set(dataType, {
             location,
             require,
         });
+    }
+
+    _kebabTypeName(typeName) {
+        this._typeNameConverter = this._typeNameConverter || new KebabCaseConverter();
+        return this._typeNameConverter.convert(typeName);
     }
 
     handleReadOperation(readOperation) {
@@ -29,20 +35,27 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         if (!this.handlesType(readOperation.target)) return;
 
         let location, _require;
-        if (this.map.has(readOperation.target)) {
-            location = this.map.get(readOperation.target).location;
-            _require = this.map.get(readOperation.target).require;
-        } else {
-            location = this.dataModuleId;
-            _require = global.require;
-        }
+        if (this._typeToLocation.has(readOperation.target)) {
+            location = this._typeToLocation.get(readOperation.target);
+            if (location.location) {
+                _require = location.require;
+                location = location.location
+            }
+        } 
         
+        if (!_require) {
+            _require = global.require;  
+        }
 
+        if (!location) {
+            location = `data/instance/${this._kebabTypeName(readOperation.target.name)}/main.mjson`; 
+        }
+
+
+        //TODO Update to look in data/instance/<typename>/main.mjson if a location is not provided
         if (!location || !_require) {
             throw new Error(`No location or require registered for type ${readOperation.target.name}`);
         }
-
-        console.log("SerializedDataService.handleReadOperation");
 
         return _require
             .async(location)
@@ -60,7 +73,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 if (rawData[0] instanceof DataObject) {
                     rawData.forEach((object) => {
-                        this.mergeDataObject(object);
+                        this.rootService.mergeDataObject(object);
                     });
                 }
 
@@ -98,7 +111,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 value: "./data.mjson"
             },
 
-            dataModuleId: {
+            moduleId: {
                 value: undefined
             },
 
@@ -106,11 +119,26 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 value: function (deserializer) {
                     RawDataService.prototype.deserializeSelf.call(this, deserializer);
 
-                    //TODO Support providing dataModuleIds as a map to support multiple types
-                    let value = deserializer.getProperty("dataModuleId");
+                    let value = deserializer.getProperty("instances");
                     if (value) {
-                        this.dataModuleId = value;
+                        this._mapDataModuleIds(value);
                     }
+                }
+            },
+
+            _mapDataModuleIds: {
+                value: function (instances) {
+                    console.log("Map Instances", instances);
+                    instances.forEach((item) => {
+                        if (!item.type || !item.moduleId) {
+                            console.warn("type and moduleId are required to register data in SerializedDataService");
+                            return;
+                        }
+                        if (!this.handlesType(item)) {
+                            console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
+                        }
+                        this._typeToLocation.set(item.type, item.moduleId);
+                    });
                 }
             }
 
