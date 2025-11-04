@@ -5,6 +5,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     uuid = require("core/uuid"),
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
+    { DataObject } = require("../../model/data-object"),
     DataOperation = require("../data-operation").DataOperation;
 
 
@@ -1216,6 +1217,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     Choosing to stop right there for now.
                 */
                 readCompletedOperation.referrer.stopImmediatePropagation();
+
+                if (readCompletedOperation.data[0] instanceof DataObject) {
+                    return Promise.resolve(readCompletedOperation.data);
+                } else {
+                    return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
+                }
 
                 return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
             } else if(readCompletedOperation.rawDataService === this.destinationDataService) {

@@ -33,7 +33,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             _require = this.map.get(readOperation.target).require;
         } else {
             location = this.dataModuleId;
-            _require = require;
+            _require = global.require;
         }
         
 
