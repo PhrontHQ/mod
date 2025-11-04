@@ -1218,13 +1218,14 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 */
                 readCompletedOperation.referrer.stopImmediatePropagation();
 
+
+                //TODO Move this logic into _saveOriginReadCompletedOperationDataToDestinationDataService -> _syncObjectDescriptorRawDataFromReadCompletedOperation
                 if (readCompletedOperation.data[0] instanceof DataObject) {
                     return Promise.resolve(readCompletedOperation.data);
                 } else {
                     return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
                 }
 
-                return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
             } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
                 //TODO: cleanup that logic regarding the next block bellow
                 /*

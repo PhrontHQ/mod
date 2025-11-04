@@ -98,6 +98,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             deserializeSelf: {
                 value: function (deserializer) {
                     RawDataService.prototype.deserializeSelf.call(this, deserializer);
+
+                    //TODO Support providing dataModuleIds as a map to support multiple types
                     let value = deserializer.getProperty("dataModuleId");
                     if (value) {
                         this.dataModuleId = value;
