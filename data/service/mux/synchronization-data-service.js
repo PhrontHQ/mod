@@ -1221,6 +1221,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 //TODO Move this logic into _saveOriginReadCompletedOperationDataToDestinationDataService -> _syncObjectDescriptorRawDataFromReadCompletedOperation
                 if (readCompletedOperation.data[0] instanceof DataObject) {
+                    let responseOperation = this.destinationDataService.responseOperationForReadOperation(readCompletedOperation.referrer, null, readCompletedOperation.data[0], false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
+                    responseOperation.target.dispatchEvent(responseOperation);
                     return Promise.resolve(readCompletedOperation.data);
                 } else {
                     return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
