@@ -1,4 +1,5 @@
-const RawDataService = require("../raw-data-service").RawDataService;
+const RawDataService = require("../raw-data-service").RawDataService,
+    { DataObject } = require("../../model/data-object");
 
 /**
  * @class SerializedDataService
@@ -55,6 +56,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 if (criteria) {
                     rawData = module.montageObject.filter(criteria.predicateFunction);
+                }
+
+                if (rawData[0] instanceof DataObject) {
+                    rawData.forEach((object) => {
+                        this.mergeDataObject(object);
+                    });
                 }
 
                 return this._finalizeHandleReadOperation(readOperation, rawData);
