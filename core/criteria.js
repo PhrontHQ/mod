@@ -995,12 +995,29 @@ var Criteria = (exports.Criteria = Montage.specialize(
             },
         },
 
+        _circularJSONReplacer: {
+            value: function _circularJSONReplacer() {
+                const seen = new WeakSet(); 
+                return (key, value) => {
+                    if (typeof value === "object" && value !== null) {
+                    if (seen.has(value)) {
+                        // Circular reference found, discard key
+                        return; 
+                    }
+                    seen.add(value);
+                    }
+                    return value;
+                };
+            }
+        },
+
+
         /**
          * @function
          */
         toString: {
             value: function () {
-                return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters) : ""}`;
+                return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters, this._circularJSONReplacer) : ""}`;
             },
         },
     },
