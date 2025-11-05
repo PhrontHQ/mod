@@ -35,24 +35,25 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         if (!this.handlesType(readOperation.target)) return;
 
         let location, _require;
+
         if (this._typeToLocation.has(readOperation.target)) {
             location = this._typeToLocation.get(readOperation.target);
+
             if (location.location) {
                 _require = location.require;
-                location = location.location
+                location = location.location;
             }
-        } 
-        
+        }
+
         if (!_require) {
-            _require = global.require;  
+            _require = global.require;
         }
 
         if (!location) {
-            location = `data/instance/${this._kebabTypeName(readOperation.target.name)}/main.mjson`; 
+            location = `data/instance/${this._kebabTypeName(readOperation.target.name)}/main.mjson`;
         }
 
-
-        //TODO Update to look in data/instance/<typename>/main.mjson if a location is not provided
+        // TODO :Update to look in data/instance/<typename>/main.mjson if a location is not provided
         if (!location || !_require) {
             throw new Error(`No location or require registered for type ${readOperation.target.name}`);
         }
@@ -92,9 +93,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             rawData
         );
 
-        // @benoit:
-        // 1. why is this needed?
-        // 2. what is target here?
         responseOperation.target.dispatchEvent(responseOperation);
 
         // Resolve once dispatchEvent() is completed, including any pending progagationPromise.
@@ -104,15 +102,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
     static {
-
         RawDataService.defineProperties(SerializedDataService.prototype, {
-
             _defaultDataModuleId: {
-                value: "./data.mjson"
+                value: "./data.mjson",
             },
 
             moduleId: {
-                value: undefined
+                value: undefined,
             },
 
             deserializeSelf: {
@@ -120,29 +116,31 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     RawDataService.prototype.deserializeSelf.call(this, deserializer);
 
                     let value = deserializer.getProperty("instances");
+
                     if (value) {
                         this._mapDataModuleIds(value);
                     }
-                }
+                },
             },
 
             _mapDataModuleIds: {
                 value: function (instances) {
-                    console.log("Map Instances", instances);
                     instances.forEach((item) => {
                         if (!item.type || !item.moduleId) {
                             console.warn("type and moduleId are required to register data in SerializedDataService");
                             return;
                         }
+
+                        console.log(this);
+
                         if (!this.handlesType(item)) {
                             console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
                         }
+
                         this._typeToLocation.set(item.type, item.moduleId);
                     });
-                }
-            }
-
-        })
-
+                },
+            },
+        });
     }
 };
