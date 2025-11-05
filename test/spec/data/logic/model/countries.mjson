@@ -1,0 +1,71 @@
+{
+    "root": {
+        "value": [
+            {
+                "@": "US"
+            },
+            {
+                "@": "FR"
+            },
+            {
+                "@": "DE"
+            },
+            {
+                "@": "IT"
+            },
+            {
+                "@": "JP"
+            }
+        ]
+    },
+    "DE": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "identifier": "019a4966-4801-7aa8-999c-be10921f3a84",
+            "iso3166_1_alpha2Code": "DE",
+            "iso3166_1_alpha3Code": "DEU",
+            "name": "Germany",
+            "phoneCode": 49
+        }
+    },
+    "FR": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "identifier": "019a4966-4801-7c9b-8e2b-76c3c03458f2",
+            "iso3166_1_alpha2Code": "FR",
+            "iso3166_1_alpha3Code": "FRA",
+            "name": "France",
+            "phoneCode": 33
+        }
+    },
+    "IT": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "identifier": "019a4966-4801-7515-b9a9-d9685f755f94",
+            "iso3166_1_alpha2Code": "IT",
+            "iso3166_1_alpha3Code": "ITA",
+            "name": "Italy",
+            "phoneCode": 39
+        }
+    },
+    "JP": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "identifier": "019a4966-4801-715d-add3-699fcb79540f",
+            "iso3166_1_alpha2Code": "JP",
+            "iso3166_1_alpha3Code": "JPN",
+            "name": "Japan",
+            "phoneCode": 81
+        }
+    },
+    "US": {
+        "prototype": "mod/data/model/country",
+        "values": {
+            "identifier": "019a4966-4801-7140-bcd0-fa8fce21b18c",
+            "iso3166_1_alpha2Code": "US",
+            "iso3166_1_alpha3Code": "USA",
+            "name": "United States",
+            "phoneCode": 1
+        }
+    }
+}

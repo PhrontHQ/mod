@@ -1,97 +1,135 @@
-const fs = require('fs'),
-    path = require("path"),
-    RawDataService = require("../raw-data-service").RawDataService,
-    DataOperation = require("../data-operation").DataOperation;
+const RawDataService = require("../raw-data-service").RawDataService,
+    { DataObject } = require("../../model/data-object"),
+    { KebabCaseConverter } = require("core/converter/kebab-case-converter");
 
 /**
-*
-* @class SerializedDataService
-* @extends RawDataService
-* 
-* 
-* 
-* Example of mergeDataObjects can be found here
-* 
-* 
-* 
-* 
-* 
-*/
-const SerializedDataService = exports.SerializedDataService = class SerializedDataService extends RawDataService {/** @lends SerializedDataService */
+ * @class SerializedDataService
+ * @extends RawDataService
+ */
+exports.SerializedDataService = class SerializedDataService extends RawDataService {
     constructor() {
         super();
-
-        return this;
-
+        this._typeToLocation = new Map();
     }
 
+    registerTypeForInstancesLocation(dataType, location) {
+        if (!location) {
+            throw new Error("Both location must be provided");
+        }
+
+        this._typeToLocation.set(dataType, location);
+    }
+
+    _kebabTypeName(typeName) {
+        this._typeNameConverter = this._typeNameConverter || new KebabCaseConverter();
+        return this._typeNameConverter.convert(typeName);
+    }
 
     handleReadOperation(readOperation) {
-        let readOperationCompletionPromise;
+        // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
+        // data operations, verify here whether this service should handle the operation.
+        if (!this.handlesType(readOperation.target)) return;
 
-        /*
-            This gives a chance to a delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
-            When that promise resolves, then we check if readOperation.defaultPrevented, if yes, the we don't handle it, otherwise we proceed.
+        let location, _require;
 
-            Wonky, WIP: needs to work without a delegate actually implementing it.
-            And a RawDataService shouldn't know about all that boilerplate
+        if (this._typeToLocation.has(readOperation.target)) {
+            location = this._typeToLocation.get(readOperation.target);
 
-            Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
-            it might be simpler, but probably a bit less efficient
+            if (location.location) {
+                _require = location.require;
+                location = location.location;
+            }
+        }
 
-        */
-        readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
-        if(readOperationCompletionPromise) {
-            readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
-                if(!readOperation.defaultPrevented) {
-                    this._handleReadOperation(readOperation);
+        if (!_require) {
+            _require = global.require;
+        }
+
+        if (!location) {
+            location = `data/instance/${this._kebabTypeName(readOperation.target.name)}/main.mjson`;
+        }
+
+        return _require
+            .async(location)
+            .then((module) => {
+                if (!module || !module.montageObject) {
+                    throw new Error("Module not found or invalid module format: " + location);
                 }
+
+                let { montageObject: rawData } = module;
+                const { criteria } = readOperation;
+
+                if (criteria) {
+                    rawData = module.montageObject.filter(criteria.predicateFunction);
+                }
+
+                if (rawData[0] instanceof DataObject) {
+                    rawData.forEach((object) => {
+                        this.rootService.mergeDataObject(object);
+                    });
+                }
+
+                return this._finalizeHandleReadOperation(readOperation, rawData);
+            })
+            .catch((error) => {
+                console.error("Error loading serialized data:", error);
+                throw error;
             });
-        } else {
-            this._handleReadOperation(readOperation);
-        }
-
-        //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
-        //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
-        if(this.promisesReadCompletionOperation) {
-            return readOperationCompletionPromise;
-        }
-
     }
 
-    _handleReadOperation(readOperation) {
+    _finalizeHandleReadOperation(readOperation, rawData, readOperationCompletionPromiseResolve) {
+        const responseOperation = this.responseOperationForReadOperation(
+            readOperation.referrer ? readOperation.referrer : readOperation,
+            null,
+            rawData
+        );
 
-        /*
-            Until we solve more efficiently (lazily) how RawDataServices listen for and receive data operations, we have to check wether we're the one to deal with this:
-        */
-        if(!this.handlesType(readOperation.target)) { 
-            return;
-        }
-
-        let readOperationCompletionPromiseResolvers,
-            readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject;
-
-
-        if(this.promisesReadCompletionOperation) {
-            readOperationCompletionPromiseResolvers = Promise.withResolvers();
-            readOperationCompletionPromise = readOperationCompletionPromiseResolvers.promise;
-            readOperationCompletionPromiseResolve = readOperationCompletionPromiseResolvers.resolve;
-            readOperationCompletionPromiseReject = readOperationCompletionPromiseResolvers.reject;
-        } else {
-            readOperationCompletionPromise = readOperationCompletionPromiseResolve = readOperationCompletionPromiseReject = undefined;
-        }
-
-        let rawData;
-
-        let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
         responseOperation.target.dispatchEvent(responseOperation);
 
-        //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+        // Resolve once dispatchEvent() is completed, including any pending progagationPromise.
         responseOperation.propagationPromise.then(() => {
             readOperationCompletionPromiseResolve?.(responseOperation);
         });
-
-
     }
 
-}
+    static {
+        RawDataService.defineProperties(SerializedDataService.prototype, {
+            _defaultDataModuleId: {
+                value: "./data.mjson",
+            },
+
+            moduleId: {
+                value: undefined,
+            },
+
+            deserializeSelf: {
+                value: function (deserializer) {
+                    RawDataService.prototype.deserializeSelf.call(this, deserializer);
+
+                    let value = deserializer.getProperty("instances");
+
+                    if (value) {
+                        this._mapDataModuleIds(value);
+                    }
+                },
+            },
+
+            _mapDataModuleIds: {
+                value: function (instances) {
+                    instances.forEach((item) => {
+                        if (!item.type || !item.moduleId) {
+                            console.warn("type and moduleId are required to register data in SerializedDataService");
+                            return;
+                        }
+
+                        if (!this.handlesType(item.type)) {
+                            console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
+                        }
+
+                        this.registerTypeForInstancesLocation(item.type, item.moduleId);
+                    });
+                },
+            },
+        });
+    }
+};

@@ -24,6 +24,7 @@ var DataService = require("./data-service").DataService,
     uuid = require("../../core/uuid"),
     syntaxProperties = require("../../core/frb/syntax-properties"),
     //DataEvent = (require)("../model/data-event").DataEvent,
+    DataObject = require("../model/data-object").DataObject,
     DataQuery = require("../model/data-query").DataQuery;
 
 require("../../core/collections/shim-object");
@@ -1113,7 +1114,7 @@ RawDataService.addClassProperties({
                 We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
                 We'll need to find a way to optimize down to a single lookup if we can
             */
-            if(mapping.needsRawDataTypeIdentificationCriteria) {
+            if (mapping?.needsRawDataTypeIdentificationCriteria) {
                 type = mapping.objectTypeForRawData(rawData);
             }
 
@@ -3142,6 +3143,7 @@ RawDataService.addClassProperties({
                 //stream = DataService.mainService.registeredDataStreamForDataOperation(operation),
                 stream = this.contextForPendingDataOperation(operation),
                 // stream = this.referrerContextForDataOperation(operation),
+                isRawData = !(records[0] instanceof DataObject),
 
                 streamObjectDescriptor;
             // if(operation.type === DataOperation.Type.ReadCompletedOperation) {
@@ -3163,7 +3165,10 @@ RawDataService.addClassProperties({
                     We now could get readUpdate that are reads for readExpressions that are properties (with a valueDescriptor) of the ObjectDescriptor of the referrer. So we need to add a check that the obectDescriptor match, otherwise, it needs to be assigned to the right instance, or created in memory and mapping/converters will find it.
                 */
 
-                if (streamObjectDescriptor === objectDescriptor) {
+                if (!isRawData) {
+                    console.log("handleReadUpdateOperation.addData", operation.data);
+                    stream.addData(operation.data);
+                } else if (streamObjectDescriptor === objectDescriptor) {
                     if (records && records.length > 0) {
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);

@@ -1,0 +1,22 @@
+{
+    "root": {
+        "value": [
+            {"@": "kids"},
+            {"@": "horror"}
+        ]
+    },
+
+    "kids": {
+        "prototype": "logic/data/model/movie",
+        "values": {
+            "name": "Kids"
+        }
+    },
+
+    "horror": {
+        "prototype": "logic/data/model/movie",
+        "values": {
+            "name": "Horror"
+        }
+    }
+}
