@@ -133,7 +133,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                         console.log(this);
 
-                        if (!this.handlesType(item)) {
+                        if (!this.handlesType(item.type)) {
                             console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
                         }
 
