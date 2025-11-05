@@ -16,22 +16,14 @@ describe("SerializedDataService", () => {
     beforeEach(async () => {
         mainService = new DataService();
         serializedDataService = new SerializedDataService();
-
-        // @benoit: why this is needed?
         defaultEventManager.application.mainService = mainService;
 
         // Register some instances for testing
-        // @benoit: this is a temporary method, we should find a better way to do this I guess
-        // any idea how to spec that?
-        serializedDataService.registerInstancesForType(Country, {
-            location: "spec/data/logic/model/countries.mjson",
-            require,
-        });
-
-        serializedDataService.registerInstancesForType(MovieDescriptor, {
-            location: "spec/data/logic/instance/movie/main.mjson",
-            require,
-        });
+        serializedDataService.registerTypeForInstancesLocation(Country, "spec/data/logic/model/countries.mjson");
+        serializedDataService.registerTypeForInstancesLocation(
+            MovieDescriptor,
+            "spec/data/logic/instance/movie/main.mjson"
+        );
 
         await mainService.registerChildService(serializedDataService, [Country, MovieDescriptor]);
 
@@ -45,56 +37,57 @@ describe("SerializedDataService", () => {
         // Cleanup code after each test
     });
 
-    it ("can deserialize instances for multiple types", (done) => {
+    it("can deserialize instances for multiple types", (done) => {
         let deserializer = new Deserializer(),
             serialization = {
-                    "root": {
-                        "prototype": "mod/data/service/serialized-data-service.mod",
-                        "values": {
-                            "identifier": "FooBarDataService",
-                            "name": "FooBarDataService",
-                            "exportName": "SerializedDataService",
-                            "types": [
-                                {"@": "CategoryDescriptor"},
-                                {"@": "MovieDescriptor"}
-                            ],
-                            "instances": [
-                                {
-                                    "type": {"@": "CategoryDescriptor"},
-                                    "moduleId": "spec/data/logic/instance/category/main.mjson"
-                                },
-                                {
-                                    "type": {"@": "MovieDescriptor"},
-                                    "moduleId": "spec/data/logic/instance/movie/main.mjson"
-                                }
-                            ]
-                        }
+                root: {
+                    prototype: "mod/data/service/serialized-data-service.mod",
+                    values: {
+                        identifier: "FooBarDataService",
+                        name: "FooBarDataService",
+                        exportName: "SerializedDataService",
+                        types: [{ "@": "CategoryDescriptor" }, { "@": "MovieDescriptor" }],
+                        instances: [
+                            {
+                                type: { "@": "CategoryDescriptor" },
+                                moduleId: "spec/data/logic/instance/category/main.mjson",
+                            },
+                            {
+                                type: { "@": "MovieDescriptor" },
+                                moduleId: "spec/data/logic/instance/movie/main.mjson",
+                            },
+                        ],
                     },
-
-                    "CategoryDescriptor": {
-                        "object": "spec/data/logic/model/category.mjson"
-                    },
-
-                    "MovieDescriptor": {
-                        "object": "spec/data/logic/model/movie.mjson"
-                    }
                 },
-                serializationString = JSON.stringify(serialization);
 
-            deserializer.init(
-                serializationString, require);
+                CategoryDescriptor: {
+                    object: "spec/data/logic/model/category.mjson",
+                },
 
-            deserializer.deserializeObject().then(function (root) {
+                MovieDescriptor: {
+                    object: "spec/data/logic/model/movie.mjson",
+                },
+            },
+            serializationString = JSON.stringify(serialization);
+
+        deserializer.init(serializationString, require);
+
+        deserializer
+            .deserializeObject()
+            .then(function (root) {
                 expect(Object.getPrototypeOf(root)).toBe(SerializedDataService.prototype);
                 expect(root._typeToLocation.size).toBe(2);
-                expect(root._typeToLocation.get(CategoryDescriptor)).toBe("spec/data/logic/instance/category/main.mjson")
-                expect(root._typeToLocation.get(MovieDescriptor)).toBe("spec/data/logic/instance/movie/main.mjson")
-            }).catch(function(reason) {
+                expect(root._typeToLocation.get(CategoryDescriptor)).toBe(
+                    "spec/data/logic/instance/category/main.mjson"
+                );
+                expect(root._typeToLocation.get(MovieDescriptor)).toBe("spec/data/logic/instance/movie/main.mjson");
+            })
+            .catch(function (reason) {
                 fail(reason);
-            }).finally(function () {
+            })
+            .finally(function () {
                 done();
             });
-
     });
 
     it("should handle read operations", async () => {
@@ -108,9 +101,6 @@ describe("SerializedDataService", () => {
 
         // Assert
         expect(movies.length).toBe(2);
-
-        // @benoit: Any idea?
-        // WARNING: recordDataIdentifierForObject when one already exists:{"_modificationDate":"2025-11-03T11:13:51.237Z","_creationDate":"2025-11-03T11:13:51.237Z"}
     });
 
     it("should handle read operations with criteria", async () => {

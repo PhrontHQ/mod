@@ -12,16 +12,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         this._typeToLocation = new Map();
     }
 
-    // FIXME: this method is temporary, for testing purposes only
-    registerInstancesForType(dataType, { location, require }) {
-        if (!location || !require) {
-            throw new Error("Both location and require must be provided");
+    registerTypeForInstancesLocation(dataType, location) {
+        if (!location) {
+            throw new Error("Both location must be provided");
         }
 
-        this._typeToLocation.set(dataType, {
-            location,
-            require,
-        });
+        this._typeToLocation.set(dataType, location);
     }
 
     _kebabTypeName(typeName) {
@@ -130,7 +126,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
                         }
 
-                        this._typeToLocation.set(item.type, item.moduleId);
+                        this.registerTypeForInstancesLocation(item.type, item.moduleId);
                     });
                 },
             },
