@@ -131,8 +131,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             return;
                         }
 
-                        console.log(this);
-
                         if (!this.handlesType(item.type)) {
                             console.warn(`type ${item.type.name} is not handled by this SerializedDataService`);
                         }
