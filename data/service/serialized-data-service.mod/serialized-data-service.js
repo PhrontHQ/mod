@@ -53,11 +53,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             location = `data/instance/${this._kebabTypeName(readOperation.target.name)}/main.mjson`;
         }
 
-        // TODO :Update to look in data/instance/<typename>/main.mjson if a location is not provided
-        if (!location || !_require) {
-            throw new Error(`No location or require registered for type ${readOperation.target.name}`);
-        }
-
         return _require
             .async(location)
             .then((module) => {
