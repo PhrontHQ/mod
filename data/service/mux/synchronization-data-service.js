@@ -893,6 +893,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             if( rawData[i]) {
                 console.log("<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
+                //TODO Test if rawData[i] is already a mapped object and, if so, set iMappingResult to Promise.resolve(rawData[i])
+                // WARNING: We might need to add logic inside _syncObjectDescriptorRawDataFromReadCompletedOperation
                 iMappingResult = this._syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData[i], readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, previousMappingResult, /*registerMappedPropertiesAsChanged*/ true);
 
                 if(serializeMapping) {
@@ -1060,6 +1062,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         //Ideally we shouldn't have that, remove the noise
          if(readCompletedOperation.rawDataService === this) return;
 
+         // If the rawDataService isn't one of our originDataServices, the sync service is not responsible 
+         // for saving the data. Therefore, we exit.
+         // 
+         if (!this.originDataServices.has(readCompletedOperation.rawDataService)) return;
+
 
         if(readCompletedOperation.referrer?.criteria?.name === 'originDataSnapshotLookUp') {
             /*
@@ -1220,13 +1227,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
                 //TODO Move this logic into _saveOriginReadCompletedOperationDataToDestinationDataService -> _syncObjectDescriptorRawDataFromReadCompletedOperation
-                if (readCompletedOperation.data[0] instanceof DataObject) {
-                    let responseOperation = this.destinationDataService.responseOperationForReadOperation(readCompletedOperation.referrer, null, readCompletedOperation.data[0], false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
-                    responseOperation.target.dispatchEvent(responseOperation);
-                    return Promise.resolve(readCompletedOperation.data);
-                } else {
+                // if (readCompletedOperation.data[0] instanceof DataObject) {
+                //     let responseOperation = this.destinationDataService.responseOperationForReadOperation(readCompletedOperation.referrer, null, readCompletedOperation.data, false /*isNotLast*/, readCompletedOperation.target/*responseOperationTarget*/);
+                //     responseOperation.target.dispatchEvent(responseOperation);
+                //     return Promise.resolve(readCompletedOperation.data);
+                // } else {
                     return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
-                }
+                // }
 
             } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
                 //TODO: cleanup that logic regarding the next block bellow
