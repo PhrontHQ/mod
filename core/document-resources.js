@@ -300,7 +300,7 @@ var DocumentResources = Montage.specialize({
     },
 
     automaticallyAddsCSSLayerToUnscoppedCSS: { 
-        value: false
+        value: true
     },
 
     handleEvent: {

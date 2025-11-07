@@ -4932,6 +4932,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
      */
     addStylesheetWithClassListScopeInCSSLayerName: {
         value: function (style, classListScope, cssLayerName) {
+            
             this._stylesheets.push(style);
             this._stylesheetsclassListScopes.push(classListScope ? `.${this._stylesheets.join.call(classListScope,".")}` : undefined);
             this._cssLayerNames.push(cssLayerName);
@@ -4941,9 +4942,24 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
     _addedStyleSheetsByTemplate: {
         value: null
     },
+
+    _addCssLayerOrder: {
+        value: function () {
+            let cssLayers = global.require.dependenciesMatchingPattern(/\.?mod/);
+                cssLayers.push(global.require.config.name),
+                styleElement = document.createElement('style');
+                styleElement.textContent = `@layer ${cssLayers.join(", ")};`; 
+
+            document.head.appendChild(styleElement);
+        }
+    },
     
     addStyleSheetsFromTemplate: {
         value: function(template, cssLayerName) {
+            if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._didDefineCSSLayerOrder) {
+                this._addCssLayerOrder();
+                this._didDefineCSSLayerOrder = true;
+            }
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
                     ownerDocument = this.element.ownerDocument,

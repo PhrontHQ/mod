@@ -413,6 +413,47 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         }
     }
 
+    function dependenciesMatchingPattern(config, patternRegExp) {
+        var packages = config.packageLock.packages,
+            dependencies = packages[""].dependencies,
+            dependees = {},
+            result = [],
+            dependency, packageName;
+
+        for (dependency in dependencies) {
+            if (patternRegExp.test(dependency)) {
+                packageName = NODE_MODULES_SLASH + dependency;
+                dependees[dependency] = dependees[dependency] || new Set([config.name]);
+                dependenciesMatchingPatternInPackage(config, dependency, packages[packageName], patternRegExp, dependees);
+            }
+        }
+
+        for (dependency in dependees) {
+            result.push({name: dependency, dependeeCount: dependees[dependency].size});
+        }
+        result.sort((a, b) => {
+            return b.dependeeCount - a.dependeeCount;
+        });
+        return result.map((item) => {
+            return item.name;
+        });
+    }
+
+    function dependenciesMatchingPatternInPackage(config, depPackageName, aPackage, patternRegExp, dependees) {
+        var packages = config.packageLock.packages,
+            dependencies = aPackage.dependencies,
+            dependency, packageName;
+        
+        for (dependency in dependencies) {
+            if (patternRegExp.test(dependency)) {
+                packageName = NODE_MODULES_SLASH + dependency;
+                dependenciesMatchingPatternInPackage(config, dependency, packages[packageName], patternRegExp, dependees);
+                dependees[dependency] = dependees[dependency] || new Set();
+                dependees[dependency].add(depPackageName);
+            }
+        }
+    }
+
     function configurePackage(location, description, parent) {
 
         if (!isRelativePattern.test(location)) {
@@ -1084,6 +1125,8 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
 
             require.read = config.read;
 
+            require.dependenciesMatchingPattern = dependenciesMatchingPattern.bind(require, config);
+
             return require;
         }
 
@@ -1217,6 +1260,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         return null;
     };
 
+
     /**
      * Try loading a package.json file. If the package.json cannot be read
      * at the given location, the next possible package location is tried
@@ -1307,7 +1351,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
             }
             var location = dependency.location;
             return !!loadedPackages[location];
-        };
+        }; 
 
         config.getPackage = function (dependency) {
             dependency = normalizeDependency(dependency, config);
@@ -1368,6 +1412,8 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
                 });
             }
         }
+
+
         if (typeof pkg.then === "function") {
             pkg = pkg.then(function (pkg) {
                 pkg.registry = registry;
