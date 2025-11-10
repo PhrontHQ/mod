@@ -436,23 +436,26 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
     }
 
     function modDependencies(config) {
-        let result = [],
-            context = {
+        let context = {
                 dependees: {},
                 dependencyByDependeeCount: [null]
             },
-            rootPackage = config.packageLock.packages[""],
-            dependencies = rootPackage.dependencies;
+            rootPackage = config.packageLock.packages[""];
 
         modDependenciesForPackage(config, rootPackage, rootPackage.name, context, 1)
 
+        return dependenciesInOrderOfDependeeCount(context);
+    }
+
+    function dependenciesInOrderOfDependeeCount(context) {
+        let result = [],
+            dependencies;
         for (let i = context.dependencyByDependeeCount.length - 1; i >= 0; i--) {
             dependencies = context.dependencyByDependeeCount[i];
             if (dependencies && dependencies.size) {
                 result.push(...dependencies);
             }
         }
-
         return result;
     }
 
