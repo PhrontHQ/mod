@@ -4948,18 +4948,22 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
             let cssLayers = global.require.dependenciesMatchingPattern(/\.?mod/);
                 cssLayers.push(global.require.config.name),
                 styleElement = document.createElement('style');
-                styleElement.textContent = `@layer ${cssLayers.join(", ")};`; 
 
-            document.head.appendChild(styleElement);
+            styleElement.textContent = `@layer ${cssLayers.map((layer) => {
+                return layer.replace(".", "_");
+            }).join(", ")};`; 
+
+            document.head.firstChild.before(styleElement);
+            return styleElement;
         }
     },
     
     addStyleSheetsFromTemplate: {
         value: function(template, cssLayerName) {
-            if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._didDefineCSSLayerOrder) {
-                this._addCssLayerOrder();
-                this._didDefineCSSLayerOrder = true;
+            if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._cssLayerOrderElement) {
+                this._cssLayerOrderElement = this._addCssLayerOrder();
             }
+            cssLayerName = cssLayerName.replace(".", "_");
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
                     ownerDocument = this.element.ownerDocument,
@@ -5009,8 +5013,14 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift(), cssLayerNames.shift());
             }
 
-            documentHead.insertBefore(bufferDocumentFragment, documentHead.firstChild);
-
+            /*
+                Add all stylesheets after the CSS layer statement in the DOM to ensure the 
+                order defined in the statement is honored.
+            */
+            if (documentHead.firstChild === this._cssLayerOrderElement) {
+                documentHead.firstChild.after(bufferDocumentFragment);
+            }
+            
             this._needsStylesheetsDraw = false;
         }
     },
