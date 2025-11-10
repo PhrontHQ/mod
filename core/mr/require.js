@@ -413,45 +413,67 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         }
     }
 
-    function dependenciesMatchingPattern(config, patternRegExp) {
-        var packages = config.packageLock.packages,
-            dependencies = packages[""].dependencies,
-            dependees = {},
-            result = [],
-            dependency, packageName;
+    function addDependencyToContext(context, dependee, dependency) {
+        let dependees = context.dependees,
+            dependencyByDependeeCount = context.dependencyByDependeeCount,
+            count;
+        
+        if (!dependees[dependency]) {
+            dependees[dependency] = new Set();
+        }
+        dependees[dependency].add(dependee);
 
-        for (dependency in dependencies) {
-            if (patternRegExp.test(dependency)) {
-                packageName = NODE_MODULES_SLASH + dependency;
-                dependees[dependency] = dependees[dependency] || new Set([config.name]);
-                dependenciesMatchingPatternInPackage(config, dependency, packages[packageName], patternRegExp, dependees);
-            }
+        count = dependees[dependency].size;
+        if (dependencyByDependeeCount[count - 1]) {
+            dependencyByDependeeCount[count - 1].delete(dependency);
+        }
+        if (dependencyByDependeeCount.length === count) {
+            dependencyByDependeeCount.push(new Set());
         }
 
-        for (dependency in dependees) {
-            result.push({name: dependency, dependeeCount: dependees[dependency].size});
-        }
-        result.sort((a, b) => {
-            return b.dependeeCount - a.dependeeCount;
-        });
-        return result.map((item) => {
-            return item.name;
-        });
+        dependencyByDependeeCount[count].add(dependency);
+
     }
 
-    function dependenciesMatchingPatternInPackage(config, depPackageName, aPackage, patternRegExp, dependees) {
-        var packages = config.packageLock.packages,
-            dependencies = aPackage.dependencies,
-            dependency, packageName;
-        
-        for (dependency in dependencies) {
-            if (patternRegExp.test(dependency)) {
-                packageName = NODE_MODULES_SLASH + dependency;
-                dependenciesMatchingPatternInPackage(config, dependency, packages[packageName], patternRegExp, dependees);
-                dependees[dependency] = dependees[dependency] || new Set();
-                dependees[dependency].add(depPackageName);
+    function modDependencies(config) {
+        let result = [],
+            context = {
+                dependees: {},
+                dependencyByDependeeCount: [null]
+            },
+            rootPackage = config.packageLock.packages[""],
+            dependencies = rootPackage.dependencies;
+
+        modDependenciesForPackage(config, rootPackage, rootPackage.name, context, 1)
+
+        for (let i = context.dependencyByDependeeCount.length - 1; i >= 0; i--) {
+            dependencies = context.dependencyByDependeeCount[i];
+            if (dependencies && dependencies.size) {
+                result.push(...dependencies);
             }
         }
+
+        return result;
+    }
+
+    function modDependenciesForPackage(config, aPackage, packageName, context, depth) {
+        var packages = config.packageLock.packages,
+            dependencies = aPackage.dependencies,
+            dependency, depPackage, packageName,
+            packageLockKey;
+
+        for (dependency in dependencies) {
+                packageLockKey = NODE_MODULES_SLASH + dependency;
+                depPackage = packages[packageLockKey];
+                    
+            if (dependency === "mod") {
+                addDependencyToContext(context, packageName, dependency);
+            } else if (depPackage.dependencies && depPackage.dependencies.mod) {
+                addDependencyToContext(context, packageName, dependency);
+                modDependenciesForPackage(config, depPackage, dependency, context, depth + 1);
+            }
+        }
+
     }
 
     function configurePackage(location, description, parent) {
@@ -1125,7 +1147,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
 
             require.read = config.read;
 
-            require.dependenciesMatchingPattern = dependenciesMatchingPattern.bind(require, config);
+            require.modDependencies = modDependencies.bind(require, config);
 
             return require;
         }

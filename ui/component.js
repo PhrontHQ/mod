@@ -4945,7 +4945,7 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
 
     _addCssLayerOrder: {
         value: function () {
-            let cssLayers = global.require.dependenciesMatchingPattern(/\.?mod/);
+            let cssLayers = global.require.modDependencies();
                 cssLayers.push(global.require.config.name),
                 styleElement = document.createElement('style');
 
