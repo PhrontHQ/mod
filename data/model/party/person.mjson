@@ -5,15 +5,31 @@
             "name": "Person",
             "description": "This should be a subclass of Being, itself a subclass of Party, when the time comes it's needed to deal with animals for example",
             "propertyDescriptors": [
-                {"@": "name"},
-                {"@": "gender"},
-                {"@": "aliases"},
-                {"@": "preferredLocales"},
-                {"@": "tags"},
-                {"@": "userIdentities"},
-                {"@": "signatures"},
-                {"@": "educationExperiences"}
-           ],
+                {
+                    "@": "name"
+                },
+                {
+                    "@": "gender"
+                },
+                {
+                    "@": "aliases"
+                },
+                {
+                    "@": "preferredLocales"
+                },
+                {
+                    "@": "tags"
+                },
+                {
+                    "@": "userIdentities"
+                },
+                {
+                    "@": "signatures"
+                },
+                {
+                    "@": "educationExperiences"
+                }
+            ],
             "objectDescriptorModule": {
                 "%": "./person.mjson"
             },
@@ -21,7 +37,9 @@
             "module": {
                 "%": "./person"
             },
-            "parent":{"@": "BeingDescriptor"},
+            "parent": {
+                "@": "BeingDescriptor"
+            },
             "userInterfaceDescriptorModules": {
                 "*": {
                     "%": "./person-ui-descriptor.mjson"
@@ -33,7 +51,6 @@
                     "%": "./person-cascading-list-ui-descriptor.mjson"
                 }
             }
-
         }
     },
     "BeingDescriptor": {
@@ -44,7 +61,9 @@
         "values": {
             "name": "name",
             "cardinality": 1,
-            "valueDescriptor": {"@": "PersonNameDescriptor"}
+            "valueDescriptor": {
+                "@": "PersonNameDescriptor"
+            }
         }
     },
     "PersonNameDescriptor": {
@@ -55,22 +74,24 @@
         "values": {
             "name": "gender",
             "cardinality": 1,
-            "valueDescriptor": {"@": "gender_descriptor"}
+            "valueDescriptor": {
+                "@": "gender_descriptor"
+            }
         }
     },
     "gender_descriptor": {
         "object": "./gender.mjson"
     },
-
     "aliases": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "aliases",
             "cardinality": -1,
-            "valueDescriptor": {"@": "PersonNameDescriptor"}
+            "valueDescriptor": {
+                "@": "PersonNameDescriptor"
+            }
         }
     },
-
     "preferredLocales": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -79,14 +100,13 @@
             "valueType": "array"
         }
     },
-
     "tags": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "tags",
             "valueType": "string",
             "cardinality": -1
-       }
+        }
     },
     "userIdentities": {
         "prototype": "core/meta/property-descriptor",
@@ -94,18 +114,18 @@
             "name": "userIdentities",
             "valueType": "object",
             "cardinality": -1,
-            "valueDescriptor": {"@": "userIdentity_descriptor"},
-            "inversePropertyName": "person"
-       }
+            "valueDescriptor": {
+                "@": "userIdentity_descriptor"
+            },
+            "inversePropertyName": "user"
+        }
     },
     "userIdentity_descriptor": {
         "object": "../app/user-identity.mjson"
     },
-
     "PersonSignatureDescriptor": {
         "object": "./person-signature.mjson"
     },
-
     "signatures": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -113,14 +133,14 @@
             "valueType": "object",
             "cardinality": -1,
             "inversePropertyName": "person",
-            "valueDescriptor": {"@": "PersonSignatureDescriptor"}
-       }
+            "valueDescriptor": {
+                "@": "PersonSignatureDescriptor"
+            }
+        }
     },
-
     "EducationExperienceDescriptor": {
         "object": "./education/education-experience.mjson"
     },
-
     "educationExperiences": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -128,8 +148,9 @@
             "valueType": "object",
             "cardinality": -1,
             "inversePropertyName": "person",
-            "valueDescriptor": {"@": "EducationExperienceDescriptor"}
-       }
+            "valueDescriptor": {
+                "@": "EducationExperienceDescriptor"
+            }
+        }
     }
-
 }
