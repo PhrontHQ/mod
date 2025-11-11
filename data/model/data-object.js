@@ -270,6 +270,10 @@ exports.DataObject = class DataObject extends Target {
         }
     }
 
+    clone() {
+        return this;
+    }
+
     /**
      * This class methods are polymorphic, which poses a problem.
      * Object needs to receive create events from Object instances and all instances inheriting from Object.
