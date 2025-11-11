@@ -40,6 +40,22 @@ if((global.Map !== void 0) && (typeof global.Set.prototype.values === "function"
         enumerable: false
     });
 
+    /**
+     * Sserialize a Map object
+     * @param {Deserializer} serializer The Serializer building out the serialization
+     * @function external:Map.serializeSelf
+    */
+    Object.defineProperty(Map.prototype, "one", {
+        value: function () {
+            if (this.size > 0) {
+                return this.values().next().value;
+            }
+            return undefined;
+        },
+        writable: true,
+        configurable: true,
+        enumerable: false
+    });
 
     Map.prototype.constructClone = function (values) {
         return new this.constructor(values);
