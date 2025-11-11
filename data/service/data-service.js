@@ -5984,8 +5984,10 @@ DataService.addClassProperties(
                     ? key === ""
                         ? JSON.stringify(value, this._criteriaParametersReplacer)
                         : value?.dataIdentifier
-                        ? value.dataIdentifier
-                        : value.toString()
+                            ? value.dataIdentifier
+                            : !!value
+                                ? value.toString()
+                                : null
                     : Array.isArray(value)
                     ? value.map(this._criteriaParametersReplacer)
                     : value;
@@ -6342,12 +6344,10 @@ DataService.addClassProperties(
                                     readOperation.hints = query.hints;
                                 }
 
-                                /*
-
+                    /*
                         this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
                         phront-service does it, but we need to stop doing it half way there and the other half over there.
                         SaveChanges is cleaner, but the job is also easier there.
-
                     */
                                 let criteria = query.criteria,
                                     parameters = criteria ? criteria.parameters : undefined;

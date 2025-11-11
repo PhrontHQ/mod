@@ -731,6 +731,16 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
     },
 
     /**
+     * an accessToken instance representing the approved access 
+     * for the data operation's identity to perform this data operation
+     *
+     * @type {Object}
+     */
+    accessToken: {
+        value: undefined
+    },
+
+    /**
      * The session in which the data operation exists
      *
      * @type {Object}

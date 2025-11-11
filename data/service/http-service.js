@@ -2,7 +2,8 @@ const { identity } = require("../../core/collections/shim-function");
 
 const RawDataService = require("./raw-data-service").RawDataService,
     AuthenticationPolicy = require("./authentication-policy").AuthenticationPolicy,
-    Identity = require("../model/identity").Identity,
+    //FIXME: user-identity needs to move to data/model/authentication
+    UserIdentity = require("../model/app/user-identity").UserIdentity,
     DataQuery = require("../model/data-query").DataQuery,
     Criteria = require("../../core/criteria").Criteria,
     Enumeration = require("../model/enumeration").Enumeration,
@@ -143,10 +144,11 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         
         var objectDescriptor = readOperation.target,
             mapping = objectDescriptor && this.mappingForObjectDescriptor(objectDescriptor),
-            authenticationPromise, 
+            accessTokenPromise, 
             responseOperation,
             readOperationCompletionPromiseResolvers,
-            readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject;
+            readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject,
+            readOperationAccessToken;
 
 
         if(this.promisesReadCompletionOperation) {
@@ -163,22 +165,43 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
             /*
                 An HTTP Service typically needs an identity to get some kind of access token.
-                If it's meant to use a user's identity, it shouldn't have one set on it, nor an 
+                If it's meant to use a user's identity, an HTTP Service shouldn't have a UserIdentity assigned sen it, nor an 
                 identity query.
                 
-                It's more likey for a data service being executed in a Worker to have it's own client identity. 
+                It's more likey for a data service being executed in a Worker to have it's own client identity
             */
 
             /*
                 Wether one was assigned straight or already obtained via fetchIdentity()
             */
-            if(this.identity) {
-                identityPromise = Promise.resolve(this.identity);
-            }
-            else if(this.identityQuery) {
-                identityPromise = this.fetchIdentity();
-            } else {
+            if(this.identity || this.identityQuery) {
+                identityPromise = this.identityPromise;
+            } else if(readOperation.identity) {
                 identityPromise = Promise.resolve(readOperation.identity);
+            } else if(this.application.identity) {
+                identityPromise = Promise.resolve(this.application.identity);
+            } else {
+                /*
+                    Workareound: readOperation.identity is undefine right now, so we're defaulting to application.identity
+                    BUT #TODO: a user-mod / end-mod can evenually have multiple user identities from different identity providers
+                    So we'll need to redesign for that. A RawDataService will need to figure out, which one of those user identities
+                    the one it should use.
+
+                    Knowing about a RawDataService's organization behind it should help match it 
+                    to one of the existing identities's provider / oranization, if it's the same, but some API can accept
+                    identities from multiple providers, so we need to add to RawDataService the knowledge of 
+                    what kind of identities it can accept / work with:
+
+                    - a criteria or a list of criteria to evaluate on identities, such that if the evaluation returns true
+                    the identity can be used by the raw data service
+
+                */
+               let userIdentityQuery = DataQuery.withTypeAndCriteria(UserIdentity);
+
+               
+               identityPromise = this.mainService.fetchData(userIdentityQuery);
+
+                //identityPromise = Promise.resolve(readOperation.identity || this.application.identity);
             }
 
             
@@ -193,55 +216,92 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         //         console.debug("this.accessToken.remainingValidityDuration is "+ this.accessToken.remainingValidityDuration +" ms");
         //    }
 
-            if(this.identity || this.identityQuery) {
+            /*
+                TODO CLEANUP: for backend service, the identity is related to the service/backend itself
+                and we typically read it from a secret manager.
 
-            }
-            if(!this.accessToken || this.accessToken.remainingValidityDuration < 2000) {
+                With that identity / credentials, we typically get an access token, but it shouldn't be stored
+                on the RawDataService itself, instead we need to use 
+                    registerAccessTokenForIdentity/accessTokenForIdentity/unregisterAccessTokenForIdentity
+                to get it back as we work on operations
 
-                if(this.accessToken) {
+                That way we don't have a difference between those 2 use cases, they are one and the same 
+                For Backward compatibility, we should look
+            */
 
-                    console.debug("\t"+this.name+" renewing access token that is about to expire: "+this.accessToken.remainingValidityDuration+"ms left")
 
-                    //Clear the cache
-                    this.mainService.unregisterReadOnlyDataObject(this.accessToken);
-                    this.unregisterAccessTokenForIdentity(this.identity);
 
+            // console.debug("this.identity: ",this.identity);
+            accessTokenPromise = identityPromise.then((resolvedIdentity) => {
+
+
+                //Now that we have a resolvedIdentity, we can check if we have a registered accesss token
+                let registeredAccessToken = this.accessTokenForIdentity(resolvedIdentity);
+
+                if(!registeredAccessToken  || registeredAccessToken.remainingValidityDuration < 2000) {
+
+                    if(registeredAccessToken) {
+                        console.debug("\t"+this.name+" renewing access token that is about to expire: "+registeredAccessToken.remainingValidityDuration+"ms left")
+
+                        //Clear the cache
+                        this.mainService.unregisterReadOnlyDataObject(registeredAccessToken);
+                        this.unregisterAccessTokenForIdentity(resolvedIdentity);
+                    }
                 }
-                // console.debug("this.identity: ",this.identity);
-                authenticationPromise = identityPromise.then((result) => {
-                    let identityCriteria = new Criteria().initWithExpression("identity == $", this.identity),
-                        tokenDataQuery = DataQuery.withTypeAndCriteria(this.accessTokenDescriptor, identityCriteria),
+
+                return resolvedIdentity.objectDescriptor.propertyDescriptorNamed("accessTokens").valueDescriptor
+                .then((resolvedAccessTokenDescriptor) => {
+
+                    let accessTokenDescriptor = resolvedAccessTokenDescriptor ? resolvedAccessTokenDescriptor : this.accessTokenDescriptor;
+
+                    if(!registeredAccessToken && !accessTokenDescriptor) {
+
+                        throw "DataService "+this.identifier+" can't get an access token to handle readOperation " + readOperation
+
+                    } else {
+
+                        /*
+                            In the case where the identity is cached locally, and the access token is too. 
+
+                        */
+
+                        let identityCriteria = new Criteria().initWithExpression("identity == $", resolvedIdentity),
+                        tokenDataQuery = DataQuery.withTypeAndCriteria(accessTokenDescriptor, identityCriteria),
                         tokenQueryDataStream;
-        
-                    tokenDataQuery.identity = this.identity;
-                    tokenQueryDataStream = this.mainService.fetchData(tokenDataQuery);
             
-                    return tokenQueryDataStream.then((result) => {
-                        if(result && result.length === 1) {
-                            let accessToken = result[0];
-                            this.registerAccessTokenForIdentity(accessToken, this.identity);
+                        tokenDataQuery.identity = resolvedIdentity;
+                        tokenQueryDataStream = this.mainService.fetchData(tokenDataQuery);
+                
+                        return tokenQueryDataStream.then((result) => {
+                            if(result && result.length === 1) {
+                                let accessToken = result[0];
+                                this.registerAccessTokenForIdentity(accessToken, resolvedIdentity);
 
-                            return accessToken;
-                        } else {
-                            return null;
-                        }
-                    });
+                                //Now set them both on the operation:
+                                readOperation.identity = resolvedIdentity;
+                                readOperation.accessToken = accessToken;
 
-                })
-                .catch(error => {
-                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-                    console.error("Identity promise failed with error", error);
-                    return responseOperation;
+                                return accessToken;
+                            } else {
+                                return null;
+                            }
+                        });
+                    }
+
                 });
 
-            } else {
-                authenticationPromise = Promise.resolve(this.accessToken);
-            }
+            })
+            .catch(error => {
+                let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                console.error("Identity promise failed with error", error);
+                return responseOperation;
+            });
+
         } else {
-            authenticationPromise = Promise.resolve();
+            accessTokenPromise = Promise.resolve();
         }
 
-        authenticationPromise.then((accessToken) => {
+        accessTokenPromise.then((accessToken) => {
 
             //if(accessToken?.accessToken) console.debug("accessToken: ",accessToken.accessToken);
             // mapping = objectDescriptor && this.mappingForType(objectDescriptor),

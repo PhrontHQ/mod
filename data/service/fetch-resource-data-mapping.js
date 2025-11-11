@@ -362,26 +362,34 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
             We need to find the criteria that led us to the current response:
 
             fetchResponse -> fetchRequest -> criteria -> response mapping
-        */
 
+            If no criteria have been set. We'll act based on fetchResponse's type
+        */
+       if(this.fetchResponseRawDataMappingExpressionByCriteria) {
             let criteriaIterator = this.fetchResponseRawDataMappingExpressionByCriteria.keys(),
                 fetchResponseScope = this._scope.nest(fetchResponse),
                 iCriteria;
 
-        while ((iCriteria = criteriaIterator.next().value)) {
+            while ((iCriteria = criteriaIterator.next().value)) {
 
-            if(iCriteria.evaluate(fetchResponse)) {
-                //We have a match, we need to evaluate the rules to 
-                let fetchResponseRawDataMappingFunction = this.fetchResponseRawDataMappingFunctionForCriteria(iCriteria),
-                    result = fetchResponseRawDataMappingFunction(fetchResponseScope);
+                if(iCriteria.evaluate(fetchResponse)) {
+                    //We have a match, we need to evaluate the rules to 
+                    let fetchResponseRawDataMappingFunction = this.fetchResponseRawDataMappingFunctionForCriteria(iCriteria),
+                        result = fetchResponseRawDataMappingFunction(fetchResponseScope);
 
-                if(result) {
-                    Array.isArray(result) 
-                        ? rawData.push(...result)
-                        : rawData.push(result);
+                    if(result) {
+                        Array.isArray(result) 
+                            ? rawData.push(...result)
+                            : rawData.push(result);
+                    }
                 }
             }
-        }
+       } else if(Array.isArray(fetchResponse)) {
+            rawData.push(...result);
+       } else {
+            rawData.push(fetchResponse);
+       }
+
     }
 
     filterReadOperationRawData(readOperation, rawData) {

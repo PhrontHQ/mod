@@ -530,7 +530,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // let mapping = this.destinationDataService.mappingForObject(dataObject);
             let mapping = rawDataService.mappingForObject(dataObject);
 
-            readExpressions = Object.keys(mapping.objectMappingRules);
+            /*
+                This should't rely 
+            */
+            if(mapping?.objectMappingRules) {
+                readExpressions = Object.keys(mapping.objectMappingRules);
+            }
         }
 
         //We ask the fetching rawDataService to do the mapping
@@ -811,7 +816,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             /*
                 If rawData has an originDataSnapshot, which can be created by FetchResourceDataMapping, we use it
             */
-            originDataSnapshot[rawDataService.identifier] = rawData.originDataSnapshot ?? rawData;    
+            //FIXME WARNING - rawData can be much bigger than practical, and, we only use a portion of it
+            //So we need to only keep what we mapped... so we need to filter that.
+            //disabling for now as size created problems
+            originDataSnapshot[rawDataService.identifier] = {};    
+            //originDataSnapshot[rawDataService.identifier] = rawData.originDataSnapshot ?? rawData;    
         }
 
         if(this.delegate?.synchronizationDataServiceDidMapRawDataPropertiesToObjectFromDataOperation) {
@@ -1065,7 +1074,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
          // If the rawDataService isn't one of our originDataServices, the sync service is not responsible 
          // for saving the data. Therefore, we exit.
          // 
-         if (!this.originDataServices.has(readCompletedOperation.rawDataService)) return;
+        if (!this.originDataServices.has(readCompletedOperation.rawDataService) && readCompletedOperation.rawDataService !== this.destinationDataService) {
+            return;
+        }
 
 
         if(readCompletedOperation.referrer?.criteria?.name === 'originDataSnapshotLookUp') {
