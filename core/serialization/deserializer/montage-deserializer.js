@@ -70,11 +70,22 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
     __defaultInstances: {
         value: undefined
     },
+    _buildDefaultInstances: {
+        value: function() {
+            let defaultInstances = {
+                application: Montage.application
+            };
+            if(currentEnvironment.isBrowser) {
+                defaultInstances.window = window;
+            }
+
+            this.constructor.prototype.__defaultInstances = defaultInstances;
+            return defaultInstances;
+        }
+    },
     _defaultInstances: {
         get: function() {
-            return this.__defaultInstances || (this.__defaultInstances = {
-                application: Montage.application
-            });
+            return this.__defaultInstances || (this._buildDefaultInstances());
         }
     },
         /**
@@ -97,6 +108,8 @@ var MontageDeserializer = exports.MontageDeserializer = Montage.specialize({
                 instances = this._defaultInstances;
             } else if(!instances.application) {
                 instances.application = this._defaultInstances.application;
+            } else if(currentEnvironment.isBrowser && !instances.window) {
+                instances.window = window;
             }
 
             var context = this._module && MontageDeserializer.moduleContexts.get(this._module),
