@@ -7,7 +7,6 @@
                 {"@": "idToken"},
                 {"@": "idTokenClaims"},
                 {"@": "username"},
-                {"@": "username"},
                 {"@": "accessTokens"},
                 {"@": "password"},
                 {"@": "session"},
