@@ -97,7 +97,7 @@ const Identity = exports.Identity = class Identity extends DataObject /** @lends
     }
 
     deserializeSelf(deserializer) {
-        //super.deserializeSelf(deserializer);
+        super.deserializeSelf(deserializer);
 
         var result, value;
         value = deserializer.getProperty("applicationIdentifier");
@@ -118,7 +118,7 @@ const Identity = exports.Identity = class Identity extends DataObject /** @lends
     }
 
     serializeSelf(serializer) {
-        //super.serializeSelf(serializer);
+        super.serializeSelf(serializer);
 
         if(this.applicationIdentifier) {
             serializer.setProperty("applicationIdentifier", this.applicationIdentifier);
