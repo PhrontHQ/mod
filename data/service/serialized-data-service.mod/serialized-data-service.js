@@ -11,7 +11,37 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     constructor() {
         super();
         this._typeToLocation = new Map();
+        this._typeToManagedSubtypes = new Map();
         this._dataInstancesPromiseByObjectDescriptor = new Map();
+    }
+
+    deserializedFromSerialization(label) {
+        RawDataService.prototype.deserializedFromSerialization.call(this, label);
+        
+        this._childServiceRegistrationPromise.then(() => {
+            this._populateTypeToSubtypesMap();
+        });      
+    }
+
+    _populateTypeToSubtypesMap() {
+        if (this._typeToManagedSubtypes.size === 0) {
+            let typeSet = new Set(this.types);
+
+            this.types.forEach((type) => {
+                if (!type.descendantDescriptors) {
+                    return;
+                }
+                type.descendantDescriptors.forEach((descendant) => {
+                    if (!typeSet.has(descendant)) {
+                        return
+                    }
+                    if (!this._typeToManagedSubtypes.has(type)) {
+                        this._typeToManagedSubtypes.set(type, []);
+                    }
+                    this._typeToManagedSubtypes.get(type).push(descendant);
+                });
+            });
+        }
     }
 
     registerTypeForInstancesLocation(dataType, location) {
@@ -41,45 +71,68 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         let dataInstancesPromiseForObjectDescriptor = this._dataInstancesPromiseByObjectDescriptor.get(objectDescriptor);
         if(!dataInstancesPromiseForObjectDescriptor) {
-                let location, _require;
+                let subtypes = this._typeToManagedSubtypes.get(objectDescriptor),
+                    hierarchyInstancePromises;
 
-                if (this._typeToLocation.has(objectDescriptor)) {
-                    location = this._typeToLocation.get(objectDescriptor);
-
-                    if (location.location) {
-                        _require = location.require;
-                        location = location.location;
-                    }
-                }
-
-                if (!_require) {
-                    _require = global.require;
-                }
-
-                if (!location) {
-                    location = `data/instance/${this._kebabTypeName(objectDescriptor.name)}/main.mjson`;
-                }
-
-                dataInstancesPromiseForObjectDescriptor = _require
-                    .async(location)
-                    .then((module) => {
-                        if (!module || !module.montageObject) {
-                            throw new Error("Module not found or invalid module format: " + location);
-                        }
-
-                        let { montageObject: rawData } = module;
-
-                        return rawData;
-                    })
-                    .catch((error) => {
-                        console.error("Error loading serialized data:", error);
-                        throw error;
+                if (subtypes) {
+                    hierarchyInstancePromises = subtypes.map((subtype) => {
+                        return this.dataInstancesPromiseForObjectDescriptor(subtype);
                     });
+                    hierarchyInstancePromises.push(this._dataInstancesPromiseForObjectDescriptor(objectDescriptor));
+                    dataInstancesPromiseForObjectDescriptor = Promise.all(hierarchyInstancePromises).then((instances) => {
+                        return instances.reduce((result, subInstances) => {
+                            result.push.apply(result, subInstances);
+                            return result;
+                        }, []);
+                    });
+                } else {
+                    dataInstancesPromiseForObjectDescriptor = this._dataInstancesPromiseForObjectDescriptor(objectDescriptor);
+                }
 
                 this._dataInstancesPromiseByObjectDescriptor.set(objectDescriptor, dataInstancesPromiseForObjectDescriptor);
+                
         }
         return dataInstancesPromiseForObjectDescriptor;
     }
+
+    _dataInstancesPromiseForObjectDescriptor(objectDescriptor) {
+        let location, _require;
+
+        if (this._typeToLocation.has(objectDescriptor)) {
+            location = this._typeToLocation.get(objectDescriptor);
+
+            if (location.location) {
+                _require = location.require;
+                location = location.location;
+            }
+        }
+
+        if (!_require) {
+            _require = global.require;
+        }
+
+        if (!location) {
+            location = `data/instance/${this._kebabTypeName(objectDescriptor.name)}/main.mjson`;
+        }
+
+        return _require
+            .async(location)
+            .then((module) => {
+                if (!module || !module.montageObject) {
+                    throw new Error("Module not found or invalid module format: " + location);
+                }
+
+                let { montageObject: rawData } = module;
+
+                return rawData;
+            })
+            .catch((error) => {
+                console.error("Error loading serialized data:", error);
+                throw error;
+            });
+    }
+
+
 
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
@@ -107,7 +160,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             rawData[objectKeys[i]] = object[objectKeys[i]];
                         }
                     } else {
-                        let iPropertyValues =  object[objectKeys[i]];
+                        let iPropertyValues =  object[objectKeys[i]],
+                            oneValue;
 
                         if(iPropertyValues) {
                             //iPropertyValues is a collection, so we're going to use .one() to get a sample.
@@ -271,7 +325,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         // data operations, verify here whether this service should handle the operation.
         if (!this.handlesType(readOperation.target)) return;
 
-        let readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation)
+
+        //TJ If there is no delegate, callDelegateMethod returns null which throws an error. Do we need a null check or should we ALWAYS have a delegate?
+        let delegatePromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation) || Promise.resolve(readOperation);
+        delegatePromise
         .then((readOperation) => {
             /*
                 if readOperation.cancelable is true, then if readOperation.defaultPrevented is true, 
@@ -285,8 +342,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                         const { criteria, objectDescriptor: target } = readOperation,
                                 predicateFunction = criteria?.predicateFunction;
-                        let rawDataForObjectPromises = [],
-                            rawDataForObjectPromiseAll;
+                        let rawDataForObjectPromises = [];
 
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
@@ -338,6 +394,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
     static {
         RawDataService.defineProperties(SerializedDataService.prototype, {
+
             _defaultDataModuleId: {
                 value: "./data.mjson",
             },
