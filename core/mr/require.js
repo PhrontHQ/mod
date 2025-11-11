@@ -413,6 +413,72 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         }
     }
 
+    function addDependencyToContext(context, dependee, dependency) {
+        let dependees = context.dependees,
+            dependencyByDependeeCount = context.dependencyByDependeeCount,
+            count;
+        
+        if (!dependees[dependency]) {
+            dependees[dependency] = new Set();
+        }
+        dependees[dependency].add(dependee);
+
+        count = dependees[dependency].size;
+        if (dependencyByDependeeCount[count - 1]) {
+            dependencyByDependeeCount[count - 1].delete(dependency);
+        }
+        if (dependencyByDependeeCount.length === count) {
+            dependencyByDependeeCount.push(new Set());
+        }
+
+        dependencyByDependeeCount[count].add(dependency);
+
+    }
+
+    function modDependencies(config) {
+        let context = {
+                dependees: {},
+                dependencyByDependeeCount: [null]
+            },
+            rootPackage = config.packageLock.packages[""];
+
+        modDependenciesForPackage(config, rootPackage, rootPackage.name, context, 1)
+
+        return dependenciesInOrderOfDependeeCount(context);
+    }
+
+    function dependenciesInOrderOfDependeeCount(context) {
+        let result = [],
+            dependencies;
+        for (let i = context.dependencyByDependeeCount.length - 1; i >= 0; i--) {
+            dependencies = context.dependencyByDependeeCount[i];
+            if (dependencies && dependencies.size) {
+                result.push(...dependencies);
+            }
+        }
+        return result;
+    }
+
+    function modDependenciesForPackage(config, aPackage, packageName, context, depth) {
+        var packages = config.packageLock.packages,
+            dependencies = aPackage.dependencies,
+            dependency, depPackage, packageName,
+            packageLockKey;
+
+        for (dependency in dependencies) {
+                packageLockKey = NODE_MODULES_SLASH + dependency;
+                depPackage = packages[packageLockKey];
+                    
+            if (dependency === "mod") {
+                addDependencyToContext(context, packageName, dependency);
+            } else if (depPackage.dependencies && depPackage.dependencies.mod) {
+                addDependencyToContext(context, packageName, dependency);
+                modDependenciesForPackage(config, depPackage, dependency, context, depth + 1);
+            }
+        }
+
+    }
+
     function configurePackage(location, description, parent) {
 
         if (!isRelativePattern.test(location)) {
@@ -1084,6 +1150,8 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
 
             require.read = config.read;
 
+            require.modDependencies = modDependencies.bind(require, config);
+
             return require;
         }
 
@@ -1217,6 +1285,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         return null;
     };
 
+
     /**
      * Try loading a package.json file. If the package.json cannot be read
      * at the given location, the next possible package location is tried
@@ -1307,7 +1376,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
             }
             var location = dependency.location;
             return !!loadedPackages[location];
-        };
+        }; 
 
         config.getPackage = function (dependency) {
             dependency = normalizeDependency(dependency, config);
@@ -1368,6 +1437,8 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
                 });
             }
         }
+
+
         if (typeof pkg.then === "function") {
             pkg = pkg.then(function (pkg) {
                 pkg.registry = registry;
