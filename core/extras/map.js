@@ -62,7 +62,7 @@
 
 
     /**
-     * Sserialize a Map object
+     * Serialize a Map object
      * @param {Deserializer} serializer The Serializer building out the serialization
      * @function external:Map.serializeSelf
     */
