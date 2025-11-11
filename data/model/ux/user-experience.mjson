@@ -1,0 +1,108 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "DigitalAsset",
+            "propertyDescriptors": [
+                {"@": "description"},
+                {"@": "content"},
+                {"@": "contentDescription"},
+                {"@": "contentType"},
+                {"@": "contentLength"},
+                {"@": "metadata"},
+                {"@": "location"},
+                {"@": "secureLocation"},
+                {"@": "secureLocationExpirationDate"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./digital-asset.mjson"
+            },
+            "exportName": "DigitalAsset",
+            "module": {
+                "%": "./digital-asset"
+            },
+            "object":{"@": "DigitalAssetPrototype"},
+            "parent":{"@": "objectDescriptor"}
+        }
+    },
+    "DigitalAssetPrototype": {
+        "object": "./digital-asset"
+    },
+    "objectDescriptor": {
+        "object": "data/model/data-object.mjson"
+    },
+
+    "description": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "description",
+            "isLocalizable": true,
+            "valueType": "string"
+        }
+    },
+
+    "content": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "content",
+            "valueType": "object"
+        }
+    },
+
+    "contentDescription": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "contentDescription",
+            "isLocalizable": true,
+            "valueType": "string",
+            "description": "known as altText on the web, expected to describe the content of the asset, important for accessibility and discoverability"
+        }
+    },
+
+    "contentType": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "contentType",
+            "valueType": "string"
+        }
+    },
+    "contentLength": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "contentLength",
+            "valueType": "number"
+        }
+    },
+
+    "metadata": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "metadata",
+            "cardinality": 1,
+            "valueType": "object"
+        }
+    },
+
+    "location": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "location",
+            "valueType": "URL"
+        }
+    },
+    "secureLocation": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "signedLocation",
+            "valueType": "URL"
+        }
+    },
+    "secureLocationExpirationDate": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "secureLocationExpirationDate",
+            "valueType": "Date"
+        }
+    }
+
+}
