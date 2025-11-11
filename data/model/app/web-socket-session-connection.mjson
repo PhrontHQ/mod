@@ -4,7 +4,7 @@
         "values": {
             "name": "WebSocketSessionConnection",
             "propertyDescriptors": [
-                {"@": "webSocketSession"},
+                {"@": "session"},
                 {"@": "serverConnectionId"},
                 {"@": "existenceTimeRange"}
             ],
@@ -26,10 +26,10 @@
         "object": "./web-socket-session.mjson"
     },
 
-    "webSocketSession": {
+    "session": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "webSocketSession",
+            "name": "session",
             "cardinality": 1,
             "valueType": "object",
             "valueDescriptor": {"@": "WebSocketSessionDescriptor"},
