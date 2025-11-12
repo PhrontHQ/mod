@@ -1,5 +1,6 @@
 const RawDataService = require("../raw-data-service").RawDataService,
     DataObject = require("../../model/data-object").DataObject,
+    DataQuery = require("../../model/data-query").DataQuery,
     Criteria = require("core/criteria").Criteria,
     KebabCaseConverter = require("core/converter/kebab-case-converter").KebabCaseConverter;
 
@@ -262,7 +263,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         object[property] = record[property];
                     }
                 } else {
-                    let iPropertyValues =  record[property];
+                    let iPropertyValues =  record[property],
+                        oneValue;
 
                     if(iPropertyValues) {
                         //iPropertyValues is a collection, so we're going to use .one() to get a sample.
