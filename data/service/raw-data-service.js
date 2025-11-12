@@ -1552,7 +1552,10 @@ RawDataService.addClassProperties({
                 this._snapshot.set(dataIdentifier, rawData);
                 return rawData
             }
-            else {
+            /* If rawData and snapshot are the same object, nothing to do */
+            else if(rawData === snapshot) {
+                return rawData
+            } else {
                 var rawDataKeys = Object.keys(rawData),
                     i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues, iRemovedValues,
                     iHasAddedValues, iHasRemovedValues,
@@ -1646,6 +1649,13 @@ RawDataService.addClassProperties({
                     /* 
                         otherwise there's nothing to do, so let's take it out from rawData 
                         unless it's the primary key...
+
+                        Benoit 11/11/2025:
+                            If rawData === snapshot (which shouldn't reach here after an added optimization upfront),
+                            then this ends up removing a value from the snapshot. That value is a property that is a string.
+
+                            I can't figure out the logic behind: (rawData[rawDataKeys[i]] !== dataIdentifier.primaryKey) 
+                            as it assumes that the value of the property rawDataKeys[i] is the current object's primarykey? 
                     */
                     else if(rawData[rawDataKeys[i]] !== dataIdentifier.primaryKey) {
                         delete rawData[rawDataKeys[i]];
