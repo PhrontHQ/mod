@@ -693,8 +693,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //     });
                 
             // } else {
-                return Promise.resolve(value);
+            //      return Promise.resolve(value);
             // }
+
+            return Promise.resolve(dataObject);
+
         })
         .then((value) => {
 
