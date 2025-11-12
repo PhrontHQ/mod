@@ -317,7 +317,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         if(mappingPromises.length) {
             return Promise.all(mappingPromises);
         } else {
-            return Promise.resolve(undefined)
+            return Promise.resolve(object)
         }
     }
     handleReadOperation(readOperation) {
