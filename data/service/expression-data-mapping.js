@@ -1379,6 +1379,14 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         /* 11/9/2025 comment end */
 
                         /*
+                            if we don't have what we need to fullfill, we bail out.
+                            Previously if the rule isn't required, we would bail out, but if it's been sent ny the server, me might as well make it useful than stay unused in the snapshot, as long as we can.
+                        */
+                        if((!isRequiredRule && !service.canMapObjectDescriptorRawDataToObjectPropertyWithoutFetch(objectDescriptor, aRule.targetPath)) || !dataHasRuleRequirements) {
+                            continue;
+                        }
+
+                        /*
                             Tell our service: mappingWillMapRawDataToObjectProperty
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
