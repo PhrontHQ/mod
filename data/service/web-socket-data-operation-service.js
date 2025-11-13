@@ -911,9 +911,10 @@ WebSocketDataOperationService.addClassProperties({
                     //},0);
                     });
 
-                    if(this.promisesReadCompletionOperation) {
-                        return completionPromise;
-                    }
+                }
+
+                if(this.promisesReadCompletionOperation) {
+                    return completionPromise;
                 }
 
                 //this._socketSendOperation(operation);
