@@ -414,16 +414,26 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 
                         }
                         else {
-                            let error = new Error(this.name+": No Mapping for "+ iReadOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
-                            responseOperation = this.responseOperationForReadOperation(iReadOperation.referrer ? iReadOperation.referrer : iReadOperation, error, null);
-                            console.log("\t"+this.identifier+" handleReadOperation dispatch C responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
 
-                            responseOperation.target.dispatchEvent(responseOperation);
+                            console.warn(this.name+": No Rule found to map a read operation for "+ iReadOperation.target.name+ " to a fetchRequest");
+                            readOperationCompletionPromiseResolve();
+                            /*
+                                Benoit 11/13/2025 commented it as this is it an error: some RawDataService can map raw data to objects that may be nested in 
+                                a read for another type, but don't actually have an API to get it on its own. 
+
+                                We need to eventually need to introduce that semantic more clearly, but the recent mapping from operation to fetchRequests is 
+                                a step in that direction.
+                            */
+                            // let error = new Error(this.name+": No Mapping for "+ iReadOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
+                            // responseOperation = this.responseOperationForReadOperation(iReadOperation.referrer ? iReadOperation.referrer : iReadOperation, error, null);
+                            // console.log("\t"+this.identifier+" handleReadOperation dispatch C responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+
+                            // responseOperation.target.dispatchEvent(responseOperation);
             
-                            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                            responseOperation.propagationPromise.then(() => {
-                                readOperationCompletionPromiseResolve?.(responseOperation);
-                            });
+                            // //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                            // responseOperation.propagationPromise.then(() => {
+                            //     readOperationCompletionPromiseResolve?.(responseOperation);
+                            // });
                             
                         }
                     }
