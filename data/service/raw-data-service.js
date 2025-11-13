@@ -2,6 +2,7 @@ var DataService = require("./data-service").DataService,
     compile = require("../../core/frb/compile-evaluator"),
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
     //Montage = (require) ("../../core/core").Montage,
@@ -5006,7 +5007,7 @@ RawDataService.addClassProperties({
                         applicationCredentials =  result[0].value.applicationCredentials;
 
                     if(applicationIdentifier && applicationCredentials) {
-                        let identity = new Identity();
+                        let identity = new UserIdentity();
 
                         identity.applicationIdentifier = applicationIdentifier;
                         identity.applicationCredentials = applicationCredentials;
