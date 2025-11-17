@@ -122,7 +122,7 @@
         "values": {
             "name": "originDataSnapshot",
             "valueType": "object",
-            "isUnique": true,
+            "isUnique": false,
             "isSearchable": false,
             "description": "Stores the latest known data snapshot from an origin service it was imported from. An entry per origin data service contains the data snapshot from that origin. originDataSnapshot can eventually be on the larger side, and as we typically won't search through it, we're not making it searcheable"
         }
