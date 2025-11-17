@@ -852,6 +852,11 @@ WebSocketDataOperationService.addClassProperties({
 
     _handleReadOperation: {
         value: function (operation) {
+            /*
+                Testing for if(this.application.identity) is a way to prevent WebSocketDataOperationService to
+                fetch a USerIdentity before the WebSocket is opened: IT HAS TO COME FROM AN HTTP ENDPOINT, third-prty or ours
+                built on top of a worker.
+            */
             if(this.application.identity && this.handlesType(operation.target)) {
 
                 /*
