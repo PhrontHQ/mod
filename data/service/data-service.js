@@ -6353,53 +6353,53 @@ DataService.addClassProperties(
                                     parameters = criteria ? criteria.parameters : undefined;
                                 rawParameters = parameters;
 
-                                if (parameters && typeof criteria.parameters === "object") {
-                                    var keys = Object.keys(parameters),
-                                        i,
-                                        countI,
-                                        iKey,
-                                        iValue,
-                                        iRecord,
-                                        criteriaClone;
+                                // if (parameters && typeof criteria.parameters === "object") {
+                                //     var keys = Object.keys(parameters),
+                                //         i,
+                                //         countI,
+                                //         iKey,
+                                //         iValue,
+                                //         iRecord,
+                                //         criteriaClone;
 
-                                    //rawParameters = Array.isArray(parameters) ? [] : {};
+                                //     //rawParameters = Array.isArray(parameters) ? [] : {};
 
-                                    for (i = 0, countI = keys.length; i < countI; i++) {
-                                        iKey = keys[i];
-                                        iValue = parameters[iKey];
-                                        if (!iValue) {
-                                            console.warn(
-                                                "fetchData: criteria ",
-                                                criteria,
-                                                "has value: " + value + " for parameter key " + iKey
-                                            );
-                                        } else {
-                                            if (iValue.dataIdentifier) {
-                                                if (!criteriaClone) {
-                                                    criteriaClone = criteria.clone();
-                                                    rawParameters = criteriaClone.parameters;
-                                                }
-                                                /*
-                                            this isn't working because it's causing triggers to fetch properties we don't have
-                                            and somehow fails, but it's wastefull. Going back to just put primary key there.
-                                        */
-                                                // iRecord = {};
-                                                // rawParameters[iKey] = iRecord;
-                                                // (promises || (promises = [])).push(
-                                                //     self._mapObjectToRawData(iValue, iRecord)
-                                                // );
-                                                rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
-                                            }
-                                            // else {
-                                            //     rawParameters[iKey] = iValue;
-                                            // }
-                                        }
-                                    }
+                                //     for (i = 0, countI = keys.length; i < countI; i++) {
+                                //         iKey = keys[i];
+                                //         iValue = parameters[iKey];
+                                //         if (!iValue) {
+                                //             console.warn(
+                                //                 "fetchData: criteria ",
+                                //                 criteria,
+                                //                 "has value: " + value + " for parameter key " + iKey
+                                //             );
+                                //         } else {
+                                //             if (iValue.dataIdentifier) {
+                                //                 if (!criteriaClone) {
+                                //                     criteriaClone = criteria.clone();
+                                //                     rawParameters = criteriaClone.parameters;
+                                //                 }
+                                //                 /*
+                                //             this isn't working because it's causing triggers to fetch properties we don't have
+                                //             and somehow fails, but it's wastefull. Going back to just put primary key there.
+                                //         */
+                                //                 // iRecord = {};
+                                //                 // rawParameters[iKey] = iRecord;
+                                //                 // (promises || (promises = [])).push(
+                                //                 //     self._mapObjectToRawData(iValue, iRecord)
+                                //                 // );
+                                //                 rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
+                                //             }
+                                //             // else {
+                                //             //     rawParameters[iKey] = iValue;
+                                //             // }
+                                //         }
+                                //     }
 
-                                    if (criteriaClone) {
-                                        readOperation.criteria = criteriaClone;
-                                    }
-                                }
+                                //     if (criteriaClone) {
+                                //         readOperation.criteria = criteriaClone;
+                                //     }
+                                // }
 
                                 readOperation.dataStream = stream;
 
