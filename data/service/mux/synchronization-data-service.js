@@ -822,8 +822,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //FIXME WARNING - rawData can be much bigger than practical, and, we only use a portion of it
             //So we need to only keep what we mapped... so we need to filter that.
             //disabling for now as size created problems
-            originDataSnapshot[rawDataService.identifier] = {};    
-            //originDataSnapshot[rawDataService.identifier] = rawData.originDataSnapshot ?? rawData;    
+            // originDataSnapshot[rawDataService.identifier] = {};    
+            originDataSnapshot[rawDataService.identifier] = rawData.originDataSnapshot ?? rawData;    
         }
 
         if(this.delegate?.synchronizationDataServiceDidMapRawDataPropertiesToObjectFromDataOperation) {
