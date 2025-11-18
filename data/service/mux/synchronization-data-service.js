@@ -223,6 +223,20 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     */
     rawDataServiceWillHandleReadOperation(originDataService, readOperation) {
 
+        /*
+            In the flow, this happens when a read operation failed to find data in the destination service. A typical case is when a subgraph isn't capture initially
+            
+            If the readOperation is sent as such to an originDataService, it's going to need support to convert an object-level criteria into it's own raw data.
+            to obtain the data for that read.
+
+            For example, a typical "read an object's property" is "primary key === uuid" and read Expressions has "myProp".
+            We need to uopdate  "primary key === uuid" to "dataIdentifier = $" with the dataIdentifier abstracting the ability to get a primary key for a dataService's identifier
+            by looking it up within originDataSnapshot
+
+            
+
+        */
+
         //Temporarily bypassing until issues mentioned above are taken care of
         return Promise.resolve(readOperation);
 
