@@ -459,6 +459,14 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         return readOperationCompletionPromise;
     }
 
+    /**
+     * Gives the opportunity to turn dataOperation into multiple ones if needed by a service's practical constraints.
+     * If a result is cached, rawDataOperations can receive Read[Completed|Failed]Operations as well
+     *
+     * @param {DataOperation} dataOperation - The dataOperation to evaluate.
+     * @param {Array<DataOperation>} rawDataOperations - An array to collect the resulting data operations needed
+     * @returns {Promise<rawDataOperations>} A promise that resolves with the rawDataOperations passed in, as a convenience
+     */
     mapDataOperationToRawDataOperations(dataOperation, rawDataOperations) {
 
         /*
@@ -581,6 +589,8 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                         }
                      
                     }
+                } else if(!rawDataOperations.has(dataOperation)) {
+                    rawDataOperations.push(dataOperation);    
                 }
 
             }
