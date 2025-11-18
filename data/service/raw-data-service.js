@@ -2422,6 +2422,7 @@ RawDataService.addClassProperties({
             }
 
             if(this.needsRawDataTypeIdentificationCriteria) {
+                debugger;
                 let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
                 
                 assign(rawData, criteria.expression, true, criteria.parameters);
@@ -3440,6 +3441,11 @@ RawDataService.addClassProperties({
                     console.log("handleReadUpdateOperation.addData", operation.data);
                     stream.addData(operation.data);
                 } else if (streamObjectDescriptor === objectDescriptor) {
+                    if (objectDescriptor.name === "Organization") {
+                        console.log("RawDataService.handleReadUpdateOperation");
+                        debugger;
+                    }
+                    
                     if (records && records.length > 0) {
                         //We pass the map key->index as context so we can leverage it to do record[index] to find key's values as returned by RDS Data API
                         this.addRawData(stream, records, operation);

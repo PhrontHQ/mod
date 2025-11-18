@@ -140,6 +140,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     fetchRawObjectProperty(object, propertyName) {
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
+        console.log("SerializedDatService.fetchRawObjectProperty is not implemented", object, propertyName)
         return this.nullPromise;
     }
 
