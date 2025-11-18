@@ -494,9 +494,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
     __syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged) {
-        // if(objectDescriptor.name === "Device") {
-        //     console.log("sync Device"+objectDescriptor.name+" rawData: ", rawData);
-        // }
+        if(objectDescriptor.name === "Organization") {
+            console.log("Sync Organization"+objectDescriptor.name+" rawData: ", rawData);
+        }
 
         let rawDataService = readCompletedOperation.rawDataService,
             //We might want to ask the delegate his take on what readExpressions to use 
@@ -1079,6 +1079,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         return this._captureSynchronizationDataServiceReadCompletionOperation(readUpdateOperation);
     }
     captureSynchronizationDataServiceReadCompletedOperation(readCompletedOperation) {
+        
         return this._captureSynchronizationDataServiceReadCompletionOperation(readCompletedOperation);
     }
 

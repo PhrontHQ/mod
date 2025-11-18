@@ -1,5 +1,7 @@
 const RawDataService = require("../raw-data-service").RawDataService,
+    
     DataObject = require("../../model/data-object").DataObject,
+    DataOperation = require("../data-operation").DataOperation,
     DataQuery = require("../../model/data-query").DataQuery,
     Criteria = require("core/criteria").Criteria,
     KebabCaseConverter = require("core/converter/kebab-case-converter").KebabCaseConverter;
@@ -14,6 +16,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         this._typeToLocation = new Map();
         this._typeToManagedSubtypes = new Map();
         this._dataInstancesPromiseByObjectDescriptor = new Map();
+        this.needsRawDataTypeIdentificationCriteria = true;
     }
 
     deserializedFromSerialization(label) {
@@ -134,6 +137,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
 
+    fetchRawObjectProperty(object, propertyName) {
+        //Find deserialized counterpart of object in memory. 
+        //Assign object[propertyName] = deserializedObject[propertyName];
+        return this.nullPromise;
+    }
+
 
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
@@ -196,7 +205,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
 
         return Promise.resolve(rawData);
-        
     }
 
     _rawDataForObject(object, context) {
@@ -208,6 +216,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             iRawData = {};
             return this.mapObjectToRawData(object, iRawData, context)
             .then((rawData) => {
+                this.mapObjectTypeToRawData(object, rawData, context);
+                return rawData;
+            }).then((rawData) => {
                 this.recordSnapshot(iDataInstanceIdentifier, rawData);
                 return rawData;
             });

@@ -338,7 +338,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
     rawDataTypeIdentificationCriteria: {
         get: function() {
-            return this._rawDataTypeIdentificationCriteria || this._defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
+            return this._rawDataTypeIdentificationCriteria || this.service.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
         },
         set: function(value) {
             if(this._rawDataTypeIdentificationCriteria !== value) {
@@ -347,51 +347,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
-    _defaultRawDataTypeIdentificationCriteria: {
-        value: undefined
-    },
-    
-    _defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor: {
-        value: function(objectDescriptor) {
-            return new Criteria().initWithExpression("fullModuleId == $.fullModuleId", {fullModuleId: objectDescriptor.fullModuleId});
-        }
-    },
-
-    _defaultRawDataTypeIdentificationCriteriaForObjectDescriptor: {
-        value: function(objectDescriptor, includesChildObjectDescriptors, array, rawDataTypeName) {
-            let isRoot = (array === undefined),
-                _rawDataTypeName = isRoot ? this.rawDataTypeName : rawDataTypeName,
-                _array = (array || []);
-
-            _array.push(this.rawDataTypeIdentificationCriteria);
-
-            if(includesChildObjectDescriptors) {
-                let childObjectDescriptors = objectDescriptor.childObjectDescriptors,
-                    i=0, countI = childObjectDescriptors.length,
-                    service = this.service,
-                    iChildObjectDescriptor, iChildObjectDescriptorMapping;
-
-                for(i=0; (i<countI); i++) {
-                    iChildObjectDescriptor = childObjectDescriptors[i];
-                    iChildObjectDescriptorMapping = service.mappingForType(iChildObjectDescriptor);
-                    /*
-                        Just because it's a subclass, doesn't mean it's persisted in the same object store, so got to check
-                    */
-                    if(iChildObjectDescriptorMapping.rawDataTypeName === _rawDataTypeName) {
-                        iChildObjectDescriptorMapping._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array, _rawDataTypeName);
-                    }
-                }
-            }
-
-            if(isRoot) {
-                if(_array.length ===0) {
-                    return _array[0]
-                } else {
-                    return Criteria.or(..._array);
-                }    
-            }
-        }
-    },
     /**
      * TODO: Modify API to be able to not includesChildObjectDescriptors  
      * @type {ObjectDescriptor}
@@ -399,28 +354,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     defaultRawDataTypeIdentificationCriteria: {
         value: function(includesChildObjectDescriptors = true) {
             if(!this._defaultRawDataTypeIdentificationCriteria) {
-                let criteria;
-
-                if(!this.rawDataTypeName || (this.rawDataTypeName && this.rawDataTypeName === this.objectDescriptor.name)) {
-                    /*
-                        If we're the root of the hieararchy stored in the ObjectStore, we're going to not have a fullModuleId value.
-                        That way if subclasses are added after instances of the root class have beem added, we don't need to update exising rows. 
-                        Because initially there would be no reason to use fullModuleId in the first place and that column would be empty
-
-                        TODO: expose the fullModuleId as a criteria / API so it's less hard coded
-                    */
-                    if(!includesChildObjectDescriptors) {
-                        criteria = new Criteria().initWithExpression("fullModuleId == null");
-                    } else {
-                        criteria = null;
-                    }
-                } else {
-                    /*
-                        TODO: Tweak the API to be able to get includesChildObjectDescriptors passed in from a read operation
-                    */
-                    criteria = this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor, /*includesChildObjectDescriptors*/true);
-                }
-                this._defaultRawDataTypeIdentificationCriteria = criteria;
+                this._defaultRawDataTypeIdentificationCriteria = this.service.defaultRawDataTypeIdentificationCriteria(this.objectDescriptor, includesChildObjectDescriptors);
             }
             return this._defaultRawDataTypeIdentificationCriteria;
         }
@@ -455,11 +389,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     rawDataTypeIdentificationCriteriaForDataOperation: {
         value: function(aDataOperation) {
-            if(aDataOperation.type === DataOperation.Type.ReadOperation) {
-                return this.defaultRawDataTypeIdentificationCriteria(aDataOperation.data.includesChildObjectDescriptors);
-            } else {
-                return this.rawDataTypeIdentificationCriteria;
-            }
+            return this.service.rawDataTypeIdentificationCriteriaForDataOperation(aDataOperation);
         }
     },
 
@@ -1933,7 +1863,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             if(this.needsRawDataTypeIdentificationCriteria && context.type === DataOperation.Type.CreateOperation) {
                 // let criteria = this._defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
-                let criteria = this.rawDataTypeIdentificationCriteriaForDataOperation(context);
+                let criteria = this.service.rawDataTypeIdentificationCriteriaForDataOperation(context);
                 
                 
                 assign(rawData, criteria.expression, true, criteria.parameters);
