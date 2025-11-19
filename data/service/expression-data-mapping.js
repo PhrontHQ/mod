@@ -2695,7 +2695,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     Benoit: adding  && value to the condition as we don't want arrays with null in it
                 */
                 //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
-                var objectPropertyValue = Object.getPropertyDescriptor(object,propertyName).get.call(object, /*shouldFetch*/false);
+                let getter = Object.getPropertyDescriptor(object,propertyName).get;
+                // if (!descriptor) {
+                //     debugger;
+                // }
+                var objectPropertyValue = getter && getter.call(object, /*shouldFetch*/false) || object[propertyName];
                 if(isToMany && value) {
                     /*
                         When we arrive here coming from _assignInversePropertyValue()

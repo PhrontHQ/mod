@@ -177,7 +177,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         if(iPropertyValues) {
                             //iPropertyValues is a collection, so we're going to use .one() to get a sample.
                             oneValue = iPropertyValues.one();
-
+ 
                             //The collection is empty, we can carry it over
                             if(!oneValue) {
                                 rawData[objectKeys[i]] = iPropertyValues;
@@ -215,11 +215,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if(!iRawData) {
             iRawData = {};
+            console.log("SerializedDataService._rawDataForObject 1", object);
             return this.mapObjectToRawData(object, iRawData, context)
             .then((rawData) => {
+                console.log("SerializedDataService._rawDataForObject 2", object);
                 this.mapObjectTypeToRawData(object, rawData, context);
                 return rawData;
             }).then((rawData) => {
+                console.log("SerializedDataService._rawDataForObject 3", object);
                 this.recordSnapshot(iDataInstanceIdentifier, rawData);
                 return rawData;
             });
@@ -234,8 +237,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let iObjectValue = mainService.objectForDataIdentifier(aDataIdentifier);
 
         if(!iObjectValue) {
+            
             let criteria = new Criteria().initWithExpression("identifier == $", aDataIdentifier.primaryKey),
                 iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
+
+            console.log("SerializedDataService._objectPromiseForDataIdentifier", iObjectValueQuery);
 
             return mainService.fetchData(iObjectValueQuery)
                 .then((fetchDataResult) => {
@@ -259,17 +265,34 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 or if that value has an idententifier if it's an
             */
             if(iPropertyDescriptor.valueDescriptor) {
-                if(iPropertyDescriptor.cardinality === 1) {
+                // debugger;
+                if (iPropertyDescriptor.valueDescriptor.then) {
+                    mappingPromises.push(iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
+                        return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
+                    }));
+                } else {
+                    return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
+                }
+
+            } else {
+                //We can for shure move the data as-is
+                object[property] = record[property];
+            }
+        }
+    }
+
+    __mapRawDataPropertyToObject (record, property, valueDescriptor, object, mainService) {
+        let objectDescriptor = object.objectDescriptor,
+            iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
+        if(iPropertyDescriptor.cardinality === 1) {
                     let iPropertyValue = object[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
                         let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record.identifier);
 
-                        (mappingPromises || (mappingPromises = [])).push(
-                            this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
+                        return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
                             .then((iObjectValue) => {
                                 object[property] = iObjectValue
                             })
-                        );
         
                     } else {
                         object[property] = record[property];
@@ -287,20 +310,22 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             object[property] = iPropertyValues;
                         } else if(Array.isArray(iPropertyValues)) {
                             let values = [],
-                                objectDescriptor = iPropertyDescriptor.valueDescriptor;
+                                objectDescriptor = valueDescriptor,
+                                mappingPromises = [];
 
                             object[property] = values;
 
                             for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
                                 let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
 
-                                (mappingPromises || (mappingPromises = [])).push(
+                                mappingPromises.push(
                                     this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
                                     .then((iObjectValue) => {
                                         values.push(iObjectValue);
                                     })
                                 );
                             }
+                            return Promise.all(mappingPromises);
 
                         } else if(iPropertyValues instanceof Map) {
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
@@ -309,12 +334,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         object[property] = iPropertyValues;
                     }
                 }
-
-            } else {
-                //We can for shure move the data as-is
-                object[property] = record[property];
-            }
-        }
     }
 
     mapRawDataToObject (record, object, context, readExpressions, registerMappedPropertiesAsChanged = false) {
@@ -323,6 +342,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         let recordKeys = Object.keys(record),
             mappingPromises = [];
+
+            
 
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {
             this._mapRawDataPropertyToObject (record, recordKeys[i], object, mappingPromises, mainService);
@@ -339,6 +360,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         // data operations, verify here whether this service should handle the operation.
         if (!this.handlesType(readOperation.target)) return;
 
+        console.log("SerializeDataService.handleReadOperation", readOperation);
 
         //TJ If there is no delegate, callDelegateMethod returns null which throws an error. Do we need a null check or should we ALWAYS have a delegate?
         let delegatePromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation) || Promise.resolve(readOperation);
@@ -351,6 +373,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             */
             if(!readOperation.defaultPrevented) {
 
+                let random = Math.random();
+
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
 
@@ -358,6 +382,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 predicateFunction = criteria?.predicateFunction;
                         let rawDataForObjectPromises = [];
 
+                        console.log("SerializedDataService.handleReadOperation", random, readOperation.target.name, dataInstances, criteria)
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
                                 rawDataForObjectPromises.push(
@@ -376,6 +401,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         }
                 })
                 .then((filteredRawData) => {
+                        console.log("SerializedDataService.handleReadOperation finalize", random, readOperation.target.name, filteredRawData);
                         return this._finalizeHandleReadOperation(readOperation, filteredRawData);
                 })
                 .catch((error) => {

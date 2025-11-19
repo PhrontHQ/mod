@@ -167,7 +167,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         let readOperation = emptyReadOperation.referrer,
             criteriaName = readOperation?.criteria?.name,
             qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
-            rawDataPrimaryKeys = emptyReadOperation.rawDataService.mappingForObjectDescriptor(readOperation.target).rawDataPrimaryKeys,
+            rawDataPrimaryKeys = emptyReadOperation.rawDataService.mappingForObjectDescriptor(readOperation.target).rawDataPrimaryKeys || [],
             isPrimaryKeyCriteria = qualifiedProperties
                                         ? rawDataPrimaryKeys.every(rawDataPrimaryKey=> qualifiedProperties.includes(rawDataPrimaryKey))
                                         : false,
@@ -496,18 +496,20 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     __syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged) {
         if(objectDescriptor.name === "Organization") {
             console.log("Sync Organization"+objectDescriptor.name+" rawData: ", rawData);
+            // debugger;
         }
 
         let rawDataService = readCompletedOperation.rawDataService,
             //We might want to ask the delegate his take on what readExpressions to use 
             readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
             //readExpressions = readCompletedOperation.,referrer?.data?.readExpressions,
-            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData);
+            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData),
+            typeForRawData = this.objectTypeForRawData(objectDescriptor, rawData);
 
         rawDataService.recordSnapshot(dataIdentifier,  rawData);
 
         //We get, if it's been created before, or create a brand new object
-        let dataObject = rawDataService.getDataObject(objectDescriptor, rawData, dataIdentifier, readCompletedOperation);
+        let dataObject = rawDataService.getDataObject(typeForRawData, rawData, dataIdentifier, readCompletedOperation);
 
         this._syncingObjectsCountedSet.add(dataObject);
         //let dataObject = this.mainService.createDataObject(objectDescriptor);
@@ -596,8 +598,16 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
 
+            if (objectDescriptor.name === "Organization") {
+                console.log("Try to map organization", rawData);
+            }
+
         return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
         .then((value) => {
+
+            if (objectDescriptor.name === "Organization") {
+                console.log("Mapped Organization", value);
+            }
 
             //cleanup:
             //this.removeEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
@@ -715,7 +725,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         })
         .then((value) => {
 
-
+            if (objectDescriptor.name === "Organization") {
+                console.log("Mapped Organization 2", value, !!this.delegate?.synchronizationDataServiceDidMapRawDataToObjectFromDataOperationWithReadExpressions);
+            }
 
             if(this.delegate?.synchronizationDataServiceDidMapRawDataToObjectFromDataOperationWithReadExpressions) {
                 this.delegate.synchronizationDataServiceDidMapRawDataToObjectFromDataOperationWithReadExpressions(this, rawData, dataObject, readCompletedOperation, readExpressions)
@@ -735,15 +747,18 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             }
 
 
-            if(dataObject.objectDescriptor.name === "Task") {
-                console.log("\n\n\############# Task "+dataIdentifier+" originId: "+JSON.stringify(dataObject.originId)+" "+dataObject.description+" "+dataObject.associatedTools.length+" associatedTools: ["+dataObject.associatedTools.map((value) => value?.description)+"], "+rawData.tools.length+" rawData.tools: " + rawData.tools.map((value) => value?.description)+"\n\n")
+            // if(dataObject.objectDescriptor.name === "Organization") {
+            //     console.log("\n\n\############# Organization "+dataIdentifier+" originId: "+JSON.stringify(dataObject.originId)+" "+dataObject.description+" "+dataObject.associatedTools.length+" associatedTools: ["+dataObject.associatedTools.map((value) => value?.description)+"], "+rawData.tools.length+" rawData.tools: " + rawData.tools.map((value) => value?.description)+"\n\n")
+            // }
+            if (objectDescriptor.name === "Organization") {
+                console.log("Mapped Organization 3", value);
             }
-
             return value;
 
 
         })
         .catch((error) => {
+            console.error(error);
             throw error;
         })
         .finally(() => {
@@ -1140,7 +1155,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //readCompletedOperation.stopPropagation();
             readCompletedOperation.stopImmediatePropagation();
 
-            return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
+            return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation).then((result) => {
+                console.log("SyncDataService._saveOriginReadCompletedOperationDataToDestinationDataService DONE", result);
+                return result;
+            })
 
 
 
@@ -1261,7 +1279,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 //     responseOperation.target.dispatchEvent(responseOperation);
                 //     return Promise.resolve(readCompletedOperation.data);
                 // } else {
-                    return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
+                    // return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation);
+                console.log("SyncDataService._saveOriginReadCompletedOperationDataToDestinationDataService TRY", readCompletedOperation.target.name, readCompletedOperation);
+                return this._saveOriginReadCompletedOperationDataToDestinationDataService(readCompletedOperation).then((result) => {
+                    console.log("SyncDataService._saveOriginReadCompletedOperationDataToDestinationDataService DONE", readCompletedOperation.target.name, readCompletedOperation);
+                return result;
+            })
                 // }
 
             } else if(readCompletedOperation.rawDataService === this.destinationDataService) {

@@ -1126,6 +1126,10 @@ RawDataService.addClassProperties({
                 return;
             }
 
+            if (stream.query.type.name === "Organization") {
+                debugger;
+            }
+
             var type,
                 streamQueryType = this._descriptorForParentAndRawData(stream.query.type, rawData),
                 readExpressions = stream.query.readExpressions,
@@ -2422,7 +2426,7 @@ RawDataService.addClassProperties({
             }
 
             if(this.needsRawDataTypeIdentificationCriteria) {
-                debugger;
+                // debugger;
                 let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
                 
                 assign(rawData, criteria.expression, true, criteria.parameters);
@@ -3442,8 +3446,8 @@ RawDataService.addClassProperties({
                     stream.addData(operation.data);
                 } else if (streamObjectDescriptor === objectDescriptor) {
                     if (objectDescriptor.name === "Organization") {
-                        console.log("RawDataService.handleReadUpdateOperation");
-                        debugger;
+                        console.log("RawDataService.handleReadUpdateOperation ORGANIZATION", records);
+                        // debugger;
                     }
                     
                     if (records && records.length > 0) {
