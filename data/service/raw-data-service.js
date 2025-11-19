@@ -606,6 +606,7 @@ RawDataService.addClassProperties({
                     objectSnapshot = this.snapshotForObject(object);
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.hints = {rawDataService: this};
 
                 /*
                     Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
@@ -622,7 +623,7 @@ RawDataService.addClassProperties({
                     hintSnapshot;
 
                 if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
-                    hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
+                    hintSnapshot = (propertyNameQuery.hints.snapshot || (propertyNameQuery.hints.snapshot = {}));
                     for(let i=0, countI = requirements.length; (i<countI); i++) {
 
                         /* This is getting into mapping's business so it should migrate there */
