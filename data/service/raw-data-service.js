@@ -2745,11 +2745,11 @@ RawDataService.addClassProperties({
     defaultRawDataTypeIdentificationCriteriaForObjectDescriptor: {
         value: function (objectDescriptor, includesChildObjectDescriptors, array, rawDataTypeName) {
             let isRoot = (array === undefined),
-                _rawDataTypeName = isRoot ? obectDescriptor.rawDataTypeName : rawDataTypeName,
+                _rawDataTypeName = isRoot ? objectDescriptor.rawDataTypeName : rawDataTypeName,
                 childRawDataTypeName,
                 _array = (array || []);
 
-            _array.push(this.rawDataTypeIdentificationCriteriaForType(obectDescriptor));
+            _array.push(this.rawDataTypeIdentificationCriteriaForType(objectDescriptor));
 
             if(includesChildObjectDescriptors) {
                 let childObjectDescriptors = objectDescriptor.childObjectDescriptors,
@@ -2764,7 +2764,7 @@ RawDataService.addClassProperties({
                         Just because it's a subclass, doesn't mean it's persisted in the same object store, so got to check
                     */
                     if(childRawDataTypeName === _rawDataTypeName) {
-                        this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array, _rawDataTypeName);
+                        this.defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array, _rawDataTypeName);
                     }
                 }
             }
@@ -2803,7 +2803,7 @@ RawDataService.addClassProperties({
                     /*
                         TODO: Tweak the API to be able to get includesChildObjectDescriptors passed in from a read operation
                     */
-                    criteria = this._defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(type, /*includesChildObjectDescriptors*/true);
+                    criteria = this.defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(type, /*includesChildObjectDescriptors*/true);
                 }
                 this._defaultRawDataTypeIdentificationCriteriaByType.set(type, criteria);
             }

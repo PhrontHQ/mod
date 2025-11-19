@@ -852,6 +852,7 @@ WebSocketDataOperationService.addClassProperties({
 
     _handleReadOperation: {
         value: function (operation) {
+            console.log("WebSocketDataOperationService._handleReadOperation", operation);
             /*
                 Testing for if(this.application.identity) is a way to prevent WebSocketDataOperationService to
                 fetch a USerIdentity before the WebSocket is opened: IT HAS TO COME FROM AN HTTP ENDPOINT, third-prty or ours
@@ -904,6 +905,7 @@ WebSocketDataOperationService.addClassProperties({
 
                         } else {
                             //console.log("this._socketSendOperation ",this._readOperationQueue[0]);
+                            console.log("WebSocketDataOperationService._handleReadOperation", this._readOperationQueue[0]);
 
                             this._socketSendOperation(this._readOperationQueue[0]);
 
@@ -931,12 +933,14 @@ WebSocketDataOperationService.addClassProperties({
 
     handlePerformTransactionOperation: {
         value: function (performTransactionOperation) {
+            console.log("WebSocketDataOperationService.handlePerformTransactionOperation", performTransactionOperation);
             this._socketSendOperation(performTransactionOperation);
         }
     },
 
     handleCreateTransactionOperation: {
         value: function (createTransactionOperation) {
+            console.log("WebSocketDataOperationService.handleCreateTransactionOperation", createTransactionOperation);
             this._socketSendOperation(createTransactionOperation);
         }
     },
@@ -957,6 +961,7 @@ WebSocketDataOperationService.addClassProperties({
 
     handleCommitTransactionOperation: {
         value: function (commitTransactionOperation) {
+            console.log("WebSocketDataOperationService.handleCommitTransactionOperation", commitTransactionOperation);
             this._socketSendOperation(commitTransactionOperation);
         }
     },
