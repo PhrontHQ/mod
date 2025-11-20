@@ -140,7 +140,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     fetchRawObjectProperty(object, propertyName) {
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
-        console.log("SerializedDatService.fetchRawObjectProperty is not implemented", object, propertyName)
+        console.log("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName);
         return this.nullPromise;
     }
 
@@ -149,9 +149,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         //Set the primary key:
         rawData.identifier = object.identifier;
 
-        // this._forEachObjectProperty(object, (propertyValue, propertyDescriptor, object) => {
+        this._forEachObjectProperty(object, (propertyValue, propertyDescriptor, object) => {
 
-        // });
+        });
 
         /*
             Now we need to move everyting on rawData. Loop on object's keys and verify that they
