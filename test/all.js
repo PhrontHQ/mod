@@ -2,7 +2,7 @@ console.log("mod-testing", "Start");
 
 module.exports = require("mod/testing/run")
     .run(require, [
-        // App
+        // // App
         // { name: "spec/application-spec", node: false },
         // // Internal
         // "spec/bitfield-spec",
@@ -76,8 +76,8 @@ module.exports = require("mod/testing/run")
         // // Serialization
         // "spec/serialization/alias-spec",
         // "spec/serialization/labeler-spec",
-        // "spec/serialization/reviver-spec",
-        // //deprecated
+        "spec/serialization/reviver-spec",
+        //deprecated
         // "spec/serialization/interpreter-spec",
         // "spec/serialization/visitor-spec",
         // "spec/serialization/serialization-extractor-spec",

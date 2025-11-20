@@ -150,12 +150,14 @@ describe("reviver", function() {
         it("should deserialize a type of custom Montage object", function(done) {
             Reviver.addCustomObjectReviver({
                 getTypeOf: function(object) {
+                    console.log("GetTypeOf", object);
                     if ("custom1" in object) {
                         return "Custom1";
                     }
                 },
 
                 reviveCustom1: function(value, context, label) {
+                    console.log("reviveCustom1", object);
                     context.setObjectLabel(value.custom1.name, label);
 
                     return value.custom1.name;
@@ -183,8 +185,10 @@ describe("reviver", function() {
             Reviver.addCustomObjectReviver({
                 getTypeOf: function(object) {
                     if ("custom1" in object) {
+                        console.log("Return custom 1");
                         return "Custom1";
                     } else if ("custom2" in object) {
+                        console.log("Return custom 2");
                         return "Custom2";
                     }
                 },

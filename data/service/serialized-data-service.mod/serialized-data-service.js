@@ -144,73 +144,94 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return this.nullPromise;
     }
 
+    _mapObjectPropertyToRawData(object, objectKey, propertyDescriptor, rawData) {
+                    
+        if(propertyDescriptor.cardinality === 1) {
+            let value =  object[objectKey];
+            if(value?.hasOwnProperty("identifier")) {
+                rawData[propertyDescriptor.name] = object[objectKey].identifier;
+            } else {
+                rawData[objectKey] = object[objectKey];
+            }
+        } else {
+            let value =  object[objectKey],
+                oneValue;
+
+            if(value) {
+                //iPropertyValues is a collection, so we're going to use .one() to get a sample.
+                oneValue = value.one();
+
+                //The collection is empty, we can carry it over
+                if(!oneValue) {
+                    rawData[objectKey] = value;
+                } else if(Array.isArray(value)) {
+                    let rawDataValues = [];
+
+                    for(let countI = value.length, i=0; (i < countI); i++) {
+                        rawDataValues.push(value[i].identifier);
+                    }
+
+                    rawData[objectKey] = rawDataValues;
+
+                } else if(value instanceof Map) {
+                    throw "mapObjectToRawData for a property that is Map needs to be implemented";
+                }
+            } else {
+                rawData[objectKey] = value;
+            }
+        }
+    }
+
 
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
+        let mappingPromises;
         rawData.identifier = object.identifier;
 
-        this._forEachObjectProperty(object, (propertyValue, propertyDescriptor, object) => {
-
+        this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
+            if (this._isAsync(propertyDescriptor.valueDescriptor)) {
+                (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then(() => {
+                    console.log("SerializedDataService.mapObjectToRawData Resolved", object, propertyDescriptor);
+                    try {
+                        this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData);
+                    } catch (e) {
+                        console.error("SerializedDataService.mapObjectToRawData Error", object, propertyDescriptor, e);
+                    }
+                    
+                }).catch(function (e) {
+                    console.error(e);
+                }));
+            } else if (propertyDescriptor.valueDescriptor) {
+                this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData);
+            } else {
+                rawData[propertyDescriptor.name] = propertyValue;
+            }
         });
 
-        /*
-            Now we need to move everyting on rawData. Loop on object's keys and verify that they
-            correspond to known object's descriptor properties.
-        */ 
+        if (mappingPromises && mappingPromises.length) {
+            console.log("SerializedDataService.mappingPromises", mappingPromises, object);
+            return Promise.all(mappingPromises).then(() => {
+                console.log("SerializedDataService.mappedRawData Async", rawData);
+                return rawData;
+            });
+        }
+        console.log("SerializedDataService.mappedRawData Sync", rawData);
+        return Promise.resolve(rawData);
+    }
+
+    _isAsync(object) {
+        return object && object.then && typeof object.then === "function";
+    }
+
+    _forEachObjectProperty(object, callback) {
         let objectKeys = Object.keys(object),
             objectDescriptor = object.objectDescriptor;
         for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
             if(iPropertyDescriptor) {
-                /*
-                    We need to decide wether we store the value - object[objectKeys[i]]
-                    or if that value has an idententifier if it's an
-                */
-                if (iPropertyDescriptor.valueDescriptor) {
-                    
-                    if(iPropertyDescriptor.cardinality === 1) {
-                        let iPropertyValue =  object[objectKeys[i]];
-                        if(iPropertyValue?.hasOwnProperty("identifier")) {
-                            rawData[iPropertyDescriptor.name] = object[objectKeys[i]].identifier;
-                        } else {
-                            rawData[objectKeys[i]] = object[objectKeys[i]];
-                        }
-                    } else {
-                        let iPropertyValues =  object[objectKeys[i]],
-                            oneValue;
-
-                        if(iPropertyValues) {
-                            //iPropertyValues is a collection, so we're going to use .one() to get a sample.
-                            oneValue = iPropertyValues.one();
- 
-                            //The collection is empty, we can carry it over
-                            if(!oneValue) {
-                                rawData[objectKeys[i]] = iPropertyValues;
-                            } else if(Array.isArray(iPropertyValues)) {
-                                let rawDataValues = [];
-
-                                for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
-                                    rawDataValues.push(iPropertyValues[i].identifier);
-                                }
-
-                                rawData[objectKeys[i]] = rawDataValues;
-
-                            } else if(iPropertyValues instanceof Map) {
-                                throw "mapObjectToRawData for a property that is Map needs to be implemented";
-                            }
-                        } else {
-                            rawData[objectKeys[i]] = iPropertyValues;
-                        }
-                    }
-
-                } else {
-                    //We can for shusre move the data as-is
-                    rawData[objectKeys[i]] = object[objectKeys[i]];
-                }
+                callback(object[objectKeys[i]], objectKeys[i], iPropertyDescriptor, object);
             }
         }
-
-        return Promise.resolve(rawData);
     }
 
     _isAsync(object) {
@@ -235,14 +256,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if(!iRawData) {
             iRawData = {};
-            console.log("SerializedDataService._rawDataForObject 1", object);
             return this.mapObjectToRawData(object, iRawData, context)
             .then((rawData) => {
-                console.log("SerializedDataService._rawDataForObject 2", object);
                 this.mapObjectTypeToRawData(object, rawData, context);
                 return rawData;
             }).then((rawData) => {
-                console.log("SerializedDataService._rawDataForObject 3", object);
                 this.recordSnapshot(iDataInstanceIdentifier, rawData);
                 return rawData;
             });
@@ -384,6 +402,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
     handleReadOperation(readOperation) {
+        console.log("SerializeDataService.handleReadOperation", readOperation, !this.handlesType(readOperation.target));
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
         // data operations, verify here whether this service should handle the operation.
         if (!this.handlesType(readOperation.target)) return;
@@ -410,7 +429,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 predicateFunction = criteria?.predicateFunction;
                         let rawDataForObjectPromises = [];
 
-                        console.log("SerializedDataService.handleReadOperation", random, readOperation.target.name, dataInstances, criteria)
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
                                 rawDataForObjectPromises.push(

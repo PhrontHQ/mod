@@ -1644,6 +1644,7 @@ var MontageReviver = exports.MontageReviver = Montage.specialize(/** @lends Mont
         value: function(reviver) {
             var customObjectRevivers = this.customObjectRevivers;
 
+            console.log("addCustomObjectReviver", reviver);
             /* jshint forin: true */
             for (var methodName in reviver) {
             /* jshint forin: false */
@@ -1678,8 +1679,9 @@ var MontageReviver = exports.MontageReviver = Montage.specialize(/** @lends Mont
     makeGetCustomObjectTypeOf:{
         value: function (getCustomObjectTypeOf) {
             var previousGetCustomObjectTypeOf = this.prototype.getCustomObjectTypeOf;
-
+            
             return function(value) {
+                console.log("getCustomObjectTypeOf", value);
                 return getCustomObjectTypeOf(value) || previousGetCustomObjectTypeOf(value);
             };
         }
