@@ -1126,9 +1126,9 @@ RawDataService.addClassProperties({
                 return;
             }
 
-            if (stream.query.type.name === "Organization") {
-                debugger;
-            }
+            // if (stream.query.type.name === "Organization") {
+            //     debugger;
+            // }
 
             var type,
                 streamQueryType = this._descriptorForParentAndRawData(stream.query.type, rawData),

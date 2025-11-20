@@ -149,6 +149,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         //Set the primary key:
         rawData.identifier = object.identifier;
 
+        // this._forEachObjectProperty(object, (propertyValue, propertyDescriptor, object) => {
+
+        // });
+
         /*
             Now we need to move everyting on rawData. Loop on object's keys and verify that they
             correspond to known object's descriptor properties.
@@ -162,7 +166,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     We need to decide wether we store the value - object[objectKeys[i]]
                     or if that value has an idententifier if it's an
                 */
-                if(iPropertyDescriptor.valueDescriptor) {
+                if (iPropertyDescriptor.valueDescriptor) {
+                    
                     if(iPropertyDescriptor.cardinality === 1) {
                         let iPropertyValue =  object[objectKeys[i]];
                         if(iPropertyValue?.hasOwnProperty("identifier")) {
@@ -208,6 +213,21 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return Promise.resolve(rawData);
     }
 
+    _isAsync(object) {
+        return object && object.then && typeof object.then === "function";
+    }
+
+    _forEachObjectProperty(object, callback) {
+        let objectKeys = Object.keys(object),
+            objectDescriptor = object.objectDescriptor;
+        for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
+            iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
+            if(iPropertyDescriptor) {
+                callback(object[objectKeys[i]], iPropertyDescriptor, object);
+            }
+        }
+    }
+
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
         let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
@@ -241,12 +261,20 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             let criteria = new Criteria().initWithExpression("identifier == $", aDataIdentifier.primaryKey),
                 iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
 
-            console.log("SerializedDataService._objectPromiseForDataIdentifier", iObjectValueQuery);
 
-            return mainService.fetchData(iObjectValueQuery)
+            return mainService.fetchData(iObjectValueQuery).catch((e) => {
+                    //FIXME: This should not be necessary. SynchronizationDataService should be able to 
+                    //understand that fetching by identifier here means fetching by id in PostgreSQL
+                    criteria = new Criteria().initWithExpression("id == $", aDataIdentifier.primaryKey),
+                    iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
+                    return mainService.fetchData(iObjectValueQuery)
+                })
                 .then((fetchDataResult) => {
                     return fetchDataResult[0];
-                });
+                }).catch((e) => {
+                    console.error("Serialized DataService failed to fetch objectPromise", e);
+                    return null;
+                })
             
         } else {
             return Promise.resolve(iObjectValue);
