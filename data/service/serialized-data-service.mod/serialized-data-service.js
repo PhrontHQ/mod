@@ -426,23 +426,26 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
                         console.log("SerializedDataService.handleReadOperation dataInstances", dataInstances);
-                        let objectDescriptor = readOperation.target;
                         criteria = readOperation.criteria;
                             let predicateFunction = criteria?.predicateFunction;
 
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
-                            criteria = Criteria.withExpression("identifier == $", criteria.parameters);
+                            let parameters = criteria.parameters;
+                            if (parameters.id) {
+                                parameters = parameters.id;
+                            } else if (parameters.identifier) {
+                                parameters = parameters.identifier;
+                            }
+                            criteria = Criteria.withExpression("identifier == $", parameters);
                             predicateFunction = criteria?.predicateFunction;
                         }
                         let rawDataForObjectPromises = [];
 
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
-                            console.log("SerializedDataService.handleReadOperation.getRawDataForInstance", (criteria && predicateFunction(dataInstances[i]), dataInstances[i]));
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
                                 rawDataForObjectPromises.push(
                                     this._rawDataForObject(dataInstances[i], readOperation)
                                     .then((iDataInstanceRawData) => {
-                                        console.log("SerializedDataService.RawDataForInstance", iDataInstanceRawData);
                                         return iDataInstanceRawData;
                                     })
                                 );
@@ -456,8 +459,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         }
                 })
                 .then((filteredRawData) => {
-                        console.log("SerializedDataService.handleReadOperation finalize", criteria, readOperation.target.name, filteredRawData);
-                        return this._finalizeHandleReadOperation(readOperation, filteredRawData);
+                    if (!readOperation.data.readExpressions) {
+                        return filteredRawData
+                    }
+                    
+                    return this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]);
+                }).then((filteredRawData) => {
+                    console.log("SerializedDataService.handleReadOperation finalize", criteria, readOperation.target.name, filteredRawData);
+                    return this._finalizeHandleReadOperation(readOperation, filteredRawData);
                 })
                 .catch((error) => {
                     console.error("Error loading serialized data:", error);
@@ -471,6 +480,30 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         });
     }
+
+    _valueForRawDataAndReadExpression(objectDescriptor, rawData, readExpression) {
+        var propertyDescriptor = objectDescriptor.propertyDescriptorForName(readExpression),
+            valueDescriptor = propertyDescriptor.valueDescriptor;
+
+        if (this._isAsync(valueDescriptor)) {
+            return valueDescriptor.then((relObjectDescriptor) => {
+                let value = rawData[propertyDescriptor.name],
+                    dataIdentifer;
+                if (Array.isArray(value)) {
+                    value = value.map((item) => {
+                        dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                        return this.snapshotForDataIdentifier(dataIdentifer);
+                    });
+                } else {
+                    dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                    value = this.snapshotForDataIdentifier(dataIdentifer);
+                }
+                return value;
+            });
+        }
+
+    }  
+
 
     _finalizeHandleReadOperation(readOperation, rawData, readOperationCompletionPromiseResolve) {
         const responseOperation = this.responseOperationForReadOperation(
