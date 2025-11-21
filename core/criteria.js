@@ -1017,7 +1017,17 @@ var Criteria = (exports.Criteria = Montage.specialize(
          */
         toString: {
             value: function () {
-                return `${this.expression} with ${this.parameters ? JSON.stringify(this.parameters, this._circularJSONReplacer) : ""}`;
+                let stringified = "";
+                if (this.parameters) {
+                    try {
+                        stringified = JSON.stringify(this.parameters)
+                    } catch (e) {
+                        stringified = this.parameters;
+                    }
+                }
+                
+
+                return `${this.expression} with ${stringified}`;
             },
         },
     },

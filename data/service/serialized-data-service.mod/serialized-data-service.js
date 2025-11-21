@@ -138,6 +138,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
 
     fetchRawObjectProperty(object, propertyName) {
+        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+            iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
+
+        if (!object._originDataSnapshot && propertyName == "originDataSnapshot") {
+            object.originDataSnapshot = {};
+            object.originDataSnapshot[this.identifier] = iRawData;
+            return this.nullPromise;
+        }
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
         console.log("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName);
@@ -146,6 +154,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
     _mapObjectPropertyToRawData(object, objectKey, propertyDescriptor, rawData) {
                     
+        // debugger;
         if(propertyDescriptor.cardinality === 1) {
             let value =  object[objectKey];
             if(value?.hasOwnProperty("identifier")) {
@@ -191,7 +200,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
             if (this._isAsync(propertyDescriptor.valueDescriptor)) {
                 (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then(() => {
-                    console.log("SerializedDataService.mapObjectToRawData Resolved", object, propertyDescriptor);
                     try {
                         this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData);
                     } catch (e) {
@@ -209,13 +217,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         });
 
         if (mappingPromises && mappingPromises.length) {
-            console.log("SerializedDataService.mappingPromises", mappingPromises, object);
             return Promise.all(mappingPromises).then(() => {
-                console.log("SerializedDataService.mappedRawData Async", rawData);
                 return rawData;
             });
         }
-        console.log("SerializedDataService.mappedRawData Sync", rawData);
         return Promise.resolve(rawData);
     }
 
@@ -238,26 +243,17 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return object && object.then && typeof object.then === "function";
     }
 
-    _forEachObjectProperty(object, callback) {
-        let objectKeys = Object.keys(object),
-            objectDescriptor = object.objectDescriptor;
-        for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
-            iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
-            if(iPropertyDescriptor) {
-                callback(object[objectKeys[i]], iPropertyDescriptor, object);
-            }
-        }
-    }
-
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
         let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
+
         if(!iRawData) {
             iRawData = {};
             return this.mapObjectToRawData(object, iRawData, context)
             .then((rawData) => {
+                object.originDataSnapshot = rawData;
                 this.mapObjectTypeToRawData(object, rawData, context);
                 return rawData;
             }).then((rawData) => {
@@ -265,6 +261,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 return rawData;
             });
         } else {
+            if (!object.originDataSnapshot) {
+                object.originDataSnapshot = iRawData;
+            }
             //Not ideal to recrete a promise here...
             return Promise.resolve(iRawData);
         }
@@ -401,13 +400,15 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             return Promise.resolve(object)
         }
     }
+    shouldOverrideCriteria(criteria) {
+        return criteria && criteria.expression && (criteria.expression.equals("id == $") || criteria.expression.equals("id == id$") || criteria.expression.equals("id == $id"));
+    }
     handleReadOperation(readOperation) {
-        console.log("SerializeDataService.handleReadOperation", readOperation, !this.handlesType(readOperation.target));
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
         // data operations, verify here whether this service should handle the operation.
         if (!this.handlesType(readOperation.target)) return;
 
-        console.log("SerializeDataService.handleReadOperation", readOperation);
+        console.log("SerializedDataService.handleReadOperation", readOperation);
 
         //TJ If there is no delegate, callDelegateMethod returns null which throws an error. Do we need a null check or should we ALWAYS have a delegate?
         let delegatePromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation) || Promise.resolve(readOperation);
@@ -421,19 +422,28 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             if(!readOperation.defaultPrevented) {
 
                 let random = Math.random();
+                let criteria;
 
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
+                        console.log("SerializedDataService.handleReadOperation dataInstances", dataInstances);
+                        let objectDescriptor = readOperation.target;
+                        criteria = readOperation.criteria;
+                            let predicateFunction = criteria?.predicateFunction;
 
-                        const { criteria, objectDescriptor: target } = readOperation,
-                                predicateFunction = criteria?.predicateFunction;
+                        if (criteria && this.shouldOverrideCriteria(criteria)) {
+                            criteria = Criteria.withExpression("identifier == $", criteria.parameters);
+                            predicateFunction = criteria?.predicateFunction;
+                        }
                         let rawDataForObjectPromises = [];
 
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
+                            console.log("SerializedDataService.handleReadOperation.getRawDataForInstance", (criteria && predicateFunction(dataInstances[i]), dataInstances[i]));
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
                                 rawDataForObjectPromises.push(
                                     this._rawDataForObject(dataInstances[i], readOperation)
                                     .then((iDataInstanceRawData) => {
+                                        console.log("SerializedDataService.RawDataForInstance", iDataInstanceRawData);
                                         return iDataInstanceRawData;
                                     })
                                 );
@@ -447,7 +457,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         }
                 })
                 .then((filteredRawData) => {
-                        console.log("SerializedDataService.handleReadOperation finalize", random, readOperation.target.name, filteredRawData);
+                        console.log("SerializedDataService.handleReadOperation finalize", criteria, readOperation.target.name, filteredRawData);
                         return this._finalizeHandleReadOperation(readOperation, filteredRawData);
                 })
                 .catch((error) => {

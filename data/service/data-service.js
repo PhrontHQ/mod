@@ -2413,6 +2413,10 @@ DataService.addClassProperties(
                     isObjectCreated = this.isObjectCreated(object),
                     debug = exports.DataService.debugProperties.has(propertyName);
 
+                if (propertyName === "suborganizations") {
+                    debugger;
+                }
+
                 // Check if property is included in debugProperties. Intended for debugging
                 if (debug) {
                     console.debug("DataService.fetchObjectProperty", object, propertyName);

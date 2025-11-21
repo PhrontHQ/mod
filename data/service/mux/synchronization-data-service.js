@@ -1432,6 +1432,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             return;
         }
 
+        this.registerChildDataServiceReadCompletionOperation(readFailedOperation);
+
         console.log("Sync Service capture ReadFailedOperation "+readFailedOperation.id+" from "+readFailedOperation.rawDataService.identifier+", referrer "+readFailedOperation.referrer.id+", for "+readFailedOperation.referrer.target.name + (readFailedOperation.referrer?.data?.readExpressions? (" "+readFailedOperation.referrer?.data?.readExpressions) : "") + " like "+ readFailedOperation.referrer.criteria+": ", readFailedOperation.data);
 
         if((readFailedOperation.data.name === DataOperationErrorNames.DatabaseMissing) || 
@@ -1489,6 +1491,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     });
                 }
     
+            } else if (!this.didAllChildServicesCompletedReadOperationForTarget(readFailedOperation.referrer, readFailedOperation.target)) {
+                readFailedOperation.stopPropagation();
             }
             /*
                 If we have a delegate, we're going to rely on it to take care of the situation
@@ -1590,6 +1594,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
         return destinationDataServiceResultsPromise
         .then((destinationDataServiceResults) => {
+            if (propertyName === "suborganizations") {
+                console.log("Returned suborganizations results", destinationDataServiceResults);
+            }
             if(destinationDataServiceResults) {
                 return destinationDataServiceResults; 
             } else {
@@ -1599,6 +1606,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             
         })
         .catch((error) => {
+            console.error(error);
             needsImport = true;
             return this._invokeChildServicesFetchObjectProperty(childServices, 1, object, propertyName);
         })
@@ -1615,6 +1623,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 we should invoke our delegate 
             */
 
+            if (propertyName === "suborganizations") {
+                console.log("Returned fetchObjectProperty result", fetchObjectPropertyResult);
+            }
 
             return fetchObjectPropertyResult;
 
