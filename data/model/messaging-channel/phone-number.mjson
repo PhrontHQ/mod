@@ -47,6 +47,18 @@
             "valueType": "string"
         }
     },
+    "CountryDescriptor": {
+        "object": "data/model/country.mjson"
+    },
+    "country": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "country",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "PartySMSNumberDescriptor"}
+        }
+    },
     "nationalNumber": {
         "prototype": "core/meta/property-descriptor",
         "values": {
