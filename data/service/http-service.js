@@ -96,10 +96,38 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         super();
     }
 
+    deserializeSelf(deserializer) {
 
+        super.deserializeSelf(deserializer);
+
+        let value = deserializer.getProperty("requestResponseFallbackModuleId");
+        if (value) {
+            this.requestResponseFallbackModuleId = value;
+        }
+    }
 
     handleReadOperation(readOperation) {
         let readOperationCompletionPromise;
+
+        /*
+            This is to temporarily prevents a RawDataService to attempt to handle a readOperation that comes
+            from a query coming from a mapping's converter that will have a very RawData-specific criteria that
+            doesn't mean anything to any other RawDataService even if they can provide data for that type as well.
+
+            We either need to have the converter fetchData via its own service directly, and not via mainService.
+            Or automate in SynchronizationDataService the fetch of each origin data service's origin data snapshot for the current
+            object and property being fetched and get them to handle a read in their own language/model/data shape.
+            
+            That logic is in SynchronizationDataService and has been disabled, it need to be brought back and baked 
+        */
+        // if(readOperation.criteria?.name === "rawDataPrimaryKeyCriteria" && readOperation.hints?.rawDataService && readOperation.hints.rawDataService !== this) {
+        //     return;
+        // }
+
+        // if((readOperation.criteria?.name.contains("ForeignValueToObjectConverter")) && readOperation.hints?.rawDataService && readOperation.hints.rawDataService !== this) {
+        //     return;
+        // }
+       
 
         /*
             This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
@@ -113,45 +141,51 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
         */
         readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
-        if(readOperationCompletionPromise) {
+        if (readOperationCompletionPromise) {
             readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
-                if(!readOperation.defaultPrevented) {
-                    this._handleReadOperation(readOperation);
+                if (!readOperation.defaultPrevented) {
+                    let resultPromise = this._handleReadOperation(readOperation);
+                    if (this.promisesReadCompletionOperation) {
+                        return resultPromise
+                    }
                 }
             });
         } else {
-            this._handleReadOperation(readOperation);
+            let resultPromise = this._handleReadOperation(readOperation);
+            if (this.promisesReadCompletionOperation) {
+                readOperationCompletionPromise = resultPromise;
+            }
         }
 
         //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
         //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
-        if(this.promisesReadCompletionOperation) {
+        if (this.promisesReadCompletionOperation) {
             return readOperationCompletionPromise;
         }
 
     }
     _handleReadOperation(readOperation) {
         // if(readOperation.target.name === "Workstation" && readOperation.data.readExpressions[0] === "parent") {
-            //console.log("\t"+this.identifier+" handle readOperation id " + readOperation.id + " for "+readOperation.target.name+ (readOperation?.data?.readExpressions? (" "+readOperation?.data?.readExpressions) : "") + " like "+ readOperation.criteria);
+        //console.log("\t"+this.identifier+" handle readOperation id " + readOperation.id + " for "+readOperation.target.name+ (readOperation?.data?.readExpressions? (" "+readOperation?.data?.readExpressions) : "") + " like "+ readOperation.criteria);
         // }
 
         /*
             Until we solve more efficiently (lazily) how RawDataServices listen for and receive data operations, we have to check wether we're the one to deal with this:
         */
-        if(!this.handlesType(readOperation.target)) { 
+        if (!this.handlesType(readOperation.target)) {
             return;
         }
-        
+
         var objectDescriptor = readOperation.target,
             mapping = objectDescriptor && this.mappingForObjectDescriptor(objectDescriptor),
-            accessTokenPromise, 
+            accessTokenPromise,
             responseOperation,
             readOperationCompletionPromiseResolvers,
             readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject,
             readOperationAccessToken;
 
 
-        if(this.promisesReadCompletionOperation) {
+        if (this.promisesReadCompletionOperation) {
             readOperationCompletionPromiseResolvers = Promise.withResolvers();
             readOperationCompletionPromise = readOperationCompletionPromiseResolvers.promise;
             readOperationCompletionPromiseResolve = readOperationCompletionPromiseResolvers.resolve;
@@ -160,7 +194,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             readOperationCompletionPromise = readOperationCompletionPromiseResolve = readOperationCompletionPromiseReject = undefined;
         }
 
-        if(this.authenticationPolicy && this.authenticationPolicy === AuthenticationPolicy.UP_FRONT) {
+        if (this.authenticationPolicy && this.authenticationPolicy === AuthenticationPolicy.UP_FRONT) {
             let identityPromise;
 
             /*
@@ -174,11 +208,11 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             /*
                 Wether one was assigned straight or already obtained via fetchIdentity()
             */
-            if(this.identity || this.identityQuery) {
+            if (this.identity || this.identityQuery) {
                 identityPromise = this.identityPromise;
-            } else if(readOperation.identity) {
+            } else if (readOperation.identity) {
                 identityPromise = Promise.resolve(readOperation.identity);
-            } else if(this.application.identity) {
+            } else if (this.application.identity) {
                 identityPromise = Promise.resolve(this.application.identity);
             } else {
                 /*
@@ -196,15 +230,15 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                     the identity can be used by the raw data service
 
                 */
-               let userIdentityQuery = DataQuery.withTypeAndCriteria(UserIdentity);
+                let userIdentityQuery = DataQuery.withTypeAndCriteria(UserIdentity);
 
-               
-               identityPromise = this.mainService.fetchData(userIdentityQuery);
+
+                identityPromise = this.mainService.fetchData(userIdentityQuery);
 
                 //identityPromise = Promise.resolve(readOperation.identity || this.application.identity);
             }
 
-            
+
 
             /*
                 if we don't have a token or if it's expired (this.accessToken.remainingValidityDuration is negative), 
@@ -212,9 +246,9 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
                 then we re-authenticate
             */
-        //    if(this.accessToken) {
-        //         console.debug("this.accessToken.remainingValidityDuration is "+ this.accessToken.remainingValidityDuration +" ms");
-        //    }
+            //    if(this.accessToken) {
+            //         console.debug("this.accessToken.remainingValidityDuration is "+ this.accessToken.remainingValidityDuration +" ms");
+            //    }
 
             /*
                 TODO CLEANUP: for backend service, the identity is related to the service/backend itself
@@ -238,10 +272,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 //Now that we have a resolvedIdentity, we can check if we have a registered accesss token
                 let registeredAccessToken = this.accessTokenForIdentity(resolvedIdentity);
 
-                if(!registeredAccessToken  || registeredAccessToken.remainingValidityDuration < 2000) {
+                if (!registeredAccessToken || registeredAccessToken.remainingValidityDuration < 2000) {
 
-                    if(registeredAccessToken) {
-                        console.debug("\t"+this.name+" renewing access token that is about to expire: "+registeredAccessToken.remainingValidityDuration+"ms left")
+                    if (registeredAccessToken) {
+                        console.debug("\t" + this.name + " renewing access token that is about to expire: " + registeredAccessToken.remainingValidityDuration + "ms left")
 
                         //Clear the cache
                         this.mainService.unregisterReadOnlyDataObject(registeredAccessToken);
@@ -250,52 +284,52 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 }
 
                 return resolvedIdentity.objectDescriptor.propertyDescriptorNamed("accessTokens").valueDescriptor
-                .then((resolvedAccessTokenDescriptor) => {
+                    .then((resolvedAccessTokenDescriptor) => {
 
-                    let accessTokenDescriptor = resolvedAccessTokenDescriptor ? resolvedAccessTokenDescriptor : this.accessTokenDescriptor;
+                        let accessTokenDescriptor = resolvedAccessTokenDescriptor ? resolvedAccessTokenDescriptor : this.accessTokenDescriptor;
 
-                    if(!registeredAccessToken && !accessTokenDescriptor) {
+                        if (!registeredAccessToken && !accessTokenDescriptor) {
 
-                        throw "DataService "+this.identifier+" can't get an access token to handle readOperation " + readOperation
+                            throw "DataService " + this.identifier + " can't get an access token to handle readOperation " + readOperation
 
-                    } else {
+                        } else {
 
-                        /*
-                            In the case where the identity is cached locally, and the access token is too. 
+                            /*
+                                In the case where the identity is cached locally, and the access token is too. 
+    
+                            */
 
-                        */
+                            let identityCriteria = new Criteria().initWithExpression("identity == $", resolvedIdentity),
+                                tokenDataQuery = DataQuery.withTypeAndCriteria(accessTokenDescriptor, identityCriteria),
+                                tokenQueryDataStream;
 
-                        let identityCriteria = new Criteria().initWithExpression("identity == $", resolvedIdentity),
-                        tokenDataQuery = DataQuery.withTypeAndCriteria(accessTokenDescriptor, identityCriteria),
-                        tokenQueryDataStream;
-            
-                        tokenDataQuery.identity = resolvedIdentity;
-                        tokenQueryDataStream = this.mainService.fetchData(tokenDataQuery);
-                
-                        return tokenQueryDataStream.then((result) => {
-                            if(result && result.length === 1) {
-                                let accessToken = result[0];
-                                this.registerAccessTokenForIdentity(accessToken, resolvedIdentity);
+                            tokenDataQuery.identity = resolvedIdentity;
+                            tokenQueryDataStream = this.mainService.fetchData(tokenDataQuery);
 
-                                //Now set them both on the operation:
-                                readOperation.identity = resolvedIdentity;
-                                readOperation.accessToken = accessToken;
+                            return tokenQueryDataStream.then((result) => {
+                                if (result && result.length === 1) {
+                                    let accessToken = result[0];
+                                    this.registerAccessTokenForIdentity(accessToken, resolvedIdentity);
 
-                                return accessToken;
-                            } else {
-                                return null;
-                            }
-                        });
-                    }
+                                    //Now set them both on the operation:
+                                    readOperation.identity = resolvedIdentity;
+                                    readOperation.accessToken = accessToken;
 
-                });
+                                    return accessToken;
+                                } else {
+                                    return null;
+                                }
+                            });
+                        }
+
+                    });
 
             })
-            .catch(error => {
-                let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-                console.error("Identity promise failed with error", error);
-                return responseOperation;
-            });
+                .catch(error => {
+                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                    console.error("Identity promise failed with error", error);
+                    return responseOperation;
+                });
 
         } else {
             accessTokenPromise = Promise.resolve();
@@ -320,142 +354,142 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             */
 
             this.mapDataOperationToRawDataOperations(readOperation, readOperations)
-            .then(() => {
-                for(let i=0, iReadOperation; (iReadOperation = readOperations[i]); i++) {
+                .then(() => {
+                    for (let i = 0, iReadOperation; (iReadOperation = readOperations[i]); i++) {
 
-                    if(iReadOperation.type === DataOperation.Type.ReadCompletedOperation) {
-                        console.log("\t"+this.identifier+" handleReadOperation dispatch mapped ReadCompletedOperation " + iReadOperation.id, " for "+iReadOperation.referrer.target.name+ " like "+ iReadOperation.referrer.criteria);
+                        if (iReadOperation.type === DataOperation.Type.ReadCompletedOperation) {
+                            console.log("\t" + this.identifier + " handleReadOperation dispatch mapped ReadCompletedOperation " + iReadOperation.id, " for " + iReadOperation.referrer.target.name + " like " + iReadOperation.referrer.criteria);
 
-                        iReadOperation.target.dispatchEvent(iReadOperation);
-    
-                        iReadOperation.propagationPromise.then(() => {
-                            readOperationCompletionPromiseResolve?.(iReadOperation);
-                        });
-    
-                    } else {
-    
-                        let iMapping = this.mappingForObjectDescriptor(iReadOperation.target);
-                        if(typeof iMapping.mapDataOperationToFetchRequests === "function") {
-                            iMapping.mapDataOperationToFetchRequests(iReadOperation, fetchRequests);
-    
-                            if(fetchRequests.length > 0) {
-    
-                                for(let i=0, iRequest; (iRequest = fetchRequests[i]); i++) {
-                                    console.debug(iRequest.url);
-                                    // console.debug("iRequest headers: ",iRequest.headers);
-                                    // console.debug("iRequest body: ",iRequest.body);
-                                    // .finally((value) => {
-                                    //     console.debug("finally objectDescriptor.dispatchEvent("+responseOperation+");");
-                                    //     objectDescriptor.dispatchEvent(responseOperation);
-                                    // })
-                                    this._fetchReadOperationRequest(iReadOperation, iRequest, readOperationCompletionPromiseResolve);
-                                }              
-                            } else {
-                                let criteriaParameters = readOperation?.criteria?.parameters,
-                                    qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
-                                    rawDataPrimaryKeyProperties = mapping.rawDataPrimaryKeyProperties,
-                                    rawData = [];
-                
-                                if(readOperation.data.readExpressions && readOperation.data.readExpressions.length > 0 && qualifiedProperties?.length == 1) {
-                                    /*
-                                        The test obove is for a query initiated by mod's data-triggers to resolve values of one object at a time and that qualifiedProperties only is the primary key.
-                                        So far mod supports a single primary key, that can be an object.
-                
-                                        We should more carefully use the syntax to match the property to it's value
-                                    */
-                                    // let readExpressions = readOperation.data.readExpressions,
-                                    //         rawDataObject = {};
-                
-                                    //     rawData.push(rawDataObject);
-                                    // //Set the primary key:
-                                    // rawDataObject[qualifiedProperties[0]] = criteriaParameters;
-                                    
-                                    // console.once.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
-                                    
-                                    // //console.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions+" and criteria: ",readOperation.criteria);
-                                    // for(let i = 0, countI = readExpressions.length, iReadExpression, iPropertyDescriptor; (i < countI); i++ ) {
-                                    //     iReadExpression = readExpressions[i]
-                                    //     iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iReadExpression);
-                                    //     rawDataObject[iReadExpression] = iPropertyDescriptor.defaultValue || iPropertyDescriptor.defaultFalsyValue;
-                                    // }
-                                    
-                                    responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
-                                    console.log("\t"+this.identifier+" handleReadOperation dispatch A responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+                            iReadOperation.target.dispatchEvent(iReadOperation);
 
-                                    responseOperation.target.dispatchEvent(responseOperation);
-                
-                                    //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                                    responseOperation.propagationPromise.then(() => {
-                                        readOperationCompletionPromiseResolve?.(responseOperation);
-                                    });
-                
-                                } else {
-                                    let error = new Error("No Mapping found "+ readOperation.target.name+ " "+readOperation.data.readExpressions);
-                                
-                                    console.once.error(error.message);
-                                    if(readOperation.clientId) {
-                                        error.stack = null;
+                            iReadOperation.propagationPromise.then(() => {
+                                readOperationCompletionPromiseResolve?.(iReadOperation);
+                            });
+
+                        } else {
+
+                            let iMapping = this.mappingForObjectDescriptor(iReadOperation.target);
+                            if (typeof iMapping.mapDataOperationToFetchRequests === "function") {
+                                iMapping.mapDataOperationToFetchRequests(iReadOperation, fetchRequests);
+
+                                if (fetchRequests.length > 0) {
+
+                                    for (let i = 0, iRequest; (iRequest = fetchRequests[i]); i++) {
+                                        console.debug(iRequest.url);
+                                        // console.debug("iRequest headers: ",iRequest.headers);
+                                        // console.debug("iRequest body: ",iRequest.body);
+                                        // .finally((value) => {
+                                        //     console.debug("finally objectDescriptor.dispatchEvent("+responseOperation+");");
+                                        //     objectDescriptor.dispatchEvent(responseOperation);
+                                        // })
+                                        this._fetchReadOperationRequest(iReadOperation, iRequest, readOperationCompletionPromiseResolve);
                                     }
-                                    // responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-                                    //Send an empty response instead
-                                    responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, []);
-                                    console.log("\t"+this.identifier+" handleReadOperation dispatch B responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+                                } else {
+                                    let criteriaParameters = readOperation?.criteria?.parameters,
+                                        qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
+                                        rawDataPrimaryKeyProperties = mapping.rawDataPrimaryKeyProperties,
+                                        rawData = [];
 
-                                    responseOperation.target.dispatchEvent(responseOperation);
-                
-                                    //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                                    responseOperation.propagationPromise.then(() => {
-                                        readOperationCompletionPromiseResolve?.(responseOperation);
-                                    });
-                                    
+                                    if (readOperation.data.readExpressions && readOperation.data.readExpressions.length > 0 && qualifiedProperties?.length == 1) {
+                                        /*
+                                            The test obove is for a query initiated by mod's data-triggers to resolve values of one object at a time and that qualifiedProperties only is the primary key.
+                                            So far mod supports a single primary key, that can be an object.
+                    
+                                            We should more carefully use the syntax to match the property to it's value
+                                        */
+                                        // let readExpressions = readOperation.data.readExpressions,
+                                        //         rawDataObject = {};
+
+                                        //     rawData.push(rawDataObject);
+                                        // //Set the primary key:
+                                        // rawDataObject[qualifiedProperties[0]] = criteriaParameters;
+
+                                        // console.once.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
+
+                                        // //console.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions+" and criteria: ",readOperation.criteria);
+                                        // for(let i = 0, countI = readExpressions.length, iReadExpression, iPropertyDescriptor; (i < countI); i++ ) {
+                                        //     iReadExpression = readExpressions[i]
+                                        //     iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iReadExpression);
+                                        //     rawDataObject[iReadExpression] = iPropertyDescriptor.defaultValue || iPropertyDescriptor.defaultFalsyValue;
+                                        // }
+
+                                        responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
+                                        console.log("\t" + this.identifier + " handleReadOperation dispatch A responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+
+                                        responseOperation.target.dispatchEvent(responseOperation);
+
+                                        //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                                        responseOperation.propagationPromise.then(() => {
+                                            readOperationCompletionPromiseResolve?.(responseOperation);
+                                        });
+
+                                    } else {
+                                        let error = new Error("No Mapping found " + readOperation.target.name + " " + readOperation.data.readExpressions);
+
+                                        console.once.error(error.message);
+                                        if (readOperation.clientId) {
+                                            error.stack = null;
+                                        }
+                                        // responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                                        //Send an empty response instead
+                                        responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, []);
+                                        console.log("\t" + this.identifier + " handleReadOperation dispatch B responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+
+                                        responseOperation.target.dispatchEvent(responseOperation);
+
+                                        //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                                        responseOperation.propagationPromise.then(() => {
+                                            readOperationCompletionPromiseResolve?.(responseOperation);
+                                        });
+
+                                    }
+
                                 }
-                
+
                             }
-                
+                            else {
+
+                                console.warn(this.name + ": No Rule found to map a read operation for " + iReadOperation.target.name + " to a fetchRequest");
+                                readOperationCompletionPromiseResolve();
+                                /*
+                                    Benoit 11/13/2025 commented it as this is it an error: some RawDataService can map raw data to objects that may be nested in 
+                                    a read for another type, but don't actually have an API to get it on its own. 
+    
+                                    We need to eventually need to introduce that semantic more clearly, but the recent mapping from operation to fetchRequests is 
+                                    a step in that direction.
+                                */
+                                // let error = new Error(this.name+": No Mapping for "+ iReadOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
+                                // responseOperation = this.responseOperationForReadOperation(iReadOperation.referrer ? iReadOperation.referrer : iReadOperation, error, null);
+                                // console.log("\t"+this.identifier+" handleReadOperation dispatch C responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+
+                                // responseOperation.target.dispatchEvent(responseOperation);
+
+                                // //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                                // responseOperation.propagationPromise.then(() => {
+                                //     readOperationCompletionPromiseResolve?.(responseOperation);
+                                // });
+
+                            }
                         }
-                        else {
 
-                            console.warn(this.name+": No Rule found to map a read operation for "+ iReadOperation.target.name+ " to a fetchRequest");
-                            readOperationCompletionPromiseResolve();
-                            /*
-                                Benoit 11/13/2025 commented it as this is it an error: some RawDataService can map raw data to objects that may be nested in 
-                                a read for another type, but don't actually have an API to get it on its own. 
-
-                                We need to eventually need to introduce that semantic more clearly, but the recent mapping from operation to fetchRequests is 
-                                a step in that direction.
-                            */
-                            // let error = new Error(this.name+": No Mapping for "+ iReadOperation.target.name+ " lacks mapDataOperationToFetchRequests(readOperation, fetchRequests) method");
-                            // responseOperation = this.responseOperationForReadOperation(iReadOperation.referrer ? iReadOperation.referrer : iReadOperation, error, null);
-                            // console.log("\t"+this.identifier+" handleReadOperation dispatch C responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
-
-                            // responseOperation.target.dispatchEvent(responseOperation);
-            
-                            // //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-                            // responseOperation.propagationPromise.then(() => {
-                            //     readOperationCompletionPromiseResolve?.(responseOperation);
-                            // });
-                            
-                        }
                     }
-    
-                }
-    
-            });            
+
+                });
 
         })
-        .catch((error) => {
-            responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-            console.error(error);
-            console.log("\t"+this.identifier+" handleReadOperation ERROR dispatch D responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
-            responseOperation.target.dispatchEvent(responseOperation);
+            .catch((error) => {
+                responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                console.error(error);
+                console.log("\t" + this.identifier + " handleReadOperation ERROR dispatch D responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+                responseOperation.target.dispatchEvent(responseOperation);
 
-            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-            responseOperation.propagationPromise.then(() => {
-                readOperationCompletionPromiseResolve?.(responseOperation);
+                //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                responseOperation.propagationPromise.then(() => {
+                    readOperationCompletionPromiseResolve?.(responseOperation);
+                });
+
             });
-            
-        });
-        
+
         return readOperationCompletionPromise;
     }
 
@@ -476,16 +510,16 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             One common case is a read operation for an objet's property, can also be a relationship to another type.
             We're first adding this. 
         */
-       let  readExpressions = dataOperation.data?.readExpressions,
+        let readExpressions = dataOperation.data?.readExpressions,
             readExpressionsCount = readExpressions?.length || 0;
 
-        if(dataOperation?.criteria?.name === "rawDataPrimaryKeyCriteria" && readExpressions?.length > 0) {
+        if (dataOperation?.criteria?.name === "rawDataPrimaryKeyCriteria" && readExpressions?.length > 0) {
             var objectDescriptor = dataOperation.target,
-            mapping = this.mappingForType(objectDescriptor),
-            rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
-            primaryKeyPropertyDescriptors = mapping.primaryKeyPropertyDescriptors,
-            criteria = dataOperation.criteria,
-            readExpressionPromises;
+                mapping = this.mappingForType(objectDescriptor),
+                rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
+                primaryKeyPropertyDescriptors = mapping.primaryKeyPropertyDescriptors,
+                criteria = dataOperation.criteria,
+                readExpressionPromises;
 
             /*
                 We'd need a way to struture how to inform what readExpression a RawDataService can combine.
@@ -494,20 +528,20 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 to have that sorted out at the end of looping on readExpressions.
                 It might be better done in FetchResourceDataMapping
             */
-    
-            for(let i=0, countI = readExpressionsCount, iExpression;(i<countI); i++) {
+
+            for (let i = 0, countI = readExpressionsCount, iExpression; (i < countI); i++) {
 
                 iExpression = readExpressions[i];
 
                 let iObjectRule = mapping.objectMappingRuleForPropertyName(iExpression),
                     iObjectRuleConverter = iObjectRule && iObjectRule.converter,
-    
+
                     iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(iExpression),
                     iValueDescriptorReference = iObjectRule && iObjectRule.propertyDescriptor._valueDescriptorReference,
                     iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
 
                 //If it's a relationship to another type, we're going to need to build a different DataOperation
-                if(iValueDescriptorReference && iValueDescriptorReference !== objectDescriptor) {
+                if (iValueDescriptorReference && iValueDescriptorReference !== objectDescriptor) {
 
                     let iReadOperation = new DataOperation();
                     iReadOperation.clientId = dataOperation.clientId;
@@ -530,22 +564,22 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                         up their own thing.
                     */
                     //Loop on potential matches
-                    while((iRawDataMappingRule = iRawDataMappingRulesIterator.next().value)) {
+                    while ((iRawDataMappingRule = iRawDataMappingRulesIterator.next().value)) {
 
                         let iTargetPath = iRawDataMappingRule.targetPath,
                             iRawDataMappingRuleConverter = iRawDataMappingRule.reverter,
                             iRawDataMappingRuleConverterForeignDescriptorMapping = iRawDataMappingRuleConverter && iRawDataMappingRuleConverter.foreignDescriptorMatchingRawProperty && iRawDataMappingRuleConverter.foreignDescriptorMatchingRawProperty(iTargetPath);
 
-                        if(iRawDataMappingRuleConverterForeignDescriptorMapping) {
+                        if (iRawDataMappingRuleConverterForeignDescriptorMapping) {
                             //Test
                             iValueDescriptorReference = iRawDataMappingRuleConverterForeignDescriptorMapping.type;
                             iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
                         }
 
-                        if(readExpressionsCount === 1) {
+                        if (readExpressionsCount === 1) {
                             let mappingScope = mapping._scope.nest(dataOperation),
                                 originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier];
-                            
+
                             /*
                                 FIXME: not all aspects of RawForeignValueToObjectConverter's query creation have migrated to a more
                                 object-level representation.
@@ -553,23 +587,23 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                 We could try to use dataOperation.criteria parameters, if it's a to-many,
                                 than it might work, but that's a bit reaching
                             */
-                            if(originDataSnapshot) {
+                            if (originDataSnapshot) {
                                 mappingScope = mappingScope.nest(originDataSnapshot);
-                                
 
-                                if( (iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter) || (iRawDataMappingRule.reverter instanceof RawEmbeddedHierarchyValueToObjectConverter)) {
-                                // if( (iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter)) {
-                                    
+
+                                if ((iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter) || (iRawDataMappingRule.reverter instanceof RawEmbeddedHierarchyValueToObjectConverter)) {
+                                    // if( (iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter)) {
+
                                     let originValue = iObjectRule.evaluate(mappingScope);
-                                    if(!Promise.is(originValue)) {
+                                    if (!Promise.is(originValue)) {
                                         let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, originValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
                                         rawDataOperations.push(responseOperation);
                                     } else {
                                         (readExpressionPromises || (readExpressionPromises = [])).push(originValue);
                                         originValue.then((resolvedOriginValue) => {
                                             console.debug("iObjectRule: ", iObjectRule);
-                                            console.debug("originDataSnapshot: ",originDataSnapshot);
-                                            console.debug("dataOperation: ",dataOperation);
+                                            console.debug("originDataSnapshot: ", originDataSnapshot);
+                                            console.debug("dataOperation: ", dataOperation);
                                             let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, resolvedOriginValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
                                             rawDataOperations.push(responseOperation);
                                         });
@@ -578,7 +612,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                 } else {
                                     iReadOperation.criteria = iRawDataMappingRule.reverter.convertCriteriaForValue(iObjectRule.expression(mappingScope));
                                     //iReadOperation.criteria = iRawDataMappingRuleConverter.convertCriteriaForValue(criteria.parameters.id);
-                                    rawDataOperations.push(iReadOperation);    
+                                    rawDataOperations.push(iReadOperation);
                                 }
                             } else {
                                 console.log("can't fetch further");
@@ -587,21 +621,21 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                         } else {
                             throw "HTTPService mapDataOperationToRawDataOperations() is not implememnted yer to handle more than one expression"
                         }
-                     
+
                     }
-                } else if(!rawDataOperations.has(dataOperation)) {
-                    rawDataOperations.push(dataOperation);    
+                } else if (!rawDataOperations.has(dataOperation)) {
+                    rawDataOperations.push(dataOperation);
                 }
 
             }
 
-            if(readExpressionPromises && readExpressionPromises.length) {
-                return (readExpressionPromises.length === 1 
+            if (readExpressionPromises && readExpressionPromises.length) {
+                return (readExpressionPromises.length === 1
                     ? readExpressionPromises[0]
                     : Promise.all(readExpressionPromises))
-                .then((resolvedValue) => {
-                    return rawDataOperations;
-                })
+                    .then((resolvedValue) => {
+                        return rawDataOperations;
+                    })
             } else {
                 return Promise.resolve(rawDataOperations);
             }
@@ -613,78 +647,155 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         }
     }
 
+    __requestResponseFallback
+    __requestResponseFallbackPromise
+
+    get _requestResponseFallback() {
+        if (this.requestResponseFallbackModuleId && !this.__requestResponseFallbackPromise) {
+
+            return ( this.__requestResponseFallbackPromise || (this.__requestResponseFallbackPromise = global.require.async(this.requestResponseFallbackModuleId)
+                .then((requestResponseFallback) => {
+                    if (!requestResponseFallback) {
+                        throw new Error("requestResponseFallback not found at " + this.requestResponseFallbackModuleId);
+                    }
+
+                    return requestResponseFallback;
+                })
+                .catch((error) => {
+                    console.error("Error loading requestResponseFallback data at "+this.requestResponseFallbackModuleId+": ", error);
+                    throw error;
+                })));
+
+        } else {
+            return (this.__requestResponseFallbackPromise || (this.__requestResponseFallbackPromise = Promise.resolveNull));
+        }
+    }
+
+    fallbackForResponseIfNeeded(response) {
+        if (response.status === 200) {
+            console.debug("200: " + response.url);
+            return response;
+        } else {
+
+            return this._requestResponseFallback
+                .then((requestResponseFallback) => {
+                    //First implementation, lookup the url, later smarter mapping rules:
+                    let requestResponseFallbackBody = requestResponseFallback?.[response.url];
+
+                    if (requestResponseFallbackBody) {
+
+                        if (!(requestResponseFallbackBody instanceof Response)) {
+
+                            // Response constructor (https://developer.mozilla.org/en-US/docs/Web/API/Response/Response) 
+                            // expects the first argument, the body to be many possible types, but an Object isn't one of them.
+                            // So if requestResponseFallbackBody isn't a string we JSON.stringify it 
+                            if(requestResponseFallbackBody instanceof Object) {
+                                requestResponseFallbackBody = JSON.stringify(requestResponseFallbackBody);
+                            }
+                            //We replace it by a response object
+                            const fallbackResponse = new Response(requestResponseFallbackBody, {
+                                headers: response.headers,
+                                status: 200,
+                                statusText: "(cache)"
+                            });
+
+                            //Now cache the result Response for further use
+                            requestResponseFallback[response.url] = fallbackResponse;
+                            requestResponseFallbackBody = fallbackResponse;
+                        }
+                        return requestResponseFallbackBody;
+
+                    } else {
+                        return response;
+                    }
+
+                });
+        }
+    }
+
     _fetchReadOperationRequest(readOperation, iRequest, readOperationCompletionPromiseResolve) {
 
         fetch(iRequest)
-        .then((response) => {
-            if (response.status === 200) {
-                console.debug("200: "+response.url);
+            .then((response) => {
+                return this.fallbackForResponseIfNeeded(response);
+            })
+            .then((response) => {
 
-                //console.log("Cache-Control: " + response.headers.get('Cache-Control') || response.headers.get('cache-control'));
-                if(response.headers.get('content-type').includes("json")) {
-                    return response.json();
-                } else {
-                    return response.text();
-                }
-            } else if( response.status === 401) {
-                console.debug("401: "+response.url);
-                // console.log("Token has expired?",response);
-                throw new Error("Token has expired");
-            } else if( response.status === 404) {
-                /*
-                    This is the case where the API is all path and therefore in case nothing is found, the response is logically a 404
-                */
-                if((new URL(response.url)).search === "") {
-                    return null;
-                } else {
-                    console.log("\t"+`No ${readOperation.target.name} Data found for criteria ${readOperation.criteria.expression} with parameters ${JSON.stringify(readOperation.criteria.parameters)} at ${response.url}`);
-                    throw new Error("\t"+`No ${readOperation.target.name} Data found for criteria ${readOperation.criteria.expression} with parameters ${JSON.stringify(readOperation.criteria.parameters)} at ${response.url}`);    
-                }
-            }
-            else {
-                return response.text()
-                .then((responseContent) => {
-                    if(responseContent === "") {
-                        console.log(response);
+                if (response.status === 200 || response.statusText === "(cache)" ) {
+                    console.debug("200: " + response.url);
+
+                    //console.log("Cache-Control: " + response.headers.get('Cache-Control') || response.headers.get('cache-control'));
+                    if (response.headers.get('content-type').includes("json")) {
+                        return response.json();
+                    } else {
+                        return response.text();
                     }
-                    throw new Error("Request failed with error: " + responseContent);
+                } else {
+
+                    if (response.status === 401) {
+                        console.debug("401: " + response.url);
+                        // console.log("Token has expired?",response);
+                        throw new Error("Token has expired");
+                    } else if (response.status === 403) {
+                        console.debug("403: Authorization Request Denied" + response.url);
+                        // console.log("Token has expired?",response);
+                        throw new Error("Authorization Request Denied");
+                    } else if (response.status === 404) {
+                        /*
+                            This is the case where the API is all path and therefore in case nothing is found, the response is logically a 404
+                        */
+                        if ((new URL(response.url)).search === "") {
+                            return null;
+                        } else {
+                            console.log("\t" + `No ${readOperation.target.name} Data found for criteria ${readOperation.criteria.expression} with parameters ${JSON.stringify(readOperation.criteria.parameters)} at ${response.url}`);
+                            throw new Error("\t" + `No ${readOperation.target.name} Data found for criteria ${readOperation.criteria.expression} with parameters ${JSON.stringify(readOperation.criteria.parameters)} at ${response.url}`);
+                        }
+                    }
+                    else {
+                        return response.text()
+                            .then((responseContent) => {
+                                if (responseContent === "") {
+                                    console.log(response);
+                                }
+                                throw new Error("Request failed with error: " + responseContent);
+                            });
+                    }
+                }
+            })
+            .then((responseContent) => {
+                //console.debug(iRequest.url+": ",JSON.stringify(responseContent));
+                let mapping = this.mappingForObjectDescriptor(readOperation.target);
+                let rawData = [];
+
+                mapping.mapFetchResponseToRawData(responseContent, rawData);
+                //console.debug("rawData: ",rawData);
+                let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, false /*isNotLast*/, readOperation.target/*responseOperationTarget*/);
+                console.log("\t" + this.identifier + " handleReadOperation dispatch " + responseOperation.type + " id " + responseOperation.id + " for read referrer id " + responseOperation.referrer.id + " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+
+                responseOperation.target.dispatchEvent(responseOperation);
+
+                //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                responseOperation.propagationPromise.then(() => {
+                    readOperationCompletionPromiseResolve?.(responseOperation);
                 });
-            }
-        })
-        .then((responseContent) => {
-            //console.debug(iRequest.url+": ",JSON.stringify(responseContent));
-            let mapping = this.mappingForObjectDescriptor(readOperation.target);
-            let rawData = [];
 
-            mapping.mapFetchResponseToRawData(responseContent, rawData);
-            //console.debug("rawData: ",rawData);
-            let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, false /*isNotLast*/, readOperation.target/*responseOperationTarget*/);
-            console.log("\t"+this.identifier+" handleReadOperation dispatch "+ responseOperation.type+" id " +responseOperation.id+" for read referrer id "+responseOperation.referrer.id+" for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
+                //return responseOperation;
+            })
+            .catch((error) => {
+                console.log(this.name + " Fetch Request:", iRequest + ", error: ", error);
+                let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
+                console.error(error);
+                console.log(this.identifier + " handleReadOperation dispatch ERROR responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
 
-            responseOperation.target.dispatchEvent(responseOperation);
+                responseOperation.target.dispatchEvent(responseOperation);
 
-            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-            responseOperation.propagationPromise.then(() => {
-                readOperationCompletionPromiseResolve?.(responseOperation);
-            });
+                //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+                responseOperation.propagationPromise.then(() => {
+                    readOperationCompletionPromiseResolve?.(responseOperation);
+                });
 
-            //return responseOperation;
-        })
-        .catch((error) => {
-            console.log(this.name+" Fetch Request:", iRequest+", error: ", error);
-            let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
-            console.error(error);
-            console.log(this.identifier+" handleReadOperation dispatch ERROR responseOperation " + responseOperation.id, " for "+responseOperation.referrer.target.name+ " like "+ responseOperation.referrer.criteria);
-
-            responseOperation.target.dispatchEvent(responseOperation);
-
-            //Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-            responseOperation.propagationPromise.then(() => {
-                readOperationCompletionPromiseResolve?.(responseOperation);
-            });
-            
-            //return responseOperation;
-        })
+                //return responseOperation;
+            })
 
     }
 
@@ -705,7 +816,7 @@ HttpService.addClassProperties({
      * @type {Object<string, string>}
      */
     FORM_URL_ENCODED: {
-        value: {"Content-Type": "application/x-www-form-urlencoded"}
+        value: { "Content-Type": "application/x-www-form-urlencoded" }
     },
 
     /**
@@ -929,7 +1040,7 @@ HttpService.addClassProperties({
 
                     keys = Object.keys(parsed.headers);
                     for (i = 0; (key = keys[i]); ++i) {
-                        if(iValue = parsed.headers[key]) {
+                        if (iValue = parsed.headers[key]) {
                             request.setRequestHeader(key, iValue);
                         }
                     }
@@ -983,7 +1094,7 @@ HttpService.addClassProperties({
             var parsed, last, i, n;
             // Parse the url argument, setting the "last" argument index to -1
             // if the URL is invalid.
-            parsed = {url: arguments[0]};
+            parsed = { url: arguments[0] };
             last = typeof parsed.url === "string" ? arguments.length - 1 : -1;
             if (last < 0) {
                 console.warn(new Error("Invalid URL for fetchHttpRawData()"));
@@ -1077,7 +1188,7 @@ HttpService.addClassProperties({
 
     formUrlEncode: {
         value: function (string) {
-            return encodeURIComponent(string).replace(/ /g, "+").replace(/[!'()*]/g, function(c) {
+            return encodeURIComponent(string).replace(/ /g, "+").replace(/[!'()*]/g, function (c) {
                 return '%' + c.charCodeAt(0).toString(16);
             });
         }
