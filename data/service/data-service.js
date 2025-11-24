@@ -3086,6 +3086,9 @@ DataService.addClassProperties(
                             type,
                             service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
+                    if (type.name === "IncorporatedOrganization") {
+                        console.log("Create IncorporatedOrganization");
+                    }
                     this.registerCreatedDataObject(object);
 
                     return object;
@@ -3207,6 +3210,7 @@ DataService.addClassProperties(
                 // constructor = this._getPrototypeForType(objectDescriptor).constructor,
                 // object = new constructor;
                 // //object = Reflect.construct(constructor, this._emptyArray);
+
                 if (object) {
                     delegateDataIdentifier =
                         dataIdentifierDataService.callDelegateMethod(

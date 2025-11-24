@@ -1,3 +1,5 @@
+const { filter } = require("bluebird");
+
 const RawDataService = require("../raw-data-service").RawDataService,
     
     DataObject = require("../../model/data-object").DataObject,
@@ -5,6 +7,10 @@ const RawDataService = require("../raw-data-service").RawDataService,
     DataQuery = require("../../model/data-query").DataQuery,
     Criteria = require("core/criteria").Criteria,
     KebabCaseConverter = require("core/converter/kebab-case-converter").KebabCaseConverter;
+
+
+    const assign = require("../../../core/frb/assign");
+const { Organization } = require("../../model/party/organization");
 
 /**
  * @class SerializedDataService
@@ -141,14 +147,17 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
+
+
         if (!object._originDataSnapshot && propertyName == "originDataSnapshot") {
             object.originDataSnapshot = {};
             object.originDataSnapshot[this.identifier] = iRawData;
             return this.nullPromise;
         }
+
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
-        console.log("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName);
+        console.warn("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName, iRawData);
         return this.nullPromise;
     }
 
@@ -248,7 +257,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
-
         if(!iRawData) {
             iRawData = {};
             return this.mapObjectToRawData(object, iRawData, context)
@@ -259,7 +267,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             }).then((rawData) => {
                 this.recordSnapshot(iDataInstanceIdentifier, rawData);
                 return rawData;
-            });
+            }).catch((e) => {
+                console.error(e);
+            })
         } else {
             if (!object.originDataSnapshot) {
                 object.originDataSnapshot = iRawData;
@@ -269,6 +279,20 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
 
     }
+    
+    mapObjectTypeToRawData (object, rawData, context) {
+        let mapping = this.mappingForObject(object);
+        
+        if (mapping && mapping.mapObjectTypeToRawData) {
+            return mapping.mapObjectTypeToRawData(object, rawData, context);
+        }
+
+        if(this.needsRawDataTypeIdentificationCriteria) {
+            let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
+            assign(rawData, criteria.expression, true, criteria.parameters);
+        }
+    }
+    
 
     _objectPromiseForDataIdentifier(aDataIdentifier, mainService) {
         let iObjectValue = mainService.objectForDataIdentifier(aDataIdentifier);
@@ -305,18 +329,18 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
 
         if(iPropertyDescriptor) {
+            // debugger;
             /*
                 We need to decide wether we store the value - object[property]
                 or if that value has an idententifier if it's an
             */
             if(iPropertyDescriptor.valueDescriptor) {
-                // debugger;
-                if (iPropertyDescriptor.valueDescriptor.then) {
+                if (this._isAsync(iPropertyDescriptor.valueDescriptor.then)) {
                     mappingPromises.push(iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
                         return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
                     }));
                 } else {
-                    return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
+                    return this.__mapRawDataPropertyToObject(record, property, iPropertyDescriptor.valueDescriptor, object, mainService);
                 }
 
             } else {
@@ -395,7 +419,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
 
         if(mappingPromises.length) {
-            return Promise.all(mappingPromises);
+            return Promise.all(mappingPromises).then(() => {
+                return object;
+            });
         } else {
             return Promise.resolve(object)
         }
@@ -425,7 +451,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
-                        console.log("SerializedDataService.handleReadOperation dataInstances", dataInstances);
                         criteria = readOperation.criteria;
                             let predicateFunction = criteria?.predicateFunction;
 
@@ -440,6 +465,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             predicateFunction = criteria?.predicateFunction;
                         }
                         let rawDataForObjectPromises = [];
+
 
                         for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
                             if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
@@ -465,7 +491,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     
                     return this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]);
                 }).then((filteredRawData) => {
-                    console.log("SerializedDataService.handleReadOperation finalize", criteria, readOperation.target.name, filteredRawData);
+                    filteredRawData = filteredRawData && filteredRawData.filter((item) => {
+                        return !!item;
+                    });
                     return this._finalizeHandleReadOperation(readOperation, filteredRawData);
                 })
                 .catch((error) => {
@@ -485,39 +513,104 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         var propertyDescriptor = objectDescriptor.propertyDescriptorForName(readExpression),
             valueDescriptor = propertyDescriptor.valueDescriptor;
 
+
         if (this._isAsync(valueDescriptor)) {
             return valueDescriptor.then((relObjectDescriptor) => {
                 let value = rawData[propertyDescriptor.name],
-                    dataIdentifer;
-                if (Array.isArray(value)) {
-                    value = value.map((item) => {
-                        dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
-                        return this.snapshotForDataIdentifier(dataIdentifer);
+                    dataIdentifer, snapshot;
+
+                if (this.handlesType(relObjectDescriptor) && !this._dataInstancesPromiseByObjectDescriptor.has(relObjectDescriptor)) {
+                    return this._readObjectsWithType(relObjectDescriptor).then((instances) => {
+                        if (Array.isArray(value)) {
+                            value = value.map((item) => {
+                                dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                                snapshot = this.snapshotForDataIdentifier(dataIdentifer);
+                                return snapshot;
+                            }).filter((item) => {
+                                return !!item;
+                            });
+                        } else {
+                            dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, value);
+                            value = this.snapshotForDataIdentifier(dataIdentifer);
+                        }
+                        return value;
                     });
                 } else {
-                    dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                    if (Array.isArray(value)) {
+                    value = value.map((item) => {
+                        dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                        snapshot = this.snapshotForDataIdentifier(dataIdentifer);
+                        return snapshot;
+                    }).filter((item) => {
+                        return !!item;
+                    });
+                } else {
+                    dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, value);
                     value = this.snapshotForDataIdentifier(dataIdentifer);
                 }
                 return value;
+                }
+                
             });
         }
 
-    }  
+    }
+
+    _readObjectsWithType (type) {
+        return this.dataInstancesPromiseForObjectDescriptor(type).then((instances) => {
+            return Promise.all(instances.map((instance) => {
+                return this._rawDataForObject(instance)
+                                    .then((iDataInstanceRawData) => {
+                                        return iDataInstanceRawData;
+                                    })
+            }));
+        });
+    }
 
 
     _finalizeHandleReadOperation(readOperation, rawData, readOperationCompletionPromiseResolve) {
-        const responseOperation = this.responseOperationForReadOperation(
-            readOperation.referrer ? readOperation.referrer : readOperation,
-            null,
-            rawData
-        );
+        let readOperationTarget = readOperation.target,
+            readExpressions = readOperation.data && readOperation.data.readExpressions,
+            responseOperationTarget;
 
-        responseOperation.target.dispatchEvent(responseOperation);
+        if (readExpressions) {
+            for (let iPropertyName of readOperation.data.readExpressions) {
+                let propertyDescriptor = readOperationTarget.propertyDescriptorNamed(iPropertyName);
+                /* 
+                    shortcut: propertyDescriptor.valueDescriptor returns a promise, 
+                    whose resolved value is set to _valueDescriptorReference
+                */
+                if(propertyDescriptor.valueDescriptor && propertyDescriptor._valueDescriptorReference) {
+                    responseOperationTarget = propertyDescriptor._valueDescriptorReference;
+                } else {
+                    responseOperationTarget = readOperationTarget;
+                }
 
-        // Resolve once dispatchEvent() is completed, including any pending progagationPromise.
-        responseOperation.propagationPromise.then(() => {
-            readOperationCompletionPromiseResolve?.(responseOperation);
-        });
+                // if(supportedProperties.has(iPropertyName)) {
+                //     let methodName = `handle${iPropertyName.toCapitalized()}ReadOperation`;
+                //     return this[methodName]?.(readOperation)
+                // } else {
+                //     rawDataArray = null;
+                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
+                    responseOperationTarget.dispatchEvent(responseOperation);             
+                // }
+            }  
+        } else {
+            let responseOperation = this.responseOperationForReadOperation(
+                readOperation.referrer ? readOperation.referrer : readOperation,
+                null,
+                rawData
+            );
+            responseOperation.target.dispatchEvent(responseOperation);
+
+            // Resolve once dispatchEvent() is completed, including any pending progagationPromise.
+            responseOperation.propagationPromise.then(() => {
+                readOperationCompletionPromiseResolve?.(responseOperation);
+            });
+        }
+
+
+
     }
 
     static {

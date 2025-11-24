@@ -1186,7 +1186,7 @@ RawDataService.addClassProperties({
 
                 this._addRawDataPrimaryKeyValuesIfNeeded(rawData, type, stream.query);
 
-                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData, context),
+                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData, context);
                 
                 // if(!object) {
                 object = this.objectForTypeRawData(type, rawData, dataIdentifier, context);
