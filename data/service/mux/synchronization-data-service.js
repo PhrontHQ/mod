@@ -1086,7 +1086,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         const ReadCompletedOperationType = DataOperation.Type.ReadCompletedOperation;
 
         //Ideally we shouldn't have that, remove the noise
-         if(readCompletedOperation.rawDataService === this) return;
+         if(readCompletedOperation.rawDataService === this) {
+            return;
+         }
 
          // If the rawDataService isn't one of our originDataServices, the sync service is not responsible 
          // for saving the data. Therefore, we exit.
