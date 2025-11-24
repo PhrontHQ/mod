@@ -9,7 +9,7 @@
                 {"@": "applicationIdentifier"},
                 {"@": "applicationCredentials"},
                 {"@": "scope"},
-                {"@": "webSocketSessions"}
+                {"@": "sessions"}
                  
             ],
             "objectDescriptorModule": {
@@ -88,10 +88,10 @@
     "WebSocketSession": {
         "object": "./app/web-socket-session.mjson"
     },
-    "webSocketSessions": {
+    "sessions": {
         "prototype": "../../core/meta/property-descriptor",
         "values": {
-            "name": "webSocketSessions",
+            "name": "sessions",
             "cardinality": -1,
             "valueType": "object",
             "valueDescriptor": {"@": "WebSocketSession"}

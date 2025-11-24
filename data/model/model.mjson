@@ -61,8 +61,10 @@
                 {"@": "AppClient"},
                 {"@": "UserSession"},
                 {"@": "WebSocketSession"},
-                {"@": "WebSocketSessionConnection"}
-
+                {"@": "WebSocketSessionConnection"},
+                {"@": "Identity"},
+                {"@": "UserIdentity"},
+                {"@": "OAuthAccessToken"}
           ]
         }
     },
@@ -273,5 +275,18 @@
 
     "WebSocketSessionConnection": {
         "object": "data/model/app/web-socket-session-connection.mjson"
+    },
+
+    "Identity": {
+        "object": "data/model/identity.mjson"
+    },
+
+    "UserIdentity": {
+        "object": "./app/user-identity.mjson"
+    },
+
+    "OAuthAccessToken": {
+        "object": "./authentication/o-auth-access-token.mjson"
     }
+
 }

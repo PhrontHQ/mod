@@ -7,13 +7,16 @@
                 {"@": "identity"},
                 {"@": "accessToken"},
                 {"@": "tokenType"},
+                {"@": "issueDate"},
+                {"@": "expirationDate"},
                 {"@": "validityDuration"},
                 {"@": "validityRange"},
-                {"@": "scope"},
+                {"@": "scopes"},
                 {"@": "refreshToken"},
                 {"@": "idToken"},
-                {"@": "refreshTokenValidityDuration"},
-                {"@": "refreshTokenValidityRange"}
+                {"@": "refreshExpirationDate"},
+                {"@": "refreshValidityDuration"},
+                {"@": "refreshValidityRange"}
             ],
             "objectDescriptorModule": {
                 "%": "./o-auth-access-token.mjson"
@@ -60,6 +63,29 @@
             "description": "Indicates the token type value. The only type that AD FS supports is Bearer"
        }
     },
+
+    "DateDescriptor": {
+        "object": "core/date.mjson"
+    },
+    "issueDate": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "issueDate",
+            "valueDescriptor": {"@": "DateDescriptor"},
+            "mandatory": true,
+            "description": "The date the token was issued"
+        }
+    },
+    "expirationDate": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "expirationDate",
+            "valueDescriptor": {"@": "DateDescriptor"},
+            "mandatory": true,
+            "description": "The date the token is no longer valid"
+        }
+    },
+
     "validityDuration": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -77,18 +103,15 @@
             "name": "validityRange",
             "valueType": "date",
             "collectionValueType": "range",
-            "definition": {
-                "args": ["validityDuration"],
-                "compute": {"@": "computeValidityRange"}
-            },
-            "description": "How long the access token is valid (in seconds)."
+            "description": "How long the access token is valid between 2 dates."
        }
     },
-    "scope": {
+    "scopes": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "scope",
-            "valueType": "string",
+            "name": "scopes",
+            "valueType": "array",
+            "cardinality": -1,
             "description": "The scope of access granted in the token and for what it is valid for, like 'openid'"
        }
     },
@@ -108,23 +131,34 @@
             "description": "The requested id token. The app can use this token to authenticate to the secured resource, such as a web API."
         }
     },
-    "refreshTokenValidityDuration": {
+
+    "refreshExpirationDate": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "refreshTokenValidityDuration",
+            "name": "refreshExpirationDate",
+            "valueDescriptor": {"@": "DateDescriptor"},
+            "mandatory": true,
+            "description": "The date the token can no longer be refreshed"
+        }
+    },
+
+    "refreshValidityDuration": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "refreshValidityDuration",
             "valueType": "number",
             "description": "How long the access token is valid (in seconds)."
        }
     },
-    "refreshTokenValidityRange": {
+    "refreshValidityRange": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "refreshTokenValidityRange",
+            "name": "refreshValidityRange",
             "valueType": "date",
             "collectionValueType": "range",
             "isDerived": true,
             "definition": {
-                "args": ["refreshTokenValidityDuration"],
+                "args": ["refreshValidityDuration"],
                 "compute": {"@": "computeValidityRange"}
             },
             "description": "How long the access token is valid (in seconds)."

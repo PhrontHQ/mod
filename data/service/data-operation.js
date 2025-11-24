@@ -201,7 +201,7 @@ var Montage = require("../../core/core").Montage,
 
 exports.DataOperationType = DataOperationType = new Enum().initWithMembersAndValues(dataOperationTypes,dataOperationTypes);
 
-var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing", "InvalidInput", "SyntaxError"];
+var dataOperationErrorNames = ["DatabaseMissing", "ObjectDescriptorStoreMissing", "PropertyDescriptorStoreMissing", "InvalidInput", "SyntaxError", "PropertyDescriptorNotFound", "PropertyMappingNotFound"];
 exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithMembersAndValues(dataOperationErrorNames,dataOperationErrorNames);
 
 // exports.DataOperationError.ObjectDescriptorStoreMissingError = Error.specialize({
@@ -727,6 +727,16 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
      * @type {Object}
      */
     identity: {
+        value: undefined
+    },
+
+    /**
+     * an accessToken instance representing the approved access 
+     * for the data operation's identity to perform this data operation
+     *
+     * @type {Object}
+     */
+    accessToken: {
         value: undefined
     },
 

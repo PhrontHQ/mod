@@ -44,6 +44,12 @@ SyntaxInOrderIterator.prototype.next = function* (type, current) {
     if(current.args && current.args[0]) {
         this._parentBySyntax.set(current.args[0],current);
         localType = yield* this.next(type, current.args[0]);
+    } 
+    /* assuming record is the only type of syntax whose args is an object and not an array */
+    else if(current.type === "record") {
+        for(let args = current.args, keys = Object.keys(args), countI = keys.length, i=0; (i < countI); i++) {
+            localType = yield* this.next(type, args[keys[i]]);
+        }
     }
 
     localType = localType === undefined
@@ -62,6 +68,13 @@ SyntaxInOrderIterator.prototype.next = function* (type, current) {
     if(current.args && current.args[1]) {
         this._parentBySyntax.set(current.args[1],current);
         localType = yield* this.next(type, current.args[1]);
+    }
+    //Aren't we doing that up already???
+    /* assuming record is the only type of syntax whose args is an object and not an array */
+    else if(current.type === "record") {
+        for(let args = current.args, keys = Object.keys(args), countI = keys.length, i=0; (i < countI); i++) {
+            localType = yield* this.next(type, args[keys[i]]);
+        }
     }
 
     localType = localType === undefined
@@ -118,7 +131,7 @@ SyntaxPostOrderIterator.prototype.next = function* (type, current) {
 
 };
 
-
+//TODO: add support and test for current.type === "record"
 function SyntaxPreOrderIterator(syntax, type) {
     return SyntaxIterator.call(this,syntax, type);
 }

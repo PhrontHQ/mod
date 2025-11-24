@@ -87,9 +87,8 @@
         "values": {
             "name": "aliases",
             "cardinality": -1,
-            "valueDescriptor": {
-                "@": "PersonNameDescriptor"
-            }
+            "valueDescriptor": {"@": "PersonNameDescriptor"},
+            "description": "Individuals may have one or more valid names, or aliases. This may be the result of adopting a new name in conjunction with a life event, such as marriage. For example, the name \"Marie Curie\" could have the corresponding alias \"Maria Salomea Skłodowska.\" Because each alias represents a separate name, an individual with one or more aliases would be modeled by a corresponding of number of NSPersonNameComponents objects, each representing a single alias."
         }
     },
     "preferredLocales": {

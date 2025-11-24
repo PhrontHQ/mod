@@ -4,8 +4,10 @@
         "values": {
             "name": "UserIdentity",
             "propertyDescriptors": [
+                {"@": "idToken"},
+                {"@": "idTokenClaims"},
                 {"@": "username"},
-                {"@": "accessToken"},
+                {"@": "accessTokens"},
                 {"@": "password"},
                 {"@": "session"},
                 {"@": "accountConfirmationCode"},
@@ -39,6 +41,20 @@
         "object": "../identity.mjson"
     },
 
+    "idToken": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "idToken",
+            "valueType": "string"
+        }
+    },
+    "idTokenClaims": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "idTokenClaims",
+            "valueType": "object"
+        }
+    },
     "username": {
         "prototype": "core/meta/property-descriptor",
         "values": {
@@ -46,12 +62,12 @@
             "valueType": "string"
         }
     },
-    "accessToken": {
+    "accessTokens": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "accessToken",
-            "valueType": "object",
-            "cardinality": 1,
+            "name": "accessTokens",
+            "valueType": "array",
+            "cardinality": -1,
             "valueDescriptor": {"@": "AccessTokenDescriptor"},
             "inversePropertyName": "identity"
        }
@@ -64,7 +80,8 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "password",
-            "valueType": "string"
+            "valueType": "string",
+            "isOneWayEncrypted": true
         }
     },
     "session": {

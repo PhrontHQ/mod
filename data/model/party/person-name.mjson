@@ -3,6 +3,7 @@
         "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "PersonName",
+            "description": "Details on the concept at https://developer.apple.com/documentation/foundation/nspersonnamecomponents",
             "propertyDescriptors": [
                 {"@": "namePrefix"},
                 {"@": "givenName"},
@@ -34,7 +35,8 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "namePrefix",
-            "valueType": "string"
+            "valueType": "string",
+            "description": "A name prefix is the portion of a name’s full form of address that precedes the name itself. Depending on the locale and individual, may include any number of titles, honorifics, distinctions, or other information."
         }
     },
     "givenName": {
@@ -70,7 +72,8 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "nameSuffix",
-            "valueType": "string"
+            "valueType": "string",
+            "description": "A name suffix is the portion of a name’s full form of address that follows the name itself. Depending on the locale and individual, may include any number of titles, honorifics, distinctions, or other information."
         }
     },
     "nickname": {

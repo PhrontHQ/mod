@@ -1323,58 +1323,68 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         // TODO: Use or build a Property iterator on the syntactic tree. (no duplication of data structures, lighter weight :) )
                         // Explore if using expression evaluation is feasible (this is an assessment if data is really accesible).
                         // Theoretically production shouldn't waste time computing this; only in development while data is flexible.
-                        let iData = data
-                        for(i=0, countI = aRuleRequirements.length;(i<countI);i++) {
-                            if (Array.isArray(aRuleRequirements[i])) {
-                                let propertyPath = aRuleRequirements[i];
-                                let jData = iData;
-                                for(j=0, countJ = propertyPath.length; (j<countJ); j++) {
-                                    if (!jData.hasOwnProperty(propertyPath[j])) {
-                                        dataHasRuleRequirements = false;
-                                        break;
-                                    } else {
-                                        jData = jData[propertyPath[j]]
-                                    }
-                                }
-                            }
-                            else if(!iData.hasOwnProperty(aRuleRequirements[i])) {
-                                dataHasRuleRequirements = false;
-                                break;
-                            }
-                        }    
-                        if(isRequiredRule && !dataHasRuleRequirements) {
-                            console.error("Rule: ",aRule, "can't be mapped because data is missing required property \"" + aRuleRequirements[i] + "\"");
-                        }
-    
+                        
                         /*
-                            #WARNING TO DO: IF WE HAVE PENDING CHANGES - A DIFFERENT VALUE - FOR A PROPERTY THAT WOULD BE OVERRIDEN BY THIS CURRENT MAPPING WE'RE GOING TO HAVE
-                            TO TELL THE USER ABOUT IT TO RESOLVE
-    
-                            original condition: Why do we even need to consider snapshot here?
-    
-                            if((!hasSnapshot && !requisitePropertyNames.has(aRule.targetPath)) || ((aRule.converter && (aRule.converter instanceof RawForeignValueToObjectConverter)) &&
-                                !requisitePropertyNames.has(aRule.targetPath) &&
-                                (readExpressions && readExpressions.indexOf(aRule.targetPath) === -1))) {
-                                    continue;
-                            }
+                            11/9/2025 
+
+                            The following is am inadequate verification  - it doesn't handle expressions beyon just direct properties
+                            Having a verification is desirable for debugging / authoring, but it needs to evolve to actually be more useful.
+                            Commenting for now  
                         */
-    
-                        /*
-                            if we don't have what we need to fullfill, we bail out.
-    
-                            Previously if the rule isn't required, we would bail out, but if it's been sent ny the server, me might as well make it useful than stay unused in the snapshot, as long as we can.
-                        */
-    
-                        // if(service.canMapObjectDescriptorRawDataToObjectPropertyWithoutFetch(objectDescriptor, aRule.targetPath) && dataHasRuleRequirements) {
-                        //     console.log("Now mapping property "+aRule.targetPath+" of "+objectDescriptor.name);
+
+                        /* 11/9/2025 comment begin */
+                        // let iData = data
+                        // for(i=0, countI = aRuleRequirements.length;(i<countI);i++) {
+                        //     if (Array.isArray(aRuleRequirements[i])) {
+                        //         let propertyPath = aRuleRequirements[i];
+                        //         let jData = iData;
+                        //         for(j=0, countJ = propertyPath.length; (j<countJ); j++) {
+                        //             if (!jData.hasOwnProperty(propertyPath[j])) {
+                        //                 dataHasRuleRequirements = false;
+                        //                 break;
+                        //             } else {
+                        //                 jData = jData[propertyPath[j]]
+                        //             }
+                        //         }
+                        //     }
+                        //     else if(!iData.hasOwnProperty(aRuleRequirements[i])) {
+                        //         dataHasRuleRequirements = false;
+                        //         break;
+                        //     }
+                        // }    
+                        // if(isRequiredRule && !dataHasRuleRequirements) {
+                        //     console.error("Rule: ",aRule, "can't be mapped because data is missing required property \"" + aRuleRequirements[i] + "\"");
                         // }
     
+                        // /*
+                        //     #WARNING TO DO: IF WE HAVE PENDING CHANGES - A DIFFERENT VALUE - FOR A PROPERTY THAT WOULD BE OVERRIDEN BY THIS CURRENT MAPPING WE'RE GOING TO HAVE
+                        //     TO TELL THE USER ABOUT IT TO RESOLVE
+    
+                        //     original condition: Why do we even need to consider snapshot here?
+    
+                        //     if((!hasSnapshot && !requisitePropertyNames.has(aRule.targetPath)) || ((aRule.converter && (aRule.converter instanceof RawForeignValueToObjectConverter)) &&
+                        //         !requisitePropertyNames.has(aRule.targetPath) &&
+                        //         (readExpressions && readExpressions.indexOf(aRule.targetPath) === -1))) {
+                        //             continue;
+                        //     }
+                        // */
+    
+                        // /*
+                        //     if we don't have what we need to fullfill, we bail out.
+                        //     Previously if the rule isn't required, we would bail out, but if it's been sent ny the server, me might as well make it useful than stay unused in the snapshot, as long as we can.
+                        // */
+                        // if((!isRequiredRule && !service.canMapObjectDescriptorRawDataToObjectPropertyWithoutFetch(objectDescriptor, aRule.targetPath)) || !dataHasRuleRequirements) {
+                        //     continue;
+                        // }
+                        /* 11/9/2025 comment end */
+
+                        /*
+                            if we don't have what we need to fullfill, we bail out.
+                            Previously if the rule isn't required, we would bail out, but if it's been sent ny the server, me might as well make it useful than stay unused in the snapshot, as long as we can.
+                        */
                         if((!isRequiredRule && !service.canMapObjectDescriptorRawDataToObjectPropertyWithoutFetch(objectDescriptor, aRule.targetPath)) || !dataHasRuleRequirements) {
                             continue;
                         }
-                        // if(!isRequiredRule || !dataHasRuleRequirements) {
-                        //     continue;
-                        // }
 
                         /*
                             Tell our service: mappingWillMapRawDataToObjectProperty

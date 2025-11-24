@@ -1,3 +1,9 @@
+/**
+ * @module mod/data/converter/raw-value-to-object-converter
+ * @requires mod/data/converter/raw-value-to-object-converter
+ */
+
+
 var RawValueToObjectConverter = require("./raw-value-to-object-converter").RawValueToObjectConverter,
 Promise = require("../../core/promise").Promise;
 /**

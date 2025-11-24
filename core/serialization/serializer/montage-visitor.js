@@ -299,7 +299,7 @@ var MontageVisitor = Montage.specialize({
                 substituteObject,
                 valuesBuilderObject = this.builder.createObjectLiteral();
 
-            builderObject.setProperty("prototype", object.constructor.name);
+            builderObject.setProperty("prototype", `global[${object.constructor.name}]`);
             builderObject.setProperty("values", valuesBuilderObject);
 
             this.builder.push(builderObject);

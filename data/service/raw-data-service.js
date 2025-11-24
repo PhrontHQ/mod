@@ -2,6 +2,7 @@ var DataService = require("./data-service").DataService,
     compile = require("../../core/frb/compile-evaluator"),
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
     //Montage = (require) ("../../core/core").Montage,
@@ -396,7 +397,12 @@ RawDataService.addClassProperties({
                 }
 
                 if(!this._connection) {
-                    throw "RawDataService "+ (this.name || this.identifier) + "could not find a connection for "+this.currentEnvironment.stage+" environment";
+                    //This is the case where all stages share the same connectionDescriptor
+                    if(this.connectionDescriptor) {
+                        this.connection = this.connectionDescriptor;
+                    } else {
+                        throw "RawDataService "+ (this.name || this.identifier) + " could not find a connection for "+this.currentEnvironment.stage+" environment";
+                    }
                 }
 
             }
@@ -559,7 +565,36 @@ RawDataService.addClassProperties({
                 propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
                 isObjectCreated = this.isObjectCreated(object);
 
-            if(isObjectCreated) {
+            /* 
+                If an object is created and didn't come from an origin data service 
+                then there's no way we could fetch a property from somewhere
+            */
+            if(isObjectCreated && !object.originDataSnapshot) {
+                /*
+                    return Promise.resolve(null);
+                    
+                    was coded under the assumption that if an object is just created, there can't be any property we could get for it.
+                    But here's a use case where this is wrong: 
+                        - a UserIdentity object is fetched through an auth raw data service doing the login via an identity provider.
+                        - with an SynchronizationService above, so the raw data service doing the login via an identity provider is an origin service
+                        - that UserIdentity is now treated as created as it is intended to be saved in SynchronizationService's destination service
+                        - Which will happen as part of the (websocket) session being created by passing the UserIdentity
+                        - and that websocket isn't opened yet
+                        - most likely because I removed UserIdenty and AuthToken from the model in mod, so WebSocketDataService hasn't yet handled a fetch yet 
+                        - We're fetching the user associated with the UserIdentity
+                        - if we weren't shorting with return Promise.resolve(null), we're building a fetch
+                        - that fetch should trigger opening the socket, saving the UserIdentity via the destinationService
+                        - no person will be found for that user
+                        - so an origin data service related to the ClientOAuthDataService will handle the readOperation
+                        - in order to do so, it needs an access token that it will fetch
+                        - that fetch will be handled by the ClientOAuthDataService
+                        - the token is returned
+                        - the origin data service fetch the person/profile rsw data
+                        - that gets converted to a Person
+                        - returned via this method to fullfill the user property on the UserIdentity
+                        - and then that Person and its relation to the UserIdentitu should be saved in the destination service
+
+                */
                 return Promise.resolve(null);
             } else {
 
@@ -571,6 +606,7 @@ RawDataService.addClassProperties({
                     objectSnapshot = this.snapshotForObject(object);
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.hints = {rawDataService: this};
 
                 /*
                     Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
@@ -587,12 +623,12 @@ RawDataService.addClassProperties({
                     hintSnapshot;
 
                 if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
-                    hintSnapshot = (propertyNameQuery.hints = {snapshot:{}}).snapshot;
+                    hintSnapshot = (propertyNameQuery.hints.snapshot || (propertyNameQuery.hints.snapshot = {}));
                     for(let i=0, countI = requirements.length; (i<countI); i++) {
 
                         /* This is getting into mapping's business so it should migrate there */
                         /* 
-                            If this is the form toMainyArray.has($), then if we have the value of toMainyArray and it's null or empty, there's no way we'd find something on the other side...
+                            If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
                             So we can save time and return right away
                         */
                         if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule.converter.convertSyntax.type === "has") {
@@ -1172,7 +1208,6 @@ RawDataService.addClassProperties({
                 this.recordSnapshot(this.dataIdentifierForObject(object), rawData);
             }
 
-
             result = this.mapRawDataToObject(rawData, object, context, readExpressions);
 
             if (this._isAsync(result)) {
@@ -1519,7 +1554,10 @@ RawDataService.addClassProperties({
                 this._snapshot.set(dataIdentifier, rawData);
                 return rawData
             }
-            else {
+            /* If rawData and snapshot are the same object, nothing to do */
+            else if(rawData === snapshot) {
+                return rawData
+            } else {
                 var rawDataKeys = Object.keys(rawData),
                     i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues, iRemovedValues,
                     iHasAddedValues, iHasRemovedValues,
@@ -1613,6 +1651,13 @@ RawDataService.addClassProperties({
                     /* 
                         otherwise there's nothing to do, so let's take it out from rawData 
                         unless it's the primary key...
+
+                        Benoit 11/11/2025:
+                            If rawData === snapshot (which shouldn't reach here after an added optimization upfront),
+                            then this ends up removing a value from the snapshot. That value is a property that is a string.
+
+                            I can't figure out the logic behind: (rawData[rawDataKeys[i]] !== dataIdentifier.primaryKey) 
+                            as it assumes that the value of the property rawDataKeys[i] is the current object's primarykey? 
                     */
                     else if(rawData[rawDataKeys[i]] !== dataIdentifier.primaryKey) {
                         delete rawData[rawDataKeys[i]];
@@ -2110,6 +2155,21 @@ RawDataService.addClassProperties({
                 mapping = this.mappingForObject(object),
                 snapshot,
                 result;
+
+
+            /*
+                TODO: Should be testing directly UserIdentity as being required, not the name
+                This is a very special case test for now.
+                UserIdentity is needed to acquire access tokens anc access more data
+                It needs to be available to others as early as possible.
+
+                Even if it's not yet fully mapped.
+
+                WIP
+            */
+            if(object.objectDescriptor.name === "UserIdentity" && !this.application.identity) {
+                this.application.identity = object;
+            }
 
             // console.log( this.dataIdentifierForObject(object).objectDescriptor.name +" _mapRawDataToObject id:"+record.id);
             if (mapping) {
@@ -2901,11 +2961,38 @@ RawDataService.addClassProperties({
     },
 
     /**
- * Returns a promise that represents the completion of data operation's referrer operation if it exists
- *
- * @method
- * @argument {DataOperation} dataOperation
- */
+     * Returns the resolve function for a promise that represents the completion of data operation's referrer operation if it exists
+     *
+     * @method
+     * @argument {DataOperation} dataOperation
+     */
+    referrerCompletionPromiseResolveForDataOperation: {
+        value: function (dataOperation) {
+            var referrerDataOperationRegistration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            return referrerDataOperationRegistration ? referrerDataOperationRegistration.completionPromiseResolve : undefined;
+        }
+    },
+    /**
+     * Returns the reject function for a promise that represents the completion of data operation's referrer operation if it exists
+     *
+     * @method
+     * @argument {DataOperation} dataOperation
+     */
+    referrerCompletionPromiseRejectForDataOperation: {
+        value: function (dataOperation) {
+            var referrerDataOperationRegistration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            return referrerDataOperationRegistration ? referrerDataOperationRegistration.completionPromiseReject : undefined;
+        }
+    },
+
+
+
+    /**
+     * Returns a promise that represents the completion of data operation's referrer operation if it exists
+     *
+     * @method
+     * @argument {DataOperation} dataOperation
+     */
     referrerContextForDataOperation: {
         value: function (dataOperation) {
             var referrerDataOperationRegistration = this._pendingDataOperationById.get(dataOperation.referrerId || dataOperation.referrer.id);
@@ -4242,6 +4329,26 @@ RawDataService.addClassProperties({
         value: function (object, operationType, dataObjectChangesMap, dataOperationsByObject, commitTransactionOperation) {
             try {
 
+
+                /*
+                    This is a check for the case where we have a dataObject that doesn't have rawDataPrimaryKeys,
+                    because it is not saved on its own, but most likely saved embedded into another one.
+
+                    This can be the case for PersonName for example that can be stores as JSON within a Person's name
+                    column in a Person's database table.
+ 
+                    If that's the case, we shouldn't do anything as the hosting object will take care of it
+                */
+                let  mapping = this.mappingForType(object.objectDescriptor),
+                    rawDataPrimaryKeys = mapping.rawDataPrimaryKeys;
+
+                if(!rawDataPrimaryKeys || rawDataPrimaryKeys?.length === 0) {
+                    return Promise.resolve(null);
+                }
+
+
+
+
                 //console.log("_saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id)
                 //TODO
                 //First thing we should be doing here is run validation
@@ -4383,7 +4490,8 @@ RawDataService.addClassProperties({
             return new Promise(function (resolve, reject) {
                 try {
 
-                    var iterator = objects.values(),
+                    var resolvedOperations = [],
+                        iterator = objects.values(),
                         isUpdateOperationType = operationType === DataOperation.Type.UpdateOperation,
                         iOperationPromises,
                         iOperationPromise,
@@ -4398,40 +4506,52 @@ RawDataService.addClassProperties({
                         iOperationPromise = self._saveDataOperationForObject(iObject, operationType, dataObjectChangesMap, dataOperationsByObject, commitTransactionOperation);
                         (iOperationPromises || (iOperationPromises = [])).push(iOperationPromise);
                         iOperationPromise.then(function (resolvedOperation) {
-                            var operationCreationProgress = (createTransaction && createTransaction.operationCreationProgress) || 0;
 
-                            if (createTransaction) {
-                                createTransaction.operationCreationProgress = ++operationCreationProgress;
-                            }
-
-                            /*
-                                NoOps will be handled by iterating on dataObjectChangesMap later on
+                            /* 
+                                It's possible that _saveDataOperationForObject() returns no operation, for example
+                                if iObject has not be configured to have its own object store, like its own table in a database
+                                because it's stored embedded into another type's object store.
                             */
-                            if (resolvedOperation.type !== DataOperation.Type.NoOp) {
-                                (operations || (operations = [])).push(resolvedOperation);
-                            }
+                            if(resolvedOperation) {
 
-                            percentCompletion = Math.round((operationCreationProgress / operationCount) * 100) / 100;
+                                resolvedOperations.push(resolvedOperation);
 
-                            if (percentCompletion > lastProgressSent) {
-                                //console.log("_saveDataOperationsForObjects: "+percentCompletion);
+                                var operationCreationProgress = (createTransaction && createTransaction.operationCreationProgress) || 0;
 
-                                transactionPrepareProgressEvent = TransactionEvent.checkout();
-                                transactionPrepareProgressEvent.type = TransactionEvent.transactionPrepareProgress;
-                                transactionPrepareProgressEvent.transaction = transaction;
-                                transactionPrepareProgressEvent.data = percentCompletion;
-                                TransactionDescriptor.dispatchEvent(transactionPrepareProgressEvent);
-                                /*  Return the event to the pool */
-                                TransactionEvent.checkin(transactionPrepareProgressEvent);
-
-
-                                //self.dispatchDataEventTypeForObject(DataEvent.saveChangesProgress, self, percentCompletion);
-
-                                lastProgressSent = percentCompletion;
                                 if (createTransaction) {
-                                    createTransaction.lastProgressSent = lastProgressSent;
+                                    createTransaction.operationCreationProgress = ++operationCreationProgress;
+                                }
+
+                                /*
+                                    NoOps will be handled by iterating on dataObjectChangesMap later on
+                                */
+                                if (resolvedOperation.type !== DataOperation.Type.NoOp) {
+                                    (operations || (operations = [])).push(resolvedOperation);
+                                }
+
+                                percentCompletion = Math.round((operationCreationProgress / operationCount) * 100) / 100;
+
+                                if (percentCompletion > lastProgressSent) {
+                                    //console.log("_saveDataOperationsForObjects: "+percentCompletion);
+
+                                    transactionPrepareProgressEvent = TransactionEvent.checkout();
+                                    transactionPrepareProgressEvent.type = TransactionEvent.transactionPrepareProgress;
+                                    transactionPrepareProgressEvent.transaction = transaction;
+                                    transactionPrepareProgressEvent.data = percentCompletion;
+                                    TransactionDescriptor.dispatchEvent(transactionPrepareProgressEvent);
+                                    /*  Return the event to the pool */
+                                    TransactionEvent.checkin(transactionPrepareProgressEvent);
+
+
+                                    //self.dispatchDataEventTypeForObject(DataEvent.saveChangesProgress, self, percentCompletion);
+
+                                    lastProgressSent = percentCompletion;
+                                    if (createTransaction) {
+                                        createTransaction.lastProgressSent = lastProgressSent;
+                                    }
                                 }
                             }
+
 
                         }, function (rejectedValue) {
                             reject(rejectedValue);
@@ -4441,9 +4561,10 @@ RawDataService.addClassProperties({
                     if (iOperationPromises) {
 
                         Promise.all(iOperationPromises)
-                            .then(function (resolvedOperations) {
+                            .then(function (allPromisesResolvedValues) {
                                 /*
                                     resolvedOperations could contains some null if changed objects don't have anything to solve in their own row because it's stored on the other side of a relationship, which is why we keep track of the other array ourselves to avoid looping over again and modify the array after, or send noop operation through the wire for nothing. Cost time an money!
+                                    So we're using the resolvedOperations array we manually fill with actual operation
                                 */
                                 resolve(resolvedOperations);
                             }, function (rejectedValue) {
@@ -4858,54 +4979,55 @@ RawDataService.addClassProperties({
         value: undefined
     },
 
-        /**
+    /**
      * Fetch an identity using an identityQuery expected to be set on the data service
      *
      * @type {Promise<Identity>}
      */
-    fetchIdentity() {
+    fetchIdentity: {
+        value: function() {
+
+            // console.warn("fetchIdentity() this.currentEnvironment is ", this.currentEnvironment);
+            // console.warn("fetchIdentity() this.hasOwnProperty('_connection') is ", this.hasOwnProperty('_connection'));
+            // console.warn("fetchIdentity() Object.getOwnPropertyDescriptor(this, 'connection') is ", Object.getOwnPropertyDescriptor(this, 'connection'));
 
 
-        // console.warn("fetchIdentity() this.currentEnvironment is ", this.currentEnvironment);
-        // console.warn("fetchIdentity() this.hasOwnProperty('_connection') is ", this.hasOwnProperty('_connection'));
-        // console.warn("fetchIdentity() Object.getOwnPropertyDescriptor(this, 'connection') is ", Object.getOwnPropertyDescriptor(this, 'connection'));
-
-
-        if(!this.identityQuery) {
-            throw "Can't perform fetchIdentity() because this.identityQuery isn't available";
-        }
-
-        return this.mainService.fetchData(this.identityQuery)
-        .then(result => {
-            if(result.length === 1) {
-                /*
-                    It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
-                    and equip SecretManager data services with the ability to handle Identity, and give them a mapping
-                    to how the raw data is stored in the secret. Let's get this working and clean it up later. 
-                */
-                let applicationIdentifier = result[0].value.applicationIdentifier,
-                    applicationCredentials =  result[0].value.applicationCredentials;
-
-                if(applicationIdentifier && applicationCredentials) {
-                    let identity = new Identity();
-
-                    identity.applicationIdentifier = applicationIdentifier;
-                    identity.applicationCredentials = applicationCredentials;
-
-                    this.identity = identity; 
-                    return this.identity;                          
-                } else {
-                    throw ("Unnable to ceate an idendity from fetched secret: "+ result);
-                }
-            } else {
-                throw ("Unnable to find a secret matching query " + this.identityQuery);
-
+            if(!this.identityQuery) {
+                throw "Can't perform fetchIdentity() because this.identityQuery isn't available";
             }
-        })
-        .catch(error => {
-            console.warn("fetchIdentity failed:", error);
-            return null;
-        })
+
+            return this.mainService.fetchData(this.identityQuery)
+            .then(result => {
+                if(result.length === 1) {
+                    /*
+                        It's a bit tricky to assume that here. An alternative would be to actually fetch an Identity,
+                        and equip SecretManager data services with the ability to handle Identity, and give them a mapping
+                        to how the raw data is stored in the secret. Let's get this working and clean it up later. 
+                    */
+                    let applicationIdentifier = result[0].value.applicationIdentifier,
+                        applicationCredentials =  result[0].value.applicationCredentials;
+
+                    if(applicationIdentifier && applicationCredentials) {
+                        let identity = new UserIdentity();
+
+                        identity.applicationIdentifier = applicationIdentifier;
+                        identity.applicationCredentials = applicationCredentials;
+
+                        this.identity = identity; 
+                        return this.identity;                          
+                    } else {
+                        throw ("Unnable to ceate an idendity from fetched secret: "+ result);
+                    }
+                } else {
+                    throw ("Unnable to find a secret matching query " + this.identityQuery);
+
+                }
+            })
+            .catch(error => {
+                console.warn("fetchIdentity failed:", error);
+                return null;
+            })
+        }
     },
 
     identityPromise: {
@@ -4914,7 +5036,7 @@ RawDataService.addClassProperties({
                 //We most likely know it from the start so we wrap it up:
                 if(this.identity) {
                     this._identityPromise = Promise.resolve(this.identity);
-                } else {
+                } else if(this.identityQuery) {
                     this._identityPromise = this.fetchIdentity();
                 }
 

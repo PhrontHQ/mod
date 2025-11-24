@@ -6,7 +6,7 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "appClients"},
-                {"@": "webSocketSessions"},
+                {"@": "sessions"},
                 {"@": "controllingOrganization"}
             ],
             "objectDescriptorModule": {
@@ -29,10 +29,10 @@
             "valueType": "string"
         }
     },
-    "webSocketSessions": {
+    "sessions": {
         "prototype": "../../../core/meta/property-descriptor",
         "values": {
-            "name": "webSocketSessions",
+            "name": "sessions",
             "cardinality": -1,
             "valueType": "object",
             "valueDescriptor": {"@": "WebSocketSessionsDescriptor"},

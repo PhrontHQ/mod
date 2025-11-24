@@ -223,6 +223,20 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     */
     rawDataServiceWillHandleReadOperation(originDataService, readOperation) {
 
+        /*
+            In the flow, this happens when a read operation failed to find data in the destination service. A typical case is when a subgraph isn't capture initially
+            
+            If the readOperation is sent as such to an originDataService, it's going to need support to convert an object-level criteria into it's own raw data.
+            to obtain the data for that read.
+
+            For example, a typical "read an object's property" is "primary key === uuid" and read Expressions has "myProp".
+            We need to uopdate  "primary key === uuid" to "dataIdentifier = $" with the dataIdentifier abstracting the ability to get a primary key for a dataService's identifier
+            by looking it up within originDataSnapshot
+
+            
+
+        */
+
         //Temporarily bypassing until issues mentioned above are taken care of
         return Promise.resolve(readOperation);
 
@@ -530,7 +544,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // let mapping = this.destinationDataService.mappingForObject(dataObject);
             let mapping = rawDataService.mappingForObject(dataObject);
 
-            readExpressions = Object.keys(mapping.objectMappingRules);
+            /*
+                This should't rely 
+            */
+            if(mapping?.objectMappingRules) {
+                readExpressions = Object.keys(mapping.objectMappingRules);
+            }
         }
 
         //We ask the fetching rawDataService to do the mapping
@@ -688,8 +707,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //     });
                 
             // } else {
-                return Promise.resolve(value);
+            //      return Promise.resolve(value);
             // }
+
+            return Promise.resolve(dataObject);
+
         })
         .then((value) => {
 
@@ -811,6 +833,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             /*
                 If rawData has an originDataSnapshot, which can be created by FetchResourceDataMapping, we use it
             */
+            //FIXME WARNING - rawData can be much bigger than practical, and, we only use a portion of it
+            //So we need to only keep what we mapped... so we need to filter that.
+            //disabling for now as size created problems
+            // originDataSnapshot[rawDataService.identifier] = {};    
             originDataSnapshot[rawDataService.identifier] = rawData.originDataSnapshot ?? rawData;    
         }
 
@@ -1060,12 +1086,16 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         const ReadCompletedOperationType = DataOperation.Type.ReadCompletedOperation;
 
         //Ideally we shouldn't have that, remove the noise
-         if(readCompletedOperation.rawDataService === this) return;
+         if(readCompletedOperation.rawDataService === this) {
+            return;
+         }
 
          // If the rawDataService isn't one of our originDataServices, the sync service is not responsible 
          // for saving the data. Therefore, we exit.
          // 
-         if (!this.originDataServices.has(readCompletedOperation.rawDataService)) return;
+        if (!this.originDataServices.has(readCompletedOperation.rawDataService) && readCompletedOperation.rawDataService !== this.destinationDataService) {
+            return;
+        }
 
 
         if(readCompletedOperation.referrer?.criteria?.name === 'originDataSnapshotLookUp') {

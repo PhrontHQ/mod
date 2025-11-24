@@ -9,7 +9,6 @@
                 {"@": "personParty"},
                 {"@": "label"},
                 {"@": "messagingChannel"},
-                {"@": "description"},
                 {"@": "notes"},
                 {"@": "roleRankings"}
             ],
@@ -88,14 +87,6 @@
     },
     "MessagingChannel": {
         "object": "./messaging-channel.mjson"
-    },
-    "description": {
-        "prototype": "core/meta/property-descriptor",
-        "values": {
-            "name": "description",
-            "cardinality": -1,
-            "valueType": "string"
-        }
     },
     "notes": {
         "prototype": "core/meta/property-descriptor",

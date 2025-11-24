@@ -434,6 +434,15 @@ WebSocketDataOperationService.addClassProperties({
                         //operation.target = self;
                         operation.rawDataService = this;
                         defaultEventManager.handleEvent(operation);
+
+                        operation.propagationPromise.then(() => {
+                            let referrerCompletionPromiseResolve = this.referrerCompletionPromiseResolveForDataOperation(operation);
+                            if(referrerCompletionPromiseResolve && this.promisesReadCompletionOperation) {
+                                referrerCompletionPromiseResolve(operation);
+                            }
+                        });
+
+                        
                     })
                 }
 
@@ -464,6 +473,11 @@ WebSocketDataOperationService.addClassProperties({
         value: false
     },
 
+    dataIdentifierForTypeRawData: {
+        value: function (type, rawData, dataOperation) {
+            return this.super(type, rawData?.to_jsonb || rawData, dataOperation);
+        }
+    },            
     /*
       overriden to efficently counters the data structure
       returned by AWS RDS DataAPI efficently
@@ -776,14 +790,92 @@ WebSocketDataOperationService.addClassProperties({
     //         }
     //     }
     // },
+    handleRead: {
+        value: function (readEvent) {
+            //Bypass for now
+            if(readEvent.target.name === "OAuthAccessToken") {
+                return;
+            }
 
+            this.super(readEvent);
+
+        }
+    },
 
     handleReadOperation: {
-        value: function (operation) {
-            if(this.handlesType(operation.target)) {
+        value: function (readOperation) {
+            let readOperationCompletionPromise;
 
-                operation.rawDataService = this;
-                this.registerPendingDataOperationWithContext(operation, operation.dataStream);
+
+            if(readOperation.target.name === "OAuthAccessToken") {
+                return;
+            }
+
+
+            /*
+                This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
+                When that promise resolves, then we check if readOperation.defaultPrevented, if yes, the we don't handle it, otherwise we proceed.
+
+                Wonky, WIP: needs to work without a delegate actually implementing it.
+                And a RawDataService shouldn't know about all that boilerplate
+
+                Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
+                it might be simpler, but probably a bit less efficient
+
+            */
+            readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
+            if(readOperationCompletionPromise) {
+                readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
+                    if(!readOperation.defaultPrevented) {
+                        let resultPromise = this._handleReadOperation(readOperation);
+                        if(this.promisesReadCompletionOperation) {
+                            return resultPromise
+                        }
+                    }
+                });
+            } else {
+                let resultPromise = this._handleReadOperation(readOperation);
+                if(this.promisesReadCompletionOperation) {
+                    readOperationCompletionPromise = resultPromise;
+                }
+            }
+
+            //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
+            //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
+            if(this.promisesReadCompletionOperation) {
+                return readOperationCompletionPromise;
+            }
+
+        }
+    },
+
+
+    _handleReadOperation: {
+        value: function (operation) {
+            /*
+                Testing for if(this.application.identity) is a way to prevent WebSocketDataOperationService to
+                fetch a USerIdentity before the WebSocket is opened: IT HAS TO COME FROM AN HTTP ENDPOINT, third-prty or ours
+                built on top of a worker.
+            */
+            if(this.application.identity && this.handlesType(operation.target)) {
+
+                /*
+                    Benoit on 11/7/2025: This logically impacts RawDataService's
+                    
+                    handleReadCompletedOperation() where the logic is surrounded by
+
+                    if(operation.rawDataService === this) {
+                        ...
+                    }
+
+                    to prevent most RawDataServices to inadvertently handle ReadCompletedOperation
+                    originated from other RawDataServices they know nothing about.
+
+                    commenting it out, as it's alread done in handleMessage() before WebSocketDataOperationService dispatch the data operation
+                    which is the right place to do it.
+                */
+                //operation.rawDataService = this;
+                let completionPromise = this.registerPendingDataOperationWithContext(operation, operation.dataStream, this.promisesReadCompletionOperation);
 
 
                 this._readOperationQueue.push(operation);
@@ -823,9 +915,16 @@ WebSocketDataOperationService.addClassProperties({
 
                     //},0);
                     });
+
+                }
+
+                if(this.promisesReadCompletionOperation) {
+                    return completionPromise;
                 }
 
                 //this._socketSendOperation(operation);
+            } else if(this.promisesReadCompletionOperation) {
+                return Promise.resolve(undefined);
             }
         }
     },

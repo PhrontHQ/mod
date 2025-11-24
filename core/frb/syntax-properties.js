@@ -8,9 +8,40 @@
  *
  * @type {string[]}
  */
+
+const SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator;
+
+
 module.exports = function syntaxProperties(syntax) {
-        return _parseRequirementsFromSyntax(syntax);
+
+    var iterator = new SyntaxInOrderIterator(syntax, "property"),
+        resultSet = null,
+        currentSyntax;
+
+    while ((currentSyntax = iterator.next().value)) {
+
+        //We don't want the numbers here - like when an expression traverses an array at a known index
+        if(typeof currentSyntax.args[1].value !== "number") {
+            (resultSet || (resultSet = new Set())).add(currentSyntax.args[1].value);
+        }
+    }
+
+    /*
+        Quick test for comparing with previous implementation that is still here bellow
+        TODO: Cleanup
+    */
+        // let parseRequirementsFromSyntax = _parseRequirementsFromSyntax(syntax);
+    // if(parseRequirementsFromSyntax && !parseRequirementsFromSyntax.equals(Array.from(resultSet))) {
+    //     console.log("check point");
+    // }
+
+    return Array.from(resultSet);
 };
+
+
+// module.exports = function syntaxProperties(syntax) {
+//         return _parseRequirementsFromSyntax(syntax);
+// };
 
 function _parseRequirementsFromRecord(syntax, requirements) {
     var args = syntax.args,
