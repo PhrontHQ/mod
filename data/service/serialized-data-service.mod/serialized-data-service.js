@@ -509,6 +509,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         });
     }
 
+    _shouldLazilyLoadManagedObjects = false;
+
     _valueForRawDataAndReadExpression(objectDescriptor, rawData, readExpression) {
         var propertyDescriptor = objectDescriptor.propertyDescriptorForName(readExpression),
             valueDescriptor = propertyDescriptor.valueDescriptor;
@@ -519,7 +521,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 let value = rawData[propertyDescriptor.name],
                     dataIdentifer, snapshot;
 
-                if (this.handlesType(relObjectDescriptor) && !this._dataInstancesPromiseByObjectDescriptor.has(relObjectDescriptor)) {
+                if (this._shouldLazilyLoadManagedObjects && this.handlesType(relObjectDescriptor) && !this._dataInstancesPromiseByObjectDescriptor.has(relObjectDescriptor)) {
                     return this._readObjectsWithType(relObjectDescriptor).then((instances) => {
                         if (Array.isArray(value)) {
                             value = value.map((item) => {
