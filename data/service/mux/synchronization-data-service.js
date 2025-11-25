@@ -167,7 +167,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         let readOperation = emptyReadOperation.referrer,
             criteriaName = readOperation?.criteria?.name,
             qualifiedProperties = readOperation?.criteria?.qualifiedProperties,
-            rawDataPrimaryKeys = emptyReadOperation.rawDataService.mappingForObjectDescriptor(readOperation.target).rawDataPrimaryKeys,
+            rawDataPrimaryKeys = emptyReadOperation.rawDataService.mappingForObjectDescriptor(readOperation.target).rawDataPrimaryKeys || [],
             isPrimaryKeyCriteria = qualifiedProperties
                                         ? rawDataPrimaryKeys.every(rawDataPrimaryKey=> qualifiedProperties.includes(rawDataPrimaryKey))
                                         : false,
@@ -502,12 +502,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //We might want to ask the delegate his take on what readExpressions to use 
             readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
             //readExpressions = readCompletedOperation.,referrer?.data?.readExpressions,
-            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData);
+            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData),
+            typeForRawData = this.objectTypeForRawData(objectDescriptor, rawData);
 
         rawDataService.recordSnapshot(dataIdentifier,  rawData);
 
         //We get, if it's been created before, or create a brand new object
-        let dataObject = rawDataService.getDataObject(objectDescriptor, rawData, dataIdentifier, readCompletedOperation);
+        let dataObject = rawDataService.getDataObject(typeForRawData, rawData, dataIdentifier, readCompletedOperation);
 
         this._syncingObjectsCountedSet.add(dataObject);
         //let dataObject = this.mainService.createDataObject(objectDescriptor);
@@ -744,6 +745,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         })
         .catch((error) => {
+            console.error(error);
             throw error;
         })
         .finally(() => {
@@ -1079,6 +1081,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         return this._captureSynchronizationDataServiceReadCompletionOperation(readUpdateOperation);
     }
     captureSynchronizationDataServiceReadCompletedOperation(readCompletedOperation) {
+        
         return this._captureSynchronizationDataServiceReadCompletionOperation(readCompletedOperation);
     }
 
@@ -1410,6 +1413,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             return;
         }
 
+        this.registerChildDataServiceReadCompletionOperation(readFailedOperation);
+
         console.log("Sync Service capture ReadFailedOperation "+readFailedOperation.id+" from "+readFailedOperation.rawDataService.identifier+", referrer "+readFailedOperation.referrer.id+", for "+readFailedOperation.referrer.target.name + (readFailedOperation.referrer?.data?.readExpressions? (" "+readFailedOperation.referrer?.data?.readExpressions) : "") + " like "+ readFailedOperation.referrer.criteria+": ", readFailedOperation.data);
 
         if((readFailedOperation.data.name === DataOperationErrorNames.DatabaseMissing) || 
@@ -1467,6 +1472,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     });
                 }
     
+            } else if (!this.didAllChildServicesCompletedReadOperationForTarget(readFailedOperation.referrer, readFailedOperation.target)) {
+                readFailedOperation.stopPropagation();
             }
             /*
                 If we have a delegate, we're going to rely on it to take care of the situation
@@ -1577,6 +1584,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             
         })
         .catch((error) => {
+            console.error(error);
             needsImport = true;
             return this._invokeChildServicesFetchObjectProperty(childServices, 1, object, propertyName);
         })
