@@ -8,7 +8,8 @@
 */
 
 
-var parse = require("./frb/parse"),
+var Montage = require("./core").Montage,
+    parse = require("./frb/parse"),
     stringify = require("./frb/stringify"),
     evaluate = require("./frb/evaluate"),
     operatorTypes = require("./frb/language").operatorTypes,
@@ -120,16 +121,19 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
         */
         if (this._current === this._value) {
             yield this._current;
-        } else {
+        } 
+
+        while (this._current) {
             if(expression && expression !== this._expression) {
                 //Less optimized path
                 this._current = evaluate(expression, this._current);
             } else {
-                this._current = this.evaluateExpression(current);
+                this._current = this.evaluateExpression(this._current);
             }
-
             yield this._current;
         }
+   
+        
     }
 
 }
