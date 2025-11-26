@@ -9,38 +9,46 @@ var RawValueToObjectConverter = require("./raw-value-to-object-converter").RawVa
  */
 exports.RawHierarchyToObjectConverter = RawValueToObjectConverter.specialize( /** @lends RawEmbeddedValueToObjectConverter# */ {
 
-        /*********************************************************************
+    /*********************************************************************
      * Serialization
      */
 
-        serializeSelf: {
-            value: function (serializer) {
+    serializeSelf: {
+        value: function (serializer) {
+
+            this.super(serializer);
     
-                this.super(serializer);
-        
-                serializer.setProperty("hierarchyExpressions", this.hierarchyExpressions);    
+            serializer.setProperty("hierarchyExpression", this.hierarchyExpression);    
+        }
+    },
+
+    deserializeSelf: {
+        value: function (deserializer) {
+
+            this.super(deserializer);
+    
+            value = deserializer.getProperty("hierarchyExpression");
+            if (value) {
+                this.hierarchyExpression = value;
             }
-        },
-    
-        deserializeSelf: {
-            value: function (deserializer) {
-    
-                this.super(deserializer);
-        
-                value = deserializer.getProperty("hierarchyExpressions");
-                if (value) {
-                    this.hierarchyExpressions = value;
-                }
-            }
-        },
+        }
+    },
     
     /*********************************************************************
      * Properties
      */
 
+
     /*********************************************************************
      * Public API
      */
+    
+    initWithHierarchyExpression: {
+        value: function (expression) {
+            this.hierarchyExpression = expression;
+            return this;
+        }
+    },
 
     /**
      * This is a unique clientId (per tab), that's given by the backend to the
@@ -50,7 +58,7 @@ exports.RawHierarchyToObjectConverter = RawValueToObjectConverter.specialize( /*
      * @type {Array<FRB Expressions>}
      */
 
-    hierarchyExpressions: {
+    hierarchyExpression: {
         value: undefined
     },
 
@@ -59,7 +67,7 @@ exports.RawHierarchyToObjectConverter = RawValueToObjectConverter.specialize( /*
      * Converts an array of raw data that are the raw data of ancestors of an object. 
      * Returns the value converted to object of the first, which is the "parent" of the object being mapped, 
      * and loop on the rest of the array to create those objects and assign them as "parent" of the previous
-     * one using the expression at the corresponding index in the "hierarchyExpressions" property
+     * one using the expression at the corresponding index in the "hierarchyExpression" property
      * @param {Property} v The value to format.
      * @returns {Promise} A promise for the referenced object.  The promise is
      * fulfilled after the object is successfully fetched.
@@ -84,9 +92,9 @@ exports.RawHierarchyToObjectConverter = RawValueToObjectConverter.specialize( /*
 
                 if(Array.isArray(v)) {
                     if(v.length) {
-                        let hierarchyExpressions = self.hierarchyExpressions;
+                        let hierarchyExpression = self.hierarchyExpression;
                         for(var i=0, countI=v.length, promises, iExpression, previousResult;(i<countI);i++) {
-                            iExpression = hierarchyExpressions[i-1];
+                            iExpression = hierarchyExpression[i-1];
                             previousResult = result;
                             result =  self._convertOneValue(v[i], typeToFetch, service, iExpression, i, previousResult);
 
