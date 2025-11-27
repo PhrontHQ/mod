@@ -1,5 +1,7 @@
 var DataService = require("./data-service").DataService,
+    assign = require("../../../core/frb/assign"),
     compile = require("../../core/frb/compile-evaluator"),
+    Criteria = require("../../core/criteria").Criteria,
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
@@ -57,6 +59,8 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
 
         this._typeIdentifierMap = new Map();
         this._descriptorToRawDataTypeMappings = new Map();
+        this._rawDataTypeIdentificationCriteriaByType = new Map();
+        this._defaultRawDataTypeIdentificationCriteriaByType = new Map();
 
         if (this.supportsDataOperation) {
             this.addEventListener(DataOperation.Type.ReadUpdateOperation, this, false);
@@ -1117,7 +1121,6 @@ RawDataService.addClassProperties({
     addOneRawData: {
         value: function (stream, rawData, context) {
 
-
             if(!rawData) {
                 console.warn("stream received null rawData in result from operatinon ", context);
                 return;
@@ -1150,9 +1153,9 @@ RawDataService.addClassProperties({
                 We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
                 We'll need to find a way to optimize down to a single lookup if we can
             */
-            if (mapping?.needsRawDataTypeIdentificationCriteria) {
-                type = mapping.objectTypeForRawData(rawData);
-            }
+           if (this.needsRawDataTypeIdentificationCriteria) {
+                type = this.objectTypeForRawData(type, rawData);
+           }
 
          
             
@@ -1183,8 +1186,8 @@ RawDataService.addClassProperties({
 
                 this._addRawDataPrimaryKeyValuesIfNeeded(rawData, type, stream.query);
 
-                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData, context),
-                //console.log("addOneRawData "+dataIdentifier);
+                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData, context);
+                
                 // if(!object) {
                 object = this.objectForTypeRawData(type, rawData, dataIdentifier, context);
                 // }
@@ -1354,6 +1357,89 @@ RawDataService.addClassProperties({
             }
             return object;
 
+        }
+    },
+
+    _defaultRawDataTypeIdentificationCriteriaByType: {
+        value: undefined
+    },
+
+    _rawDataTypeIdentificationCriteriaByType: {
+        value: undefined
+    },
+
+    defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor: {
+        value: function(objectDescriptor) {
+            return new Criteria().initWithExpression("fullModuleId == $.fullModuleId", {fullModuleId: objectDescriptor.fullModuleId});
+        }
+    },
+
+    rawDataTypeIdentificationCriteriaForType: {
+        value: function (type) {
+            if (!this._rawDataTypeIdentificationCriteriaByType.has(type)) {
+                this._rawDataTypeIdentificationCriteriaByType.set(type, this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(type));
+            }
+            return this._rawDataTypeIdentificationCriteriaByType.get(type);
+        }
+    },
+
+    needsRawDataTypeIdentificationCriteria: {
+        value: false
+    },
+
+    objectTypeForRawData: {
+        value: function (type, rawData, _rootType) {
+            let mapping;
+            if (!_rootType) {
+                _rootType = type;
+            }
+            mapping = this.mappingForType(type);
+
+            if (mapping && mapping.objectTypeForRawData) {
+                return mapping.objectTypeForRawData(rawData);
+            } else {
+                return this._objectTypeForRawData(type, rawData, _rootType);
+            }
+        }
+    },
+
+    _objectTypeForRawData: {
+        value: function (type, rawData, _rootType) {
+            let criteria;
+
+            _rootType = _rootType || type;
+
+            if(!rawData) return type;
+
+            if (this.rawDataTypeIdentificationCriteriaForType(type).evaluate(rawData)) {
+                return type;
+            }
+
+            /*
+                We need to look into type descendants. We have ObjectDescriptor.prototype.descendantDescriptors
+                but it would force us to loop one, when there should be only one match.
+                Ideally we need to create a descendantDescriptorIterator to solve that. Meanwhile...
+            */
+            let currentChildDescriptors = type.childObjectDescriptors,
+                thisRawDataTypeName = type.name;
+            
+            if(currentChildDescriptors) {
+                let result,
+                    i, countI, iChildDescriptor;
+
+                for(i=0, countI = currentChildDescriptors.length; (iChildDescriptor = currentChildDescriptors[i]);i++) {
+                    if (result = this.objectTypeForRawData(iChildDescriptor, rawData, _rootType)) {
+                        return result;
+                    }
+                }
+                // if(_rootMapping === this) {
+                //     console.warn("Defaulting to "+this.objectDescriptor.name+", no (sub)type was found for rawData ",rawData);
+                // }
+                return _rootType === type ? type : null;
+            } else {
+                //There are no childObjectDescriptors, no point to check further
+                return _rootType === type ? type : null;
+            }
         }
     },
 
@@ -2328,9 +2414,20 @@ RawDataService.addClassProperties({
      */
     mapObjectTypeToRawData: {
         value: function (object, rawData, context) {
-            return this.mappingForObject(object)?.mapObjectTypeToRawData(object, rawData, context);
+            let mapping = this.mappingForObject(object);
+            if (mapping && mapping.mapObjectTypeToRawData) {
+                return mapping.mapObjectTypeToRawData(object, rawData, context);
+            }
+
+            if(this.needsRawDataTypeIdentificationCriteria) {
+                // debugger;
+                let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
+                
+                assign(rawData, criteria.expression, true, criteria.parameters);
+            }
         }
     },
+    
 
     /**
      * Public method invoked by the framework during the conversion from
@@ -2631,6 +2728,92 @@ RawDataService.addClassProperties({
 
     _descriptorToRawDataTypeMappings: {
         value: undefined
+    },
+
+    defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor: {
+        value: function(objectDescriptor) {
+            return new Criteria().initWithExpression("fullModuleId == $.fullModuleId", {fullModuleId: objectDescriptor.fullModuleId});
+        }
+    },
+
+    defaultRawDataTypeIdentificationCriteriaForObjectDescriptor: {
+        value: function (objectDescriptor, includesChildObjectDescriptors, array, rawDataTypeName) {
+            let isRoot = (array === undefined),
+                _rawDataTypeName = isRoot ? objectDescriptor.rawDataTypeName : rawDataTypeName,
+                childRawDataTypeName,
+                _array = (array || []);
+
+            _array.push(this.rawDataTypeIdentificationCriteriaForType(objectDescriptor));
+
+            if(includesChildObjectDescriptors) {
+                let childObjectDescriptors = objectDescriptor.childObjectDescriptors,
+                    i=0, countI = childObjectDescriptors.length,
+                    iChildObjectDescriptor, iChildObjectDescriptorMapping;
+
+                for(i=0; (i<countI); i++) {
+                    iChildObjectDescriptor = childObjectDescriptors[i];
+                    iChildObjectDescriptorMapping = this.mappingForType(iChildObjectDescriptor);
+                    childRawDataTypeName = iChildObjectDescriptorMapping ? iChildObjectDescriptorMapping.rawDataTypeName : iChildDescriptor.name;
+                    /*
+                        Just because it's a subclass, doesn't mean it's persisted in the same object store, so got to check
+                    */
+                    if(childRawDataTypeName === _rawDataTypeName) {
+                        this.defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(iChildObjectDescriptor, includesChildObjectDescriptors, _array, _rawDataTypeName);
+                    }
+                }
+            }
+
+            if(isRoot) {
+                if(_array.length ===0) {
+                    return _array[0]
+                } else {
+                    return Criteria.or(..._array);
+                }    
+            }
+        }
+    },
+
+    defaultRawDataTypeIdentificationCriteria: {
+        value: function(type, includesChildObjectDescriptors = true) {
+            var mapping = this.mappingForType(type);
+                rawDataTypeName = mapping && mapping.rawDataTypeName || type.name; 
+            if(!this._defaultRawDataTypeIdentificationCriteriaByType.has(type)) {
+                let criteria;
+
+                if(!rawDataTypeName || (rawDataTypeName && rawDataTypeName === type.name)) {
+                    /*
+                        If we're the root of the hieararchy stored in the ObjectStore, we're going to not have a fullModuleId value.
+                        That way if subclasses are added after instances of the root class have beem added, we don't need to update exising rows. 
+                        Because initially there would be no reason to use fullModuleId in the first place and that column would be empty
+
+                        TODO: expose the fullModuleId as a criteria / API so it's less hard coded
+                    */
+                    if(!includesChildObjectDescriptors) {
+                        criteria = new Criteria().initWithExpression("fullModuleId == null");
+                    } else {
+                        criteria = null;
+                    }
+                } else {
+                    /*
+                        TODO: Tweak the API to be able to get includesChildObjectDescriptors passed in from a read operation
+                    */
+                    criteria = this.defaultRawDataTypeIdentificationCriteriaForObjectDescriptor(type, /*includesChildObjectDescriptors*/true);
+                }
+                this._defaultRawDataTypeIdentificationCriteriaByType.set(type, criteria);
+            }
+            return this._defaultRawDataTypeIdentificationCriteriaByType.get(type);
+        }
+    },
+
+    rawDataTypeIdentificationCriteriaForDataOperation: {
+        value: function(aDataOperation) {
+            if(aDataOperation.type === DataOperation.Type.ReadOperation) {
+                // return this.defaultRawDataTypeIdentificationCriteria(aDataOperation.target, aDataOperation.data.includesChildObjectDescriptors);
+                return this.defaultRawDataTypeIdentificationCriteria(aDataOperation.target, true);
+            } else {
+                return this.rawDataTypeIdentificationCriteriaForType(aDataOperation.target);
+            }
+        }
     },
 
     /**

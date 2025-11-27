@@ -3086,7 +3086,8 @@ DataService.addClassProperties(
                             type,
                             service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
-                    this.registerCreatedDataObject(object);
+
+                        this.registerCreatedDataObject(object);
 
                     return object;
                 } else {
@@ -3207,6 +3208,7 @@ DataService.addClassProperties(
                 // constructor = this._getPrototypeForType(objectDescriptor).constructor,
                 // object = new constructor;
                 // //object = Reflect.construct(constructor, this._emptyArray);
+
                 if (object) {
                     delegateDataIdentifier =
                         dataIdentifierDataService.callDelegateMethod(
