@@ -42,6 +42,8 @@ describe("An ExpressionIterator", function() {
         expect(next.value).toBeDefined();
         expect(next.value.name).toBe("Joan Doe");
 
+
+        //FIXME This should return done = true the first time
         next = iterator.next();
         expect(next.done).toBe(false);
         next = iterator.next();
