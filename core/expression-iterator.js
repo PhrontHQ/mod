@@ -30,8 +30,7 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
             /*
                 Initially, during the creation of the iterator, we need to call it because the next method is actually a generator, so by invoking it we return new instance of the generator.
             */
-            var _iterator = this.next(this._expression, value);
-            return _iterator;
+            this._iterator = this._generateNext(this._expression, value);
         }
     }
 
@@ -104,7 +103,11 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
         return this.compiledSyntax(this._scope);
     }
 
-    * next(expression) {
+    next(expression) {
+        return this._iterator.next(expression);
+    }
+
+    * _generateNext(expression) {
         var localType;
 
         if (!this._current) {
@@ -114,6 +117,8 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
         if (this._current === null) {
             return;
         }
+
+        
 
         /*
             We may want to make that configurable, but it makes sense to start by
@@ -133,7 +138,6 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
             yield this._current;
         }
    
-        
     }
 
 }

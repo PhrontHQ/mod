@@ -18,6 +18,18 @@ describe("An ExpressionIterator", function() {
         };
     });
 
+    it("can be created as instance of ExpressionIterator", function () {
+        let iterator = new ExpressionIterator(5, "this + 1");
+        
+        expect(iterator).toBeDefined();
+        expect(iterator instanceof ExpressionIterator).toBe(true);
+        expect(iterator._value).toBe(5);
+        expect(iterator._expression).toBe("this + 1");
+        iterator.next();
+        expect(iterator._current).toBe(5);
+        
+    });
+
     it("can iterate through a hierarchy", function () {
         let iterator = new ExpressionIterator(rawData, "child"),
             next;
