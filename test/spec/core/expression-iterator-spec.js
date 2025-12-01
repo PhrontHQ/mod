@@ -84,7 +84,4 @@ describe("An ExpressionIterator", function() {
         
     });
 
-    // it("can deserializeSelf", function () {
-    //     //TODO
-    // });
 });
