@@ -288,9 +288,6 @@ exports.DataTrigger.prototype = Object.create(
             value: function (object, shouldFetch) {
                 var valueStatus,
                     myPropertyDescriptor = this.propertyDescriptor,
-                    isToMany = this.isToMany,
-                    prototype,
-                    descriptor,
                     getter = this._valueGetter,
                     propertyName = this._propertyName;
 
@@ -322,46 +319,76 @@ exports.DataTrigger.prototype = Object.create(
 
                     // Start an asynchronous fetch of the property's value if necessary.
                     this.getObjectProperty(object).catch((error) => {
-                        console.error(this._propertyName + " DataTrigger: getObjectProperty error: ", error);
+                        console.error(propertyName + " DataTrigger: getObjectProperty error: ", error);
                     });
                 }
 
                 //}
 
-                /**
-                 * We're going to initialize to-Many to their collection type.
-                 * I don't think we need to check our valueStatus to see if
-                 * a fetch is in flight or have been made, since we merge local value
-                 * and fetched ones in the setter.
-                 */
-                if (
-                    (isToMany || myPropertyDescriptor.collectionValueType !== undefined) &&
-                    object[this._privatePropertyName] === undefined
-                ) {
-                    let valueClass;
-                    if (myPropertyDescriptor.collectionValueType) {
-                        /**
-                         * We should deprecate collectionValueType for collectionDescriptor
-                         * See: https://github.com/PhrontHQ/mod/issues/12
-                         *
-                         * Which would give us directly, via the descriptor, the class to instantiate
-                         */
-                        if (myPropertyDescriptor.collectionValueType === "map") valueClass = Map;
-                        if (myPropertyDescriptor.collectionValueType === "set") valueClass = Set;
-                        if (myPropertyDescriptor.collectionValueType === "array") valueClass = Array;
-                        if (myPropertyDescriptor.collectionValueType === "list") valueClass = Array;
-                        if (myPropertyDescriptor.collectionValueType === "range") valueClass = Range;
-                    } else {
-                        valueClass = Array;
-                    }
-
-                    // this._setAndObserveValue(object, undefined, new valueClass());
-                    let initValue = new valueClass();
-                    this._setValue(object, initValue, false, undefined, initValue);
-                }
+                // Ensure to-Many properties are initialized to their collection type.
+                this._ensureCollectionValue(object);
 
                 // Return the property's current value.
                 return getter ? getter.call(object) : object[this._privatePropertyName];
+            },
+        },
+
+        /**
+         * @method
+         * @argument {Object} object
+         */
+        _ensureCollectionValue: {
+            value: function (object) {
+                const { isMandatory = false, collectionValueType } = this.propertyDescriptor;
+                const expectsCollection = this.isToMany || collectionValueType !== undefined;
+
+                if (!expectsCollection) return;
+
+                // Check if we need to initialize the collection
+                const retrievedPropertyValue = object[this._privatePropertyName];
+
+                // Initialize to-Many to their collection type.
+                if (
+                    // Case 1: collection is not set at all
+                    retrievedPropertyValue === undefined ||
+                    // Case 2: collection is mandatory but null
+                    (isMandatory && retrievedPropertyValue === null)
+                ) {
+                    // Fall back to Array if no specific collection type is specified
+                    let valueClass = Array;
+
+                    if (collectionValueType) {
+                        /**
+                         * TODO: We should deprecate collectionValueType for collectionDescriptor
+                         * Which would give us directly, via the descriptor, the class to instantiate
+                         * @see: https://github.com/PhrontHQ/mod/issues/12
+                         *
+                         * @Benoit: 2025-12-02
+                         * This is a little bit odd that we have both defaultValue and collectionValueType
+                         * on the propertyDescriptor to indicate the type of collection to instantiate.
+                         * We should probably consolidate that.
+                         */
+                        switch (collectionValueType) {
+                            case "map":
+                                valueClass = Map;
+                                break;
+                            case "set":
+                                valueClass = Set;
+                                break;
+                            case "range":
+                                valueClass = Range;
+                                break;
+                            case "list":
+                            case "array":
+                            default:
+                                valueClass = Array;
+                                break;
+                        }
+                    }
+
+                    const initValue = new valueClass();
+                    this._setValue(object, initValue, false, undefined, initValue);
+                }
             },
         },
 
