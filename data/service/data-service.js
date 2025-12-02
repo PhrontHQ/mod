@@ -215,6 +215,8 @@ DataService.addClassProperties(
                 */
                     // self.addEventListener(DataOperation.Type.ReadOperation, self, true);
 
+                    mainService.addEventListener("change", this, false);
+
                     mainService.addEventListener(DataOperation.Type.NoOp, this, false);
                     mainService.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
                     mainService.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
@@ -460,6 +462,7 @@ DataService.addClassProperties(
                         handle that Read Event, so we can know the data services that handled it
                     */
                         this.application.addEventListener(DataOperation.Type.ReadOperation, this, true);
+                        this.addEventListener("change", this, false);
 
                         this.addEventListener(DataOperation.Type.NoOp, this, false);
                         this.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);

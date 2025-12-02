@@ -486,8 +486,12 @@ exports.DataTrigger.prototype = Object.create(
                                         // To deal with changes happening to an array value of that property,
                                         // we'll need to add/cancel observing on the array itself
                                         // and dispatch added/removed change in the array's change handler.
-                                        changeEvent.target.dispatchEvent(changeEvent);
-                                        // }
+                                        if (!changeEvent.target.dispatchEvent) {
+                                            console.warn(`Change Event target ${changeEvent.target.objectDescriptor.name} does not specialize Target so cannot dispatch event`)
+                                            self._service.rootService.handleChange(changeEvent);
+                                        } else {
+                                            changeEvent.target.dispatchEvent(changeEvent);
+                                        }
                                     }
                                 };
                             } else {
@@ -563,7 +567,13 @@ exports.DataTrigger.prototype = Object.create(
                                     // we'll need to add/cancel observing on the array itself
                                     // and dispatch added/removed change in the array's change handler.
                                     // Bypass EventManager for now
-                                    self._service.rootService.handleChange(changeEvent);
+                                    // self._service.rootService.handleChange(changeEvent);
+                                    if (!changeEvent.target.dispatchEvent) {
+                                        console.warn(`Change Event target ${changeEvent.target.objectDescriptor.name} does not specialize Target so cannot dispatch event`)
+                                        self._service.rootService.handleChange(changeEvent);
+                                    } else {
+                                        changeEvent.target.dispatchEvent(changeEvent);
+                                    }
                                     // }
                                 };
 
@@ -583,8 +593,12 @@ exports.DataTrigger.prototype = Object.create(
                                     changeEvent.keyValue = currentValue;
 
                                     // Bypass EventManager for now
-                                    self._service.rootService.handleChange(changeEvent);
-                                    // }
+                                    if (!changeEvent.target.dispatchEvent) {
+                                        console.warn(`Change Event target ${changeEvent.target.objectDescriptor.name} does not specialize Target so cannot dispatch event`)
+                                        self._service.rootService.handleChange(changeEvent);
+                                    } else {
+                                        changeEvent.target.dispatchEvent(changeEvent);
+                                    }
                                 };
 
                             this._collectionListener.set(object, listener);
@@ -740,7 +754,14 @@ exports.DataTrigger.prototype = Object.create(
                     // and dispatch added/removed change in the array's change handler.
 
                     // Bypass EventManager for now
-                    this._service.rootService.handleChange(changeEvent);
+                    
+                    if (!changeEvent.target.dispatchEvent) {
+                        console.warn(`Change Event target ${changeEvent.target.objectDescriptor.name} does not specialize Target so cannot dispatch event`)
+                        this._service.rootService.handleChange(changeEvent);
+                    } else {
+                        changeEvent.target.dispatchEvent(changeEvent);
+                    }
+                    
                 }
 
                 // Resolve any pending promise for this trigger's property value.
