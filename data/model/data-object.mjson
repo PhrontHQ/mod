@@ -201,6 +201,7 @@
             "name": "existenceTimeRange",
             "valueType": "date",
             "cardinality": 1,
+            "collectionValueType": "range",
             "valueDescriptor": {"@": "range_descriptor"},
             "description": "Everything has a beginning and an end. This represnet the lifespan of the real-world object modeled. For a Person it would be that date of birth amd of death. The creationDate is when the digital object representing that person was created. Different"
         }

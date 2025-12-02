@@ -67,6 +67,7 @@
             "name": "connectionTimeRange",
             "valueType": "date",
             "cardinality": 1,
+            "collectionValueType": "range",
             "valueDescriptor": {"@": "rangeDescriptor"}
         }
     },

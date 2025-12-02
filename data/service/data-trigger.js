@@ -3,7 +3,6 @@ var Montage = require("core/core").Montage,
     ModelObjectDescriptor = require("../model/object-descriptor").ObjectDescriptor,
     Map = require("core/collections/map"),
     Range = require("core/range").Range,
-    RangeObjectDescriptor = require("core/range.mjson").montageObject,
     //DataService requires DataTrigger before it sets itself on the exports object...
     //DataServiceModule = require("data/service/data-service"),
     ChangeEvent = require("core/event/change-event").ChangeEvent,
@@ -338,7 +337,7 @@ exports.DataTrigger.prototype = Object.create({}, /** @lends DataTrigger.prototy
                     if(myPropertyDescriptor.collectionValueType === "set" ) valueClass = Set;
                     if(myPropertyDescriptor.collectionValueType === "array" ) valueClass = Array;
                     if(myPropertyDescriptor.collectionValueType === "list" ) valueClass = Array;
-                    if(myPropertyDescriptor.collectionValueType === "range" || myPropertyDescriptor._valueDescriptorReference === RangeObjectDescriptor) valueClass = Range;
+                    if(myPropertyDescriptor.collectionValueType === "range" ) valueClass = Range;
                 } else {
                     valueClass = Array;
                 }

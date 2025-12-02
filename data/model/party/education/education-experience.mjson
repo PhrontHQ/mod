@@ -93,6 +93,7 @@
             "name": "timeRange",
             "valueType": "date",
             "cardinality": 1,
+            "collectionValueType": "range",
             "valueDescriptor": {"@": "range_descriptor"}
         }
     },
