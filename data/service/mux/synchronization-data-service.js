@@ -74,6 +74,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             this.addEventListener(DataOperation.Type.ReadUpdatedOperation, this, true);
             this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, true);
 
+            this.addEventListener("change", this, false);
+
             //handleReadCompletedOperation() is not doing anything at this point
             // this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
 
@@ -212,6 +214,18 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         } else {
             return false;
         }   
+    }
+
+    handleChange(changeEvent) {
+        let dataObject = changeEvent.target;
+        if(this.isSyncingObject(dataObject)) {
+            //Make sure we register the change
+            if(!this.mainService.isObjectCreated(dataObject)) {
+                console.log("SyncDataService.registerChangedObject", dataObject.objectDescriptor.name, changeEvent.key, changeEvent.keyValue);
+                this.mainService.registerChangedDataObject(dataObject);
+            }
+            this.mainService.changesForDataObject(dataObject).set(changeEvent.key, changeEvent.keyValue);
+        }
     }
 
     /*
