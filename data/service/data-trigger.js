@@ -486,8 +486,7 @@ exports.DataTrigger.prototype = Object.create(
                                         // To deal with changes happening to an array value of that property,
                                         // we'll need to add/cancel observing on the array itself
                                         // and dispatch added/removed change in the array's change handler.
-                                        // Bypass EventManager for now
-                                        self._service.rootService.handleChange(changeEvent);
+                                        changeEvent.target.dispatchEvent(changeEvent);
                                         // }
                                     }
                                 };
