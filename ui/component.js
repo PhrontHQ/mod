@@ -4953,6 +4953,8 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 return layer.replace(".", "_");
             }).join(", ")};`; 
 
+            styleElement.setAttribute("data-mod-id", "mod-layer-statement")
+
             document.head.firstChild.before(styleElement);
             return styleElement;
         }
@@ -4960,9 +4962,11 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
     
     addStyleSheetsFromTemplate: {
         value: function(template, cssLayerName) {
+
             if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._cssLayerOrderElement) {
-                this._cssLayerOrderElement = this._addCssLayerOrder();
+                this._cssLayerOrderElement = document.querySelector('[data-mod-id="mod-layer-statement"]') || this._addCssLayerOrder();
             }
+            
             cssLayerName = cssLayerName.replace(".", "_");
             if(!this._addedStyleSheetsByTemplate.has(template)) {
                 var resources = template.getResources(),
@@ -5017,8 +5021,8 @@ var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
                 Add all stylesheets after the CSS layer statement in the DOM to ensure the 
                 order defined in the statement is honored.
             */
-            if (documentHead.firstChild === this._cssLayerOrderElement) {
-                documentHead.firstChild.after(bufferDocumentFragment);
+            if (documentHead.firstElementChild === this._cssLayerOrderElement) {
+                documentHead.firstElementChild.after(bufferDocumentFragment);
             }
             
             this._needsStylesheetsDraw = false;

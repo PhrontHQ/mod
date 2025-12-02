@@ -440,7 +440,11 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
                 dependees: {},
                 dependencyByDependeeCount: [null]
             },
-            rootPackage = config.packageLock.packages[""];
+            rootPackage = config.packageLock && config.packageLock.packages[""];
+
+        if (!rootPackage) {
+            return [];
+        }
 
         modDependenciesForPackage(config, rootPackage, rootPackage.name, context, 1)
 
