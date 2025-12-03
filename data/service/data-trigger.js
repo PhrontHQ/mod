@@ -286,11 +286,6 @@ exports.DataTrigger.prototype = Object.create(
             configurable: true,
             writable: true,
             value: function (object, shouldFetch) {
-                var valueStatus,
-                    myPropertyDescriptor = this.propertyDescriptor,
-                    getter = this._valueGetter,
-                    propertyName = this._propertyName;
-
                 // if(shouldFetch === undefined && this._service.rootService._objectsBeingMapped.has(object) && !object.snapshot) {
                 //     shouldFetch = false;
                 // }
@@ -302,8 +297,8 @@ exports.DataTrigger.prototype = Object.create(
                 // ) {
                 if (
                     shouldFetch !== false &&
-                    (valueStatus = this._getValueStatus(object)) !== null &&
-                    (!myPropertyDescriptor.definition || !myPropertyDescriptor.isDerived) &&
+                    this._getValueStatus(object) !== null &&
+                    (!this.propertyDescriptor.definition || !this.propertyDescriptor.isDerived) &&
                     !this._service.isObjectCreated(object)
                 ) {
                     /**
@@ -319,7 +314,7 @@ exports.DataTrigger.prototype = Object.create(
 
                     // Start an asynchronous fetch of the property's value if necessary.
                     this.getObjectProperty(object).catch((error) => {
-                        console.error(propertyName + " DataTrigger: getObjectProperty error: ", error);
+                        console.error(this._propertyName + " DataTrigger: getObjectProperty error: ", error);
                     });
                 }
 
@@ -329,7 +324,7 @@ exports.DataTrigger.prototype = Object.create(
                 this._ensureCollectionValue(object);
 
                 // Return the property's current value.
-                return getter ? getter.call(object) : object[this._privatePropertyName];
+                return this._valueGetter ? this._valueGetter.call(object) : object[this._privatePropertyName];
             },
         },
 
@@ -340,19 +335,16 @@ exports.DataTrigger.prototype = Object.create(
         _ensureCollectionValue: {
             value: function (object) {
                 const { isMandatory = false, collectionValueType } = this.propertyDescriptor;
-                const expectsCollection = this.isToMany || collectionValueType !== undefined;
 
-                if (!expectsCollection) return;
-
-                // Check if we need to initialize the collection
-                const retrievedPropertyValue = object[this._privatePropertyName];
+                // When the property does not expect a collection value, nothing to do
+                if (!(this.isToMany || collectionValueType !== undefined)) return;
 
                 // Initialize to-Many to their collection type.
                 if (
                     // Case 1: collection is not set at all
-                    retrievedPropertyValue === undefined ||
+                    object[this._privatePropertyName] === undefined ||
                     // Case 2: collection is mandatory but null
-                    (isMandatory && retrievedPropertyValue === null)
+                    (isMandatory && object[this._privatePropertyName] === null)
                 ) {
                     // Fall back to Array if no specific collection type is specified
                     let valueClass = Array;
