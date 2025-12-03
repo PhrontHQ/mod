@@ -1,4 +1,4 @@
-var Montage = require("core/core").Montage,
+var Target = require("core/target").Target,
     PersonNameToSringConverter = require("../../converter/person-name-to-string-converter-private").PersonNameToSringConverter,
     _sharedPersonNameToSringConverter = new PersonNameToSringConverter;
 
@@ -72,7 +72,7 @@ var Montage = require("core/core").Montage,
  * @extends external:Montage
  */
 
-var PersonName = exports.PersonName = Montage.specialize(/** @lends EventPerson.prototype */ {
+var PersonName = exports.PersonName = Target.specialize(/** @lends EventPerson.prototype */ {
     constructor: {
         value: function PersonName() {
             this.super();

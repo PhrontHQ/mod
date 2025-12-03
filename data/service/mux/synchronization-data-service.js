@@ -157,6 +157,21 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         return this._syncingObjectsCountedSet.has(aDataObject);
      }
 
+ 
+    _objectsToTrackChangesWhileBeingMapped = new CountedSet();
+ 
+    startTrackingChangesForObjectBeingMapped(aDataObject) {
+        this._objectsToTrackChangesWhileBeingMapped.add(aDataObject);
+    }
+ 
+    stopTrackingChangesForObjectBeingMapped (aDataObject) {
+        this._objectsToTrackChangesWhileBeingMapped.delete(aDataObject);
+    }
+ 
+    shouldTrackChangesForObjectBeingMapped(aDataObject) {
+        return this._objectsToTrackChangesWhileBeingMapped.has(aDataObject);
+    }
+
     /**
      * Prefetches any object properties required to map the rawData property
      * and maps once the fetch is complete.
@@ -217,8 +232,37 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     handleChange(changeEvent) {
-        let dataObject = changeEvent.target;
-        if(this.isSyncingObject(dataObject)) {
+        let dataObject = changeEvent.target,    
+            value = changeEvent.keyValue;
+
+
+        /********
+         * 
+         * - CountedMap where the key is an object being synced and the values are objects fetched as part of the sync. _objectsToTrackChangesWhileBeingMapped
+         * - CountedMap from object to the root object that triggered it to be synced. _objectsToParentWhoseChangesAreTrackedWhileBeingMapped
+         * 
+         * in handleChange
+         * -- if dataObject is syncing, the keyValue is added to both dataStructures _objectsToTrackChangesWhileBeingMapped[object] = [..., key] and _objectsToParentWhoseChangesAreTrackedWhileBeingMapped[key] = [..., object]
+         * 
+         * startTrackingChangesForObjectBeingMapped
+         * -- if target exists in _objectsToTrackChangesWhileBeingMapped, value is added
+         * -- reverse lookup is added in _objectsToParentWhoseChangesAreTrackedWhileBeingMapped
+         *  
+         * stopTrackingChangesForObjectBeingMapped
+         * -- if object exists in _objectsToTrackChangesWhileBeingMapped, remove instance
+         * -- get parent of object from _objectsToParentWhoseChangesAreTrackedWhileBeingMapped, if it exists
+         * -- if object count in _objectsToTrackChangesWhileBeingMapped is 0, remove it.
+         * -- if parent count in _objectsToTrackChangesWhileBeingMapped is 0, remove it.
+         * -- 
+         * 
+         * 
+         */
+
+            // CountedMap 
+            // Value gets added
+            // Key is root object
+
+        if (this.isSyncingObject(dataObject)) {
             //Make sure we register the change
             if(!this.mainService.isObjectCreated(dataObject)) {
                 console.log("SyncDataService.registerChangedObject", dataObject.objectDescriptor.name, changeEvent.key, changeEvent.keyValue);
@@ -506,6 +550,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     }    
 
+    
+
 
     __syncObjectDescriptorRawDataFromReadCompletedOperation(objectDescriptor, rawData, readCompletedOperation, readEmptyHandedDataServices, readEmptyHandedDataServicesByCreatedObjectsToSync, registerMappedPropertiesAsChanged) {
         // if(objectDescriptor.name === "Device") {
@@ -610,9 +656,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //         }
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
+        this.startTrackingChangesForObjectBeingMapped(dataObject);
 
         return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
         .then((value) => {
+
 
             //cleanup:
             //this.removeEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
@@ -765,7 +813,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         .finally(() => {
             //cleanup:
             this._syncingObjectsCountedSet.delete(dataObject);
-
+            this.stopTrackingChangesForObjectBeingMapped(dataObject);
             //this.removeEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
         });
 
