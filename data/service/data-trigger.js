@@ -334,48 +334,46 @@ exports.DataTrigger.prototype = Object.create(
          */
         _ensureCollectionValue: {
             value: function (object) {
-                const { isMandatory = false, collectionValueType } = this.propertyDescriptor;
-
                 // When the property does not expect a collection value, nothing to do
-                if (!(this.isToMany || collectionValueType !== undefined)) return;
+                if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
+                    return;
+                }
 
                 // Initialize to-Many to their collection type.
                 if (
                     // Case 1: collection is not set at all
                     object[this._privatePropertyName] === undefined ||
                     // Case 2: collection is mandatory but null
-                    (isMandatory && object[this._privatePropertyName] === null)
+                    (this.propertyDescriptor.isMandatory === true && object[this._privatePropertyName] === null)
                 ) {
-                    // Fall back to Array if no specific collection type is specified
-                    let valueClass = Array;
+                    let valueClass;
 
-                    if (collectionValueType) {
-                        /**
-                         * TODO: We should deprecate collectionValueType for collectionDescriptor
-                         * Which would give us directly, via the descriptor, the class to instantiate
-                         * @see: https://github.com/PhrontHQ/mod/issues/12
-                         *
-                         * @Benoit: 2025-12-02
-                         * This is a little bit odd that we have both defaultValue and collectionValueType
-                         * on the propertyDescriptor to indicate the type of collection to instantiate.
-                         * We should probably consolidate that.
-                         */
-                        switch (collectionValueType) {
-                            case "map":
-                                valueClass = Map;
-                                break;
-                            case "set":
-                                valueClass = Set;
-                                break;
-                            case "range":
-                                valueClass = Range;
-                                break;
-                            case "list":
-                            case "array":
-                            default:
-                                valueClass = Array;
-                                break;
-                        }
+                    /**
+                     * TODO: We should deprecate collectionValueType for collectionDescriptor
+                     * Which would give us directly, via the descriptor, the class to instantiate
+                     * @see: https://github.com/PhrontHQ/mod/issues/12
+                     *
+                     * @Benoit: 2025-12-02
+                     * This is a little bit odd that we have both defaultValue and collectionValueType
+                     * on the propertyDescriptor to indicate the type of collection to instantiate.
+                     * We should probably consolidate that.
+                     */
+                    switch (this.propertyDescriptor.collectionValueType) {
+                        case "map":
+                            valueClass = Map;
+                            break;
+                        case "set":
+                            valueClass = Set;
+                            break;
+                        case "range":
+                            valueClass = Range;
+                            break;
+                        case "list":
+                        case "array":
+                        // Fall back to Array if no specific collection type is specified
+                        default:
+                            valueClass = Array;
+                            break;
                     }
 
                     const initValue = new valueClass();
