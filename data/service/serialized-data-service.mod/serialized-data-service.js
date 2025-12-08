@@ -157,7 +157,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
-        console.warn("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName, iRawData);
+        // console.warn("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName, iRawData);
         return this.nullPromise;
     }
 
@@ -248,10 +248,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
 
-    _isAsync(object) {
-        return object && object.then && typeof object.then === "function";
-    }
-
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
         let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
@@ -335,7 +331,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 or if that value has an idententifier if it's an
             */
             if(iPropertyDescriptor.valueDescriptor) {
-                if (this._isAsync(iPropertyDescriptor.valueDescriptor.then)) {
+                if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
                     mappingPromises.push(iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
                         return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
                     }));
@@ -394,7 +390,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                     })
                                 );
                             }
-                            return Promise.all(mappingPromises);
+                            return Promise.all(mappingPromises).then(() => {
+                                object[property].splice.apply(object[property], [0, Infinity].concat(values));
+                                return;
+                            });
 
                         } else if(iPropertyValues instanceof Map) {
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
@@ -488,7 +487,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     if (!readOperation.data.readExpressions) {
                         return filteredRawData
                     }
-                    
                     return this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]);
                 }).then((filteredRawData) => {
                     filteredRawData = filteredRawData && filteredRawData.filter((item) => {
@@ -509,19 +507,38 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         });
     }
 
-    _shouldLazilyLoadManagedObjects = false;
+    _shouldLazilyLoadManagedObjects = true;
 
     _valueForRawDataAndReadExpression(objectDescriptor, rawData, readExpression) {
         var propertyDescriptor = objectDescriptor.propertyDescriptorForName(readExpression),
             valueDescriptor = propertyDescriptor.valueDescriptor;
-
 
         if (this._isAsync(valueDescriptor)) {
             return valueDescriptor.then((relObjectDescriptor) => {
                 let value = rawData[propertyDescriptor.name],
                     dataIdentifer, snapshot;
 
-                if (this._shouldLazilyLoadManagedObjects && this.handlesType(relObjectDescriptor) && !this._dataInstancesPromiseByObjectDescriptor.has(relObjectDescriptor)) {
+                if (!this.handlesType(relObjectDescriptor)) {
+                    //Needs to be implemented
+                    console.error("SerializedDataService cannot resolve relationship for object that is not also managed by the serializedDataService")
+                    return null;
+                }
+
+                if (!this._shouldLazilyLoadManagedObjects) {
+                    if (Array.isArray(value)) {
+                        value = value.map((item) => {
+                            dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
+                            snapshot = this.snapshotForDataIdentifier(dataIdentifer);
+                            return snapshot;
+                        }).filter((item) => {
+                            return !!item;
+                        });
+                    } else {
+                        dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, value);
+                        value = this.snapshotForDataIdentifier(dataIdentifer);
+                    }
+                    return value;
+                } else {
                     return this._readObjectsWithType(relObjectDescriptor).then((instances) => {
                         if (Array.isArray(value)) {
                             value = value.map((item) => {
@@ -537,20 +554,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         }
                         return value;
                     });
-                } else {
-                    if (Array.isArray(value)) {
-                    value = value.map((item) => {
-                        dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
-                        snapshot = this.snapshotForDataIdentifier(dataIdentifer);
-                        return snapshot;
-                    }).filter((item) => {
-                        return !!item;
-                    });
-                } else {
-                    dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, value);
-                    value = this.snapshotForDataIdentifier(dataIdentifer);
-                }
-                return value;
                 }
                 
             });

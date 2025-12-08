@@ -4530,8 +4530,6 @@ RawDataService.addClassProperties({
                 }
 
 
-
-
                 //console.log("_saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id)
                 //TODO
                 //First thing we should be doing here is run validation

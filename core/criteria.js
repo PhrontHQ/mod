@@ -996,7 +996,7 @@ var Criteria = (exports.Criteria = Montage.specialize(
         },
 
         _circularJSONReplacer: {
-            value: function _circularJSONReplacer() {
+            get: function _circularJSONReplacer() {
                 const seen = new WeakSet(); 
                 return (key, value) => {
                     if (typeof value === "object" && value !== null) {

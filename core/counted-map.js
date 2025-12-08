@@ -1,4 +1,4 @@
-Set = require("core/collections/map");
+const Map = require("core/collections/map");
 
 /**
  * The CountedMap keeps a counter associated with object inserted into it. It keeps track of the number of times objects are inserted and objects are really removed when they've been removed the same number of times.

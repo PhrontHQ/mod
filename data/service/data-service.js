@@ -3084,7 +3084,7 @@ DataService.addClassProperties(
                     var service = this.childServiceForType(type),
                         //Gives a chance to raw data service to provide a primary key for clien-side creation/
                         //Especially useful for systems that use uuid as primary keys.
-                        //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type));
+                        //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
                         object = this._createDataObject(
                             type,
                             service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
@@ -4440,7 +4440,7 @@ DataService.addClassProperties(
         },
 
         registerDataObjectChangesFromEvent: {
-            value: function (changeEvent) {
+            value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
                     objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4485,7 +4485,8 @@ DataService.addClassProperties(
                                 self._registerDataObjectChangesFromEvent(
                                     changeEvent,
                                     propertyDescriptor,
-                                    _inversePropertyDescriptor
+                                    _inversePropertyDescriptor,
+                                    shouldTrackChangesWhileBeingMapped
                                 );
                             }
                         });
@@ -4493,21 +4494,23 @@ DataService.addClassProperties(
                         this._registerDataObjectChangesFromEvent(
                             changeEvent,
                             propertyDescriptor,
-                            inversePropertyDescriptor
+                            inversePropertyDescriptor,
+                            shouldTrackChangesWhileBeingMapped
                         );
                     }
                 } else {
                     this._registerDataObjectChangesFromEvent(
                         changeEvent,
                         propertyDescriptor,
-                        inversePropertyDescriptor
+                        inversePropertyDescriptor,
+                        shouldTrackChangesWhileBeingMapped
                     );
                 }
             },
         },
 
         _registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, propertyDescriptor, inversePropertyDescriptor) {
+            value: function (changeEvent, propertyDescriptor, inversePropertyDescriptor, shouldTrackChangesWhileBeingMapped) {
                 var dataObject = changeEvent.target,
                     isCreatedObject = this.isObjectCreated(dataObject),
                     key = changeEvent.key,
@@ -4528,8 +4531,11 @@ DataService.addClassProperties(
                 ?
                 #TODO TEST!!
             */
+            // if (dataObject.objectDescriptor.name === "EmploymentPositionStaffing") {
+            //     debugger;
+            // }
 
-                if (!isCreatedObject && !isDataObjectBeingMapped) {
+                if (!isCreatedObject && (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped)) {
                     //this.changedDataObjects.add(dataObject);
                     this.registerChangedDataObject(dataObject);
                 }
@@ -4571,12 +4577,12 @@ DataService.addClassProperties(
 
             */
                 if (
-                    changeEvent.hasOwnProperty("key") &&
-                    changeEvent.hasOwnProperty("keyValue") &&
+                    changeEvent.key &&
+                    changeEvent.keyValue &&
                     key !== "length" &&
                     /* new for blocking re-entrant */ changesForDataObject.get(key) !== keyValue
                 ) {
-                    if (!isDataObjectBeingMapped) {
+                    if (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped) {
                         changesForDataObject.set(key, keyValue);
                     }
 
