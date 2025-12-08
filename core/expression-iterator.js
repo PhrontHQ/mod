@@ -27,10 +27,6 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
         if(value) {
             this._value = value;
             this._expression = expression;
-            /*
-                Initially, during the creation of the iterator, we need to call it because the next method is actually a generator, so by invoking it we return new instance of the generator.
-            */
-            this._iterator = this._generateNext(this._expression, value);
         }
     }
 
@@ -41,6 +37,12 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
              * @private
              * @type {object}
              */
+            __iterator: {
+                value: null,
+            },
+            _expression: {
+                value: null,
+            },
             _syntax: {
                 value: null,
             },
@@ -58,6 +60,47 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
 
     }
 
+    /**
+     * Serializes the ExpressionIterator's properties using the provided serializer.
+     * @param {Serializer} serializer - The serializer instance.
+     */
+    serializeSelf(serializer) {
+        super.serializeSelf(serializer);
+        serializer.setProperty("expression", this.expression);
+    }
+
+    /**
+     * Deserializes the ExpressionIterator's properties using the provided deserializer.
+     * @param {Deserializer} deserializer - The deserializer instance.
+     */
+    deserializeSelf(deserializer) {
+        this.expression = deserializer.getProperty("expression");
+    }
+
+
+    /* 
+     * Borrowed from Iterator.from() static method
+     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Iterator/from
+     *
+     * Allows a configured instance to iterate over a specific value
+     * @param {Iterable} value - An objec to iterate on.
+     * @return {this}
+     */
+    from(value) {
+        this._value = value;
+        return this;
+    }
+
+    get _iterator() {
+        return this.__iterator || (this.__iterator = this._generateNext(this._expression));
+    }
+
+    /**
+     * TEST ME - to see if expression were changed while
+     * iteration is happening if it does the right thing
+     *
+     * @type {object}
+     */
     _reset() {
         this._expression = null;
         this._compiledSyntax = null;
@@ -66,6 +109,17 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
         this._qualifiedProperties = null;
 
         this._syntax = null;
+    }
+
+    get expression() {
+        return this._expression;
+    }
+    set expression (value) {
+        if (value !== this._expression) {
+            //We need to reset:
+            this._reset();
+            this._expression= value;
+        }
     }
 
     /**
@@ -135,9 +189,17 @@ exports.ExpressionIterator = class ExpressionIterator extends Object {
             } else {
                 this._current = this.evaluateExpression(this._current);
             }
-            yield this._current;
-        }
-   
-    }
 
+            /* 
+                To have the yiels return {value:..., done: true}, 
+                the last yield needs to be the one to cary 
+                the last actual value, done: will be false 
+                the function needs to end without a yield 
+                then {value:undefined, done: true} is returned by next()
+            */
+            if(this._current) {
+                yield this._current;
+            }
+        }
+    }
 }
