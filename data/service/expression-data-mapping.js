@@ -1398,6 +1398,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    // 1. Add dataObject to scope 
+    // 2. Update converters to receive scope instead of value (raw-embedded, raw-embedded-hierarchy, raw-foreign-key)
+    // 3. Pass scope as context to resolveObjectForTypeRawData
+    // 4. 
+
     mapRawDataToObject: {
         value: function (rawData, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged) {
             var promises,
@@ -1409,11 +1414,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if(context instanceof DataOperation) {
                 mappingScope = this._scope.nest(context);
                 mappingScope = mappingScope.nest(rawData);
-
             } else {
                 mappingScope = this._scope.nest(rawData);
             }
 
+            mappingScope.rootObjectBeingMapped = object;
             /*
                 Tell our service it's about to start
                 TODO: We may need to pass an additional 'mappedProperties' array argument to collect and communicate 

@@ -65,8 +65,9 @@ exports.RawEmbeddedHierarchyValueToObjectConverter = RawValueToObjectConverter.s
      * fulfilled after the object is successfully fetched.
      */
     convert: {
-        value: function (v) {
+        value: function (scope) {
             var self = this,
+                v = scope.value,
                 convertedValue,
                 result;
 

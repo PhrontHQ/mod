@@ -8,6 +8,12 @@ var Montage = require("../../core/core").Montage,
 var ONE_WAY_BINDING = "<-";
 var TWO_WAY_BINDING = "<->";
 
+var CONVERTERS_ACCEPTING_SCOPE = new Set([
+    "data/converter/raw-foreign-value-to-object-converter",
+    "data/converter/raw-embedded-value-to-object-converter",
+    "data/converter/raw-embedded-hierarchy-value-to-object-converter"
+])
+
 /**
  * Instructions to map raw data to model objects or model objects to model objects
  *
@@ -277,7 +283,8 @@ exports.MappingRule = Montage.specialize(/** @lends MappingRule.prototype */ {
      */
     evaluate: {
         value: function (scope) {
-            var value = this.expression(scope);
+            var value = this.expression(scope),
+                ruleScope;
             // return this.converter ? (this.converter.convert(value) :
             //                         this.reverter ?
             //                         this.reverter.revert(value) :
@@ -295,7 +302,27 @@ exports.MappingRule = Montage.specialize(/** @lends MappingRule.prototype */ {
                     to pass the rule as a second argument: regular converters don't need to know and can ignore it, while those who do have it handy,
                     in-scope which is more natural in a stateless / functional approach those convert()/revert() have been using.
                 */
+
+                /******
+                 * Data Converters were originally written to accept the result of an expression on the scope. This will be changed 
+                 * so Data Converters accept the scope itself which will provide access to the full scope chain. This will empower 
+                 * the converter to know significantly more about the object being converted without exploding the method signature with arguments. 
+                 * 
+                 * As an example, raw-embedded-value-to-object-converter expects a scope like...
+                 * value: aRawDataService
+                 *      --> value: aDataOperation 
+                 *         --> value: rawData
+                 *             rootObjectBeingMapped: dataObject
+                 *    
+                 * This goal is to eventually change all data converters to accept scope
+                 */
+               if (CONVERTERS_ACCEPTING_SCOPE.has(this.converter.moduleId)) {
+                ruleScope = scope.nest(value);
+                value = this.converter.convert(ruleScope);
+               } else {
                 value = this.converter.convert(value);
+               }
+                
                 if(this._isAsync(value)) {
                     var self = this;
                     return value.then(function(value) {

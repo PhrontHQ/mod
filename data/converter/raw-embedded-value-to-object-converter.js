@@ -29,8 +29,9 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
      * fulfilled after the object is successfully fetched.
      */
     convert: {
-        value: function (v) {
+        value: function (scope) {
             var self = this,
+                v = scope.value,
                 convertedValue;
 
             /*
@@ -48,7 +49,7 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
                     if(v.length) {
                         convertedValue = [];
                         for(var i=0, countI=v.length, result, promises;(i<countI);i++) {
-                            result =  self._convertOneValue(v[i],typeToFetch, service, convertedValue, i);
+                            result =  self._convertOneValue(scope, typeToFetch, service, convertedValue, i);
                             if (Promise.is(result)) {
                                 (promises || (promises = [])).push(result);
                             } else {
@@ -73,7 +74,7 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
                 }
                 else {
                     if(v) {
-                        return self._convertOneValue(v,typeToFetch, service);
+                        return self._convertOneValue(scope, typeToFetch, service);
                     }
                 }
             });
@@ -81,8 +82,14 @@ exports.RawEmbeddedValueToObjectConverter = RawValueToObjectConverter.specialize
     },
 
     _convertOneValue:  {
-        value: function (v, typeToFetch, service, valueArray, index) {
-            var result = service.resolveObjectForTypeRawData(typeToFetch, v);
+        value: function (scope, typeToFetch, service, valueArray, index) {
+            var result, v;
+            if (Array.isArray(scope.value) && !isNaN(index)) {
+                v = scope.value[index];
+            } else {
+                v = scope.value;
+            }
+            result = service.resolveObjectForTypeRawData(typeToFetch, v, scope);
 
             if (result) {
                 result = result.then(function (dataObject) {

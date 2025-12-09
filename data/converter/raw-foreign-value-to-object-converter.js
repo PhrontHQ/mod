@@ -649,16 +649,16 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
      */
 
     convert: {
-        value: function (v) {
+        value: function (scope) {
             return this.service.then((service) => {
-                return this._convert(v, service);
+                return this._convert(scope, service);
             });
         }
     },
 
    _convert: {
-        value: function (v, service) {
-
+        value: function (scope, service) {
+            var v = scope.value;
             if((v && !(v instanceof Array )) || (v instanceof Array && v.length > 0)) {
                 var self = this,
                     //We put it in a local variable so we have the right value in the closure

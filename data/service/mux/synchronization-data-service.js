@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person", "EmploymentPosition", "EmploymentPositionStaffing"
+                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Job"
             ]);
         }
         return this.__trackedTypes;
@@ -184,7 +184,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
  
     _objectsToTrackChangesWhileBeingMapped = new CountedMap();
-    _objectsToTrackChangesWhileBeingMappedSet = new CountedSet();
 
     _objectsToParentsWhoseChangesAreTrackedWhileBeingMapped = new CountedMap();
 
@@ -194,9 +193,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         console.log(this._objectsToTrackChangesWhileBeingMapped);
     }
  
-    startTrackingChangesForObjectBeingMapped(aDataObject) {
-        this._objectsToTrackChangesWhileBeingMapped.add(aDataObject);
-        this._objectsToTrackChangesWhileBeingMappedSet.add(aDataObject);
+    startTrackingChangesForObjectBeingMapped(aDataObject, value) {
+        this._objectsToTrackChangesWhileBeingMapped.set(aDataObject, value);
+        this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, aDataObject);
     }
  
     stopTrackingChangesForObjectBeingMapped (aDataObject) {
@@ -303,23 +302,30 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // CountedMap 
             // Value gets added
             // Key is root object
-
+        propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
 
         if (this.isSyncingObject(dataObject)) {
             //Make sure we register the change
             if(!this.mainService.isObjectCreated(dataObject)) {
-                propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
-                this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject SYNCING", dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
+                // propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
+                if (propertyDescriptor._valueDescriptorReference) {
+                    this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject SYNCING", dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
+                }
+                this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
                 this.mainService.registerChangedDataObject(dataObject);
                 this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
             } 
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
-                this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                if (propertyDescriptor._valueDescriptorReference) {
+                    this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
                 this.mainService.registerChangedDataObject(dataObject);
                 this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
         } else {
-            this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject NOT SYNCING", dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+            if (propertyDescriptor._valueDescriptorReference) {
+                this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject NOT SYNCING", dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+            }
         }
     }
 
@@ -360,14 +366,18 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         this.startTrackingChangesForObjectBeingMapped(rootObject);
         if (propertyDescriptor.cardinality === Infinity) {
             changeEvent.addedValues.forEach((nestedObject) => {
-                this._logTypeEvent(rootObject.objectDescriptor, `Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+                if (nestedObject && propertyDescriptor._valueDescriptorReference) {
+                    this._logTypeEvent(nestedObject.objectDescriptor, `Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+                }
                 this.startTrackingChangesForObjectBeingMapped(nestedObject);
                 this._objectsToTrackChangesWhileBeingMapped.set(rootObject, nestedObject);
                 this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(nestedObject, rootObject);
             });
         } else {
             // if (this.shouldTrackChangesForObjectBeingMapped(changeEvent.keyValue)) {
-            this._logTypeEvent(rootObject.objectDescriptor, `Register ${changeEvent.keyValue.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+            if (propertyDescriptor._valueDescriptorReference) {
+                this._logTypeEvent(rootObject.objectDescriptor, `Register ${changeEvent.keyValue.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+            }
             this.startTrackingChangesForObjectBeingMapped(rootObject);
             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
             this._objectsToTrackChangesWhileBeingMapped.set(rootObject, changeEvent.keyValue);
@@ -376,6 +386,22 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // }
         }
     }
+
+    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, scope) {
+        let rootObject = scope && scope.rootObjectBeingMapped;
+
+        if (!rootObject) {
+            return;
+        }
+
+        if (this.isSyncingObject(rootObject) || this.shouldTrackChangesForObjectBeingMapped(rootObject)) {
+            this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} via ${rootObject.objectDescriptor.name}`);
+            this.startTrackingChangesForObjectBeingMapped(rootObject, object);
+            this._objectsToTrackChangesWhileBeingMapped.set(rootObject, object);
+            this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(object, rootObject);
+        }
+    }
+
     /*
         To avoid duplicates and find nested data that may not be accessible as such via API, we attempt to find it in the originDataSnapshot column
         of the type fetched. But it could also be a nested type, stored in a another root column. Don't think it's properly handled
@@ -625,7 +651,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         // which is obviously not the default when objects are mapped when fetched
         //console.log("rawDataServiceMappingDidMapRawDataToObjectPropertyValue("+propertyName+")");
     }
-
+ 
 
         /**
      * Called by [addRawData()]{@link RawDataService#addRawData} to add an object
@@ -971,7 +997,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
      * @argument {Object} object - A Data Object just created.
      */
     rawDataServiceDidCreateObject(rawDataService, object) {
-        //console.log("rawDataServiceDidCreateObject() ["+object.objectDescriptor.name+"] ", object);
         this.mainService.registerCreatedDataObject(object);
 
         //Now register the object by it's destinationDataService-issued dataIdentifier as well
