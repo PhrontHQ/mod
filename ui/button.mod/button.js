@@ -54,6 +54,50 @@ const Button = (exports.Button = class Button extends Control {
 
     static VisualPosition = VisualPosition;
 
+    /**
+     * How long to wait (in milliseconds) between allowing press events
+     * @type {number}
+     */
+    _debounceThreshold = 300;
+
+    /**
+     * Whether debouncing is enabled for press events
+     * @type {boolean}
+     */
+    _debounceEnabled = false;
+
+    get debounceEnabled() {
+        return this._debounceEnabled;
+    }
+
+    set debounceEnabled(enabled) {
+        enabled = !!enabled;
+
+        if (enabled !== this._debounceEnabled) {
+            this._debounceEnabled = enabled;
+            this._updateActionDebounceRegistration();
+        }
+    }
+
+    get debounceThreshold() {
+        return this._debounceThreshold;
+    }
+
+    set debounceThreshold(threshold) {
+        if (typeof threshold === "number" && threshold >= 0 && this._debounceThreshold !== threshold) {
+            this._debounceThreshold = threshold;
+            this._updateActionDebounceRegistration();
+        }
+    }
+
+    _updateActionDebounceRegistration() {
+        if (this.debounceEnabled ) {
+            this.registerInteractionForDebounce("action", this.debounceThreshold);
+        } else {
+            this.unregisterInteractionForDebounce("action");
+        }
+    }
+
     // <---- Properties ---->
 
     _visualPosition = VisualPosition.start;
@@ -275,7 +319,10 @@ const Button = (exports.Button = class Button extends Control {
 
         if (identifier === "space" || identifier === "enter") {
             this.active = false;
-            this.dispatchActionEvent();
+
+            if (!this.shouldPreventInteraction("action")) {
+                this.dispatchActionEvent();
+            }
         }
     }
 
@@ -300,7 +347,11 @@ const Button = (exports.Button = class Button extends Control {
     handlePress(mutableEvent) {
         if (!this._promise) {
             this.active = false;
-            this.dispatchActionEvent(event.details);
+
+            if (!this.shouldPreventInteraction("action")) {
+                this.dispatchActionEvent(event.details);
+            }
+
             this._removeEventListeners();
         }
     }

@@ -1,6 +1,8 @@
 const { Component } = require("mod/ui/component");
 
 exports.Main = class Main extends Component {
+    debounceCounter = 0;
+
     message = null;
 
     handleAction(event) {
@@ -9,6 +11,12 @@ exports.Main = class Main extends Component {
 
     handleLongAction(event) {
         this.message = `${event.target.identifier} button has been clicked (long action)`;
+    }
+
+    handleDebounceButtonAction(event) {
+        this.debounceCounter++;
+        const id = event.target.identifier;
+        this.debounceMessage = `${id} button has been clicked (debounce) ${this.debounceCounter} times`;
     }
 
     async handlePromiseButtonAction(_) {
