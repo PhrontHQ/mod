@@ -85,7 +85,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     }
 
     handleChange() {
-        this._moveThumbToSegment(this.templateObjects?.segments?.selectedIterations[0]?.firstElement);
+        this.needsDraw = true;
     }
 
     /**
