@@ -31,7 +31,6 @@ var Montage = require("../core").Montage,
     MontageElement = (typeof window === "object") ? window.MontageElement : null;
 
 
-__resizeObserver = null;
 
 
 /**
@@ -1425,17 +1424,18 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
     _resizeObserver: {
         enumerable: false,
-        value: function _resizeObserver() {
+        get: function() {
             if(!this.__resizeObserver) {
                 this.__resizeObserver = new ResizeObserver(entries => {
-                    entries.forEach(entry => {
+                    for (var i = 0, length = entries.length; i < length; i++) {
+                        var entry = entries[i];
                         // Assuming ChangeEvent is a class or constructor available in this scope
                         var changeEvent = new ChangeEvent();
                         changeEvent.target = entry.target;
                         changeEvent.key = "size";
                         changeEvent.keyValue = entry; // The entry object contains detailed resize info
                         this.handleEvent(changeEvent); // 'this' correctly refers to YourClass instance
-                    });
+                    }
                 });
             }
             return this.__resizeObserver;
@@ -1470,8 +1470,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 // }
             // }
 
-            if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
-                this._resizeObserver().observe(target, {box: optionsOrUseCapture?.size?.box});
+            if(eventType === "change" && this.isBrowser && 
+               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement))) {
+                this._resizeObserver.observe(target, {box: optionsOrUseCapture?.size?.box});
             }
 
             listenerOptions.listener = listener;
@@ -1551,8 +1552,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 ? targetEntryForEventType.delete(Event_CAPTURING_PHASE)
                 : targetEntryForEventType.delete(Event_BUBBLING_PHASE)
             }
-            if(eventType === "change" && (target instanceof Element || target instanceof SVGElement)) {
-                this._resizeObserver().unobserve(target);
+            if(eventType === "change" && this.isBrowser && 
+               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement))) {
+                this._resizeObserver.unobserve(target);
             }
 
             this._stopObservingTargeForEventTypeIfNeeded(target, eventType, targetEntryForEventType);
