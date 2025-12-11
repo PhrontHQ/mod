@@ -1144,12 +1144,16 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         value: function (objectProperty) {
             var rawDataMappingRules = this.rawDataMappingRules,
                 iRawDataMappingPropertyName,
+                reverterForeignDescriptorMappings,
                 matchingRules = new Set(),
                 aRule, aRulePropertyRequirements, iMatch,
                 i, countI;
 
+            //See line 2402
+
             for (iRawDataMappingPropertyName in rawDataMappingRules) {
                 aRule = rawDataMappingRules[iRawDataMappingPropertyName];
+                reverterForeignDescriptorMappings = aRule && aRule.reverter && aRule.reverter.foreignDescriptorMappings;
                 aRulePropertyRequirements = aRule.requirements;
                 if(aRulePropertyRequirements) {
                     iMatch = 0;
@@ -1163,7 +1167,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         if the mapping overrides a property from it's parent, we want it and don't want to have
                         the parent as well.
                     */
-                    if(iMatch === countI && matchingRules.size === 0) {
+                    // if(iMatch === countI && matchingRules.size === 0) {
+                    if(iMatch === countI) {
                         matchingRules.add(aRule);
                     }
                 }

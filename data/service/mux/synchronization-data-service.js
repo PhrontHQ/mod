@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Job"
+                "Person", "PartyPostalAddress", "EmploymentPositionStaffing"
             ]);
         }
         return this.__trackedTypes;
@@ -303,6 +303,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // Value gets added
             // Key is root object
         propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
+
 
         if (this.isSyncingObject(dataObject)) {
             //Make sure we register the change
