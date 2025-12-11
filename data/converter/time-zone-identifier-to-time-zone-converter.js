@@ -4,6 +4,7 @@
  */
 var Converter = require("../../core/converter/converter").Converter,
     TimeZone = require("../../core/date/time-zone").TimeZone,
+    Criteria = require("../../core/criteria").Criteria,
     singleton;
 
 /**
@@ -23,6 +24,15 @@ var TimeZoneIdentifierToTimeZoneConverter = exports.TimeZoneIdentifierToTimeZone
             }
 
             return this;
+        }
+    },
+
+
+    convertCriteriaForValue: {
+        value: function(value) {
+            var criteria = new Criteria().initWithSyntax(this.convertSyntax, value);
+            criteria._expression = this.convertExpression;
+            return criteria;
         }
     },
 
