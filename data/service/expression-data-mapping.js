@@ -1144,10 +1144,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         value: function (objectProperty) {
             var rawDataMappingRules = this.rawDataMappingRules,
                 iRawDataMappingPropertyName,
+                foreignDescriptorRawDataProperty,
                 reverterForeignDescriptorMappings,
                 matchingRules = new Set(),
                 aRule, aRulePropertyRequirements, iMatch,
-                i, countI;
+                i, countI, j;
 
             //See line 2402
 
@@ -1167,13 +1168,22 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         if the mapping overrides a property from it's parent, we want it and don't want to have
                         the parent as well.
                     */
-                    // if(iMatch === countI && matchingRules.size === 0) {
-                    if(iMatch === countI) {
-                        matchingRules.add(aRule);
+                    if(iMatch === countI && matchingRules.size === 0) {
+                        if (reverterForeignDescriptorMappings) {
+                            for (j = 0; j < reverterForeignDescriptorMappings.length; j++) {
+                                foreignDescriptorRawDataProperty = reverterForeignDescriptorMappings[j].rawDataProperty;
+                                aRule = rawDataMappingRules[foreignDescriptorRawDataProperty];
+                                if (aRule) {
+                                    matchingRules.add(aRule)
+                                }
+                            }
+                        } else {
+                            matchingRules.add(aRule);
+                        }
                     }
                 }
             }
-            this._rawDataMappingRulesByObjectProperties.set(objectProperty,matchingRules);
+            this._rawDataMappingRulesByObjectProperties.set(objectProperty, matchingRules);
             return matchingRules;
         }
     },
