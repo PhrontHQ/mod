@@ -3903,9 +3903,16 @@ DataService.addClassProperties(
         },
         registerChangedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    changedDataObjects = this.changedDataObjects,
-                    value = changedDataObjects.get(objectDescriptor);
+                var objectDescriptor = this.objectDescriptorForObject(dataObject), changedDataObjects, value;
+
+                if (this.isObjectCreated(dataObject)) {
+                    console.warn(`DataService can't register a new object (${objectDescriptor.name} in changedDataObjects`);
+                    return;
+                }
+
+                changedDataObjects = this.changedDataObjects;
+                value = changedDataObjects.get(objectDescriptor);
+
                 if (!value) {
                     changedDataObjects.set(objectDescriptor, (value = new Set()));
                 }
