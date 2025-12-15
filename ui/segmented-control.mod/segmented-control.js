@@ -17,6 +17,10 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     // Controls whether animations should be enabled
     _shouldEnableAnimation = false;
 
+    _resizeTimer = null;
+
+    _isResizing = false;
+
     /**
      * The path to the value within each option object.
      * If options are simple values, use 'this'.
@@ -85,7 +89,18 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     }
 
     handleChange() {
+        this._isResizing = true;
+
+        if (this._resizeTimer) {
+            clearTimeout(this._resizeTimer);
+        }
+
         this.needsDraw = true;
+
+        this._resizeTimer = setTimeout(() => {
+            this._isResizing = false;
+            this.needsDraw = true;
+        }, 150);
     }
 
     /**
@@ -123,6 +138,12 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         segmentsElement.removeEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         this.needsDraw = true;
     };
+    
+    willDraw() {
+        if (this._isResizing && this._readyForAnimation) {
+            this.element?.classList.remove("mod--readyForAnimation");
+        }
+    }
 
     draw() {
         this._applyDisabledClass();
@@ -154,10 +175,20 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             segments.addEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         }
 
-        if (this._shouldEnableAnimation && !this._readyForAnimation) {
+        if (this._shouldEnableAnimation && !this._readyForAnimation && !this._isResizing) {
             // Enable animations after the initial positioning, to avoid unwanted transitions
             this.element?.classList.add("mod--readyForAnimation");
             this._readyForAnimation = true;
+        }
+    }
+
+    /**
+     * Called after the component has been drawn.
+     * Adds the readyForAnimation class if not resizing and ready for animation.
+     */
+    didDraw() {
+        if (!this._isResizing && this._readyForAnimation) {
+            this.element?.classList.add("mod--readyForAnimation");
         }
     }
 
