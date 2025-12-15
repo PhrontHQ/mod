@@ -1427,18 +1427,25 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         get: function() {
             if(!this.__resizeObserver) {
                 this.__resizeObserver = new ResizeObserver(entries => {
-                    for (var i = 0, length = entries.length; i < length; i++) {
-                        var entry = entries[i];
+                    for (let i = 0, length = entries.length; i < length; i++) {
                         // Assuming ChangeEvent is a class or constructor available in this scope
                         var changeEvent = new ChangeEvent();
-                        changeEvent.target = entry.target;
+                        changeEvent.target = entries[i].target;
                         changeEvent.key = "size";
-                        changeEvent.keyValue = entry; // The entry object contains detailed resize info
+                        changeEvent.keyValue = entries[i]; // The entry object contains detailed resize info
                         this.handleEvent(changeEvent); // 'this' correctly refers to YourClass instance
                     }
                 });
             }
             return this.__resizeObserver;
+        }
+    },
+
+    _isDOMTargetChangeListener: {
+        enumerable: false,
+        value: function _isDOMTargetChangeListener(target, eventType) {
+            return (eventType === "change" && this.isBrowser && 
+               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement)));
         }
     },
 
@@ -1470,8 +1477,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 // }
             // }
 
-            if(eventType === "change" && this.isBrowser && 
-               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement))) {
+            if(this._isDOMTargetChangeListener(target, eventType)) {
                 this._resizeObserver.observe(target, {box: optionsOrUseCapture?.size?.box});
             }
 
@@ -1552,8 +1558,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 ? targetEntryForEventType.delete(Event_CAPTURING_PHASE)
                 : targetEntryForEventType.delete(Event_BUBBLING_PHASE)
             }
-            if(eventType === "change" && this.isBrowser && 
-               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement))) {
+            if(this._isDOMTargetChangeListener(target, eventType)) {
                 this._resizeObserver.unobserve(target);
             }
 
