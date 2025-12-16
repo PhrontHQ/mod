@@ -23,6 +23,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         this._typeToManagedSubtypes = new Map();
         this._dataInstancesPromiseByObjectDescriptor = new Map();
         this.needsRawDataTypeIdentificationCriteria = true;
+
+        // Checks that the serialized instances include objects  
+        // when the propertyDescriptor has a valueDescriptor. Validation is 
+        // expensive so this should only be enabled in development
+        this._isModelValidationEnabled = false;
     }
 
     deserializedFromSerialization(label) {
@@ -135,11 +140,52 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 let { montageObject: rawData } = module;
 
                 return rawData;
+            }).then((rawData) => {
+                if (this._isModelValidationEnabled) {
+                    this._validateRawDataForType(rawData, objectDescriptor);
+                }
+                return rawData;
             })
             .catch((error) => {
                 console.error("Error loading serialized data:", error);
                 throw error;
             });
+
+    }
+
+    _validateRawDataForType(rawData, objectDescriptor) {
+        rawData.forEach((rawObject) => {
+            this._validateRawDataObjectForType(rawObject, objectDescriptor);
+        });
+    }
+
+    _validateRawDataObjectForType(rawData, objectDescriptor) {
+        let propertyDescriptors = objectDescriptor.propertyDescriptors,
+            propertyDescriptor, value, valueType, expectedType,
+            i, n;
+
+        for (i = 0, n = propertyDescriptors.length; i < n; i++) {
+            propertyDescriptor = propertyDescriptors[i];
+            if (propertyDescriptor.valueDescriptor) {
+                value = rawData[propertyDescriptor.name];
+                expectedType = propertyDescriptor._valueDescriptorReference.name || "object";
+                if (!value) {
+                    continue;
+                } if (!Array.isArray(value)) {
+                    valueType = typeof value;
+                    if (valueType !== "object") {
+                        console.warn(`${objectDescriptor.name}.${propertyDescriptor.name} expects ${expectedType} and received ${valueType}`);
+                    }
+                } else if (value && value.length) {
+                    valueType = typeof value[0];
+                    
+                    if (valueType !== "object") {
+                        console.warn(`${objectDescriptor.name}.${propertyDescriptor.name} expects an array of ${expectedType} and received ${valueType}`);
+                    }
+                }
+            }
+        }
+        
     }
 
 
