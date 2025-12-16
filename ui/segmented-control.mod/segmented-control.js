@@ -8,38 +8,36 @@ const Component = require("ui/component").Component;
  * @extends Component
  */
 const SegmentedControl = (exports.SegmentedControl = class SegmentedControl extends Component {
-    // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
-    _cancelHandleOptionsChange = null;
+    static {
+        Montage.defineProperties(this.prototype, {
+             // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
+            _cancelHandleOptionsChange: {value: null},
+            // Indicates when the component is ready for animations
+            _readyForAnimation: {value: false},
+            // Controls whether animations should be enabled
+            _shouldEnableAnimation: {value: false},
+            _resizeTimer: {value: null},
+            _isResizing: {value: false},
+            /**
+             * The path to the value within each option object.
+             * If options are simple values, use 'this'.
+             * @type {string}
+             */
+            valuePath: { value: "this"},
+            /**
+             * The currently selected option value
+             * @type {*}
+             */
+            selection: { value: null },
 
-    // Indicates when the component is ready for animations
-    _readyForAnimation = false;
-
-    // Controls whether animations should be enabled
-    _shouldEnableAnimation = false;
-
-    _resizeTimer = null;
-
-    _isResizing = false;
-
-    /**
-     * The path to the value within each option object.
-     * If options are simple values, use 'this'.
-     * @type {string}
-     */
-    valuePath = "this";
-
-    /**
-     * The currently selected option value
-     * @type {*}
-     */
-    selection = null;
-
-    /**
-     * The disabled state of the segmented control
-     * @returns {boolean} True if disabled, false otherwise
-     */
-    _disabled = false;
-
+            /**
+             * The disabled state of the segmented control
+             * @returns {boolean} True if disabled, false otherwise
+             */
+            _disabled: { value: false }
+        });
+    }
+    
     get disabled() {
         return this._disabled;
     }
