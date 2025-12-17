@@ -16,8 +16,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             _readyForAnimation: {value: false},
             // Controls whether animations should be enabled
             _shouldEnableAnimation: {value: false},
-            _resizeTimer: {value: null},
-            _isResizing: {value: false},
+            _isChangingSelection: {value: false},
             /**
              * The path to the value within each option object.
              * If options are simple values, use 'this'.
@@ -37,7 +36,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             _disabled: { value: false }
         });
     }
-    
+
     get disabled() {
         return this._disabled;
     }
@@ -80,6 +79,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
                      box: "border-box"
               }
         });
+        this.element?.classList.remove("mod--readyForAnimation");
     }
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
@@ -87,18 +87,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     }
 
     handleChange() {
-        this._isResizing = true;
-
-        if (this._resizeTimer) {
-            clearTimeout(this._resizeTimer);
-        }
-
         this.needsDraw = true;
-
-        this._resizeTimer = setTimeout(() => {
-            this._isResizing = false;
-            this.needsDraw = true;
-        }, 150);
     }
 
     /**
@@ -124,6 +113,12 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         const selectedValue = this.valueForExpression.call(option, this.valuePath);
         this.selection = selectedValue || null;
         this.dispatchEvent(event);
+        this._isChangingSelection = true;
+        // Enable animations immediately for the upcoming draw
+        this.element?.classList.add("mod--readyForAnimation");
+        this._readyForAnimation = true;
+        // Listen for transition end to disable animations
+        this.thumbElement?.addEventListener("transitionend", this.handleTransitionEnd, { once: true });
         this.needsDraw = true;
     }
 
@@ -136,12 +131,6 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         segmentsElement.removeEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         this.needsDraw = true;
     };
-    
-    willDraw() {
-        if (this._isResizing && this._readyForAnimation) {
-            this.element?.classList.remove("mod--readyForAnimation");
-        }
-    }
 
     draw() {
         this._applyDisabledClass();
@@ -161,34 +150,22 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
                 // If no segment is selected, hide the thumb
                 this.thumbElement.style.display = "none";
             }
-
-            if (!this._readyForAnimation && !this._shouldEnableAnimation) {
-                // Trigger a redraw to enable animations
-                this._shouldEnableAnimation = true;
-                this.needsDraw = true;
-                return;
-            }
         } else {
             // Wait for the inner repetition segments to be drawn, before moving the thumb
             segments.addEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         }
-
-        if (this._shouldEnableAnimation && !this._readyForAnimation && !this._isResizing) {
-            // Enable animations after the initial positioning, to avoid unwanted transitions
-            this.element?.classList.add("mod--readyForAnimation");
-            this._readyForAnimation = true;
-        }
     }
 
     /**
-     * Called after the component has been drawn.
-     * Adds the readyForAnimation class if not resizing and ready for animation.
+     * Handles the end of thumb transition animations
      */
-    didDraw() {
-        if (!this._isResizing && this._readyForAnimation) {
-            this.element?.classList.add("mod--readyForAnimation");
+    handleTransitionEnd = () => {
+        if (this._isChangingSelection) {
+            this.element?.classList.remove("mod--readyForAnimation");
+            this._readyForAnimation = false;
+            this._isChangingSelection = false;
         }
-    }
+    };
 
     /**
      * Moves the thumb element to match the position and size of the selected segment
