@@ -377,7 +377,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         } else {
             // if (this.shouldTrackChangesForObjectBeingMapped(changeEvent.keyValue)) {
             if (propertyDescriptor._valueDescriptorReference) {
-                this._logTypeEvent(rootObject.objectDescriptor, `Register ${changeEvent.keyValue.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+                this._logTypeEvent(rootObject.objectDescriptor, `Register ${changeEvent.keyValue?.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
             }
             this.startTrackingChangesForObjectBeingMapped(rootObject);
             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
