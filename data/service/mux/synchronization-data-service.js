@@ -1293,7 +1293,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
 
 
-        this._logTypeEvent(readCompletedOperation.referrer.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria+": ", readCompletedOperation.data);
+        this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria+": ", readCompletedOperation.data);
 
         //Record the read completion from that service:
         if(readCompletedOperation.type === ReadCompletedOperationType) {
