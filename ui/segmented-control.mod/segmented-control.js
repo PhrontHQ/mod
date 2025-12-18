@@ -86,7 +86,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         this._cancelHandleOptionsChange?.();
     }
 
-    handleChange() {
+    handleChange(event) {
         this.needsDraw = true;
     }
 
@@ -94,7 +94,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
      * Handles changes to the options array.
      * Triggers a redraw.
      */
-    handleOptionsChange() {
+    handleOptionsChange(event) {
         this.needsDraw = true;
     }
 
@@ -159,7 +159,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     /**
      * Handles the end of thumb transition animations
      */
-    handleTransitionEnd = () => {
+    handleTransitionEnd = (event) => {
         if (this._isChangingSelection) {
             this.element?.classList.remove("mod--readyForAnimation");
             this._readyForAnimation = false;
