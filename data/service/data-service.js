@@ -4585,7 +4585,7 @@ DataService.addClassProperties(
             */
                 if (
                     changeEvent.key &&
-                    changeEvent.keyValue &&
+                    typeof changeEvent.keyValue !== "undefined" &&
                     key !== "length" &&
                     /* new for blocking re-entrant */ changesForDataObject.get(key) !== keyValue
                 ) {
