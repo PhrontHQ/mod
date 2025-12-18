@@ -4,6 +4,7 @@ var DataService = require("./data-service").DataService,
     Criteria = require("../../core/criteria").Criteria,
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    RawDataIdentifier = require("../model/raw-data-identifier").RawDataIdentifier,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
@@ -1301,10 +1302,18 @@ RawDataService.addClassProperties({
 
     resolveObjectForTypeRawData: {
         value: function (type, rawData, context) {
-            var dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData),
+            var dataIdentifier,
                 //Retrieves an existing object is responsible data service is uniquing, or creates one
                 object, result;
 
+            
+            try {
+                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData);
+            } catch(error) {
+                console.warn(`Error creating required dataIdentifer for type ${type.name}, rawData: ${JSON.stringify(rawData)}: ${error.message}`);
+                dataIdentifier = null;
+                return Promise.resolveNull;
+            }
 
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
