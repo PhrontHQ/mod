@@ -20,6 +20,7 @@ var Montage = require("../core").Montage,
     Deserializer = require("../serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../collections/map"),
     currentEnvironment = require("../environment").currentEnvironment,
+    ChangeEvent = require("./change-event").ChangeEvent,
     Event_NONE = 0,
     Event_CAPTURING_PHASE =	1,
     Event_AT_TARGET	= 2,
@@ -28,7 +29,6 @@ var Montage = require("../core").Montage,
     browserSupportsCaptureOption = false,
     browserSupportsPassiveOption = false,
     MontageElement = (typeof window === "object") ? window.MontageElement : null;
-
 
 
 
@@ -1422,6 +1422,33 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+    _resizeObserver: {
+        enumerable: false,
+        get: function() {
+            if(!this.__resizeObserver) {
+                this.__resizeObserver = new ResizeObserver(entries => {
+                    for (let i = 0, length = entries.length; i < length; i++) {
+                        // Assuming ChangeEvent is a class or constructor available in this scope
+                        var changeEvent = new ChangeEvent();
+                        changeEvent.target = entries[i].target;
+                        changeEvent.key = "size";
+                        changeEvent.keyValue = entries[i]; // The entry object contains detailed resize info
+                        this.handleEvent(changeEvent); // 'this' correctly refers to YourClass instance
+                    }
+                });
+            }
+            return this.__resizeObserver;
+        }
+    },
+
+    _isDOMTargetChangeListener: {
+        enumerable: false,
+        value: function _isDOMTargetChangeListener(target, eventType) {
+            return (eventType === "change" && this.isBrowser && 
+               (target instanceof Element || (typeof SVGElement !== "undefined" && target instanceof SVGElement)));
+        }
+    },
+
    registerTargetEventListener: {
         enumerable: false,
         value: function registerTargetEventListener(target, eventType, listener, optionsOrUseCapture) {
@@ -1449,6 +1476,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
                 // }
             // }
+
+            if(this._isDOMTargetChangeListener(target, eventType)) {
+                this._resizeObserver.observe(target, {box: optionsOrUseCapture?.size?.box});
+            }
 
             listenerOptions.listener = listener;
 
@@ -1526,6 +1557,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 listenerOptions.capture
                 ? targetEntryForEventType.delete(Event_CAPTURING_PHASE)
                 : targetEntryForEventType.delete(Event_BUBBLING_PHASE)
+            }
+            if(this._isDOMTargetChangeListener(target, eventType)) {
+                this._resizeObserver.unobserve(target);
             }
 
             this._stopObservingTargeForEventTypeIfNeeded(target, eventType, targetEntryForEventType);

@@ -8,33 +8,34 @@ const Component = require("ui/component").Component;
  * @extends Component
  */
 const SegmentedControl = (exports.SegmentedControl = class SegmentedControl extends Component {
-    // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
-    _cancelHandleOptionsChange = null;
+    static {
+        Montage.defineProperties(this.prototype, {
+             // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
+            _cancelHandleOptionsChange: {value: null},
+            // Indicates when the component is ready for animations
+            _readyForAnimation: {value: false},
+            // Controls whether animations should be enabled
+            _shouldEnableAnimation: {value: false},
+            _isChangingSelection: {value: false},
+            /**
+             * The path to the value within each option object.
+             * If options are simple values, use 'this'.
+             * @type {string}
+             */
+            valuePath: { value: "this"},
+            /**
+             * The currently selected option value
+             * @type {*}
+             */
+            selection: { value: null },
 
-    // Indicates when the component is ready for animations
-    _readyForAnimation = false;
-
-    // Controls whether animations should be enabled
-    _shouldEnableAnimation = false;
-
-    /**
-     * The path to the value within each option object.
-     * If options are simple values, use 'this'.
-     * @type {string}
-     */
-    valuePath = "this";
-
-    /**
-     * The currently selected option value
-     * @type {*}
-     */
-    selection = null;
-
-    /**
-     * The disabled state of the segmented control
-     * @returns {boolean} True if disabled, false otherwise
-     */
-    _disabled = false;
+            /**
+             * The disabled state of the segmented control
+             * @returns {boolean} True if disabled, false otherwise
+             */
+            _disabled: { value: false }
+        });
+    }
 
     get disabled() {
         return this._disabled;
@@ -73,18 +74,27 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     enterDocument() {
         this._cancelHandleOptionsChange = this.addRangeAtPathChangeListener("_options", this, "handleOptionsChange");
         this.addPathChangeListener("_selectedOption", this, "handleSelectionChange");
+        this.element.addEventListener("change", this, {
+               size: {
+                     box: "border-box"
+              }
+        });
+        this.element?.classList.remove("mod--readyForAnimation");
     }
-
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
         this._cancelHandleOptionsChange?.();
+    }
+
+    handleChange(event) {
+        this.needsDraw = true;
     }
 
     /**
      * Handles changes to the options array.
      * Triggers a redraw.
      */
-    handleOptionsChange() {
+    handleOptionsChange(event) {
         this.needsDraw = true;
     }
 
@@ -103,6 +113,12 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         const selectedValue = this.valueForExpression.call(option, this.valuePath);
         this.selection = selectedValue || null;
         this.dispatchEvent(event);
+        this._isChangingSelection = true;
+        // Enable animations immediately for the upcoming draw
+        this.element?.classList.add("mod--readyForAnimation");
+        this._readyForAnimation = true;
+        // Listen for transition end to disable animations
+        this.thumbElement?.addEventListener("transitionend", this.handleTransitionEnd, { once: true });
         this.needsDraw = true;
     }
 
@@ -134,24 +150,22 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
                 // If no segment is selected, hide the thumb
                 this.thumbElement.style.display = "none";
             }
-
-            if (!this._readyForAnimation && !this._shouldEnableAnimation) {
-                // Trigger a redraw to enable animations
-                this._shouldEnableAnimation = true;
-                this.needsDraw = true;
-                return;
-            }
         } else {
             // Wait for the inner repetition segments to be drawn, before moving the thumb
             segments.addEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         }
-
-        if (this._shouldEnableAnimation && !this._readyForAnimation) {
-            // Enable animations after the initial positioning, to avoid unwanted transitions
-            this.element?.classList.add("mod--readyForAnimation");
-            this._readyForAnimation = true;
-        }
     }
+
+    /**
+     * Handles the end of thumb transition animations
+     */
+    handleTransitionEnd = (event) => {
+        if (this._isChangingSelection) {
+            this.element?.classList.remove("mod--readyForAnimation");
+            this._readyForAnimation = false;
+            this._isChangingSelection = false;
+        }
+    };
 
     /**
      * Moves the thumb element to match the position and size of the selected segment
