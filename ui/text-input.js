@@ -55,6 +55,8 @@ var TextInput = (exports.TextInput = class TextInput extends Control {
      * @default 300
      */
     set debounceThreshold(value) {
+        if (Number.isFinite(value) === false || value < 0) return;
+
         this._debounceThreshold = Number(value);
 
         if (this._debounced) {
