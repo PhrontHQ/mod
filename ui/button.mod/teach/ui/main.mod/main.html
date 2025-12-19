@@ -62,6 +62,16 @@
                         "element": {"#": "text"},
                         "value": {"<-": "@owner.message || 'please hit a button'"}
                     }
+                },
+                "debouncedButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "button-debounced"},
+                        "identifier": "debounced",
+                        "label": "Debounced Button",
+                        "debounced": true,
+                        "debounceThreshold": 150
+                    }
                 }
             }
         </script>
@@ -84,6 +94,7 @@
                 <span data-mod-id="text" class="infoText"></span>
                 <br />
                 <button>Bare Button</button>
+                <button data-mod-id="button-debounced" class="button"></button>
             </section>
         </div>
     </body>

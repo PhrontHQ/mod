@@ -24,6 +24,8 @@
                     "prototype": "ui/text-area.mod",
                     "values": {
                         "element": {"#": "textArea"},
+                        "throttleThreshold": {"<-": "@owner.throttleThreshold"},
+                        "throttled": {"<-": "@owner.throttled"},
                         "placeholder": {"<-": "@owner.placeholder"},
                         "name": {"<-": "@owner.propertyName"},
                         "value": {"<->": "@owner.value"}

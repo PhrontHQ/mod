@@ -56,6 +56,66 @@ const Button = (exports.Button = class Button extends Control {
 
     // <---- Properties ---->
 
+    /**
+     * Options for debouncing the action event.
+     * Immediately invokes the function and then ignores any calls made
+     * within the threshold period.
+     * @type {Object}
+     * @default { leading: true, trailing: false }
+     */
+    debounceOptions = {
+        leading: true,
+        trailing: false,
+    };
+
+    _debounceThreshold = 300;
+
+    get debounceThreshold() {
+        return this._debounceThreshold;
+    }
+
+    /**
+     * The debounce threshold in milliseconds.
+     * @type {number}
+     * @default 300
+     */
+    set debounceThreshold(value) {
+        this._debounceThreshold = Number(value);
+
+        if (this._debounced) {
+            this.dispatchActionEvent = this.debounce(
+                this.dispatchActionEvent.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
+        }
+    }
+
+    _debounced = false;
+
+    get debounced() {
+        return this._debounced;
+    }
+
+    /**
+     * Indicates whether the action event is debounced.
+     * @type {boolean}
+     * @default false
+     */
+    set debounced(value) {
+        this._debounced = Boolean(value);
+
+        if (this._debounced) {
+            this.dispatchActionEvent = this.debounce(
+                this.dispatchActionEvent.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
+        } else {
+            this.dispatchActionEvent = Button.prototype.dispatchActionEvent;
+        }
+    }
+
     _visualPosition = VisualPosition.start;
 
     get visualPosition() {

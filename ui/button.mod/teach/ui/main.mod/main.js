@@ -11,6 +11,11 @@ exports.Main = class Main extends Component {
         this.message = `${event.target.identifier} button has been clicked (long action)`;
     }
 
+    handleDebouncedAction(event) {
+        console.log("Debounced action triggered");
+        this.message = `${event.target.identifier} button has been clicked (debounced)`;
+    }
+
     async handlePromiseButtonAction(_) {
         this.message = "First Promise is pending resolution. Wait 2 seconds...";
 

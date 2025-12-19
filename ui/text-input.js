@@ -22,8 +22,49 @@ To-DO: Move value logic with converter to Control
 
 
 */
-var TextInput = exports.TextInput = class TextInput extends Control {/** @lends module:mod/ui/text-input.TextInput# */
-}
+var TextInput = (exports.TextInput = class TextInput extends Control {
+    /**
+     * Options for debouncing the action event.
+     * Invokes the function after the threshold period has passed
+     * since the last call.
+     *
+     * @type {Object}
+     * @default { leading: false, trailing: true }
+     */
+    debounceOptions = {
+        leading: false,
+        trailing: true,
+    };
+
+    _debounceThreshold = 500;
+
+    get debounceThreshold() {
+        return this._debounceThreshold;
+    }
+
+    /**
+     * The debounce threshold in milliseconds.
+     * @type {number}
+     * @default 300
+     */
+    set debounceThreshold(value) {
+        this._debounceThreshold = Number(value);
+
+        if (this._debounced) {
+            this.dispatchActionEvent = this.debounce(
+                this.dispatchActionEvent.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
+        }
+    }
+
+    _debounced = false;
+
+    get debounced() {
+        return this._debounced;
+    }
+});
 
 TextInput.addClassProperties({
     select: {

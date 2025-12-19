@@ -24,6 +24,8 @@
                     "prototype": "ui/text-field.mod",
                     "values": {
                         "element": {"#": "textField"},
+                        "throttleThreshold": {"<-": "@owner.throttleThreshold"},
+                        "throttled": {"<-": "@owner.throttled"},
                         "placeholder": {"<-": "@owner.placeholder"},
                         "name": {"<-": "@owner.propertyName"},
                         "value": {"<->": "@owner.value"},
