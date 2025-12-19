@@ -2,6 +2,7 @@
     @module mod/ui/text-input
 */
 var Control = require("ui/control").Control,
+    Button = require("ui/button.mod").Button,
     deprecate = require("core/deprecate");
 
 /**
