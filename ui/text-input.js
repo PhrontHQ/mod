@@ -27,13 +27,13 @@ var TextInput = exports.TextInput = class TextInput extends Control {/** @lends 
 
 TextInput.addClassProperties({
     select: {
-        value: function() {
+        value: function () {
             this._element.select();
-        }
+        },
     },
 
     _hasStandardElement: {
-        value: true
+        value: true,
     },
 
     /**
@@ -42,22 +42,22 @@ TextInput.addClassProperties({
         @default true
     */
     _updateOnInput: {
-        value: true
+        value: true,
     },
 
-/**
+    /**
     When this property and the converter's <code>allowPartialConversion</code> are both true, as the user enters text in the input element each new character is added to the component's <code>value</code> property, which triggers the conversion. Depending on the type of input element being used, this behavior may not be desirable. For instance, you likely would not want to convert a date string as a user is entering it, only when they've completed their input.
     Specifies whether
     @type {boolean}
     @default true
 */
     updateOnInput: {
-        get: function() {
+        get: function () {
             return !!this._updateOnInput;
         },
-        set: function(v) {
+        set: function (v) {
             this._updateOnInput = v;
-        }
+        },
     },
 
     // HTMLInputElement methods
@@ -68,68 +68,66 @@ TextInput.addClassProperties({
     // Callbacks
 
     enterDocument: {
-        value: function(firstTime) {
+        value: function (firstTime) {
             if (firstTime) {
-
                 if (this._value === this.constructor.prototype._value) {
                     this.value = this.originalElement ? this.originalElement.textContent : this._element.textContent;
                 }
 
-                if(this.hasStandardElement || this.element.contentEditable === "true") {
-                    this.element.addEventListener('input', this);
-                    this.element.addEventListener('change', this);
-                    this.element.addEventListener('invalid', this);
+                if (this.hasStandardElement || this.element.contentEditable === "true") {
+                    this.element.addEventListener("input", this);
+                    this.element.addEventListener("change", this);
+                    this.element.addEventListener("invalid", this);
                 }
-
             }
-        }
+        },
     },
 
     _setElementValue: {
-        value: function(value) {
+        value: function (value) {
             var drawValue;
-            if (value === null ||  typeof value === "undefined") {
+            if (value === null || typeof value === "undefined") {
                 drawValue = "";
             } else {
-                drawValue = String((value === null || value === undefined ? '' : value));
+                drawValue = String(value === null || value === undefined ? "" : value);
             }
 
             if (drawValue !== this.element.value) {
                 this.element.value = drawValue;
             }
-        }
+        },
     },
 
-    drawsFocusOnPointerActivation : {
-        value: true
+    drawsFocusOnPointerActivation: {
+        value: true,
     },
 
     draw: {
         enumerable: false,
-        value: function() {
+        value: function () {
             Control.prototype.draw.call(this);
 
             var el = this.element;
 
             //if (!this._valueSyncedWithElement) {
-                this._setElementValue(this.converter ? this.converter.convert(this._value) : this._value);
+            this._setElementValue(this.converter ? this.converter.convert(this._value) : this._value);
             //}
 
             if (this.error) {
-                el.classList.add('mod--invalidText');
-                el.classList.add('mod--invalid');
-                el.title = this.error.message || '';
+                el.classList.add("mod--invalidText");
+                el.classList.add("mod--invalid");
+                el.title = this.error.message || "";
             } else {
                 el.classList.remove("mod--invalidText");
                 el.classList.remove("mod--invalid");
-                el.title = '';
+                el.title = "";
             }
-        }
+        },
     },
 
     didDraw: {
         enumerable: false,
-        value: function() {
+        value: function () {
             if (this._hasFocus && this._value !== null && this._value !== undefined) {
                 var length = this._value.toString().length;
                 this.element.setSelectionRange(length, length);
@@ -139,20 +137,19 @@ TextInput.addClassProperties({
             if (!this.needsDraw) {
                 this._valueSyncedWithElement = true;
             }
-        }
+        },
     },
-
 
     // Event handlers
 
     handleInput: {
         enumerable: false,
-        value: function(event) {
+        value: function (event) {
             if (this.converter) {
                 if (this.converter.allowPartialConversion === true && this.updateOnInput === true) {
                     this.takeValueFromElement();
                 }
-            } else if(this.updateOnInput === true){
+            } else if (this.updateOnInput === true) {
                 this.takeValueFromElement();
             }
 
@@ -160,25 +157,23 @@ TextInput.addClassProperties({
                 //It's a bit unclear if error is/should be a boolean or an error object...
                 //From a draw's perspective, both work.
                 this.error = null;
-            }
-            else {
+            } else {
                 this.error = true;
             }
-
-        }
+        },
     },
     handleChange: {
         enumerable: false,
-        value: function(event) {
+        value: function (event) {
             this.takeValueFromElement();
             this.dispatchActionEvent();
             this._hasFocus = false;
-        }
+        },
     },
 
     errorMessageFromValidityState: {
-        value: function(validityState) {
-            if(!validityState.valid) {
+        value: function (validityState) {
+            if (!validityState.valid) {
                 /*
                     Needs a proper message for each of the following:
 
@@ -206,29 +201,27 @@ TextInput.addClassProperties({
                         A Boolean that is true if the element has a required attribute, but no value, or false otherwise. If true, the element matches the :invalid CSS pseudo-class.
                 */
 
-
                 return "value is invalid";
             }
             return null;
-
-        }
+        },
     },
 
     handleInvalid: {
         enumerable: false,
-        value: function(event) {
+        value: function (event) {
             //To trigger a draw that will add mod--invalid/Text
             this.error = true;
             this.errorMessage = this.errorMessageFromValidityState(event.target.validity);
-        }
+        },
     },
     handleBlur: {
         enumerable: false,
-        value: function(event) {
-            this.super(event) ;
+        value: function (event) {
+            this.super(event);
             this.takeValueFromElement();
             this.dispatchActionEvent();
-        }
+        },
     },
 
     placeholderValue: {
@@ -238,9 +231,8 @@ TextInput.addClassProperties({
         },
         get: function () {
             return this.placeholder;
-        }
+        },
     },
-
 });
 
 // Standard <input> tag attributes - http://www.w3.org/TR/html5/the-input-element.html#the-input-element
@@ -249,24 +241,24 @@ TextInput.addAttributes({
     accept: null,
     alt: null,
     autocomplete: null,
-    checked: {dataType: "boolean"},
+    checked: { dataType: "boolean" },
     dirname: null,
     formaction: null,
     formenctype: null,
     formmethod: null,
-    formnovalidate: {dataType: 'boolean'},
+    formnovalidate: { dataType: "boolean" },
     formtarget: null,
     height: null,
     list: null,
     maxlength: null,
     minlength: null,
-    multiple: {dataType: 'boolean'},
+    multiple: { dataType: "boolean" },
     pattern: null,
     placeholder: null,
-    readonly: {dataType: 'boolean'},
-    required: {dataType: 'boolean'},
+    readonly: { dataType: "boolean" },
+    required: { dataType: "boolean" },
     size: null,
     src: null,
-    width: null
+    width: null,
     // "type" is not bindable and "value" is handled as a special attribute
 });

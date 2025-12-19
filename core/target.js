@@ -11,7 +11,6 @@ var Montage = require("./core").Montage,
  * @extends Montage
  */
 exports.Target = class Target extends Montage {
-
     static {
         // const p = this.prototype;
 
@@ -59,9 +58,7 @@ exports.Target = class Target extends Montage {
         //  */
         // p.nextTarget = null;
 
-
         Montage.defineProperties(this.prototype, {
-
             /**
              * Provides a reference to the Montage event manager used in the
              * application.
@@ -69,7 +66,7 @@ exports.Target = class Target extends Montage {
              * @property {EventManager} value
              * @default defaultEventManager
              */
-            eventManager: {value: defaultEventManager, serializable: false},
+            eventManager: { value: defaultEventManager, serializable: false },
 
             /**
              * Whether or not this target can accept user focus and become the
@@ -83,20 +80,20 @@ exports.Target = class Target extends Montage {
              * @type {boolean}
              * @default false
              */
-            acceptsActiveTarget: {value: false, serializable: false},
+            acceptsActiveTarget: { value: false, serializable: false },
 
             /**
              * Called prior to this target becoming the activeTarget
              * @function
              * @param {Target} oldTarget the current activeTarget
              */
-            willBecomeActiveTarget: {value: Function.noop},
+            willBecomeActiveTarget: { value: Function.noop },
 
             /**
              * Called after to this target became the activeTarget
              * @function
              */
-            didBecomeActiveTarget: {value: Function.noop},
+            didBecomeActiveTarget: { value: Function.noop },
 
             /**
              * Which target to distribute an event after this when distributing events
@@ -104,21 +101,17 @@ exports.Target = class Target extends Montage {
              * @property {boolean} serializable
              * @property {Target} value
              */
-            nextTarget: {value: null, serializable: false},
+            nextTarget: { value: null, serializable: false },
 
             /**
              * Optional. If present, EventManager will call this, otherwise it will use nextTarget
-             * Returns all next targets on which listeners will be invoked, similar to 
+             * Returns all next targets on which listeners will be invoked, similar to
              * https://developer.mozilla.org/en-US/docs/Web/API/Event/composedPath
              * @property {Array<Target>}
              */
-            composedPath: {value: undefined} 
-
+            composedPath: { value: undefined },
         });
-
     }
-
-
 
     /**
      * Whether or not this is the activeTarget
@@ -132,8 +125,6 @@ exports.Target = class Target extends Montage {
     get isActiveTarget() {
         return this === defaultEventManager.activeTarget;
     }
-
-
 
     /**
      * Ask this target to surrender its activeTarget status.
@@ -153,8 +144,8 @@ exports.Target = class Target extends Montage {
      * @param {Event} event The event object to dispatch
      */
     dispatchEvent(event) {
-        if(!event) return;
-        var targettedEvent = (event instanceof MutableEvent) ? event : MutableEvent.fromEvent(event);
+        if (!event) return;
+        var targettedEvent = event instanceof MutableEvent ? event : MutableEvent.fromEvent(event);
         targettedEvent.target = this;
         defaultEventManager.handleEvent(targettedEvent);
         return !event.defaultPrevented;
@@ -463,4 +454,3 @@ exports.Target = class Target extends Montage {
 //     }
 
 // });
-

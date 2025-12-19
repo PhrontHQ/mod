@@ -165,7 +165,7 @@ const Button = (exports.Button = class Button extends Control {
 
             // Store reference to track this specific promise
             const currentTrackedPromise = promise;
-            
+
             // Clear state when promise resolves/rejects
             // TODO: we should propably add an error state?...
             promise.finally(() => {
@@ -211,11 +211,7 @@ const Button = (exports.Button = class Button extends Control {
 
     get _spaceKeyComposer() {
         if (!this.__spaceKeyComposer) {
-            this.__spaceKeyComposer = KeyComposer.createKey(
-                this,
-                "space",
-                "space"
-            );
+            this.__spaceKeyComposer = KeyComposer.createKey(this, "space", "space");
         }
 
         return this.__spaceKeyComposer;
@@ -225,11 +221,7 @@ const Button = (exports.Button = class Button extends Control {
 
     get _enterKeyComposer() {
         if (!this.__enterKeyComposer) {
-            this.__enterKeyComposer = KeyComposer.createKey(
-                this,
-                "enter",
-                "enter"
-            );
+            this.__enterKeyComposer = KeyComposer.createKey(this, "enter", "enter");
         }
 
         return this.__enterKeyComposer;

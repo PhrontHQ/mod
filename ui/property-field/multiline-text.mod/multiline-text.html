@@ -1,42 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title></title>
-    <link rel="stylesheet" href="multiline-text.css">
-    <script type="text/mod-serialization">
-    {
-        "owner": {
-            "values": {
-                "element": {"#": "owner"}
-            }
-        },
+    <head>
+        <title></title>
+        <link rel="stylesheet" href="multiline-text.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "owner"}
+                    }
+                },
 
-        "propertyField": {
-            "prototype": "ui/property-field.mod",
-            "values": {
-                "element": {"#": "propertyField"},
-                "label": {"<-": "@owner.label"},
-                "errorMessage": {"<-": "@owner.errorMessage"}
-            }
-        },
+                "propertyField": {
+                    "prototype": "ui/property-field.mod",
+                    "values": {
+                        "element": {"#": "propertyField"},
+                        "label": {"<-": "@owner.label"},
+                        "errorMessage": {"<-": "@owner.errorMessage"}
+                    }
+                },
 
-        "textArea": {
-            "prototype": "ui/text-area.mod",
-            "values": {
-                "element": {"#": "textArea"},
-                "placeholder": {"<-": "@owner.placeholder"},
-                "name": {"<-": "@owner.propertyName"},
-                "value": {"<->": "@owner.value"}
+                "textArea": {
+                    "prototype": "ui/text-area.mod",
+                    "values": {
+                        "element": {"#": "textArea"},
+                        "placeholder": {"<-": "@owner.placeholder"},
+                        "name": {"<-": "@owner.propertyName"},
+                        "value": {"<->": "@owner.value"}
+                    }
+                }
             }
-        }
-    }
-    </script>
-</head>
-<body>
-    <div data-mod-id="owner" class="ModMultilineTextPropertyField">
-        <div data-mod-id="propertyField" class="ModTextPropertyField-propertyField">
-            <div data-mod-id="textArea" data-arg="control" class="ModTextPropertyField-textArea"></div>
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="owner" class="ModMultilineTextPropertyField">
+            <div data-mod-id="propertyField" class="ModTextPropertyField-propertyField">
+                <div data-mod-id="textArea" data-arg="control" class="ModTextPropertyField-textArea"></div>
+            </div>
         </div>
-    </div>
-</body>
+    </body>
 </html>
