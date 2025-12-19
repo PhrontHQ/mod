@@ -228,6 +228,7 @@ exports.Target = class Target extends Montage {
      * @param {Boolean} [options.trailing] - execute on trailing edge (default: true)
      * @returns {Function}
      */
+    // TODO: this is a beta feature, needs a more robust implementation.
     debounce(func, delay = 100, options = {}) {
         const { leading = false, trailing = true } = options;
         let timeoutId;
@@ -274,6 +275,7 @@ exports.Target = class Target extends Montage {
      * @param {Boolean} [options.trailing] - execute on trailing edge
      * @returns {Function}
      */
+    // TODO: this is a beta feature, needs a more robust implementation.
     throttle(func, limit = 100, options = {}) {
         const { leading = true, trailing = false } = options;
         let inThrottle;
