@@ -219,9 +219,93 @@ exports.Target = class Target extends Montage {
         }
     }
 
+    /**
+     * Debounce function
+     * @param {Function} func - function to debounce
+     * @param {Number} [delay] - delay in milliseconds
+     * @param {Object} [options] - options object
+     * @param {Boolean} [options.leading] - execute on leading edge
+     * @param {Boolean} [options.trailing] - execute on trailing edge (default: true)
+     * @returns {Function}
+     */
+    debounce(func, delay = 100, options = {}) {
+        const { leading = false, trailing = true } = options;
+        let timeoutId;
+        let lastCallTime = 0;
 
-}
+        return function (...args) {
+            const now = Date.now();
+            const isFirstCall = lastCallTime === 0;
 
+            // Clear the previous timer
+            if (timeoutId) clearTimeout(timeoutId);
+
+            // Execute on leading edge if enabled and it's the first call
+            if (leading && isFirstCall) {
+                func.apply(this, args);
+                lastCallTime = now;
+            }
+
+            // Set up trailing execution if enabled
+            if (trailing) {
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                    lastCallTime = 0;
+                    timeoutId = null;
+                }, delay);
+            } else {
+                // Reset after delay even if not calling
+                timeoutId = setTimeout(() => {
+                    lastCallTime = 0;
+                    timeoutId = null;
+                }, delay);
+            }
+
+            lastCallTime = now;
+        };
+    }
+
+    /**
+     * Throttle function
+     * @param {Function} func - function to throttle
+     * @param {Number} [limit] - limit in milliseconds
+     * @param {Object} [options] - options object
+     * @param {Boolean} [options.leading] - execute on leading edge (default: true)
+     * @param {Boolean} [options.trailing] - execute on trailing edge
+     * @returns {Function}
+     */
+    throttle(func, limit = 100, options = {}) {
+        const { leading = true, trailing = false } = options;
+        let inThrottle;
+        let lastArgs;
+        let lastContext;
+
+        return function (...args) {
+            if (!inThrottle) {
+                // Execute on leading edge if enabled
+                if (leading) func.apply(this, args);
+
+                inThrottle = true;
+
+                // Set up timer
+                setTimeout(() => {
+                    inThrottle = false;
+
+                    // Execute on trailing edge if enabled and there were queued calls
+                    if (trailing && lastArgs) {
+                        func.apply(lastContext, lastArgs);
+                        lastArgs = null;
+                        lastContext = null;
+                    }
+                }, limit);
+            } else if (trailing) {
+                // Store the latest call for trailing execution
+                lastArgs = args;
+                lastContext = this;
+            }
+        };
+    }
+};
 
 // var prototype = exports.Target.prototype;
 // Montage.defineProperties(exports.Target.prototype, {
