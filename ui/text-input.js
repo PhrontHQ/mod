@@ -23,20 +23,27 @@ To-DO: Move value logic with converter to Control
 
 */
 var TextInput = (exports.TextInput = class TextInput extends Control {
-    /**
-     * Options for debouncing the action event.
-     * Invokes the function after the threshold period has passed
-     * since the last call.
-     *
-     * @type {Object}
-     * @default { leading: false, trailing: true }
-     */
-    debounceOptions = {
-        leading: false,
-        trailing: true,
-    };
+    static {
+        /**
+         * Options for debouncing the action event.
+         * Invokes the function after the threshold period has passed
+         * since the last call.
+         * @type {Object}
+         * @default { leading: false, trailing: true }
+         */
+        Montage.defineProperties(this.prototype, {
+            debounceOptions: {
+                value: {
+                    leading: false,
+                    trailing: true,
+                },
+            },
 
-    _debounceThreshold = 500;
+            _debounceThreshold: { value: 300 }, // milliseconds
+
+            _debounced: { value: false },
+        });
+    }
 
     get debounceThreshold() {
         return this._debounceThreshold;
@@ -56,13 +63,44 @@ var TextInput = (exports.TextInput = class TextInput extends Control {
                 this._debounceThreshold,
                 this.debounceOptions
             );
+
+            this.takeValueFromElement = this.debounce(
+                this.takeValueFromElement.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
         }
     }
 
-    _debounced = false;
-
     get debounced() {
         return this._debounced;
+    }
+
+    /**
+     * Indicates whether the action event is debounced.
+     * @type {boolean}
+     * @default false
+     */
+    set debounced(value) {
+        this._debounced = Boolean(value);
+
+        if (this._debounced) {
+            console.log("debouncing with threshold ", this._debounceThreshold, this.debounceOptions);
+            this.dispatchActionEvent = this.debounce(
+                this.dispatchActionEvent.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
+
+            this.takeValueFromElement = this.debounce(
+                this.takeValueFromElement.bind(this),
+                this._debounceThreshold,
+                this.debounceOptions
+            );
+        } else {
+            this.takeValueFromElement = Control.prototype.takeValueFromElement;
+            this.dispatchActionEvent = Button.prototype.dispatchActionEvent;
+        }
     }
 });
 

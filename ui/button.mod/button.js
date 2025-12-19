@@ -56,19 +56,27 @@ const Button = (exports.Button = class Button extends Control {
 
     // <---- Properties ---->
 
-    /**
-     * Options for debouncing the action event.
-     * Immediately invokes the function and then ignores any calls made
-     * within the threshold period.
-     * @type {Object}
-     * @default { leading: true, trailing: false }
-     */
-    debounceOptions = {
-        leading: true,
-        trailing: false,
-    };
+    static {
+        /**
+         * Options for debouncing the action event.
+         * Immediately invokes the function and then ignores any calls made
+         * within the threshold period.
+         * @type {Object}
+         * @default { leading: true, trailing: false }
+         */
+        Montage.defineProperties(this.prototype, {
+            debounceOptions: {
+                value: {
+                    leading: true,
+                    trailing: false,
+                },
+            },
 
-    _debounceThreshold = 300;
+            _debounceThreshold: { value: 300 }, // milliseconds
+
+            _debounced: { value: false },
+        });
+    }
 
     get debounceThreshold() {
         return this._debounceThreshold;
@@ -90,8 +98,6 @@ const Button = (exports.Button = class Button extends Control {
             );
         }
     }
-
-    _debounced = false;
 
     get debounced() {
         return this._debounced;
