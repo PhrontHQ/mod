@@ -87,7 +87,6 @@ var TextInput = (exports.TextInput = class TextInput extends Control {
         this._debounced = Boolean(value);
 
         if (this._debounced) {
-            console.log("debouncing with threshold ", this._debounceThreshold, this.debounceOptions);
             this.dispatchActionEvent = this.debounce(
                 this.dispatchActionEvent.bind(this),
                 this._debounceThreshold,
