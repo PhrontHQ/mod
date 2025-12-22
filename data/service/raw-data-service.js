@@ -1793,6 +1793,7 @@ RawDataService.addClassProperties({
 
     /**
      * Returns the snapshot associated with the object argument if available
+     * This is the snapshot of last saved values
      *
      * @private
      * @argument {DataIdentifier} dataIdentifier
@@ -1814,6 +1815,43 @@ RawDataService.addClassProperties({
             return this.hasSnapshotForDataIdentifier(this.dataIdentifierForObject(object));
         }
     },
+
+
+    __pendingSnapshot: {
+        value: null
+    },
+
+    _pendingSnapshot: {
+        get: function () {
+            return this.__pendingSnapshot || (this.__pendingSnapshot = new Map());
+        }
+    },
+
+    /**
+     * The snapshot reflecting the last known pending state committed
+     *
+     * @private
+     * @argument {DataIdentifier} dataIdentifier
+     */
+    pendingSnapshotForDataIdentifier: {
+        value: function (dataIdentifier) {
+            let pendingSnapshot = this._pendingSnapshot.get(dataIdentifier);
+            if(!pendingSnapshot) {
+                let snapshot = this.snapshotForDataIdentifier(dataIdentifier);
+
+                if(!snapshot) {
+                    console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
+                } else {
+                    pendingSnapshot = Object.create(snapshot);
+                    this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
+                }
+            }
+            return pendingSnapshot;
+        }
+    },
+
+
+
 
     /**
      * Returns true as default so data are sorted according to a query's
@@ -4584,11 +4622,12 @@ RawDataService.addClassProperties({
                     }
                 }
 
-                if (snapshot = this.snapshotForDataIdentifier(dataIdentifier)) {
-                    //We make a shallow copy so we can remove properties we don't care about
-                    snapshot = Object.assign({}, snapshot);
-                }
+                // if (snapshot = this.snapshotForDataIdentifier(dataIdentifier)) {
+                //     //We make a shallow copy so we can remove properties we don't care about
+                //     snapshot = Object.assign({}, snapshot);
+                // }
 
+                snapshot = this.pendingSnapshotForDataIdentifier(dataIdentifier);
 
                 if (localizableProperties && localizableProperties.size) {
                     operation.locales = this.localesForObject(object)

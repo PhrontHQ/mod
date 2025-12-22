@@ -1759,6 +1759,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    //TODO: Rename lastReadSnapshot to pendingSnapshot
     _setRawDataPropertyValueIfNeeded: {
         value: function(rawData, rawDataPropertyName, rawDataPropertValue, lastReadSnapshot, rawDataSnapshot) {
             /*
@@ -1785,6 +1786,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     rawData[rawDataPropertyName] = rawDataPropertValue;
                     if(lastReadSnapshot[rawDataPropertyName] !== undefined) {
                         rawDataSnapshot[rawDataPropertyName] = lastReadSnapshot[rawDataPropertyName];
+
+                        //assuming is now pendingSnapshot, we record the new value for next one:
+                        if(lastReadSnapshot) {
+                            lastReadSnapshot[rawDataPropertyName] = rawDataPropertValue;
+                        }
                     }
                 }
             } else {
@@ -1792,6 +1798,12 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     No snapshot, we just set as before when we were not considering snapshots at this level, so that should take care of legacy
                 */
                 rawData[rawDataPropertyName] = rawDataPropertValue;
+
+                //assuming is now pendingSnapshot, we record the new value for next one:
+                if(lastReadSnapshot) {
+                    lastReadSnapshot[rawDataPropertyName] = rawDataPropertValue;
+                }
+
             }
         }
     },
