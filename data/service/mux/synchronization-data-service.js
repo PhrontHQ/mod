@@ -1293,7 +1293,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
 
 
-        this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria+": ", readCompletedOperation.data);
+        this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria+": ", readCompletedOperation.data);
 
         //Record the read completion from that service:
         if(readCompletedOperation.type === ReadCompletedOperationType) {
@@ -1305,7 +1305,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             or if it's one from a subgraph of that being synced, as coming from an originDataService, we try to sync
         */
         if(/*(readCompletedOperation.rawDataService !== this.destinationDataService) ||*/ (this.readOperationsPendingSynchronization.has(readCompletedOperation.referrer) && readCompletedOperation.data?.length)) {
-            this._logTypeEvent(readCompletedOperation.referrer.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": REGISTERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+            this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": REGISTERED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria);
 
             /*
                 A read from another data service failed to return data, and now we have another one who did
@@ -1333,7 +1333,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
         } else if(readCompletedOperation.data == null || (Array.isArray(readCompletedOperation.data) && readCompletedOperation.data.length === 0 )) {
-            this._logTypeEvent(readCompletedOperation.referrer.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": NO DATA FOUND  from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+            this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": NO DATA FOUND  from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name+ (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria);
 
             // console.debug("No Data Found. Do we check of the rawDataService is an originDataService?")
             /* 
@@ -1357,7 +1357,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 } else {
 
-                    this._logTypeEvent(readCompletedOperation.referrer.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": TRY TO SYNC from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+                    this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+": TRY TO SYNC from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria);
 
                     //Register what we need to reconciliate with the OG readOperation from client
                     //This is trying to see of a fetch failing in the destination data service can find data within originDataSnapshot if they exists and match that use-case
