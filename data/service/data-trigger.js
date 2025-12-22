@@ -979,6 +979,7 @@ exports.DataTrigger.prototype = Object.create(
                                 );
                             }
                         }
+                        self._service._objectsBeingMapped.delete(object);
                         return self._fulfillObjectPropertyFetch(object, /*error*/ undefined, propertyValue);
                     })
                     .catch((error) => {
@@ -986,10 +987,8 @@ exports.DataTrigger.prototype = Object.create(
                             'DataTrigger Error _fetchObjectProperty for property "' + self._propertyName + '"',
                             error
                         );
+                        self._service._objectsBeingMapped.delete(object);
                         return self._fulfillObjectPropertyFetch(object, error);
-                    })
-                    .finally(() => {
-                        this._service._objectsBeingMapped.delete(object);
                     });
             },
         },
