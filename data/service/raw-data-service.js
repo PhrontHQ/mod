@@ -2918,7 +2918,7 @@ RawDataService.addClassProperties({
                 This might be overreaching? Let's see 
             */
             if(valueDescriptor && !objectRuleConverter) {
-                console.warn("won't map property '"+propertyName+"' as no comverter is specified for valueDescriptor " +valueDescriptor.name);
+                console.warn("won't map property '"+propertyName+"' as no converter is specified for valueDescriptor " +valueDescriptor.name);
             }
 
             return (
