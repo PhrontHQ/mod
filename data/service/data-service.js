@@ -4704,7 +4704,7 @@ DataService.addClassProperties(
                             } else {
                                 for (i = 0, countI = removedValues.length; i < countI; i++) {
                                     if (!isDataObjectBeingMapped) {
-                                        registeredRemovedValues.delete(removedValues[i]);
+                                        registeredRemovedValues.add(removedValues[i]);
                                     }
                                     self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                         dataObject,

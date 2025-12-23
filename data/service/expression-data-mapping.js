@@ -1784,7 +1784,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                 if(lastReadSnapshot[rawDataPropertyName] !== rawDataPropertValue) {
                     rawData[rawDataPropertyName] = rawDataPropertValue;
-                    if(lastReadSnapshot[rawDataPropertyName] !== undefined) {
+                    /*
+                        For add/remove, this is potentially called twice: 
+                            - once for added values
+                            - once for removed values
+                        
+                        So to avoid, on the second call when called twice to override the actual
+                        correct last known values with the upcominh one,
+                        we add a test to verify that rawDataSnapshot doesn't already have the property set
+                    
+                    */
+                    if((lastReadSnapshot[rawDataPropertyName] !== undefined) && (!rawDataSnapshot.hasOwnProperty(rawDataPropertyName))) {
                         rawDataSnapshot[rawDataPropertyName] = lastReadSnapshot[rawDataPropertyName];
 
                         //assuming is now pendingSnapshot, we record the new value for next one:
