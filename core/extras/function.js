@@ -77,3 +77,13 @@ Object.defineProperty(Function.prototype, "isClass", {
     configurable: true
 });
 
+Object.defineProperty(Function.prototype, "debounceWithDelay", {
+    value: function (delay) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => this(...args), delay)
+        }
+    },
+    configurable: true
+});

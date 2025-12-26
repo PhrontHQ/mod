@@ -6,6 +6,7 @@ const Montage = require("core/core").Montage,
     parse = require("core/frb/parse"),
     compile = require("core/frb/compile-evaluator"),
     assign = require("core/frb/assign"),
+    Promise = require("core/promise").Promise,
     Scope = require("core/frb/scope");
 
 /**
@@ -322,25 +323,62 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
         return fetchRequests;
     }
 
-    fetchResponseRawDataMappingFunctionForCriteria(aCriteria) {
-        let value = this.fetchResponseRawDataMappingExpressionByCriteria.get(aCriteria);
+    /**
+     * Historically started with just an expression to evaluate on a scope containing fetchResponse
+     * Evolved to be able to use a converter which opens the door for more flexobility.
+     *
+     * @public
+     * @argument {Object}   fetchResponse   - The response to map
+     * @argument {Array}    rawData         - The array conraing raw data, each entry destrined to become one object
+     * @argument {Criteria} aCriteria       - a criteria for which a specific mapping was configured for that response
+     */
+    mapFetchResponseToRawDataMatchingCriteria(fetchResponse, rawData, aCriteria) {
+
+        let value = this.fetchResponseRawDataMappingExpressionByCriteria.get(aCriteria),
+            rawDataResult;
 
         if(!value) {
             throw new Error("No Fetch Response Mapping found for Criteria: "+ aCriteria);
         }
 
-        if(typeof value !== "function") {
-            //We parse and compile the expression so we can evaluate it:
-            try {
-                value = compile(parse(value));
-            } catch(compileError) {
-                throw new Error("Fetch Response Mapping Expression Compile error: "+ compileError+", for Criteria: "+ aCriteria);
+        //Use of a converter
+        if(typeof value.convert === "function") {
+            //This is not coded to handle the return of a promise
+            rawDataResult = value.convert(fetchResponse);
+            if(Promise.is(rawDataResult)) {
+                throw "Mapping fetchResponse to raw data with a comverter isn't coded to handle a Promise returned by converter"
+            }
+        }
+        //Use of a direct expression, but we're looking for a comp
+        else {
+            let compiledExpressionFunction;
+
+            if(typeof value !== "function") {
+                //We parse and compile the expression so we can evaluate it:
+                try {
+                    compiledExpressionFunction = compile(parse(value));
+                } catch(compileError) {
+                    throw new Error("Fetch Response Mapping Expression Compile error: "+ compileError+", for Criteria: "+ aCriteria);
+                }
+
+                this.fetchResponseRawDataMappingExpressionByCriteria.set(aCriteria, compiledExpressionFunction);
+            } else {
+                compiledExpressionFunction = value;
             }
 
-            this.fetchResponseRawDataMappingExpressionByCriteria.set(aCriteria, value);
+            //Now run the function to get the value:
+            let fetchResponseScope = this._scope.nest(fetchResponse);
+
+            rawDataResult = compiledExpressionFunction(fetchResponseScope);
         }
 
-        return value;
+        if(rawDataResult) {
+            Array.isArray(rawDataResult) 
+                ? rawData.push(...rawDataResult)
+                : rawData.push(rawDataResult);
+        }
+
+        return;
     }
 
     /**
@@ -367,21 +405,24 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
         */
        if(this.fetchResponseRawDataMappingExpressionByCriteria) {
             let criteriaIterator = this.fetchResponseRawDataMappingExpressionByCriteria.keys(),
-                fetchResponseScope = this._scope.nest(fetchResponse),
+                // fetchResponseScope = this._scope.nest(fetchResponse),
                 iCriteria;
 
             while ((iCriteria = criteriaIterator.next().value)) {
 
                 if(iCriteria.evaluate(fetchResponse)) {
                     //We have a match, we need to evaluate the rules to 
-                    let fetchResponseRawDataMappingFunction = this.fetchResponseRawDataMappingFunctionForCriteria(iCriteria),
-                        result = fetchResponseRawDataMappingFunction(fetchResponseScope);
+                    // let fetchResponseRawDataMappingFunction = this.fetchResponseRawDataMappingFunctionForCriteria(iCriteria),
+                    //     result = fetchResponseRawDataMappingFunction(fetchResponseScope);
+                    // if(result) {
+                    //     Array.isArray(result) 
+                    //         ? rawData.push(...result)
+                    //         : rawData.push(result);
+                    // }
 
-                    if(result) {
-                        Array.isArray(result) 
-                            ? rawData.push(...result)
-                            : rawData.push(result);
-                    }
+                    //We have a match, we map what we have in store for this criteria,
+                    //An expression to evaluate, or a converter
+                    this.mapFetchResponseToRawDataMatchingCriteria(fetchResponse, rawData, iCriteria)
                 }
             }
        } else if(Array.isArray(fetchResponse)) {

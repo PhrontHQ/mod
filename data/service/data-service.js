@@ -35,6 +35,7 @@ const Object = global.Object, //Cache for scope traversal performance
 
 require("../../core/extras/string");
 require("../../core/extras/date");
+require("core/extras/function");
 
 var AuthorizationPolicyType = new Montage();
 AuthorizationPolicyType.NoAuthorizationPolicy = AuthorizationPolicy.NONE;
@@ -4446,6 +4447,10 @@ DataService.addClassProperties(
             },
         },
 
+        debouncedQueueMicrotaskWithDelay: {
+            value: queueMicrotask.debounceWithDelay(500)
+        },
+
         registerDataObjectChangesFromEvent: {
             value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
                 var dataObject = changeEvent.target,
@@ -4459,13 +4464,21 @@ DataService.addClassProperties(
                     return;
                 }
 
-                if (!isDataObjectBeingMapped && this.autosaves && !this.isAutosaveScheduled) {
-                    this.isAutosaveScheduled = true;
-                    queueMicrotask(() => {
+                if (!isDataObjectBeingMapped && this.autosaves /* && !this.isAutosaveScheduled*/) {
+                    //this.isAutosaveScheduled = true;
+                    this.debouncedQueueMicrotaskWithDelay(() => {
                         this.isAutosaveScheduled = false;
                         this.saveChanges();
                     });
                 }
+
+                // if (!isDataObjectBeingMapped && this.autosaves && !this.isAutosaveScheduled) {
+                //     this.isAutosaveScheduled = true;
+                //     queueMicrotask(() => {
+                //         this.isAutosaveScheduled = false;
+                //         this.saveChanges();
+                //     });
+                // }
 
                 var inversePropertyName = propertyDescriptor.inversePropertyName,
                     inversePropertyDescriptor;
@@ -4704,7 +4717,7 @@ DataService.addClassProperties(
                             } else {
                                 for (i = 0, countI = removedValues.length; i < countI; i++) {
                                     if (!isDataObjectBeingMapped) {
-                                        registeredRemovedValues.delete(removedValues[i]);
+                                        registeredRemovedValues.add(removedValues[i]);
                                     }
                                     self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                         dataObject,
@@ -5371,6 +5384,21 @@ DataService.addClassProperties(
                             self._buildInvalidityStateForObjects(deletedDataObjects),
                         ])
                             .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
+
+
+                                /* 
+                                
+                                    Benoit 12/26/2025
+
+                                    The following is half-baked:
+                                        1. createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates get entries for object descriptors and instances have no actual invalidity
+                                        2. The dispatch is only done for changed objects and not created nor deleted ones
+
+                                    temporarily commenting it out until we address it
+
+                                */
+
+                                /* Benoit 12/26/2025 
                                 // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
                                 self._dispatchObjectsInvalidity(changedInvalidityStates);
 
@@ -5387,8 +5415,12 @@ DataService.addClassProperties(
                                     // Exit, can't move on
                                     resolve(validatefailedOperation);
                                 } else {
+                                
+                                Benoit 12/26/2025 */
                                     return transactionObjectDescriptors;
+                                /* Benoit 12/26/2025    
                                 }
+                                Benoit 12/26/2025 */
                             }, reject)
                             .then(function (_transactionObjectDescriptors) {
                                 var operationCount =

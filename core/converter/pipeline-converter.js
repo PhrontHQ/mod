@@ -94,7 +94,10 @@ exports.PipelineConverter = Converter.specialize({
 
 
             if (isFinalOutput) {
-                result = isPromise ? output : Promise.resolve(output);
+                //Potentially breaking change here. The code was introducing a Promise in the output when none existed in any of the converter involved
+                //WAS: result = isPromise ? output : Promise.resolve(output);
+                //NOW: respecting the natural outcome of the pipeline's converters
+                result = output;
             } else if (isPromise) {
                 result = output.then(function (value) {
                     return self._convertWithConverterAtIndex(value, index);

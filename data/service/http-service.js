@@ -623,7 +623,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                         }
 
                     }
-                } else if (!rawDataOperations.has(dataOperation)) {
+                } else if (iObjectRule && !rawDataOperations.has(dataOperation)) {
                     rawDataOperations.push(dataOperation);
                 }
 
