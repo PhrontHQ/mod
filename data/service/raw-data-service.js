@@ -4702,7 +4702,7 @@ RawDataService.addClassProperties({
                             dataOperationsByObject.set(object, operation);
                         }
 
-                        console.debug("###### _saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " is ", operation)
+                        //console.debug("###### _saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " is ", operation)
 
                         return operation;
                     });
