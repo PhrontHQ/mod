@@ -27,14 +27,20 @@ var TimeZoneIdentifierToTimeZoneConverter = exports.TimeZoneIdentifierToTimeZone
         }
     },
 
+    /*
+        this doesn't feel right
 
-    convertCriteriaForValue: {
-        value: function(value) {
-            var criteria = new Criteria().initWithSyntax(this.convertSyntax, value);
-            criteria._expression = this.convertExpression;
-            return criteria;
-        }
-    },
+        this converter doesn't inherit convertSyntax nor convertExpression properties
+        so this can't really work when called via a RawDataService's mapReadOperationToRawReadOperation method
+    */
+
+    // convertCriteriaForValue: {
+    //     value: function(value) {
+    //         var criteria = new Criteria().initWithSyntax(this.convertSyntax, value);
+    //         criteria._expression = this.convertExpression;
+    //         return criteria;
+    //     }
+    // },
 
     /**
      * Converts the TimeZone identifier string to a TimeZone.
