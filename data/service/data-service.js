@@ -5384,6 +5384,21 @@ DataService.addClassProperties(
                             self._buildInvalidityStateForObjects(deletedDataObjects),
                         ])
                             .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
+
+
+                                /* 
+                                
+                                    Benoit 12/26/2025
+
+                                    The following is half-baked:
+                                        1. createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates get entries for object descriptors and instances have no actual invalidity
+                                        2. The dispatch is only done for changed objects and not created nor deleted ones
+
+                                    temporarily commenting it out until we address it
+
+                                */
+
+                                /* Benoit 12/26/2025 
                                 // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
                                 self._dispatchObjectsInvalidity(changedInvalidityStates);
 
@@ -5400,8 +5415,12 @@ DataService.addClassProperties(
                                     // Exit, can't move on
                                     resolve(validatefailedOperation);
                                 } else {
+                                
+                                Benoit 12/26/2025 */
                                     return transactionObjectDescriptors;
+                                /* Benoit 12/26/2025    
                                 }
+                                Benoit 12/26/2025 */
                             }, reject)
                             .then(function (_transactionObjectDescriptors) {
                                 var operationCount =
