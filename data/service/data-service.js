@@ -5278,7 +5278,7 @@ DataService.addClassProperties(
                     this.deletedDataObjects.size === 0
                 ) {
                     /*
-                    If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separatin of changes,
+                    If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separation of changes,
                     best we can do is return a promise encompasing all pending.
 
                     If anothe saveChanges were to be called, it may not use that same promise
