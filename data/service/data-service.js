@@ -70,7 +70,7 @@ AuthenticationPolicy.OnFirstFetchAuthenticationPolicy = AuthenticationPolicy.ON_
  * @class
  * @extends external:Montage
  */
-const DataService = exports.DataService = class DataService extends Target {
+const DataService = (exports.DataService = class DataService extends Target {
     /** @lends DataService */
     constructor() {
         super();
@@ -119,7 +119,7 @@ const DataService = exports.DataService = class DataService extends Target {
             },
         });
     }
-};
+});
 
 // DataService = exports.DataService = Target.specialize(/** @lends DataService.prototype */ {
 
@@ -1316,7 +1316,7 @@ DataService.addClassProperties(
                 type = type instanceof ObjectDescriptor ? type : this.objectDescriptorForType(type);
                 //services = this._childServicesByType.get(type) || this._childServicesByType.get(null);
                 services = this._childServicesByType.get(type);
-                /*  
+                /*
                     Fixing bug were a catch-all data service, one that states it handles all by having no type
                     could end up multiple times in  services as the following block was executed at every call with the same type argument.
 
@@ -1325,7 +1325,7 @@ DataService.addClassProperties(
                 */
                 if (services) {
                     let catchAllServices = this._childServicesByType.get(null);
-                    if (catchAllServices  && !Object.isFrozen(services)) {
+                    if (catchAllServices && !Object.isFrozen(services)) {
                         services.push(...catchAllServices);
                         Object.freeze(services);
                     }
@@ -2448,12 +2448,10 @@ DataService.addClassProperties(
 
         childServicesFetchObjectProperty: {
             value: function (object, propertyName, isObjectCreated) {
-
                 //Workaround for now:
-                if(object.dataIdentifier.dataService) {
+                if (object.dataIdentifier.dataService) {
                     return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated);
                 }
-
 
                 throw "Data Services with multiple child services per ObjectDescriptor have to implement this method";
                 //     /*
@@ -3091,7 +3089,7 @@ DataService.addClassProperties(
                             service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
 
-                        this.registerCreatedDataObject(object);
+                    this.registerCreatedDataObject(object);
 
                     return object;
                 } else {
@@ -3904,10 +3902,14 @@ DataService.addClassProperties(
         },
         registerChangedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject), changedDataObjects, value;
+                var objectDescriptor = this.objectDescriptorForObject(dataObject),
+                    changedDataObjects,
+                    value;
 
                 if (this.isObjectCreated(dataObject)) {
-                    console.warn(`DataService can't register a new object (${objectDescriptor.name} in changedDataObjects`);
+                    console.warn(
+                        `DataService can't register a new object (${objectDescriptor.name} in changedDataObjects`
+                    );
                     return;
                 }
 
@@ -4448,7 +4450,7 @@ DataService.addClassProperties(
         },
 
         debouncedQueueMicrotaskWithDelay: {
-            value: queueMicrotask.debounceWithDelay(500)
+            value: queueMicrotask.debounceWithDelay(500),
         },
 
         registerDataObjectChangesFromEvent: {
@@ -4530,7 +4532,12 @@ DataService.addClassProperties(
         },
 
         _registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, propertyDescriptor, inversePropertyDescriptor, shouldTrackChangesWhileBeingMapped) {
+            value: function (
+                changeEvent,
+                propertyDescriptor,
+                inversePropertyDescriptor,
+                shouldTrackChangesWhileBeingMapped
+            ) {
                 var dataObject = changeEvent.target,
                     isCreatedObject = this.isObjectCreated(dataObject),
                     key = changeEvent.key,
@@ -4551,9 +4558,9 @@ DataService.addClassProperties(
                 ?
                 #TODO TEST!!
             */
-            // if (dataObject.objectDescriptor.name === "EmploymentPositionStaffing") {
-            //     debugger;
-            // }
+                // if (dataObject.objectDescriptor.name === "EmploymentPositionStaffing") {
+                //     debugger;
+                // }
 
                 if (!isCreatedObject && (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped)) {
                     //this.changedDataObjects.add(dataObject);
@@ -6015,10 +6022,10 @@ DataService.addClassProperties(
                     ? key === ""
                         ? JSON.stringify(value, this._criteriaParametersReplacer)
                         : value?.dataIdentifier
-                            ? value.dataIdentifier
-                            : !!value
-                                ? value.toString()
-                                : null
+                        ? value.dataIdentifier
+                        : !!value
+                        ? value.toString()
+                        : null
                     : Array.isArray(value)
                     ? value.map(this._criteriaParametersReplacer)
                     : value;
@@ -6375,7 +6382,7 @@ DataService.addClassProperties(
                                     readOperation.hints = query.hints;
                                 }
 
-                    /*
+                                /*
                         this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
                         phront-service does it, but we need to stop doing it half way there and the other half over there.
                         SaveChanges is cleaner, but the job is also easier there.
