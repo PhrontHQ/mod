@@ -4,6 +4,7 @@
 var Control = require("ui/control").Control,
     Button = require("ui/button.mod").Button,
     deprecate = require("core/deprecate");
+const { Montage } = require("core/core");
 
 /**
     The base class for all text-based input components. You typically won't create instances of this prototype.

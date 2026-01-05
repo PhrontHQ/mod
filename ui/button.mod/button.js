@@ -5,6 +5,7 @@ const { VisualPosition } = require("core/enums/visual-position");
 const { PressComposer } = require("composer/press-composer");
 const { KeyComposer } = require("composer/key-composer");
 const { Control } = require("ui/control");
+const { Montage } = require("core/core");
 
 // TODO: migrate away from using undefinedGet and undefinedSet
 
