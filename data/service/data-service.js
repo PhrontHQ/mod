@@ -4940,19 +4940,6 @@ DataService.addClassProperties(
             },
         },
 
-        /**
-         * Dispatches validation error events for each object in the provided map.
-         * @param {Map<object, Map<string, ValidationError[]>>} objectInvalidityMap - A map where keys are objects and values are their invalidity states.
-         * @returns {void}
-         */
-        _dispatchValidationErrors: {
-            value: function (objectInvalidityMap) {
-                for (const [dataObject, invalidity] of objectInvalidityMap) {
-                    this.dispatchDataEventTypeForObject(DataEvent.invalid, dataObject, invalidity);
-                }
-            },
-        },
-
         _promisesByPendingTransactions: {
             value: undefined,
         },
@@ -5394,13 +5381,18 @@ DataService.addClassProperties(
                                         // Only add if there are actual validation errors
                                         if (invalidity && invalidity.size > 0) {
                                             aggregatedValidationErrors.set(dataObject, invalidity);
+
+                                            // Dispatch invalid data event for each invalid object
+                                            this.dispatchDataEventTypeForObject(
+                                                DataEvent.invalid,
+                                                dataObject,
+                                                invalidity
+                                            );
                                         }
                                     }
                                 }
 
                                 if (aggregatedValidationErrors.size > 0) {
-                                    self._dispatchValidationErrors(aggregatedValidationErrors);
-
                                     const validateFailedOperation = new DataOperation();
                                     validateFailedOperation.type = DataOperation.Type.ValidateFailedOperation;
                                     validateFailedOperation.target = self.mainService;
