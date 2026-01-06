@@ -4940,26 +4940,6 @@ DataService.addClassProperties(
             },
         },
 
-        /**
-         * Dispatches invalidity events for each object in the provided map.
-         * @param {Map<object, Map<string, ValidationError[]>>} invalidityStates - A map where each key is an object and its value is its invalidity state.
-         * @returns {void}
-         */
-        _dispatchObjectsInvalidity: {
-            value: function (invalidityStates) {
-                const invalidObjectIterator = invalidityStates.keys();
-                let invalidObject;
-
-                while ((invalidObject = invalidObjectIterator.next().value)) {
-                    this.dispatchDataEventTypeForObject(
-                        DataEvent.invalid,
-                        invalidObject,
-                        invalidityStates.get(invalidObject)
-                    );
-                }
-            },
-        },
-
         _promisesByPendingTransactions: {
             value: undefined,
         },
@@ -5390,25 +5370,44 @@ DataService.addClassProperties(
                             // 3. Validate deleted objects (e.g., check for rules that block deletion).
                             self._buildInvalidityStateForObjects(deletedDataObjects),
                         ])
-                            .then(([createdInvalidityStates, changedInvalidityStates, deletedInvalidityStates]) => {
-                                // self._dispatchObjectsInvalidity(createdDataObjectInvalidity);
-                                self._dispatchObjectsInvalidity(changedInvalidityStates);
+                            .then((validationResults) => {
+                                const aggregatedValidationErrors = new Map();
 
-                                if (changedInvalidityStates.size > 0) {
-                                    // Do we really need the DataService itself to dispatch another event with
-                                    // all invalid data together at once?
-                                    // self.mainService.dispatchDataEventTypeForObject(DataEvent.invalid, self, detail);
+                                // Merge validation results from all operations. (created, changed, deleted)
+                                for (const result of validationResults) {
+                                    if (!result) continue;
 
-                                    var validatefailedOperation = new DataOperation();
-                                    validatefailedOperation.type = DataOperation.Type.ValidateFailedOperation;
-                                    // At this point, it's the dataService
-                                    validatefailedOperation.target = self.mainService;
-                                    validatefailedOperation.data = changedInvalidityStates;
-                                    // Exit, can't move on
-                                    resolve(validatefailedOperation);
-                                } else {
-                                    return transactionObjectDescriptors;
+                                    for (const [dataObject, invalidity] of result) {
+                                        // Only add if there are actual validation errors
+                                        if (invalidity && invalidity.size > 0) {
+                                            aggregatedValidationErrors.set(dataObject, invalidity);
+
+                                            // Dispatch invalid data event for each invalid object
+                                            this.dispatchDataEventTypeForObject(
+                                                DataEvent.invalid,
+                                                dataObject,
+                                                invalidity
+                                            );
+                                        }
+                                    }
                                 }
+
+                                if (aggregatedValidationErrors.size > 0) {
+                                    const validateFailedOperation = new DataOperation();
+                                    validateFailedOperation.type = DataOperation.Type.ValidateFailedOperation;
+                                    validateFailedOperation.target = self.mainService;
+
+                                    // Pass the complete set of errors
+                                    validateFailedOperation.data = aggregatedValidationErrors;
+
+                                    // Stop the transaction and resolve with the failure operation
+                                    resolve(validateFailedOperation);
+
+                                    // TODO: @benoit should we not stop/reject the inner promise ?
+                                    return null;
+                                }
+
+                                return transactionObjectDescriptors;
                             }, reject)
                             .then(function (_transactionObjectDescriptors) {
                                 var operationCount =
