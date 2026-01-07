@@ -3504,8 +3504,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             /*
                 If the object has been fetched, we should have the values in the snapshot, otherwise if they are natural primiary keys, we might be able to get them by mapping back
+
+                Except: for objects that are stored embedded into another one, they don't need to have a primaryKey.
             */
-           for(i=0, countI = rawDataPrimaryKeyCompiledExpressions.length; (i<countI); i++) {
+           for(i=0, countI = rawDataPrimaryKeyCompiledExpressions?.length; (i<countI); i++) {
                 if(!isObjectCreated && snapshot) {
                     iCompiledExpression = rawDataPrimaryKeyCompiledExpressions[i];
                     let propertyScope = this._scope.nest(snapshot);
