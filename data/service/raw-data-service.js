@@ -1848,9 +1848,7 @@ RawDataService.addClassProperties({
             if(!pendingSnapshot) {
                 let snapshot = this.snapshotForDataIdentifier(dataIdentifier);
 
-                if(!snapshot) {
-                    console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
-                } else {
+                if(snapshot) {
                     pendingSnapshot = Object.create(snapshot);
                     this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
                 }
@@ -4648,6 +4646,9 @@ RawDataService.addClassProperties({
                 // }
 
                 snapshot = this.pendingSnapshotForDataIdentifier(dataIdentifier);
+                if(!snapshot && !isNewObject) {
+                    console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
+                }
 
                 if (localizableProperties && localizableProperties.size) {
                     operation.locales = this.localesForObject(object)
