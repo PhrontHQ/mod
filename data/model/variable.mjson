@@ -75,7 +75,7 @@
             "cardinality": 1,
             "valueType": "object",
             "valueDescriptor": {"@": "DataObjectDescriptor"},
-            "description": "The scope object, high level, to be secialized, on which the expression is to be evaluated to produce a value for this variable"
+            "description": "The scope object, high level, to be serialized, on which the expression is to be evaluated to produce a value for this variable"
         }
     }
 

@@ -27,7 +27,7 @@
     "name": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "value",
+            "name": "name",
             "valueType": "string"
         }
     },

@@ -34,7 +34,7 @@
     "provider": {
         "prototype": "../../core/meta/property-descriptor",
         "values": {
-            "name": "scope",
+            "name": "provider",
             "cardinality": -1,
             "valueType": "object",
             "valueDescriptor": {"@": "IdentityProviderDescriptor"},
@@ -46,7 +46,7 @@
         "object": "./party/organization.mjson"
     },
     "ownerOrganization": {
-        "prototype": "core/meta/property-descriptor",
+        "prototype": "../../core/meta/property-descriptor",
         "values": {
             "name": "ownerOrganization",
             "cardinality": 1,
