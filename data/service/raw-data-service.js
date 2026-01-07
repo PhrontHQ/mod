@@ -4,6 +4,7 @@ var DataService = require("./data-service").DataService,
     Criteria = require("../../core/criteria").Criteria,
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    RawDataIdentifier = require("../model/raw-data-identifier").RawDataIdentifier,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
@@ -1301,10 +1302,18 @@ RawDataService.addClassProperties({
 
     resolveObjectForTypeRawData: {
         value: function (type, rawData, context) {
-            var dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData),
+            var dataIdentifier,
                 //Retrieves an existing object is responsible data service is uniquing, or creates one
                 object, result;
 
+            
+            try {
+                dataIdentifier = this.dataIdentifierForTypeRawData(type, rawData);
+            } catch(error) {
+                console.warn(`Error creating required dataIdentifer for type ${type.name}, rawData: ${JSON.stringify(rawData)}: ${error.message}`);
+                dataIdentifier = null;
+                return Promise.resolveNull;
+            }
 
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
@@ -1839,9 +1848,7 @@ RawDataService.addClassProperties({
             if(!pendingSnapshot) {
                 let snapshot = this.snapshotForDataIdentifier(dataIdentifier);
 
-                if(!snapshot) {
-                    console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
-                } else {
+                if(snapshot) {
                     pendingSnapshot = Object.create(snapshot);
                     this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
                 }
@@ -2918,7 +2925,7 @@ RawDataService.addClassProperties({
                 This might be overreaching? Let's see 
             */
             if(valueDescriptor && !objectRuleConverter) {
-                console.warn("won't map property '"+propertyName+"' as no comverter is specified for valueDescriptor " +valueDescriptor.name);
+                console.warn("won't map property '"+propertyName+"' as no converter is specified for valueDescriptor " +valueDescriptor.name);
             }
 
             return (
@@ -3445,6 +3452,17 @@ RawDataService.addClassProperties({
 
     handleReadUpdateOperation: {
         value: function (operation) {
+
+            //We need to find a way to take care of this...
+            /* 
+                Client side, with a synchronization data service in place, 
+                an readUpdateOperation dispatched by its destination service 
+                is handled here by an origin service that handles that readUpdateOperation's target 
+            */
+            if(operation.rawDataService !== this) {
+                return;
+            }
+
             var referrer = operation.referrerId,
                 objectDescriptor = operation.target,
                 records = operation.data,
@@ -4628,6 +4646,9 @@ RawDataService.addClassProperties({
                 // }
 
                 snapshot = this.pendingSnapshotForDataIdentifier(dataIdentifier);
+                if(!snapshot && !isNewObject) {
+                    console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
+                }
 
                 if (localizableProperties && localizableProperties.size) {
                     operation.locales = this.localesForObject(object)
@@ -4693,7 +4714,7 @@ RawDataService.addClassProperties({
                             dataOperationsByObject.set(object, operation);
                         }
 
-                        console.debug("###### _saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " is ", operation)
+                        //console.debug("###### _saveDataOperation ("+operationType+") forObject "+  this.dataIdentifierForObject(object)+ " in commitTransactionOperation "+commitTransactionOperation.id + " is ", operation)
 
                         return operation;
                     });

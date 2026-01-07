@@ -29,6 +29,22 @@ var MutableEvent = require("../../core/event/mutable-event").MutableEvent,
  *
  */
 
+/*
+    #TODO #REFINE: Benoit, 1/5/2026: Now that Transaction are a Data typw, we shouldn't need
+    any kind of a special event:
+        - create is covered by regular create data operation
+        - reateProgress? createComplete?
+        - createFail shouldn't be specific to a Transaction
+        - Validate, ValidateStart, ValidateProgress, ValidateComplete, ValidateFail - same, not unique to transactions
+        - transactionPrepare -> transactionPrepareFail ?
+        - transactionRollback ? That's low level: from the client's perspective, it doesn't exsist, unless you reset all objects to last fetched state, and lose changes.
+            - shoud it be a RawTransaction (New, to be created if ...) aspect? 
+        - commit: same. It's a mean to cumulate changes from a client to a server.tp represent the fact
+            that all changes desired to be in one transaction may not fit in one "message" between client and server.
+
+    To be thought through more
+*/
+
 const transactionEventTypes = [
 
     "transactionCreate",

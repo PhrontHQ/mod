@@ -121,7 +121,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
     _fetchConvertedDataForObjectDescriptorCriteria: {
-        value: function(typeToFetch, criteria, currentRule) {
+        value: function(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged) {
             var self = this;
 
             return this.service ? this.service.then(function (service) {
@@ -202,6 +202,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         var query = DataQuery.withTypeAndCriteria(typeToFetch, criteria);
 
                         query.hints = {rawDataService: service};
+
+                        if(registerMappedPropertiesAsChanged){
+                            query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
+                        }
 
                         if(sourceObjectSnapshot?.originDataSnapshot) {
                             query.hints.originDataSnapshot = sourceObjectSnapshot.originDataSnapshot;
@@ -342,7 +346,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         if(!queryParts) {
                             queryParts = {
                                 criteria: [],
-                                readExpressions: []
+                                readExpressions: []/*,
+                                hints: {}*/
                             };
                             self._pendingCriteriaByTypeToCombine.set(typeToFetch, queryParts);
                         }
@@ -351,10 +356,31 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
                             added check to avoid duplicates
+
+                            11/29/2025 FIXME - Running into a case where a single raw property value is used to fetch multiple different object properties.
+                            So the only way to handle that in an HTTP Service to decide what URL/API End point to reach is to have the readExpressions.
+                            It turns out that in that case, both properties points to the same type, which is the same as the type of the data instance for
+                            which we're resolving a property. So to not risk a regression, I'm adding an or of  
+
+                                currentRule.propertyDescriptor._valueDescriptorReference === typeToFetch
+                            
+                            To make sure we're not breaking existing behavior. BUT this needs to be re-assessed and simplified, I think now we should always
+                            that extra bit of important information and I don't think it will create a problem, but we need to test and assess 
+                            with a current working setup, and eventually add test/specs. 
                         */
-                        if((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) {
+                        //if((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) {
+                        if(((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) || (currentRule.propertyDescriptor._valueDescriptorReference === currentRule.propertyDescriptor.owner)) {
+                        //if(((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) || (currentRule.propertyDescriptor._valueDescriptorReference === typeToFetch)) {
                             queryParts.readExpressions.push(currentRule.targetPath);
                         }
+
+
+                        /*
+
+                        queryParts.hints.dataInstance = 
+                        queryParts.hints.dataInstancePropertyName = currentRule.targetPath;
+
+                        */
 
                         /*
                             Now we need to scheduled a queueMicrotask() if it's not done.
@@ -362,7 +388,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         if(!self.constructor.prototype._isCombineFetchDataMicrotaskQueued) {
                             self.constructor.prototype._isCombineFetchDataMicrotaskQueued = true;
                             queueMicrotask(function() {
-                                self._combineFetchDataMicrotask(service)
+                                self._combineFetchDataMicrotask(service, registerMappedPropertiesAsChanged)
                             });
                         }
 
@@ -415,7 +441,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     },
 
     _combineFetchDataMicrotaskFunctionForTypeQueryParts: {
-        value: function(type, queryParts, service, rootService) {
+        value: function(type, queryParts, service, rootService, registerMappedPropertiesAsChanged) {
             var self = this,
                 combinedCriteria = queryParts.criteria.length > 1 ? Criteria.or(queryParts.criteria) : queryParts.criteria[0],
                 //query = DataQuery.withTypeAndCriteria(type, combinedCriteria),
@@ -458,6 +484,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
             if(queryParts.readExpressions && queryParts.readExpressions.length > 0) {
                 query.readExpressions = queryParts.readExpressions;
+            }
+
+            if(registerMappedPropertiesAsChanged) {
+                query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
             }
 
             //console.log("_combineFetchDataMicrotaskFunctionForTypeQueryParts query:",query);
@@ -556,7 +586,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     },
 
     _combineFetchDataMicrotask: {
-        value: function(service) {
+        value: function(service, registerMappedPropertiesAsChanged) {
 
             //console.log("_combineFetchDataMicrotask("+this._pendingCriteriaByTypeToCombine.size+")");
             var mapIterator = this._pendingCriteriaByTypeToCombine.entries(),
@@ -568,7 +598,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 mapIterationType = mapIterationEntry[0];
                 mapIterationQueryParts = mapIterationEntry[1];
 
-                this._combineFetchDataMicrotaskFunctionForTypeQueryParts(mapIterationType, mapIterationQueryParts, service, service.rootService);
+                this._combineFetchDataMicrotaskFunctionForTypeQueryParts(mapIterationType, mapIterationQueryParts, service, service.rootService, registerMappedPropertiesAsChanged);
             }
 
             this.constructor.prototype._isCombineFetchDataMicrotaskQueued = false;
@@ -663,6 +693,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 var self = this,
                     //We put it in a local variable so we have the right value in the closure
                     currentRule = this.currentRule,
+                    registerMappedPropertiesAsChanged = this.registerMappedPropertiesAsChanged,
                     criteria,
                     query;
 
@@ -696,7 +727,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             aCriteria;
                         while (anObjectDescriptor = mapIterator.next().value) {
                             aCriteria = this.convertCriteriaForValue(groupMap.get(anObjectDescriptor));
-                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria));
+                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged));
 
                         }
 
@@ -723,7 +754,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             foreignKeyValue = v[rawDataProperty],
                             aCriteria = this.convertCriteriaForValue(foreignKeyValue);
 
-                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria);
+                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged);
 
                         } else {
                             return Promise.resolve(null);
@@ -737,7 +768,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                     return this._descriptorToFetch.then(function (typeToFetch) {
 
-                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule);
+                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
 
                         // if (self.serviceIdentifier) {
                         //     criteria.parameters.serviceIdentifier = self.serviceIdentifier;

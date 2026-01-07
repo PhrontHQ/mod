@@ -6,6 +6,7 @@ var DataService = require("mod/data/service/data-service").DataService,
     defaultEventManager = require("mod/core/event/event-manager").defaultEventManager;
 
 const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mjson").montageObject;
+const CategoyDescriptor = require("spec/data/logic/model/category.mjson").montageObject;
 const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObject;
 
 describe("A DataService", function () {
@@ -460,6 +461,7 @@ describe("A DataService", function () {
         let mainService;
         let movie;
         let animatedMovie;
+        let categoryService;
 
         beforeEach(async () => {
             mainService = new DataService();
@@ -467,8 +469,11 @@ describe("A DataService", function () {
 
             movieService = new RawDataService();
             animatedMovieService = new RawDataService();
+            categoryService = new RawDataService();
+
             await mainService.registerChildService(movieService, movieDescriptor);
             await mainService.registerChildService(animatedMovieService, AnimatedMovieDescriptor);
+            await mainService.registerChildService(categoryService, CategoyDescriptor);
 
             movie = mainService.createDataObject(movieDescriptor);
             animatedMovie = mainService.createDataObject(AnimatedMovieDescriptor);
@@ -616,6 +621,16 @@ describe("A DataService", function () {
                 const styleErrors = animatedMovie.invalidityState.get("animationStyle");
                 expect(styleErrors.length).toBe(1);
                 expect(styleErrors[0].message).toBe("Animation style must be either '2d' or '3d'.");
+            });
+
+            it("should not report errors for an object when its descriptor has no validation rules", async () => {
+                const category = mainService.createDataObject(CategoyDescriptor);
+
+                // Verify valid state with no additional data.
+                await mainService.saveChanges();
+
+                expect(category.invalidityState).toBeDefined();
+                expect(category.invalidityState.size).toBe(0);
             });
         });
     });

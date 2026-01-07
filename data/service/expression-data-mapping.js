@@ -1784,7 +1784,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                 if(lastReadSnapshot[rawDataPropertyName] !== rawDataPropertValue) {
                     rawData[rawDataPropertyName] = rawDataPropertValue;
-                    if(lastReadSnapshot[rawDataPropertyName] !== undefined) {
+                    /*
+                        For add/remove, this is potentially called twice: 
+                            - once for added values
+                            - once for removed values
+                        
+                        So to avoid, on the second call when called twice to override the actual
+                        correct last known values with the upcominh one,
+                        we add a test to verify that rawDataSnapshot doesn't already have the property set
+                    
+                    */
+                    if((lastReadSnapshot[rawDataPropertyName] !== undefined) && (!rawDataSnapshot.hasOwnProperty(rawDataPropertyName))) {
                         rawDataSnapshot[rawDataPropertyName] = lastReadSnapshot[rawDataPropertyName];
 
                         //assuming is now pendingSnapshot, we record the new value for next one:
@@ -3494,8 +3504,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             /*
                 If the object has been fetched, we should have the values in the snapshot, otherwise if they are natural primiary keys, we might be able to get them by mapping back
+
+                Except: for objects that are stored embedded into another one, they don't need to have a primaryKey.
             */
-           for(i=0, countI = rawDataPrimaryKeyCompiledExpressions.length; (i<countI); i++) {
+           for(i=0, countI = rawDataPrimaryKeyCompiledExpressions?.length; (i<countI); i++) {
                 if(!isObjectCreated && snapshot) {
                     iCompiledExpression = rawDataPrimaryKeyCompiledExpressions[i];
                     let propertyScope = this._scope.nest(snapshot);
