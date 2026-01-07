@@ -5431,15 +5431,15 @@ DataService.addClassProperties(
 
 
 
-                                let pendingTransactions = this._pendingTransactions;
+                                let pendingTransactions = self._pendingTransactions;
 
                                 if (pendingTransactions && pendingTransactions.length) {
 
-                                    let changedDataObjects = transaction.changedDataObjects, //Map
-                                        changedDataObjectsIterator = deletedDataObjects.values(),
+                                    let updatedDataObjectsByObjectDescriptor = transaction.updatedDataObjects, //Map
+                                        updatedDataObjectDescriptorsIterator = updatedDataObjectsByObjectDescriptor.keys(),
                                         firstPendingTransactionsCreatingChangedDataObjectsPromise,
                                         pendingTransactionsCreatingChangedDataObjectsPromises,
-                                        iObject;
+                                        iObjectDescriptor;
 
                                     /* 
                                         TODO WIP
@@ -5450,18 +5450,38 @@ DataService.addClassProperties(
                                         so we bail out if we find it
                                     */
 
-                                    while ((iObject = changedDataObjectsIterator.next().value)) {
-                                        for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
+                                    //Loop on ObjectDescriptors with instances being updated
+                                    while ((iObjectDescriptor = updatedDataObjectDescriptorsIterator.next().value)) {
+                                        let updatedDataObjects = updatedDataObjectsByObjectDescriptor.get(iObjectDescriptor),
+                                            updatedDataObjectsIterator = updatedDataObjects.values(),
+                                            iObject;
 
-                                            if (pendingTransactions[i].createdDataObjects.has(iObject)) {
-                                                if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
-                                                    firstPendingTransactionsCreatingChangedDataObjectsPromise = this.registeredPromiseForPendingTransaction(transaction);
-                                                } else {
-                                                    (pendingTransactionsCreatingChangedDataObjectsPromises || (pendingTransactionsCreatingChangedDataObjectsPromises = new Set(firstPendingTransactionsCreatingChangedDataObjectsPromise))).add(this.registeredPromiseForPendingTransaction(transaction));
+                                        while ((iObject = updatedDataObjectsIterator.next().value)) {
+
+                                            for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
+                                                let iPendingTransaction = pendingTransactions[i];
+
+                                                if (iPendingTransaction.createdDataObjects.has(iObjectDescriptor)) {
+                                                    let createdDataObjects = iPendingTransaction.createdDataObjects.get(iObjectDescriptor);
+
+                                                        if(createdDataObjects.has(iObject)) {
+
+                                                            if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                                                firstPendingTransactionsCreatingChangedDataObjectsPromise = self.registeredPromiseForPendingTransaction(iPendingTransaction);
+                                                            } else {
+                                                                if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                                                                    pendingTransactionsCreatingChangedDataObjectsPromises = new Set();
+                                                                    pendingTransactionsCreatingChangedDataObjectsPromises.add(firstPendingTransactionsCreatingChangedDataObjectsPromise);
+                                                                }
+                                                                pendingTransactionsCreatingChangedDataObjectsPromises.add(self.registeredPromiseForPendingTransaction(iPendingTransaction));
+                                                            }
+                                                            break;
+                                                        }
+
                                                 }
-                                                break;
                                             }
                                         }
+
                                     }
 
                                     if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
