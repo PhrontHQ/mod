@@ -121,7 +121,7 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "isAuthenticated",
-            "serializable": false,
+            "isSerializable": false,
             "defaultValue": false,
             "valueType": "boolean"
         }

@@ -5,7 +5,8 @@
             "name": "WebSocketSessionConnection",
             "propertyDescriptors": [
                 {"@": "session"},
-                {"@": "serverConnectionId"}
+                {"@": "serverConnectionId"},
+                {"@": "existenceTimeRange"}
             ],
             "objectDescriptorModule": {
                 "%": "./web-socket-session-connection.mjson"

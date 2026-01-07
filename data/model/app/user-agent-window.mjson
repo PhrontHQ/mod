@@ -6,8 +6,9 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "durationTimeRange"},
-                {"@": "positionTimeLog"}
-
+                {"@": "positionTimeLog"},
+                {"@": "sizeTimeLog"},
+                {"@": "screenTimeLog"}
             ],
             "objectDescriptorModule": {
                 "%": "./user-agent-window.mjson"
