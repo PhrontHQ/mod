@@ -5297,7 +5297,7 @@ DataService.addClassProperties(
 
                 var transaction = new Transaction(),
                     self = this,
-                    //Ideally, this should be saved in IndexedDB so if something happen
+                    //Ideally, this should be saved in IndexedDB/PGLite so if something happen
                     //we can at least try to recover.
                     createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
                     changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
@@ -5317,7 +5317,8 @@ DataService.addClassProperties(
                     deletedDataObjects
                 );
 
-                this.addPendingTransaction(transaction);
+                // move to _saveChangesForTransaction()
+                //this.addPendingTransaction(transaction);
 
                 //We've made copies, so we clear right away to make room for a new cycle:
                 this.discardChanges();
@@ -5327,6 +5328,16 @@ DataService.addClassProperties(
                 // this.dataObjectChanges.clear();
                 // this.objectDescriptorsWithChanges.clear();
 
+                return this._saveChangesForTransaction(transaction);
+            },
+        },
+
+        _saveChangesForTransaction: {
+            value: function(transaction) {
+                let self = this;
+                
+                this.addPendingTransaction(transaction);
+
                 let pendingTransactionPromise = new Promise(function (resolve, reject) {
                     try {
                         var deletedDataObjectsIterator,
@@ -5334,7 +5345,10 @@ DataService.addClassProperties(
                             transactionObjectDescriptors = transaction.objectDescriptors,
                             iObject,
                             transactionPrepareEvent,
-                            transactionCommitEvent;
+                            transactionCommitEvent,
+                            createdDataObjects = transaction.createdDataObjects, //Map
+                            changedDataObjects = transaction.updatedDataObjects, //Map
+                            deletedDataObjects = transaction.deletedDataObjects; //Map
 
                         // We first remove from create and update objects that are also deleted:
                         deletedDataObjectsIterator = deletedDataObjects.values();
@@ -5410,6 +5424,60 @@ DataService.addClassProperties(
                                 return transactionObjectDescriptors;
                             }, reject)
                             .then(function (_transactionObjectDescriptors) {
+
+                                //Before we can get to it, we need to verify that "transaction"'s content has no dependency to a pending transaction
+                                //for example an update to an object that's created in a pending transaction that has not completed yet, which can lead to deadlocks.
+                                //We're going to start by handling that use-case only
+
+
+
+                                let pendingTransactions = this._pendingTransactions;
+
+                                if (pendingTransactions && pendingTransactions.length) {
+
+                                    let changedDataObjects = transaction.changedDataObjects, //Map
+                                        changedDataObjectsIterator = deletedDataObjects.values(),
+                                        firstPendingTransactionsCreatingChangedDataObjectsPromise,
+                                        pendingTransactionsCreatingChangedDataObjectsPromises,
+                                        iObject;
+
+                                    /* 
+                                        TODO WIP
+                                        Nested loop, really need to be optimized as we build up the transactions, 
+                                        but let's get to work first and then we'll optimize.
+
+                                        There can only be one pending transaction with the creation of iObject
+                                        so we bail out if we find it
+                                    */
+
+                                    while ((iObject = changedDataObjectsIterator.next().value)) {
+                                        for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
+
+                                            if (pendingTransactions[i].createdDataObjects.has(iObject)) {
+                                                if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                                    firstPendingTransactionsCreatingChangedDataObjectsPromise = this.registeredPromiseForPendingTransaction(transaction);
+                                                } else {
+                                                    (pendingTransactionsCreatingChangedDataObjectsPromises || (pendingTransactionsCreatingChangedDataObjectsPromises = new Set(firstPendingTransactionsCreatingChangedDataObjectsPromise))).add(this.registeredPromiseForPendingTransaction(transaction));
+                                                }
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                    if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                                        if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                            return firstPendingTransactionsCreatingChangedDataObjectsPromise;
+                                        } else {
+                                            return Promise.resolveUndefined;
+                                        }
+                                    } else {
+                                        return Promise.all(Array.from(pendingTransactionsCreatingChangedDataObjectsPromises))
+                                    }
+                                } else {
+                                    return Promise.resolveUndefined
+                                }
+                            })
+                            .then(function () {
                                 var operationCount =
                                         createdDataObjects.size + changedDataObjects.size + deletedDataObjects.size,
                                     currentPropagationPromise,
@@ -5418,13 +5486,13 @@ DataService.addClassProperties(
                                     propagationPromises = [];
 
                                 /*
-                            Now that we passed validation, we're going to start the transaction
-                        */
+                                    Now that we passed validation, and handling transaction dependencies, we're going to start the transaction
+                                */
 
                                 /*
-                            Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
-                            for "transactionPrepareStart"
-                        */
+                                    Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
+                                    for "transactionPrepareStart"
+                                */
                                 //addEventListener(TransactionEvent.transactionCreateStart, self, false);
 
                                 //console.log("saveChanges: dispatchEvent transactionCreateEvent transaction-"+this.identifier, transaction);
@@ -5557,10 +5625,11 @@ DataService.addClassProperties(
                     }
                 });
 
-                self.registerPendingTransactionPromise(transaction, pendingTransactionPromise);
+                this.registerPendingTransactionPromise(transaction, pendingTransactionPromise);
 
                 return pendingTransactionPromise;
-            },
+
+            }
         },
 
         _cancelTransaction: {
