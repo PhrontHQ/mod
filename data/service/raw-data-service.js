@@ -3454,6 +3454,17 @@ RawDataService.addClassProperties({
 
     handleReadUpdateOperation: {
         value: function (operation) {
+
+            //We need to find a way to take care of this...
+            /* 
+                Client side, with a synchronization data service in place, 
+                an readUpdateOperation dispatched by its destination service 
+                is handled here by an origin service that handles that readUpdateOperation's target 
+            */
+            if(operation.rawDataService !== this) {
+                return;
+            }
+
             var referrer = operation.referrerId,
                 objectDescriptor = operation.target,
                 records = operation.data,
