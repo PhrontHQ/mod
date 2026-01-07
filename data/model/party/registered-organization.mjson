@@ -36,7 +36,7 @@
             "cardinality": -1,
             "inversePropertyName": "registrarOrganization",
             "valueDescriptor": {"@": "OrganizationRegistrationDescriptor"},
-            "description": "As an authority providing registration to others, the registrations of registrant organization"
+            "description": "As an authority providing registration to others, the registrations of registrant organizations"
         }
     },
     "registrarOrganizationRegistrations": {
