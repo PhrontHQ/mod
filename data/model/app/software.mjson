@@ -6,7 +6,7 @@
             "propertyDescriptors": [
                 {"@": "name"},
                 {"@": "version"},
-                {"@": "owner"},
+                {"@": "maker"},
                 {"@": "phoneNumbers"},
                 {"@": "smsNumbers"},
                 {"@": "instantMessageAddresses"},
