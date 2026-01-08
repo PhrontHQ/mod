@@ -545,6 +545,19 @@ define("includesAll", function (values) {
     return true;
 });
 
+define("isContentEqual", function (otherArray) {
+
+    if(this.length !== otherArray?.length){
+        return false;
+    }
+    for(let i = 0, countI = this.length; i < countI; i++) {
+        if(!otherArray.has(this[i])) {
+            return false;
+        }
+    }
+    return true;
+});
+
 //TODO: 
 /*
     //Same as includesAll, but the last argument is expected to be an equal function
