@@ -4629,6 +4629,29 @@ DataService.addClassProperties(
                 //A change event could carry both a key/value change and addedValues/remove, like a splice, where the key would be "length"
 
                 if ((addedValues && addedValues.length > 0) || (removedValues && removedValues.length > 0)) {
+
+                    /*
+                        TODO: FIXME
+                        if addedValues and removedValues contain the same objects in a different order,
+                        there's a bug in a way the graph is updated that is not symetric and the underlaying property of the object that change
+                        ends up empty.
+                        We set the to-one inverse of the objects in the array to null, 
+                        which in turn, understands this as it shouldn't belong in the array of its inverse relationship, from which it is removed.
+
+                        This is wastefull when it's just a different order that has no consequence for the graph itself.
+                        But the problem is that when we process the addedValues that should re-set things, there's a problem in logic that guards
+                        against upading the graph forever, that's ends the cycle before the state has been fully processed.
+
+                        #WARNING #TODO #FIXME - THAT NEEDS TO BE FIXED!
+
+                    */
+
+                    //If both array contain the same values, there's nothing to do from a relationship/graph management stand point 
+                    if(addedValues.isContentEqual(removedValues)) {
+                        return;
+                    }
+
+
                     //For key that can have add/remove the value of they key is an object
                     //that itself has two keys: addedValues and removedValues
                     //which value will be a set;
@@ -4645,56 +4668,13 @@ DataService.addClassProperties(
                     //removed ones, one could be added and later removed.
                     //We later need to convert these into dataIdentifers, we could avoid a loop later
                     //doing so right here.
-                    if (addedValues) {
-                        /*
-                        In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
+
+                    /*
+                        Benoit 1/8/26 - Got a use-case of a swap: same values in addedValues and removedValues.
+                        But with processing removedValues being the last, it would empty the array...
+
+                        So removedValues needs to be handles first, and then addedValues second
                     */
-                        if (Array.isArray(manyChanges) && (isCreatedObject || isDataObjectBeingMapped)) {
-                            self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
-                                dataObject,
-                                propertyDescriptor,
-                                addedValues,
-                                inversePropertyDescriptor,
-                                isDataObjectBeingMapped
-                            );
-                        } else {
-                            var registeredAddedValues = manyChanges.addedValues;
-                            if (!registeredAddedValues) {
-                                /*
-                                FIXME: we ended up here with manyChanges being an array, containing the same value as addedValues. And we end up setting addedValues property on that array. So let's correct it. We might not want to track toMany as set at all, and just stick to added /remove. This might happens on remove as well, we need to check further.
-                            */
-                                if (Array.isArray(manyChanges) && manyChanges.equals(addedValues)) {
-                                    manyChanges = {};
-                                    changesForDataObject.set(key, manyChanges);
-                                }
-
-                                if (!isDataObjectBeingMapped) {
-                                    manyChanges.addedValues = registeredAddedValues = new Set(addedValues);
-                                }
-                                self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
-                                    dataObject,
-                                    propertyDescriptor,
-                                    addedValues,
-                                    inversePropertyDescriptor,
-                                    isDataObjectBeingMapped
-                                );
-                            } else {
-                                for (i = 0, countI = addedValues.length; i < countI; i++) {
-                                    if (!isDataObjectBeingMapped) {
-                                        registeredAddedValues.add(addedValues[i]);
-                                    }
-                                    self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
-                                        dataObject,
-                                        propertyDescriptor,
-                                        addedValues[i],
-                                        inversePropertyDescriptor,
-                                        isDataObjectBeingMapped
-                                    );
-                                }
-                            }
-                        }
-                    }
-
                     if (removedValues) {
                         /*
                         In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
@@ -4751,6 +4731,57 @@ DataService.addClassProperties(
 
                         //,,,,,TODO
                     }
+
+                    if (addedValues) {
+                        /*
+                        In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
+                    */
+                        if (Array.isArray(manyChanges) && (isCreatedObject || isDataObjectBeingMapped)) {
+                            self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
+                                dataObject,
+                                propertyDescriptor,
+                                addedValues,
+                                inversePropertyDescriptor,
+                                isDataObjectBeingMapped
+                            );
+                        } else {
+                            var registeredAddedValues = manyChanges.addedValues;
+                            if (!registeredAddedValues) {
+                                /*
+                                FIXME: we ended up here with manyChanges being an array, containing the same value as addedValues. And we end up setting addedValues property on that array. So let's correct it. We might not want to track toMany as set at all, and just stick to added /remove. This might happens on remove as well, we need to check further.
+                            */
+                                if (Array.isArray(manyChanges) && manyChanges.equals(addedValues)) {
+                                    manyChanges = {};
+                                    changesForDataObject.set(key, manyChanges);
+                                }
+
+                                if (!isDataObjectBeingMapped) {
+                                    manyChanges.addedValues = registeredAddedValues = new Set(addedValues);
+                                }
+                                self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
+                                    dataObject,
+                                    propertyDescriptor,
+                                    addedValues,
+                                    inversePropertyDescriptor,
+                                    isDataObjectBeingMapped
+                                );
+                            } else {
+                                for (i = 0, countI = addedValues.length; i < countI; i++) {
+                                    if (!isDataObjectBeingMapped) {
+                                        registeredAddedValues.add(addedValues[i]);
+                                    }
+                                    self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
+                                        dataObject,
+                                        propertyDescriptor,
+                                        addedValues[i],
+                                        inversePropertyDescriptor,
+                                        isDataObjectBeingMapped
+                                    );
+                                }
+                            }
+                        }
+                    }
+
                 }
             },
         },
