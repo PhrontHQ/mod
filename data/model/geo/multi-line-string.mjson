@@ -1,7 +1,7 @@
 {
     "root": {
         "prototype": "core/meta/module-object-descriptor",
-        "properties": {
+        "values": {
             "name": "MultiLineString",
             "parent": {"@": "geometry"},
             "propertyDescriptors": [
@@ -21,7 +21,7 @@
 
     "identifier": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "identifier",
             "valueType": "string"
         }
@@ -33,7 +33,7 @@
 
     "coordinates": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "coordinates",
             "description": "The coordinates member of a multi-line string is an array of line string geometries.",
             "cardinality": -1,
