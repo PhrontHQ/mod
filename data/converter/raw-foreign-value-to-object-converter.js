@@ -138,7 +138,11 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 */
                 if(localResult) {
                     if(Array.isArray(localResult)) {
-                        if(criteria.parameters.length > 0) {
+                        //This is a to-one and we found one result, great!
+                        if(currentRule.propertyDescriptor.cardinality === 1 && localResult.length === 1) {
+                            return localResult;
+                        }
+                        else if(criteria.parameters.length > 0) {
                             if(localResult.length) {
                                 //We found some locally but not all
                                 localPartialResult = localResult;
@@ -150,8 +154,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             /*
                                 We found everything locally, we're done
                             */
-                                return localResult;
-                            }
+                            return localResult;
+                        }
 
                     } else {
                         //We found it, we're done:
