@@ -10,7 +10,7 @@ var AbstractControl = require("./abstract-control").AbstractControl;
 var AbstractProgressBar = exports.AbstractProgressBar = AbstractControl.specialize(/** @lends AbstractProgressBar# */ {
 
     constructor: {
-        value: function exports.AbstractProgressBar() {
+        value: function AbstractProgressBar() {
             if (this.constructor === AbstractProgressBar) {
                 throw new Error("AbstractProgressBar cannot be instantiated.");
             }

@@ -99,13 +99,13 @@ var ChangeEventProvider = exports.ChangeEventProvider = EventProvider.specialize
         value: function EventProvider_proto_registerEventListener(target, type, listener, useCapture_options) {
             var properties = useCapture_options.properties || useCapture_options.property;
 
-            if(Array.isArray(properties)) {
-                for(var i=0, countI = properties.length)
+            // if(Array.isArray(properties)) {
+            //     for(var i=0, countI = properties.length) {}
 
-            }
-            else {
-                this.makeTargetPropertyObservable(target,property);
-            }
+            // }
+            // else {
+            //     this.makeTargetPropertyObservable(target,property);
+            // }
 
 
         }
