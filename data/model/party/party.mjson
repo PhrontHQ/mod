@@ -13,7 +13,8 @@
                 {"@": "instantMessageAddresses"},
                 {"@": "urlAddresses"},
                 {"@": "contactForms"},
-                {"@": "images"}
+                {"@": "images"},
+                {"@": "profiles"}
             ],
             "objectDescriptorModule": {
                 "%": "./party.mjson"
@@ -150,6 +151,20 @@
     },
     "image_descriptor": {
         "object": "../image.mjson"
+    },
+    "profiles": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "profiles",
+            "valueType": "object",
+            "cardinality": -1,
+            "valueDescriptor": {
+                "@": "ProfileDescriptor"
+            },
+            "inversePropertyName": "representedParty"
+        }
+    },
+    "ProfileDescriptor": {
+        "object": "./profile.mjson"
     }
-
 }

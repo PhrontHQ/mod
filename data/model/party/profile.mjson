@@ -1,0 +1,90 @@
+{
+    "root": {
+        "prototype": "mod/core/meta/module-object-descriptor",
+        "values": {
+            "name": "Profile",
+            "propertyDescriptors": [
+                {"@": "representedParty"},
+                {"@": "hostOrganization"},
+                {"@": "name"},
+                {"@": "visualRepresentation"},
+                {"@": "hostUrl"},
+                {"@": "representedPartyDevices"}
+                
+            ],
+            "objectDescriptorModule": {
+                "%": "./profile.mjson"
+            },
+            "exportName": "Profile",
+            "module": {
+                "%": "./profile.mjson"
+            },
+            "object":{"@": "Profile"},
+            "parent":{"@": "IntangibleDescriptor"}
+        }
+    },
+    "Profile": {
+        "object": "./profile"
+    },
+    "IntangibleDescriptor": {
+        "object": "./intangible.mjson"
+    },
+    "OrganizationDescriptor": {
+        "object": "./organization.mjson"
+    },
+    "hostOrganization": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "hostOrganization",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "profiles",
+            "valueDescriptor": {"@": "OrganizationDescriptor"},
+            "description": "The social network where this profile exists. Look at Fediverse for insight"
+       }
+    },
+    "PartyDescriptor": {
+        "object": "business-data.mod/data/main.mod/model/party.mjson"
+    },
+    "representedParty": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "representedParty",
+            "valueType": "object",
+            "cardinality": 1,
+            "inversePropertyName": "profiles",
+            "valueDescriptor": {"@": "PartyDescriptor"},
+            "description": "The person, think, organization - subtypes of Party, this profile represents"
+       }
+    },
+    "name": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "name",
+            "cardinality": 1,
+            "valueType": "string"
+        }
+    },
+    "ImageDescriptor": {
+        "object": "../image.mjson"
+    },
+
+    "visualRepresentation": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "visualRepresentation",
+            "cardinality": 1,
+            "valueType": "object",
+            "valueDescriptor": {"@": "ImageDescriptor"},
+            "description": "The image used to represent representedParty via this profile"
+        }
+    },
+    "hostUrl": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "values": {
+            "name": "hostUrl",
+            "valueType": "URL"
+        }
+    }
+
+}

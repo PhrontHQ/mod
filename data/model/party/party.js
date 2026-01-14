@@ -77,6 +77,13 @@ exports.Party = class Party extends DataObject {
              * @public
              */
             images: { value: undefined },
+            
+            /**
+             * @property {Profile[]}
+             * @public
+             */
+            profiles: { value: undefined },
+
         });
     }
 };
