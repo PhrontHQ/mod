@@ -2274,20 +2274,20 @@ DataService.addClassProperties(
                         promises = [],
                         self = this;
 
-                    expressions.forEach(function (expression) {
+                    for(let i=0, countI = expressions.length; (i<countI); i++ ) {
                         /*
                         This only works for expressions that are pure, chained
                         property traversals, aka property path. A more general walk
                         would be needed using the expression syntax to be totally
                         generic and support any kind of expression.
                     */
-                        var split = expression.split(".");
+                        let split = expressions[i].split(".");
                         // if (split.length == 1) {
                         //     promises.push(self.getObjectProperties(object, split[0]));
                         // } else {
                         promises.push(self._getPropertiesOnPath(object, split));
                         // }
-                    });
+                    };
 
                     return Promise.all(promises);
                 } else {
