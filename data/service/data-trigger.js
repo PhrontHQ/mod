@@ -662,7 +662,6 @@ exports.DataTrigger.prototype = Object.create(
                 // requests the property's value it will get the value the property
                 // had before it was set, and it will get that value immediately.
                 status = this._getValueStatus(object);
-                this._setValueStatus(object, null);
 
                 initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch);
 
@@ -786,6 +785,8 @@ exports.DataTrigger.prototype = Object.create(
                     // this._setValueStatus(object, null);
                     status.resolve(currentValue);
                 }
+                this._setValueStatus(object, null);
+
             },
         },
 
