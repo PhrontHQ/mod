@@ -1,6 +1,6 @@
 {
     "root": {
-        "prototype": "mod/core/meta/module-object-descriptor",
+        "prototype": "core/meta/module-object-descriptor",
         "values": {
             "name": "Profile",
             "propertyDescriptors": [
@@ -8,8 +8,7 @@
                 {"@": "hostOrganization"},
                 {"@": "name"},
                 {"@": "visualRepresentation"},
-                {"@": "hostUrl"},
-                {"@": "representedPartyDevices"}
+                {"@": "hostUrl"}
                 
             ],
             "objectDescriptorModule": {
@@ -33,7 +32,7 @@
         "object": "./organization.mjson"
     },
     "hostOrganization": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "hostOrganization",
             "valueType": "object",
@@ -44,10 +43,10 @@
        }
     },
     "PartyDescriptor": {
-        "object": "business-data.mod/data/main.mod/model/party.mjson"
+        "object": "data/model/party/party.mjson"
     },
     "representedParty": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "representedParty",
             "valueType": "object",
@@ -58,7 +57,7 @@
        }
     },
     "name": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "name",
             "cardinality": 1,
@@ -70,7 +69,7 @@
     },
 
     "visualRepresentation": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "visualRepresentation",
             "cardinality": 1,
@@ -80,7 +79,7 @@
         }
     },
     "hostUrl": {
-        "prototype": "mod/core/meta/property-descriptor",
+        "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "hostUrl",
             "valueType": "URL"

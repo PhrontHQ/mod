@@ -1,4 +1,5 @@
 var Intangible = require("./intangible").Intangible;
+const { Montage } = require("core/core");
 
 /**
  * @class Profile
