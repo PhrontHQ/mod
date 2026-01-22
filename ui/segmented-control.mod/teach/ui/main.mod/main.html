@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=utf-8" />
@@ -8,7 +8,19 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "main"}
+                        "element": {"#": "main"},
+                        "visualStyle": {"@": "visualStyle"}
+                    }
+                },
+                "visualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+                        "controlBorderWidth": "0.5px",
+                        "controlBorderRadius": "8px",
+                        "controlLabelSize": "16px",
+                        "controlBackgroundFill": "rgba(243, 244, 246, 1)",
+                        "controlSelectionFill": "rgba(252, 252, 252, 1)",
+                        "textFill": "hsl(0, 0%, 0%, 1)"
                     }
                 },
                 "defaultSegmentedControl": {
@@ -117,11 +129,11 @@
             <h1>Segmented Control</h1>
 
             <!-- Default Cases -->
-            <div class="card column">
+            <div class="card column stretch">
                 <h2>Basic Usage</h2>
                 <div class="row center">
                     <label>Default (Strings):</label>
-                    <div data-mod-id="defaultSegmentedControl">
+                    <div data-mod-id="defaultSegmentedControl" class="flexible">
                         <div data-mod-id="defaultSegmentedControlSegment"></div>
                     </div>
                     <div>
@@ -132,7 +144,7 @@
                 </div>
                 <div class="row center">
                     <label>Default (Objects):</label>
-                    <div data-mod-id="defaultWithObjectSegmentedControl">
+                    <div data-mod-id="defaultWithObjectSegmentedControl" class="flexible">
                         <div data-mod-id="defaultWithObjectSegmentedControlSegment"></div>
                     </div>
                     <div>
@@ -146,22 +158,22 @@
             </div>
 
             <!-- Disabled -->
-            <div class="card column">
+            <div class="card column stretch">
                 <h2>Disabled Segments</h2>
                 <div class="row center">
                     <label>Disabled:</label>
-                    <div data-mod-id="disabledSegmentedControl">
+                    <div data-mod-id="disabledSegmentedControl" class="flexible">
                         <div data-mod-id="disabledSegmentedControlSegment"></div>
                     </div>
                 </div>
             </div>
 
             <!-- Icon Segmented Control -->
-            <div class="card column">
+            <div class="card column stretch">
                 <h2>Icon Segmented Control</h2>
                 <div class="row center">
                     <label>With Icons:</label>
-                    <div data-mod-id="iconSegmentedControl">
+                    <div data-mod-id="iconSegmentedControl" class="flexible">
                         <img data-mod-id="iconSegmentedControlSegment" width="20px" height="20px" />
                     </div>
                     <div>
