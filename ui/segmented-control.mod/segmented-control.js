@@ -1,4 +1,5 @@
 const Component = require("ui/component").Component;
+const Montage = require("montage").Montage;
 
 /**
  * A segmented control component that allows users to select from multiple options.
@@ -10,19 +11,19 @@ const Component = require("ui/component").Component;
 const SegmentedControl = (exports.SegmentedControl = class SegmentedControl extends Component {
     static {
         Montage.defineProperties(this.prototype, {
-             // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
-            _cancelHandleOptionsChange: {value: null},
+            // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
+            _cancelHandleOptionsChange: { value: null },
             // Indicates when the component is ready for animations
-            _readyForAnimation: {value: false},
+            _readyForAnimation: { value: false },
             // Controls whether animations should be enabled
-            _shouldEnableAnimation: {value: false},
-            _isChangingSelection: {value: false},
+            _shouldEnableAnimation: { value: false },
+            _isChangingSelection: { value: false },
             /**
              * The path to the value within each option object.
              * If options are simple values, use 'this'.
              * @type {string}
              */
-            valuePath: { value: "this"},
+            valuePath: { value: "this" },
             /**
              * The currently selected option value
              * @type {*}
@@ -33,7 +34,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
              * The disabled state of the segmented control
              * @returns {boolean} True if disabled, false otherwise
              */
-            _disabled: { value: false }
+            _disabled: { value: false },
         });
     }
 
@@ -75,9 +76,9 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         this._cancelHandleOptionsChange = this.addRangeAtPathChangeListener("_options", this, "handleOptionsChange");
         this.addPathChangeListener("_selectedOption", this, "handleSelectionChange");
         this.element.addEventListener("change", this, {
-               size: {
-                     box: "border-box"
-              }
+            size: {
+                box: "border-box",
+            },
         });
         this.element?.classList.remove("mod--readyForAnimation");
     }
