@@ -68,4 +68,8 @@ body {
     .flexible {
         flex: 1;
     }
+
+    .details {
+        min-width: 160px;
+    }
 }
