@@ -120,6 +120,22 @@
                         "element": {"#": "iconSegmentedControlSegmentSelectedOption"},
                         "value": {"<-": "@iconSegmentedControl.selection"}
                     }
+                },
+                "responsiveSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "responsiveSegmentedControl"},
+                        "options": {"<-": "@owner.stringOptions"},
+                        "selection": "Banana",
+                        "enclosesSize": true
+                    }
+                },
+                "responsiveSegmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "responsiveSegmentedControlSegment"},
+                        "value": {"<-": "@responsiveSegmentedControl:segment.object"}
+                    }
                 }
             }
         </script>
@@ -180,6 +196,17 @@
                         <small
                             >Selected option:&nbsp;<span data-mod-id="iconSegmentedControlSegmentSelectedOption"></span
                         ></small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Responsive Segmented Control -->
+            <div class="card column stretch">
+                <h2>Responsive Segmented Control</h2>
+                <div class="row center">
+                    <label>Resize the window to see responsiveness:</label>
+                    <div data-mod-id="responsiveSegmentedControl" class="flexible">
+                        <div data-mod-id="responsiveSegmentedControlSegment"></div>
                     </div>
                 </div>
             </div>
