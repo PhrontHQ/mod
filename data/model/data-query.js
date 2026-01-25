@@ -49,9 +49,14 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             //     }
             // }
 
-            value = deserializer.getProperty("fetchLimit");
+            //backward compatibility:
+            if(deserializer.hasProperty("fetchLimit")) {
+                value = deserializer.getProperty("fetchLimit");
+            } else {
+                value = deserializer.getProperty("sizeLimit");
+            }
             if (value !== void 0) {
-                this.fetchLimit = value;
+                this.sizeLimit = value;
             }
 
             value = deserializer.getProperty("includesChildObjectDescriptors");
@@ -87,8 +92,8 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             if(this.selectExpression) {
                 serializer.setProperty("selectExpression", this.selectExpression);
             }
-            if(this.fetchLimit) {
-                serializer.setProperty("fetchLimit", this.fetchLimit);
+            if(this.sizeLimit) {
+                serializer.setProperty("sizeLimit", this.sizeLimit);
             }
             //true is the default on the prototype
             if(this.includesChildObjectDescriptors === false) {
@@ -120,7 +125,7 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             */
             if(
                 this.super(otherQuery) &&
-                (this.fetchLimit === otherQuery.fetchLimit) &&
+                (this.sizeLimit === otherQuery.sizeLimit) &&
                 (this.includesChildObjectDescriptors === otherQuery.includesChildObjectDescriptors) &&
                 (this.readExpressions && this.readExpressions.equals(otherQuery.readExpressions)) &&
                 (this.orderings && this.orderings.equals(otherQuery.orderings)) &&
@@ -289,14 +294,14 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
      * A property defining the maximum number of objets to retrieve.
      * @type {Number}
      *
-     * fetchLimit ? matches fetchData API, limit is SQL
+     * sizeLimit ? matches fetchData API, limit is SQL
      *
-     * readLimit ? matches the operation?
+     * sizeLimit ? matches the operation?
      *
      * maximum ...
      */
 
-    fetchLimit: {
+    sizeLimit: {
         value: null
     },
 

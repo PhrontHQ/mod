@@ -5816,8 +5816,8 @@ DataService.addClassProperties(
         //             readOperation.criteria = criteria;
         //         }
 
-        //         if(query.fetchLimit) {
-        //             readOperation.data.readLimit = query.fetchLimit;
+        //         if(query.sizeLimit) {
+        //             readOperation.data.sizeLimit = query.sizeLimit;
         //         }
 
         //         if(query.orderings && query.orderings > 0) {
@@ -6469,8 +6469,8 @@ DataService.addClassProperties(
                                     //readOperation.criteria = criteria.clone();
                                     readOperation.criteria = query.criteria;
                                 }
-                                if (query.fetchLimit) {
-                                    readOperation.data.readLimit = query.fetchLimit;
+                                if (query.sizeLimit) {
+                                    readOperation.data.sizeLimit = query.sizeLimit;
                                 }
                                 if (query.batchSize) {
                                     readOperation.data.batchSize = query.batchSize;
@@ -8681,7 +8681,7 @@ DataService.addClassProperties(
 
                     //console.log("PlummingIntakeDataService _createObjectDescriptorStoreForTypeIfNeeded() --> fetchData to see if "+objectDescriptor.name+ " table exists");
 
-                    query.fetchLimit = 1;
+                    query.sizeLimit = 1;
 
                     queryPromise = this.fetchData(query).then(
                         (result) => {

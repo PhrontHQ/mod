@@ -3339,8 +3339,8 @@ RawDataService.addClassProperties({
                 readOperation.criteria = criteria;
             }
 
-            if (query.fetchLimit) {
-                readOperation.data.readLimit = query.fetchLimit;
+            if (query.sizeLimit) {
+                readOperation.data.sizeLimit = query.sizeLimit;
             }
 
             if (query.batchSize) {

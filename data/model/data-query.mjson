@@ -7,13 +7,13 @@
             "propertyDescriptors": [
                 { "@": "orderingsDescriptor" },
                 { "@": "readExpressionsDescriptor" },
-                { "@": "fetchLimitDescriptor" }
+                { "@": "sizeLimitDescriptor" }
             ],
             "propertyDescriptorGroups": {
                 "all": [
                     { "@": "orderingsDescriptor" },
                     { "@": "readExpressionsDescriptor" },
-                    { "@": "fetchLimitDescriptor" }
+                    { "@": "sizeLimitDescriptor" }
                 ]
             },
             "validationRules": [],
@@ -53,10 +53,10 @@
         }
     },
 
-    "fetchLimitDescriptor": {
+    "sizeLimitDescriptor": {
         "prototype": "../../core/meta/property-descriptor",
         "values": {
-            "name": "fetchLimit",
+            "name": "sizeLimit",
             "cardinality": 1,
             "valueType": "number"
         }
