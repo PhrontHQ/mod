@@ -1,5 +1,33 @@
 {
-    "eventManagerDescriptor": {
+    "root": {
+        "prototype": "./meta/module-object-descriptor",
+        "values": {
+            "name": "Target",
+            "propertyDescriptors": [
+                { "@": "eventManager" },
+                { "@": "acceptsActiveTargetDescriptor" },
+                { "@": "isActiveTargetDescriptor" },
+                { "@": "nextTargetDescriptor" }
+            ],
+            "propertyDescriptorGroups": {
+                "all": [
+                    { "@": "eventManager" },
+                    { "@": "acceptsActiveTargetDescriptor" },
+                    { "@": "isActiveTargetDescriptor" },
+                    { "@": "nextTargetDescriptor" }
+                ]
+            },
+            "validationRules": [],
+            "objectDescriptorModule": { "%": "./target.mjson" },
+            "exportName": "Target",
+            "module": { "%": "./target" },
+            "object":{ "@": "Target" }
+        }
+    },
+    "Target": {
+        "object": "./target"
+    },
+    "eventManager": {
         "prototype": "./meta/property-descriptor",
         "values": {
             "name": "eventManager",
@@ -35,31 +63,6 @@
             "valueDescriptor": {"@": "root"},
             "isSerializable": false
 
-        }
-    },
-    "root": {
-        "prototype": "./meta/module-object-descriptor",
-        "values": {
-            "name": "Target",
-            "propertyDescriptors": [
-                { "@": "eventManagerDescriptor" },
-                { "@": "acceptsActiveTargetDescriptor" },
-                { "@": "isActiveTargetDescriptor" },
-                { "@": "nextTargetDescriptor" }
-            ],
-            "propertyDescriptorGroups": {
-                "all": [
-                    { "@": "eventManagerDescriptor" },
-                    { "@": "acceptsActiveTargetDescriptor" },
-                    { "@": "isActiveTargetDescriptor" },
-                    { "@": "nextTargetDescriptor" }
-                ]
-            },
-            "validationRules": [],
-            "objectDescriptorModule": { "%": "./target.mjson" },
-            "exportName": "Target",
-            "module": { "%": "./target" },
-            "object":{ "@": "Target" }
         }
     }
 }
