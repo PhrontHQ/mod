@@ -1,0 +1,58 @@
+{
+
+    "root": {
+        "prototype": "../../core/meta/module-object-descriptor",
+        "values": {
+            "name": "DataOperation",
+            "propertyDescriptors": [
+                { "@": "orderingsDescriptor" },
+                { "@": "readExpressionsDescriptor" },
+                { "@": "sizeLimitDescriptor" }
+            ],
+            "propertyValidationRules": {},
+            "objectDescriptorModule": { "%": "./data-operation.mjson" },
+            "exportName": "DataOperation",
+            "module": { "%": "./data-operation" },
+            "object":{ "@": "DataOperation" },
+            "parent":{"@": "ObjectSpecificationDescriptor"}
+        }
+    },
+    "DataOperation": {
+        "object": "./data-operation"
+    },
+    "ObjectSpecificationDescriptor": {
+        "object": "./object-specification.mjson"
+    },
+
+    "orderingsDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "orderings",
+            "cardinality": -1,
+            "valueType": "array",
+            "valueDescriptor": { "@": "DataOrderingDescriptor" }
+        }
+    },
+    "DataOrderingDescriptor": {
+        "object": "./data-ordering.mjson"
+    },
+
+    "readExpressionsDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "readExpressions",
+            "cardinality": -1,
+            "valueType": "string"
+        }
+    },
+
+    "sizeLimitDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "sizeLimit",
+            "cardinality": 1,
+            "valueType": "number"
+        }
+    }
+
+}

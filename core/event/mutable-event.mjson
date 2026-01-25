@@ -1,0 +1,161 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "MutableEvent",
+            "propertyDescriptors": [
+                {"@": "id"},
+                {"@": "type"},
+                {"@": "timeStamp"},
+                {"@": "defaultPrevented"},
+                {"@": "propagationStopped"},
+                {"@": "immediatePropagationStopped"},
+                {"@": "mutable"},
+                {"@": "bubbles"},
+                {"@": "cancelable"},
+                {"@": "propagationPromise"},
+                {"@": "eventPhase"},
+                {"@": "target"},
+                {"@": "currentTarget"}
+            ],
+            "objectDescriptorModule": {
+                "%":"./mutable-event.mjson"
+            },
+            "exportName": "MutableEvent",
+            "module": {
+                "%": "./mutable-event"
+            },
+            "object":{"@": "MutableEventPrototype"},
+            "parent":{"@": "MontageObjectDescriptor"}
+        }
+    },
+    "MutableEventPrototype": {
+        "object": "./mutable-event"
+    },
+    "MontageObjectDescriptor": {
+        "object": "core/montage.mjson"
+    },
+
+    "id": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "id",
+            "valueType": "string",
+            "isUnique": true,
+            "isSearchable": true
+        }
+    },
+
+    "type": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "type",
+            "valueType": "string",
+            "isSearchable": true
+        }
+    },
+
+    "timeStamp": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "timeStamp",
+            "valueType": "number"
+        }
+    },
+
+    "defaultPrevented": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "defaultPrevented",
+            "valueType": "boolean"
+        }
+    },
+
+    "propagationStopped": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "propagationStopped",
+            "valueType": "boolean"
+        }
+    },
+
+    "immediatePropagationStopped": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "immediatePropagationStopped",
+            "valueType": "boolean"
+        }
+    },
+    "mutable": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "mutable",
+            "valueType": "boolean"
+        }
+    },
+
+    "bubbles": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "bubbles",
+            "valueType": "boolean"
+        }
+    },
+
+    "cancelable": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "cancelable",
+            "valueType": "boolean"
+        }
+    },
+
+    "propagationPromise": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "propagationPromise",
+            "cardinality": 1,
+            "valueType": "object"
+        }
+    },
+
+    "eventPhase": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "eventPhase",
+            "valueType": "number"
+        }
+    },
+
+    "TargetDescriptor": {
+        "object": "core/target.mjson"
+    },
+
+    "target": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "target",
+            "valueType": "object",
+            "valueDescriptor": { "@": "TargetDescriptor" }
+        }
+    },
+
+    "currentTarget": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "currentTarget",
+            "valueType": "object",
+            "valueDescriptor": { "@": "TargetDescriptor" }
+        }
+    },
+
+    "composedPath": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "currentTarget",
+            "valueType": "array",
+            "valueDescriptor": { "@": "TargetDescriptor" }
+        }
+    }
+
+}
