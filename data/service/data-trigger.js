@@ -598,7 +598,7 @@ exports.DataTrigger.prototype = Object.create(
                             currentValue.addMapChangeListener(listener);
                         } else if (currentValue instanceof Range) {
                             let self = this,
-                                listener = function _triggerArrayCollectionListener(plus, minus, index) {
+                                listener = function _triggerRangeListener(value, key, range) {
                                     // If we're not in the middle of a mapping...:
                                     // if(!self._service._objectsBeingMapped.has(object)) {
                                     // Dispatch update event
