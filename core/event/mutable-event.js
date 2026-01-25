@@ -280,7 +280,7 @@ var wrapPropertyGetter = function (key, storageKey) {
         },
         /**
          * @type {Property}
-         * @default {Element} null
+         * @default {Boolean} null
          */
         bubbles: {
             get: function () {
