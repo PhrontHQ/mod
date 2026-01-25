@@ -1,0 +1,22 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "EventManager",
+            "propertyDescriptors": [
+            ],
+            "objectDescriptorModule": {
+                "%": "./event-manager.mjson"
+            },
+            "exportName": "EventManager",
+            "module": {
+                "%": "./event-manager"
+            },
+            "parent":{"@": "MontageObjectDescriptor"}
+        }
+    },
+
+    "MontageObjectDescriptor": {
+        "object": "core/montage.mjson"
+    }
+}
