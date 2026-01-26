@@ -21,6 +21,35 @@ Object.defineProperty(String.prototype, "equals", {
     configurable: true
 });
 
+
+/**
+ * Returns true if the two strings are equal, ignoring case difference and accents by default
+ *
+ * Uses https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/Collator/Collator#sensitivity
+ * 
+ * "base": Only strings that differ in base letters compare as unequal. Examples: a ≠ b, a = á, a = A. In the Unicode collation algorithm, this is equivalent to the primary strength level.
+ * "accent": Only strings that differ in base letters or accents and other diacritic marks compare as unequal. Examples: a ≠ b, a ≠ á, a = A. In the Unicode collation algorithm, this is equivalent to the secondary strength level.
+ * "case": Only strings that differ in base letters or case compare as unequal. Examples: a ≠ b, a = á, a ≠ A. In the Unicode collation algorithm, this is equivalent to the primary strength level with case level handling.
+ * "variant": Strings that differ in base letters, accents and other diacritic marks, or case compare as unequal. Other differences may also be taken into consideration. Examples: a ≠ b, a ≠ á, a ≠ A. In the Unicode collation algorithm, this is equivalent to the tertiary strength level.
+ * 
+ * @function external:String#equals
+ * @param {String} that The string to compare to the string.
+ * @param {Boolean} ignoreAccents wether to ignore accents as a difference or not. True by default
+ * @returns {boolean} Returns true if the string is case insensitive equal to`that`.
+ * 
+ * Should we have another method called sensitiveEquals(that, sensitivity) that would directly take a sensitivity value as an argument?
+ * 
+ */
+Object.defineProperty(String.prototype, "caseInsensitiveEquals", {
+    value: function (that, ignoreAccents = true) {
+        return (this.localeCompare(that, undefined, { sensitivity: ignoreAccents === true ? 'base' : 'accent'}) === 0);
+    },
+    enumerable: false,
+    writable: true,
+    configurable: true
+});
+
+
 /**
  * Determines whether a substring exists within this string.
  *
