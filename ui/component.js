@@ -13,7 +13,8 @@
  * @requires collections/set
  */
 var Montage = require("../core/core").Montage,
-    getObjectDescriptorWithModuleId = require("../core/meta/module-object-descriptor").ModuleObjectDescriptor.getObjectDescriptorWithModuleId,
+    getObjectDescriptorWithModuleId = require("../core/meta/module-object-descriptor").ModuleObjectDescriptor
+        .getObjectDescriptorWithModuleId,
     Target = require("../core/target").Target,
     Template = require("../core/template").Template,
     DocumentResources = require("../core/document-resources").DocumentResources,
@@ -50,8 +51,7 @@ var ATTR_LE_COMPONENT = "data-montage-le-component",
     ATTR_LE_ARG_END = "data-montage-le-arg-end",
     _defaultDragManager;
 
-
-function loggerToString (object) {
+function loggerToString(object) {
     if (!object) {
         return "NIL";
     }
@@ -60,25 +60,24 @@ function loggerToString (object) {
 }
 
 var CssBasedAnimation = Montage.specialize({
-
     component: {
-        value: null
+        value: null,
     },
 
     fromCssClass: {
-        value: null
+        value: null,
     },
 
     cssClass: {
-        value: null
+        value: null,
     },
 
     toCssClass: {
-        value: null
+        value: null,
     },
 
     hasOneFrameDelay: {
-        value: false
+        value: false,
     },
 
     _animationAndTransitionProperties: {
@@ -90,12 +89,12 @@ var CssBasedAnimation = Montage.specialize({
             "-webkit-transition",
             "-moz-transition",
             "-ms-transition",
-            "transition"
-        ]
+            "transition",
+        ],
     },
 
     _emptyArray: {
-        value: []
+        value: [],
     },
 
     /**
@@ -105,8 +104,7 @@ var CssBasedAnimation = Montage.specialize({
      */
     _parseComputedStyleTimeValue: {
         value: function (timeValue) {
-            var result,
-                i;
+            var result, i;
 
             if (typeof timeValue !== "string" || timeValue === "") {
                 return this._emptyArray;
@@ -116,7 +114,7 @@ var CssBasedAnimation = Montage.specialize({
                 result[i] = +result[i];
             }
             return result;
-        }
+        },
     },
 
     /**
@@ -131,16 +129,17 @@ var CssBasedAnimation = Montage.specialize({
                 maxTime = 0,
                 time,
                 length,
-                i, j;
+                i,
+                j;
 
             if (this.component && this.component.element) {
                 computedStyle = global.getComputedStyle(this.component.element);
                 for (i = 0; i < this._animationAndTransitionProperties.length; i++) {
                     durations = this._parseComputedStyleTimeValue(
-                        computedStyle.getPropertyValue(this._animationAndTransitionProperties[i] + "-duration")
+                        computedStyle.getPropertyValue(this._animationAndTransitionProperties[i] + "-duration"),
                     );
                     delays = this._parseComputedStyleTimeValue(
-                        computedStyle.getPropertyValue(this._animationAndTransitionProperties[i] + "-delay")
+                        computedStyle.getPropertyValue(this._animationAndTransitionProperties[i] + "-delay"),
                     );
                     length = Math.max(durations.length, delays.length);
                     for (j = 0; j < length; j++) {
@@ -169,17 +168,17 @@ var CssBasedAnimation = Montage.specialize({
                 }
             }
             return maxTime;
-        }
+        },
     },
 
     _onAnimationsCompletedTimeout: {
-        value: null
+        value: null,
     },
 
     _cancelOnAnimationsCompletedEvent: {
         value: function () {
             clearTimeout(this._onAnimationsCompletedTimeout);
-        }
+        },
     },
 
     _onAnimationsCompleted: {
@@ -196,15 +195,15 @@ var CssBasedAnimation = Montage.specialize({
             this._onAnimationsCompletedTimeout = setTimeout(function () {
                 callback.call(self);
             }, maxTime * 1000);
-         }
+        },
     },
 
     _needsToMeasureAnimationTimeOnNextDraw: {
-        value: false
+        value: false,
     },
 
     _needsToMeasureAnimationTime: {
-        value: false
+        value: false,
     },
 
     handleDidDraw: {
@@ -234,18 +233,18 @@ var CssBasedAnimation = Montage.specialize({
                     this._needsToMeasureAnimationTime = false;
                 }
             }
-        }
+        },
     },
 
     _finishedPromise: {
-        value: null
+        value: null,
     },
 
     finished: {
         get: function () {
             if (!this._finishedPromise) {
                 var _resolve, _reject;
-                this._finishedPromise = new Promise(function(resolve, reject) {
+                this._finishedPromise = new Promise(function (resolve, reject) {
                     _resolve = resolve;
                     _reject = reject;
                 });
@@ -254,7 +253,7 @@ var CssBasedAnimation = Montage.specialize({
                 this._finishedPromise.reject = _reject;
             }
             return this._finishedPromise;
-        }
+        },
     },
 
     play: {
@@ -296,11 +295,11 @@ var CssBasedAnimation = Montage.specialize({
                 }
                 this.component.addEventListener("didDraw", this, false);
             }
-        }
+        },
     },
 
     _cancelled: {
-        value: false
+        value: false,
     },
 
     cancel: {
@@ -319,8 +318,8 @@ var CssBasedAnimation = Montage.specialize({
             if (this._finishedPromise) {
                 this._finishedPromise.reject(new Error("cancelled"));
             }
-        }
-    }
+        },
+    },
 });
 
 var rootComponent;
@@ -330,8 +329,8 @@ var rootComponent;
  * @classdesc Base class for all Montage components.
  * @extends Target
  */
-var Component = exports.Component = class Component extends Target {
-    static userInterfaceDescriptorLoadedField = 'userInterfaceDescriptorLoaded';
+var Component = (exports.Component = class Component extends Target {
+    static userInterfaceDescriptorLoadedField = "userInterfaceDescriptorLoaded";
 
     /**
      * Add the specified properties as properties of this component.
@@ -339,17 +338,17 @@ var Component = exports.Component = class Component extends Target {
      * @param {object} properties An object that contains the properties you want to add.
      * @private
      */
-     //TODO, this should be renamed addAttributeProperties
+    //TODO, this should be renamed addAttributeProperties
     static addAttributes(properties) {
         var i, descriptor, property, object;
         this.prototype._elementAttributeDescriptors = properties;
 
-        for(property in properties) {
-            if(properties.hasOwnProperty(property)) {
+        for (property in properties) {
+            if (properties.hasOwnProperty(property)) {
                 object = properties[property];
                 // Make sure that the descriptor is of the correct form.
-                if(object === null || typeof object === "string") {
-                    descriptor = {value: object, dataType: "string"};
+                if (object === null || typeof object === "string") {
+                    descriptor = { value: object, dataType: "string" };
                     properties[property] = descriptor;
                 } else {
                     descriptor = object;
@@ -357,13 +356,12 @@ var Component = exports.Component = class Component extends Target {
 
                 // Only add the internal property, and getter and setter if
                 // they don't already exist.
-                if(typeof this.prototype[property] === 'undefined') {
+                if (typeof this.prototype[property] === "undefined") {
                     this.defineAttribute(property, descriptor);
                 }
             }
         }
     }
-
 
     //TODO, this should be renamed attributePropertySetter
     static defineAttributeSetter(name, _name, descriptor) {
@@ -373,15 +371,14 @@ var Component = exports.Component = class Component extends Target {
 
                 // if requested dataType is boolean (eg: checked, readonly etc)
                 // coerce the value to boolean
-                if(descriptor && "boolean" === descriptor.dataType) {
-                    value = ( (value || value === "") ? true : false);
+                if (descriptor && "boolean" === descriptor.dataType) {
+                    value = value || value === "" ? true : false;
                 }
 
                 // If the set value is different to the current one,
                 // update it here, and set it to be updated on the
                 // element in the next draw cycle.
-                if(typeof value !== 'undefined' && (this[attributeName] !== value)) {
-
+                if (typeof value !== "undefined" && this[attributeName] !== value) {
                     if (setter) {
                         setter.call(this, value);
                     } else {
@@ -394,7 +391,7 @@ var Component = exports.Component = class Component extends Target {
                     }
                 }
             };
-        }(name, _name, descriptor.set));
+        })(name, _name, descriptor.set);
     }
 
     //TODO, this should be renamed attributePropertySetter
@@ -403,7 +400,7 @@ var Component = exports.Component = class Component extends Target {
             return function () {
                 return this[attributeName];
             };
-        }(_name));
+        })(_name);
     }
     /**
      * Adds a property to the component with the specified name.
@@ -421,35 +418,31 @@ var Component = exports.Component = class Component extends Target {
      * @param {Object} descriptor An object that specifies the new properties default attributes such as configurable and enumerable.
      * @private
      */
-     //https://github.com/kangax/html-minifier/issues/63 for a list of boolean attributes
-     //TODO, this should be renamed defineAttributeProperty
-    static defineAttribute (name, descriptor) {
+    //https://github.com/kangax/html-minifier/issues/63 for a list of boolean attributes
+    //TODO, this should be renamed defineAttributeProperty
+    static defineAttribute(name, descriptor) {
         descriptor = descriptor || {};
-        var _name = '_' + name;
-
+        var _name = "_" + name;
 
         var newDescriptor = {
-            configurable: (typeof descriptor.configurable === 'undefined') ? true: descriptor.configurable,
-            enumerable: (typeof descriptor.enumerable === 'undefined') ?  true: descriptor.enumerable,
+            configurable: typeof descriptor.configurable === "undefined" ? true : descriptor.configurable,
+            enumerable: typeof descriptor.enumerable === "undefined" ? true : descriptor.enumerable,
             set: this.defineAttributeSetter(name, _name, descriptor),
-            get: descriptor.get || this.defineAttributeGetter(_name)
+            get: descriptor.get || this.defineAttributeGetter(_name),
         };
 
         // Define _ property
         // TODO this.constructor.defineProperty
-        if(!this.prototype.hasOwnProperty(_name)) {
-            Montage.defineProperty(this.prototype, _name, {value: descriptor.value});
+        if (!this.prototype.hasOwnProperty(_name)) {
+            Montage.defineProperty(this.prototype, _name, { value: descriptor.value });
         }
         // Define property getter and setter
         Montage.defineProperty(this.prototype, name, newDescriptor);
     }
+});
 
-}
-
-Component.addClassProperties(
-    {
-
-// var Component = exports.Component = Target.specialize(/** @lends Component.prototype */{
+Component.addClassProperties({
+    // var Component = exports.Component = Target.specialize(/** @lends Component.prototype */{
     // Virtual Interface
 
     /**
@@ -486,7 +479,6 @@ Component.addClassProperties(
      * @property {String}
      */
 
-
     /**
      * Lifecycle hook for when Component's domContent changes.
      *
@@ -495,12 +487,12 @@ Component.addClassProperties(
      * @param {Element} value - The incoming element.
      */
 
-    DOM_ARG_ATTRIBUTE: {value: "data-arg"},
+    DOM_ARG_ATTRIBUTE: { value: "data-arg" },
 
-    PROCESSED_DOM_ARG_ATTRIBUTE: {value: "data-processed-arg"},
+    PROCESSED_DOM_ARG_ATTRIBUTE: { value: "data-processed-arg" },
 
     drawListLogger: {
-        value: drawListLogger
+        value: drawListLogger,
     },
     /**
      * A delegate is an object that has helper methods specific to particular
@@ -513,9 +505,9 @@ Component.addClassProperties(
      *
      * @type {?Object}
      * @default null
-    */
+     */
     delegate: {
-        value: null
+        value: null,
     },
 
     /**
@@ -527,40 +519,40 @@ Component.addClassProperties(
      * @property {object} value
      * @default null
      */
-     _templateObjects: {
-         serializable: false,
-         value: null
-     },
-     templateObjects: {
-         serializable: false,
-         get: function() {
-             if(!this._templateObjects) {
-                 this._templateObjects = Object.create(null);
-             }
-             if(!this._setupTemplateObjectsCompleted && this._templateDocumentPart) {
-                  this._setupTemplateObjects(this._templateDocumentPart.objects);
-             }
-             return this._templateObjects;
-         },
-         set: function(value) {
-             this._templateObjects = value;
-         }
-     },
+    _templateObjects: {
+        serializable: false,
+        value: null,
+    },
+    templateObjects: {
+        serializable: false,
+        get: function () {
+            if (!this._templateObjects) {
+                this._templateObjects = Object.create(null);
+            }
+            if (!this._setupTemplateObjectsCompleted && this._templateDocumentPart) {
+                this._setupTemplateObjects(this._templateDocumentPart.objects);
+            }
+            return this._templateObjects;
+        },
+        set: function (value) {
+            this._templateObjects = value;
+        },
+    },
 
-     getResources: {
-         value: function () {
-             if (!this._setupTemplateObjectsCompleted && this._templateDocumentPart) {
-                 return this._templateDocumentPart.template.getResources()._resources;
-             }
-         }
-     },
+    getResources: {
+        value: function () {
+            if (!this._setupTemplateObjectsCompleted && this._templateDocumentPart) {
+                return this._templateDocumentPart.template.getResources()._resources;
+            }
+        },
+    },
 
     /**
      * @private
      * @property {Target} value
      */
     _nextTarget: {
-        value: null
+        value: null,
     },
 
     /**
@@ -582,31 +574,30 @@ Component.addClassProperties(
         },
         set: function (value) {
             this._nextTarget = value;
-        }
+        },
     },
 
     _ownerDocumentPart: {
-        value: null
+        value: null,
     },
 
     _templateDocumentPart: {
-        value: null
+        value: null,
     },
 
     _domArguments: {
-        value: void 0
+        value: void 0,
     },
 
     _domArgumentNames: {
-        value: void 0
+        value: void 0,
     },
-
 
     /**
      * Object whose key/values are the parameters requested in this component's template
-     * and their bound elements. 
+     * and their bound elements.
      * - The key of each pair will be the name provided to data-param=""
-     * 
+     *
      * - The value of each pair will be one of the following
      *   1. The element provided as a data-arg="" in the component that serializes this one
      *   2. The element provided as the default to the data-param. The default is set in one of two ways:
@@ -614,14 +605,14 @@ Component.addClassProperties(
      *        2. Nesting an element (or component) inside the data-param element. For example
      *            <div data-param="requested-parameter">
      *                 <h2> This is static content to be used as the default for requested-parameter</h2>
-     *            </div> 
+     *            </div>
      *   3. Null if the data-arg is not provided and the data-param does not have a default
-     * 
+     *
      * @type {Object<string:Element>}
      * @private
      */
     templateArgumentByParameter: {
-        value: void 0
+        value: void 0,
     },
 
     /**
@@ -637,11 +628,11 @@ Component.addClassProperties(
             }
             return this._canDrawGate;
         },
-        enumerable: false
+        enumerable: false,
     },
 
     _blockDrawGate: {
-        value: null
+        value: null,
     },
 
     /**
@@ -658,21 +649,21 @@ Component.addClassProperties(
                 this._blockDrawGate.setField("drawRequested", false);
             }
             return this._blockDrawGate;
-        }
+        },
     },
 
     _firstDraw: {
         enumerable: false,
-        value: true
+        value: true,
     },
 
     _completedFirstDraw: {
         enumerable: false,
-        value: false
+        value: false,
     },
 
     originalElement: {
-        value: null
+        value: null,
     },
 
     /**
@@ -680,7 +671,7 @@ Component.addClassProperties(
      */
     _element: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -750,7 +741,7 @@ Component.addClassProperties(
 
             //jshint -W106
             if (global._montage_le_flag) {
-            //jshint +W106
+                //jshint +W106
                 value.setAttribute(ATTR_LE_COMPONENT, Montage.getInfoForObject(this).moduleId);
             }
 
@@ -782,7 +773,7 @@ Component.addClassProperties(
                 }
             }
             this._initializeClassListFromElement(value);
-        }
+        },
     },
 
     getElementId: {
@@ -792,7 +783,7 @@ Component.addClassProperties(
             if (element) {
                 return element.getAttribute("data-mod-id") || element.getAttribute("data-montage-id");
             }
-        }
+        },
     },
 
     _initDomArguments: {
@@ -806,14 +797,13 @@ Component.addClassProperties(
                 PROCESSED_DOM_ARG_ATTRIBUTE = this.PROCESSED_DOM_ARG_ATTRIBUTE;
 
             candidates = element.childElementCount && element.querySelectorAll("*[" + DOM_ARG_ATTRIBUTE + "]");
-            
+
             // Need to make sure that we filter dom args that are for nested
             // components and not for this component.
-            if(candidates.length) {
+            if (candidates.length) {
                 domArguments = {};
             }
-            nextCandidate:
-            for (var i = 0, candidate; (candidate = candidates[i]); i++) {
+            nextCandidate: for (var i = 0, candidate; (candidate = candidates[i]); i++) {
                 node = candidate;
                 while ((node = node.parentNode) !== element) {
                     // This candidate is inside another component so skip it.
@@ -825,16 +815,16 @@ Component.addClassProperties(
                 candidate.parentNode.removeChild(candidate);
                 name = candidate.getAttribute(DOM_ARG_ATTRIBUTE);
                 candidate.removeAttribute(DOM_ARG_ATTRIBUTE);
-                //TODO Assess whether it would be more performant to track processed dom args 
+                //TODO Assess whether it would be more performant to track processed dom args
                 // in the parent in pure JS rather than the arg element in the DOM
                 candidate.setAttribute(PROCESSED_DOM_ARG_ATTRIBUTE, name);
                 domArguments[name] = candidate;
             }
             this._domArguments = domArguments;
-        }
+        },
     },
     _sharedEmptyArray: {
-        value: []
+        value: [],
     },
     getDomArgumentNames: {
         value: function () {
@@ -842,7 +832,7 @@ Component.addClassProperties(
                 this._domArgumentNames = this._domArguments ? Object.keys(this._domArguments) : this._sharedEmptyArray;
             }
             return this._domArgumentNames;
-        }
+        },
     },
 
     /**
@@ -861,7 +851,7 @@ Component.addClassProperties(
      */
     extractDomArgument: {
         value: function (name) {
-            if(this._domArguments) {
+            if (this._domArguments) {
                 var argument;
 
                 argument = this._domArguments[name];
@@ -870,7 +860,7 @@ Component.addClassProperties(
                 return argument;
             }
             return null;
-        }
+        },
     },
 
     /**
@@ -896,8 +886,7 @@ Component.addClassProperties(
 
             // Make sure that the argument we find is indeed part of element and
             // not an argument from an inner component.
-            nextCandidate:
-            for (var i = 0, candidate; (candidate = candidates[i]); i++) {
+            nextCandidate: for (var i = 0, candidate; (candidate = candidates[i]); i++) {
                 node = candidate;
                 while ((node = node.parentNode) !== element) {
                     elementId = template.getElementId(node);
@@ -906,8 +895,7 @@ Component.addClassProperties(
                     // TODO: Make this operation faster
                     if (elementId) {
                         serialization = template.getSerialization();
-                        labels = serialization.getSerializationLabelsWithElements(
-                            elementId);
+                        labels = serialization.getSerializationLabelsWithElements(elementId);
 
                         if (labels.length > 0) {
                             // This candidate is inside another component so
@@ -918,14 +906,15 @@ Component.addClassProperties(
                 }
                 return candidate;
             }
-        }
+        },
     },
 
     dragManager: {
         get: function () {
-            return _defaultDragManager ||
-            ((_defaultDragManager = new DragManager()).initWithComponent(this.rootComponent));
-        }
+            return (
+                _defaultDragManager || (_defaultDragManager = new DragManager()).initWithComponent(this.rootComponent)
+            );
+        },
     },
 
     /**
@@ -935,7 +924,11 @@ Component.addClassProperties(
     getTemplateArgumentElement: {
         value: function (argumentName) {
             if (this._ownerDocumentPart) {
-                var ownerModuleId, element, range, argument, label,
+                var ownerModuleId,
+                    element,
+                    range,
+                    argument,
+                    label,
                     template = this._ownerDocumentPart.template;
 
                 if (global._montage_le_flag) {
@@ -956,14 +949,13 @@ Component.addClassProperties(
                     argument = this._getTemplateDomArgument(argumentName).cloneNode(true);
                     argument.removeAttribute(this.DOM_ARG_ATTRIBUTE);
                     if (global._montage_le_flag) {
-                        this._leTagNamedArgument(ownerModuleId, label, argument,
-                            argumentName);
+                        this._leTagNamedArgument(ownerModuleId, label, argument, argumentName);
                     }
                 }
 
                 return argument;
             }
-        }
+        },
     },
 
     getTemplateArgumentSerialization: {
@@ -971,7 +963,7 @@ Component.addClassProperties(
             var template = this._ownerDocumentPart.template;
 
             return template._createSerializationWithElementIds(elementIds);
-        }
+        },
     },
 
     /**
@@ -1009,7 +1001,7 @@ Component.addClassProperties(
             }
 
             return result;
-        }
+        },
     },
 
     setElementWithParentComponent: {
@@ -1018,34 +1010,33 @@ Component.addClassProperties(
             if (this.element !== element) {
                 this.element = element;
             }
-        }
+        },
     },
     _application: {
-        value: null
+        value: null,
     },
     // access to the Application object
     /**
      * Convenience to access the application object.
      * @type {Application}
-    */
+     */
     application: {
         enumerable: false,
         get: function () {
             return this._application || (Component.prototype._application = require("../core/application").application);
-        }
+        },
     },
 
     _environment: {
-        value: null
+        value: null,
     },
 
     environment: {
         enumerable: false,
         get: function () {
             return this._environment || (Component.prototype._environment = currentEnvironment);
-        }
+        },
     },
-
 
     /**
      * Convenience to access the defaultEventManager object.
@@ -1066,11 +1057,11 @@ Component.addClassProperties(
         enumerable: false,
         get: function () {
             return exports.__root__;
-        }
+        },
     },
 
     visualStyle: {
-        value: undefined
+        value: undefined,
     },
 
     /**
@@ -1082,18 +1073,18 @@ Component.addClassProperties(
         enumerable: false,
         value: function (event, targetElementController) {
             return targetElementController;
-        }
+        },
     },
 
     _alternateParentComponent: {
-        value: null
+        value: null,
     },
 
     /**
      * @private
      */
     __parentComponent: {
-        value: null
+        value: null,
     },
 
     _parentComponent: {
@@ -1103,7 +1094,7 @@ Component.addClassProperties(
         },
         get: function () {
             return this.__parentComponent;
-        }
+        },
     },
 
     /**
@@ -1120,7 +1111,7 @@ Component.addClassProperties(
         enumerable: false,
         get: function () {
             return this._parentComponent;
-        }
+        },
     },
 
     findParentComponent: {
@@ -1134,7 +1125,7 @@ Component.addClassProperties(
                 }
                 return aParentNode ? eventManager.eventHandlerForElement(aParentNode) : this._alternateParentComponent;
             }
-        }
+        },
     },
 
     querySelectorComponent: {
@@ -1149,7 +1140,7 @@ Component.addClassProperties(
             // (.*) rest
             var matches = selector.match(/^\s*(?:@([^>\s]+))?(?:\s*(>)?\s*@([^>\s]+)(.*))?$/);
             if (!matches) {
-                throw "querySelectorComponent: Syntax error \"" + selector + "\"";
+                throw 'querySelectorComponent: Syntax error "' + selector + '"';
             }
 
             var childComponents = this.childComponents,
@@ -1162,7 +1153,7 @@ Component.addClassProperties(
                 childComponent;
 
             if (leftHandOperand) {
-                rest = rightHandOperand ? "@"+rightHandOperand + rest : "";
+                rest = rightHandOperand ? "@" + rightHandOperand + rest : "";
 
                 for (i = 0, childComponent; (childComponent = childComponents[i]); i++) {
                     if (leftHandOperand === Montage.getInfoForObject(childComponent).label) {
@@ -1191,7 +1182,7 @@ Component.addClassProperties(
             }
 
             return null;
-        }
+        },
     },
 
     querySelectorAllComponent: {
@@ -1206,7 +1197,7 @@ Component.addClassProperties(
             // (.*) rest
             var matches = selector.match(/^\s*(?:@([^>\s]+))?(?:\s*(>)?\s*@([^>\s]+)(.*))?$/);
             if (!matches) {
-                throw "querySelectorComponent: Syntax error \"" + selector + "\"";
+                throw 'querySelectorComponent: Syntax error "' + selector + '"';
             }
 
             var childComponents = this.childComponents,
@@ -1219,9 +1210,12 @@ Component.addClassProperties(
                 childComponent;
 
             if (leftHandOperand) {
-                rest = rightHandOperand ? "@"+rightHandOperand + rest : "";
+                rest = rightHandOperand ? "@" + rightHandOperand + rest : "";
                 for (i = 0, childComponent; (childComponent = childComponents[i]); i++) {
-                    if (leftHandOperand === Montage.getInfoForObject(childComponent).label && (!owner || owner === childComponent.ownerComponent)) {
+                    if (
+                        leftHandOperand === Montage.getInfoForObject(childComponent).label &&
+                        (!owner || owner === childComponent.ownerComponent)
+                    ) {
                         if (rest) {
                             found = found.concat(childComponent.querySelectorAllComponent(rest));
                         } else {
@@ -1233,7 +1227,10 @@ Component.addClassProperties(
                 }
             } else {
                 for (i = 0, childComponent; (childComponent = childComponents[i]); i++) {
-                    if (rightHandOperand === Montage.getInfoForObject(childComponent).label && (!owner || owner === childComponent.ownerComponent)) {
+                    if (
+                        rightHandOperand === Montage.getInfoForObject(childComponent).label &&
+                        (!owner || owner === childComponent.ownerComponent)
+                    ) {
                         if (rest) {
                             found = found.concat(childComponent.querySelectorAllComponent(rest, owner));
                         } else {
@@ -1244,13 +1241,13 @@ Component.addClassProperties(
             }
 
             return found;
-        }
+        },
     },
 
     packageName: {
-        get: function() {
-            return Montage.getInfoForObject(this).require.packageDescription.name
-        }
+        get: function () {
+            return Montage.getInfoForObject(this).require.packageDescription.name;
+        },
     },
 
     /**
@@ -1261,7 +1258,7 @@ Component.addClassProperties(
      */
     template: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -1272,7 +1269,7 @@ Component.addClassProperties(
      */
     hasTemplate: {
         enumerable: false,
-        value: true
+        value: true,
     },
 
     /**
@@ -1281,16 +1278,16 @@ Component.addClassProperties(
      */
     _templateModuleId: {
         serializable: false,
-        value: null
+        value: null,
     },
 
     _template: {
-        value: null
+        value: null,
     },
 
     // Tree level necessary for ordering drawing re: parent-child
     _treeLevel: {
-        value: 0
+        value: 0,
     },
 
     /**
@@ -1303,7 +1300,7 @@ Component.addClassProperties(
     _addChildComponent: {
         value: function (childComponent) {
             return this.addChildComponent(childComponent);
-        }
+        },
     },
 
     addChildComponent: {
@@ -1313,13 +1310,12 @@ Component.addClassProperties(
                 childComponent._parentComponent = this;
                 childComponent._detachedParentComponent = null;
                 childComponent._prepareForEnterDocument();
-                if (childComponent.needsDraw &&
-                    !this.rootComponent.isComponentWaitingNeedsDraw(childComponent)) {
+                if (childComponent.needsDraw && !this.rootComponent.isComponentWaitingNeedsDraw(childComponent)) {
                     childComponent._addToParentsDrawList();
                 }
             }
             childComponent._shouldBuildIn = true;
-        }
+        },
     },
 
     attachToParentComponent: {
@@ -1346,7 +1342,7 @@ Component.addClassProperties(
                 }
                 parentComponent.addChildComponent(this);
             }
-        }
+        },
     },
 
     detachFromParentComponent: {
@@ -1356,7 +1352,7 @@ Component.addClassProperties(
             if (parentComponent) {
                 parentComponent.removeChildComponent(this);
 
-                if(!this._detachedParentComponent) {
+                if (!this._detachedParentComponent) {
                     this._detachedParentComponent = parentComponent;
                 }
             }
@@ -1368,10 +1364,14 @@ Component.addClassProperties(
 
                 So we add that check if a component is taken out from it's hierarchy and cleaan things up to prevent that issue.
             */
-            if(this.ownerComponent && this._blocksOwnerComponentDraw && this.ownerComponent.canDrawGate.hasField(this)) {
+            if (
+                this.ownerComponent &&
+                this._blocksOwnerComponentDraw &&
+                this.ownerComponent.canDrawGate.hasField(this)
+            ) {
                 this.ownerComponent.canDrawGate.removeField(this);
             }
-        }
+        },
     },
 
     removeChildComponent: {
@@ -1380,7 +1380,6 @@ Component.addClassProperties(
                 ix = childComponents.indexOf(childComponent);
 
             if (ix > -1) {
-
                 childComponent._exitDocument();
 
                 childComponents.splice(ix, 1);
@@ -1394,10 +1393,10 @@ Component.addClassProperties(
                 }
                 this.rootComponent.removeFromCannotDrawList(childComponent);
             }
-        }
+        },
     },
     _childComponents: {
-        value: null
+        value: null,
     },
     /**
      * The child components of the component.
@@ -1405,28 +1404,28 @@ Component.addClassProperties(
      *
      * @type {Array.<Component>}
      * @readonly
-    */
+     */
     childComponents: {
         enumerable: false,
-        get: function() {
-          return this._childComponents || (this._childComponents = []);
-        }
+        get: function () {
+            return this._childComponents || (this._childComponents = []);
+        },
     },
 
     _needsEnterDocument: {
-        value: false
+        value: false,
     },
 
     _inDocument: {
-        get: function() {
+        get: function () {
             return this.inDocument;
         },
-        set: function(value) {
+        set: function (value) {
             this.inDocument = value;
-        }
+        },
     },
     inDocument: {
-        value: false
+        value: false,
     },
 
     __exitDocument: {
@@ -1443,7 +1442,7 @@ Component.addClassProperties(
                 this.exitDocument();
                 this.inDocument = false;
             }
-        }
+        },
     },
 
     _exitDocument: {
@@ -1470,7 +1469,7 @@ Component.addClassProperties(
 
                 traverse(this);
             }
-        }
+        },
     },
 
     /**
@@ -1482,7 +1481,7 @@ Component.addClassProperties(
             if (this.isActiveTarget) {
                 defaultEventManager.activeTarget = this.nextTarget;
             }
-        }
+        },
     },
 
     _prepareForEnterDocument: {
@@ -1501,15 +1500,15 @@ Component.addClassProperties(
                     component.needsDraw = true;
                 });
             }
-        }
+        },
     },
 
     draggable: {
-        value: false
+        value: false,
     },
 
     droppable: {
-        value: false
+        value: false,
     },
 
     /**
@@ -1520,7 +1519,7 @@ Component.addClassProperties(
      */
     ownerComponent: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -1529,28 +1528,28 @@ Component.addClassProperties(
      */
     components: {
         enumerable: false,
-        value: {}
+        value: {},
     },
 
     _isComponentExpanded: {
         enumerable: false,
-        value: false
+        value: false,
     },
 
     _isTemplateLoaded: {
         enumerable: false,
-        value: false
+        value: false,
     },
     isTemplateLoaded: {
         enumerable: false,
-        get: function() {
+        get: function () {
             return this._isTemplateLoaded;
-        }
+        },
     },
 
     _isTemplateInstantiated: {
         enumerable: false,
-        value: false
+        value: false,
     },
 
     /**
@@ -1574,16 +1573,16 @@ Component.addClassProperties(
                 }
                 component.needsDraw = false;
             });
-        }
+        },
     },
 
     _newDomContent: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     _contentElementsToAppend: {
-        value: null
+        value: null,
     },
 
     domContent: {
@@ -1596,10 +1595,7 @@ Component.addClassProperties(
             }
         },
         set: function (value) {
-            var components,
-                componentsToAdd,
-                i,
-                component;
+            var components, componentsToAdd, i, component;
 
             if (!this._contentElementsToAppend) {
                 this._contentElementsToAppend = [];
@@ -1619,7 +1615,7 @@ Component.addClassProperties(
             components = this.childComponents;
             if (value) {
                 if (!this._componentsPendingBuildOut) {
-                    this._componentsPendingBuildOut = new Set;
+                    this._componentsPendingBuildOut = new Set();
                 }
                 for (i = components.length - 1; i >= 0; i--) {
                     if (!this._componentsPendingBuildOut.has(components[i])) {
@@ -1627,7 +1623,7 @@ Component.addClassProperties(
                     }
                 }
             } else {
-                this._componentsPendingBuildOut = new Set;
+                this._componentsPendingBuildOut = new Set();
                 for (i = components.length - 1; i >= 0; i--) {
                     components[i]._shouldBuildOut = true;
                 }
@@ -1643,17 +1639,17 @@ Component.addClassProperties(
                 }
             }
 
-            if(componentsToAdd) {
+            if (componentsToAdd) {
                 // not sure if I can rely on _parentComponent to detach the nodes instead of doing one loop for dettach and another to attach...
                 for (i = 0; (component = componentsToAdd[i]); i++) {
                     this.addChildComponent(component);
                 }
             }
-        }
+        },
     },
 
     _shouldClearDomContentOnNextDraw: {
-        value: false
+        value: false,
     },
 
     _findAndDetachComponentsFromNode: {
@@ -1663,7 +1659,7 @@ Component.addClassProperties(
 
             if (node.component) {
                 node.component.detachFromParentComponent();
-                if(components) {
+                if (components) {
                     components.push(node.component);
                 }
             } else {
@@ -1676,7 +1672,7 @@ Component.addClassProperties(
             }
 
             return components;
-        }
+        },
     },
 
     // Some components, like the repetition, might use their initial set of
@@ -1692,10 +1688,10 @@ Component.addClassProperties(
     // its clonesChildComponents set to true.
     clonesChildComponents: {
         writable: false,
-        value: false
+        value: false,
     },
 
-    _innerTemplate: {value: null},
+    _innerTemplate: { value: null },
 
     innerTemplate: {
         serializable: false,
@@ -1736,7 +1732,7 @@ Component.addClassProperties(
         },
         set: function (value) {
             this._innerTemplate = value;
-        }
+        },
     },
 
     /**
@@ -1752,17 +1748,17 @@ Component.addClassProperties(
     canDraw: {
         value: function () {
             return this._canDraw;
-        }
+        },
     },
 
     _canDraw: {
         get: function () {
-            return (!this._canDrawGate || this._canDrawGate.value);
+            return !this._canDrawGate || this._canDrawGate.value;
         },
         set: function (value) {
             rootComponent.componentCanDraw(this, value);
         },
-        enumerable: false
+        enumerable: false,
     },
 
     _prepareCanDraw: {
@@ -1771,11 +1767,11 @@ Component.addClassProperties(
             if (!this._isComponentTreeLoaded) {
                 return this.loadComponentTree();
             }
-        }
+        },
     },
 
     _blocksOwnerComponentDraw: {
-        value: false
+        value: false,
     },
 
     _updateOwnerCanDrawGate: {
@@ -1783,23 +1779,21 @@ Component.addClassProperties(
             if (this._blocksOwnerComponentDraw && this.ownerComponent) {
                 this.ownerComponent.canDrawGate.setField(this, this.canDrawGate.value);
             }
-        }
+        },
     },
 
     _isComponentTreeLoaded: {
-        value: false
+        value: false,
     },
 
     shouldLoadComponentTree: {
-        value: true
+        value: true,
     },
 
-    _loadComponentTreePromise: {value: null},
+    _loadComponentTreePromise: { value: null },
     loadComponentTree: {
         value: function loadComponentTree() {
-
             if (!this._loadComponentTreePromise) {
-
                 this.canDrawGate.setField("componentTreeLoaded", false);
 
                 // only put it in the root component's draw list if the
@@ -1812,9 +1806,8 @@ Component.addClassProperties(
 
                 var self = this;
 
-
                 this._loadComponentTreePromise = this.expandComponent()
-                    .then(function() {
+                    .then(function () {
                         if (self.hasTemplate || self.shouldLoadComponentTree) {
                             var promises,
                                 childComponents = self._childComponents,
@@ -1830,7 +1823,7 @@ Component.addClassProperties(
                             return Promise.resolve(null);
                         }
                     })
-                    .then(function() {
+                    .then(function () {
                         self._isComponentTreeLoaded = true;
                         // When the component tree is loaded we need to draw if the
                         // component needs to have its enterDocument() called.
@@ -1842,13 +1835,13 @@ Component.addClassProperties(
                             self.needsDraw = true;
                         }
                         self.canDrawGate.setField("componentTreeLoaded", true);
-
-                    }).catch(function (error) {
+                    })
+                    .catch(function (error) {
                         console.error(error);
                     });
             }
             return this._loadComponentTreePromise;
-        }
+        },
     },
 
     /**
@@ -1858,47 +1851,49 @@ Component.addClassProperties(
      * @param {Component#traverseComponentTree~callback} callback callback object
      * @private
      */
-    traverseComponentTree: {value: function traverseComponentTree(visitor, callback) {
-        var self = this;
+    traverseComponentTree: {
+        value: function traverseComponentTree(visitor, callback) {
+            var self = this;
 
-        function traverse() {
-            var childComponents = self.childComponents;
-            var childComponent;
-            var childLeftCount;
+            function traverse() {
+                var childComponents = self.childComponents;
+                var childComponent;
+                var childLeftCount;
 
-            if (visitor) {
-                // if the visitor returns false stop the traversal for this subtree
-                if (visitor(self) === false) {
+                if (visitor) {
+                    // if the visitor returns false stop the traversal for this subtree
+                    if (visitor(self) === false) {
+                        if (callback) {
+                            callback();
+                        }
+                        return;
+                    }
+                }
+
+                if ((childLeftCount = childComponents.length) === 0) {
                     if (callback) {
                         callback();
                     }
                     return;
                 }
-            }
 
-            if ((childLeftCount = childComponents.length) === 0) {
-                if (callback) {
-                    callback();
+                var visitorFunction = function () {
+                    if (--childLeftCount === 0 && callback) {
+                        callback();
+                    }
+                };
+                for (var i = 0; (childComponent = childComponents[i]); i++) {
+                    childComponent.traverseComponentTree(visitor, visitorFunction);
                 }
-                return;
             }
 
-            var visitorFunction = function () {
-                if (--childLeftCount === 0 && callback) {
-                    callback();
-                }
-            };
-            for (var i = 0; (childComponent = childComponents[i]); i++) {
-                childComponent.traverseComponentTree(visitor, visitorFunction);
+            if (this._isComponentExpanded) {
+                traverse();
+            } else if (callback) {
+                callback();
             }
-        }
-
-        if (this._isComponentExpanded) {
-            traverse();
-        } else if (callback) {
-            callback();
-        }
-    }},
+        },
+    },
     /**
      * Visitor function for Component#traverseComponentTree. For every component in the tree, the visitor function is
      * called with the current component as an argument.
@@ -1910,20 +1905,19 @@ Component.addClassProperties(
      * @function Component#traverseComponentTree~callback
      */
 
-
     /**
      * @function
      * @param {Component#expandComponent~callback} callback  TODO
      * @private
      */
-    _expandComponentPromise: {value: null},
+    _expandComponentPromise: { value: null },
     expandComponent: {
         value: function expandComponent() {
-
             if (!this._expandComponentPromise) {
-                    if (this.hasTemplate) {
-                        var self = this;
-                        this._expandComponentPromise = this._instantiateTemplate().then(function() {
+                if (this.hasTemplate) {
+                    var self = this;
+                    this._expandComponentPromise = this._instantiateTemplate()
+                        .then(function () {
                             self._isComponentExpanded = true;
                             self._addTemplateStylesIfNeeded();
                             self._drawVisualStyleIfNeeded();
@@ -1943,24 +1937,25 @@ Component.addClassProperties(
                                 So more to look at before we can enjoy that win.
                             */
                             //self.needsDraw = true;
-                        }).catch(function (error) {
+                        })
+                        .catch(function (error) {
                             console.error(error);
                         });
-                    } else {
-                        this._isComponentExpanded = true;
-                        this._expandComponentPromise = Promise.resolve();
-                    }
+                } else {
+                    this._isComponentExpanded = true;
+                    this._expandComponentPromise = Promise.resolve();
+                }
             }
 
             return this._expandComponentPromise;
-        }
+        },
     },
 
     _templateObjectDescriptor: {
         value: {
             enumerable: true,
-            configurable: true
-        }
+            configurable: true,
+        },
     },
 
     _setupTemplateObjects: {
@@ -1969,25 +1964,29 @@ Component.addClassProperties(
             this._addTemplateObjects(objects);
             this._setupTemplateObjectsCompleted = true;
             return this._templateObjects;
-        }
+        },
     },
     _setupTemplateObjectsCompleted: {
-        value: false
+        value: false,
     },
     _addTemplateObjects: {
         value: function (objects) {
-            var label, object,
+            var label,
+                object,
                 descriptor = this._templateObjectDescriptor,
                 templateObjects = this._templateObjects;
 
             /*jshint forin:true */
             // TODO add hasOwnProperty to objects
             for (label in objects) {
-            /*jshint forin:false */
+                /*jshint forin:false */
                 object = objects[label];
                 if (object !== null && object !== undefined) {
-                    if (!Component.prototype.isPrototypeOf(object) || object === this ||
-                        object.parentComponent === this) {
+                    if (
+                        !Component.prototype.isPrototypeOf(object) ||
+                        object === this ||
+                        object.parentComponent === this
+                    ) {
                         templateObjects[label] = object;
                     } else {
                         descriptor.get = this._makeTemplateObjectGetter(this, label, object);
@@ -1995,7 +1994,7 @@ Component.addClassProperties(
                     }
                 }
             }
-        }
+        },
     },
 
     /**
@@ -2003,7 +2002,7 @@ Component.addClassProperties(
      */
     _makeTemplateObjectGetter: {
         value: function (owner, label, object) {
-            var querySelectorLabel = "@"+label,
+            var querySelectorLabel = "@" + label,
                 isRepeated,
                 components,
                 component;
@@ -2023,7 +2022,7 @@ Component.addClassProperties(
                                 // that repeats its child components, we can
                                 // safely recreate this property with a static value
                                 Object.defineProperty(this, label, {
-                                    value: components[0]
+                                    value: components[0],
                                 });
                                 return components[0];
                             } else if (component.clonesChildComponents) {
@@ -2042,13 +2041,13 @@ Component.addClassProperties(
                     return components;
                 }
             };
-        }
+        },
     },
 
     _instantiateTemplate: {
-        value: function() {
+        value: function () {
             var self = this;
-            return this._loadTemplate().then(function(template) {
+            return this._loadTemplate().then(function (template) {
                 if (!self._element) {
                     return Promise.reject(new Error("Cannot instantiate template without an element.", self));
                 }
@@ -2063,17 +2062,19 @@ Component.addClassProperties(
                 instances.owner = self;
                 self._isTemplateInstantiated = true;
 
-                return template.instantiateWithInstances(instances, _document).then(function (documentPart) {
-                    documentPart.parentDocumentPart = self._ownerDocumentPart;
-                    self._templateDocumentPart = documentPart;
-                    documentPart.fragment = null;
-                    instances = null;
-
-                }, function (error) {
-                    throw new Error(template.getBaseUrl() + ":" + error.stack || error);
-                });
+                return template.instantiateWithInstances(instances, _document).then(
+                    function (documentPart) {
+                        documentPart.parentDocumentPart = self._ownerDocumentPart;
+                        self._templateDocumentPart = documentPart;
+                        documentPart.fragment = null;
+                        instances = null;
+                    },
+                    function (error) {
+                        throw new Error(template.getBaseUrl() + ":" + error.stack || error);
+                    },
+                );
             });
-        }
+        },
     },
 
     _templateDidLoad: {
@@ -2084,16 +2085,16 @@ Component.addClassProperties(
             //call templateObjects, so this._templateDocumentPart is needed here.
             //This is just set, again, later to the same value in the then() of template.instantiateWithInstances() inside _instantiateTemplate()
             this._templateDocumentPart = documentPart;
-            if(this._templateObjects) {
+            if (this._templateObjects) {
                 this._setupTemplateObjects(documentPart.objects);
             }
 
             this.addOwnPropertyChangeListener("draggable", this);
             this.addOwnPropertyChangeListener("droppable", this);
-        }
+        },
     },
 
-    _loadTemplatePromise: {value: null},
+    _loadTemplatePromise: { value: null },
     /**
      * Returns the promise that resolves to the component's template object
      * if it has one.
@@ -2102,9 +2103,9 @@ Component.addClassProperties(
      */
 
     loadTemplatePromise: {
-        get: function() {
+        get: function () {
             return this._loadTemplatePromise || this._loadTemplate();
-        }
+        },
     },
     _loadTemplate: {
         value: function _loadTemplate() {
@@ -2114,18 +2115,18 @@ Component.addClassProperties(
                 var self = this;
                 info = Montage.getInfoForObject(this);
 
-                this._loadTemplatePromise = Template.getTemplateWithModuleId(
-                    this.templateModuleId, info.require)
-                .then(function(template) {
-                    self._template = template;
-                    self._isTemplateLoaded = true;
+                this._loadTemplatePromise = Template.getTemplateWithModuleId(this.templateModuleId, info.require).then(
+                    function (template) {
+                        self._template = template;
+                        self._isTemplateLoaded = true;
 
-                    return template;
-                });
+                        return template;
+                    },
+                );
             }
 
             return this._loadTemplatePromise;
-        }
+        },
     },
 
     /**
@@ -2136,7 +2137,7 @@ Component.addClassProperties(
     templateModuleId: {
         get: function () {
             return this._templateModuleId || this._getDefaultTemplateModuleId();
-        }
+        },
     },
 
     _getDefaultTemplateModuleId: {
@@ -2144,20 +2145,20 @@ Component.addClassProperties(
             var info = Montage.getInfoForObject(this),
                 moduleId = info.moduleId,
                 //moduleExtension = info.require.getModuleDescriptor(info.module).extension,
-                moduleIdExtension = moduleId.substring(moduleId.lastIndexOf(".")+1),
+                moduleIdExtension = moduleId.substring(moduleId.lastIndexOf(".") + 1),
                 slashIndex = moduleId.lastIndexOf("/"),
                 templateModuleId = moduleId;
 
-
-
-
             templateModuleId += "/";
             /* . of extenson added here */
-            templateModuleId +=  moduleId.slice(slashIndex === -1 ? 0 : slashIndex+1, moduleId.length - (moduleIdExtension ? moduleIdExtension.length : 0) -1)
-            templateModuleId +=  ".html";
+            templateModuleId += moduleId.slice(
+                slashIndex === -1 ? 0 : slashIndex + 1,
+                moduleId.length - (moduleIdExtension ? moduleIdExtension.length : 0) - 1,
+            );
+            templateModuleId += ".html";
 
             return templateModuleId;
-        }
+        },
     },
 
     deserializedFromSerialization: {
@@ -2169,10 +2170,10 @@ Component.addClassProperties(
 
                 So before calling this.attachToParentComponent(), we now check if there isn't this._parentComponent set already.
             */
-            if(!this._parentComponent) {
+            if (!this._parentComponent) {
                 this.attachToParentComponent();
             }
-        }
+        },
     },
 
     _deserializedFromTemplate: {
@@ -2181,7 +2182,7 @@ Component.addClassProperties(
             Montage.getInfoForObject(this).label = label;
             this._ownerDocumentPart = documentPart;
 
-            if (! this.hasOwnProperty("identifier")) {
+            if (!this.hasOwnProperty("identifier")) {
                 this.identifier = label;
             }
 
@@ -2197,7 +2198,7 @@ Component.addClassProperties(
             if (this._needsDrawInDeserialization) {
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     blueprintModuleId: {
@@ -2205,7 +2206,7 @@ Component.addClassProperties(
         enumerable: false,
         get: function () {
             return this.objectDescriptorModuleId;
-        }
+        },
     },
 
     blueprint: require("../core/core")._objectDescriptorDescriptor,
@@ -2216,19 +2217,26 @@ Component.addClassProperties(
         enumerable: false,
         get: function () {
             var info = Montage.getInfoForObject(this);
-            var self = (info && !info.isInstance) ? this : Object.getPrototypeOf(this);
-            if (!Object.getOwnPropertyDescriptor(self, "_objectDescriptorModuleId") || !self._objectDescriptorModuleId) {
+            var self = info && !info.isInstance ? this : Object.getPrototypeOf(this);
+            if (
+                !Object.getOwnPropertyDescriptor(self, "_objectDescriptorModuleId") ||
+                !self._objectDescriptorModuleId
+            ) {
                 info = Montage.getInfoForObject(self);
                 var moduleId = info.moduleId,
                     slashIndex = moduleId.lastIndexOf("/"),
                     dotIndex = moduleId.lastIndexOf("."),
                     dotExtension;
-                slashIndex = ( slashIndex === -1 ? 0 : slashIndex + 1 );
-                dotIndex = ( dotIndex === -1 ? moduleId.length : dotIndex );
-                dotIndex = ( dotIndex < slashIndex ? moduleId.length : dotIndex );
+                slashIndex = slashIndex === -1 ? 0 : slashIndex + 1;
+                dotIndex = dotIndex === -1 ? moduleId.length : dotIndex;
+                dotIndex = dotIndex < slashIndex ? moduleId.length : dotIndex;
 
                 var objectDescriptorModuleId;
-                if ((dotIndex < moduleId.length) && ( ((dotExtension = moduleId.slice(dotIndex, moduleId.length)) === ".mod")) || (dotExtension === ".mod")) {
+                if (
+                    (dotIndex < moduleId.length &&
+                        (dotExtension = moduleId.slice(dotIndex, moduleId.length)) === ".mod") ||
+                    dotExtension === ".mod"
+                ) {
                     // We are in a reel
                     objectDescriptorModuleId = moduleId + "/" + moduleId.slice(slashIndex, dotIndex) + ".mjson";
                 } else {
@@ -2237,11 +2245,11 @@ Component.addClassProperties(
                 }
 
                 Montage.defineProperty(self, "_objectDescriptorModuleId", {
-                    value: objectDescriptorModuleId
+                    value: objectDescriptorModuleId,
                 });
             }
             return self._objectDescriptorModuleId;
-        }
+        },
     },
 
     /**
@@ -2262,7 +2270,7 @@ Component.addClassProperties(
                 this._prepareCanDraw();
             }
         },
-        enumerable: false
+        enumerable: false,
     },
 
     gateDidBecomeFalse: {
@@ -2271,7 +2279,7 @@ Component.addClassProperties(
                 this._updateOwnerCanDrawGate();
             }
         },
-        enumerable: false
+        enumerable: false,
     },
 
     /**
@@ -2283,20 +2291,20 @@ Component.addClassProperties(
      */
     _canDrawGate: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     preparedForActivationEvents: {
         enumerable: false,
-        value: false
+        value: false,
     },
 
     _arrayObjectPool: {
         value: {
             pool: null,
             size: 200,
-            ix: 0
-        }
+            ix: 0,
+        },
     },
 
     _getArray: {
@@ -2313,7 +2321,7 @@ Component.addClassProperties(
             } else {
                 return [];
             }
-        }
+        },
     },
 
     _disposeArray: {
@@ -2322,7 +2330,7 @@ Component.addClassProperties(
                 array.length = 0;
                 this._arrayObjectPool.pool[--this._arrayObjectPool.ix] = array;
             }
-        }
+        },
     },
 
     /**
@@ -2338,7 +2346,9 @@ Component.addClassProperties(
         enumerable: false,
         value: function _drawIfNeeded(level) {
             var childComponent,
-                oldDrawList, i, childComponentListLength,
+                oldDrawList,
+                i,
+                childComponentListLength,
                 firstDraw = this._firstDraw;
 
             this._treeLevel = level;
@@ -2368,15 +2378,16 @@ Component.addClassProperties(
                 for (i = 0; i < childComponentListLength; i++) {
                     childComponent = oldDrawList[i];
                     childComponent._addedToDrawList = false;
-                    if (childComponent.canDraw()) { // TODO if canDraw is false when does needsDraw get reset?
-                        childComponent._drawIfNeeded(level+1);
+                    if (childComponent.canDraw()) {
+                        // TODO if canDraw is false when does needsDraw get reset?
+                        childComponent._drawIfNeeded(level + 1);
                     } else if (drawLogger.isDebug) {
                         drawLogger.debug(loggerToString(childComponent) + " can't draw.");
                     }
                 }
                 this._disposeArray(oldDrawList);
             }
-        }
+        },
     },
 
     _isMainComponent: {
@@ -2384,17 +2395,17 @@ Component.addClassProperties(
             var bodyComponent = this.rootComponent.bodyComponent,
                 child = bodyComponent.childComponents[0],
                 isInDocument = this.element.parentNode;
-            // If the main component is in the DOM, it will be the sole child of the bodyComponent.  
+            // If the main component is in the DOM, it will be the sole child of the bodyComponent.
             // If the main component is NOT in the DOM, it's parent will be the loader and the loader will be the sole child of the bodyComponent
-            return isInDocument ? child === this : child === this.parentComponent; 
-        }
+            return isInDocument ? child === this : child === this.parentComponent;
+        },
     },
 
     _drawVisualStyleIfNeeded: {
         value: function () {
             var isMain, head, styleEl, styleScope;
             if (!this.visualStyle || this._visualStyleElement) {
-                return
+                return;
             }
 
             isMain = this._isMainComponent();
@@ -2405,12 +2416,12 @@ Component.addClassProperties(
             if (document.querySelector('[data-mod-id="' + styleScope + '"]')) {
                 console.error("Visual style with scope name " + styleScope + " already exists.");
                 return;
-            };
+            }
             styleEl.setAttribute("data-mod-id", styleScope);
             this.element.setAttribute("data-visual-style", styleScope);
             head.appendChild(styleEl);
             this._visualStyleElement = styleEl;
-        }
+        },
     },
 
     _updateComponentDom: {
@@ -2438,12 +2449,18 @@ Component.addClassProperties(
             if (this._newDomContent !== null || this._shouldClearDomContentOnNextDraw) {
                 if (drawLogger.isDebug) {
                     //jshint -W106
-                    logger.debug("Component content changed: component ", this._montage_metadata.objectName, this.identifier, " newDomContent", this._newDomContent);
+                    logger.debug(
+                        "Component content changed: component ",
+                        this._montage_metadata.objectName,
+                        this.identifier,
+                        " newDomContent",
+                        this._newDomContent,
+                    );
                     //jshint +W106
                 }
                 this._performDomContentChanges();
             }
-        }
+        },
     },
 
     _replaceElementWithTemplate: {
@@ -2466,7 +2483,11 @@ Component.addClassProperties(
                 if (_montage_le_flag && attributeName === ATTR_LE_COMPONENT) {
                     //jshint +W106
                     value = attribute.nodeValue;
-                } else if (attributeName === "id" || attributeName === "data-mod-id" || attributeName === "data-montage-id") {
+                } else if (
+                    attributeName === "id" ||
+                    attributeName === "data-mod-id" ||
+                    attributeName === "data-montage-id"
+                ) {
                     value = attribute.nodeValue;
                 } else {
                     templateAttributeValue = template.getAttribute(attributeName) || "";
@@ -2474,12 +2495,11 @@ Component.addClassProperties(
                         /*
                             Assuming only style and class are actually multi-value and we merge them
                         */
-                        if(attributeName === "style") {
+                        if (attributeName === "style") {
                             value = templateAttributeValue;
                             value += "; ";
                             value += attribute.nodeValue;
-
-                        } else if(attributeName === "class") {
+                        } else if (attributeName === "class") {
                             value = templateAttributeValue;
                             value += " ";
                             value += attribute.nodeValue;
@@ -2499,7 +2519,7 @@ Component.addClassProperties(
             if (element.parentNode) {
                 element.parentNode.replaceChild(template, element);
             } else if (!this._canDrawOutsideDocument) {
-                console.warn("Warning: Trying to replace element ", element," which has no parentNode");
+                console.warn("Warning: Trying to replace element ", element, " which has no parentNode");
             }
 
             this.eventManager.unregisterEventHandlerForElement(element);
@@ -2509,10 +2529,9 @@ Component.addClassProperties(
                 value = element.getAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
                 if (this.parentComponent.templateArgumentByParameter)
                     this.parentComponent.templateArgumentByParameter[value] = template;
-                //TODO Assess whether it would be more performant to track processed dom args 
+                //TODO Assess whether it would be more performant to track processed dom args
                 // in the parent in pure JS rather than the arg element in the DOM
                 element.removeAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
-
             }
             this._templateElement = null;
 
@@ -2525,15 +2544,15 @@ Component.addClassProperties(
                 this._newDomContent = null;
                 this._shouldClearDomContentOnNextDraw = false;
             }
-        }
+        },
     },
 
     _addTemplateStylesIfNeeded: {
         value: function () {
-            if(this._templateDocumentPart) {
+            if (this._templateDocumentPart) {
                 this.rootComponent.addStyleSheetsFromTemplate(this._templateDocumentPart.template, this.packageName);
             }
-        }
+        },
     },
 
     _prepareForDraw: {
@@ -2557,7 +2576,7 @@ Component.addClassProperties(
                 this._replaceElementWithTemplate();
             }
         },
-        enumerable: false
+        enumerable: false,
     },
 
     _leTagArguments: {
@@ -2574,11 +2593,10 @@ Component.addClassProperties(
                 this._leTagStarArgument(ownerModuleId, label, this.element);
             } else {
                 for (var i = 0, name; (name = argumentNames[i]); i++) {
-                    this._leTagNamedArgument(ownerModuleId, label,
-                        this._domArguments[name], name);
+                    this._leTagNamedArgument(ownerModuleId, label, this._domArguments[name], name);
                 }
             }
-        }
+        },
     },
 
     _getNodeFirstElement: {
@@ -2595,7 +2613,7 @@ Component.addClassProperties(
             }
 
             return element;
-        }
+        },
     },
 
     _getNodeLastElement: {
@@ -2612,7 +2630,7 @@ Component.addClassProperties(
             }
 
             return element;
-        }
+        },
     },
 
     _leTagStarArgument: {
@@ -2620,20 +2638,21 @@ Component.addClassProperties(
             var argumentBegin = this._getNodeFirstElement(rootElement);
             var argumentEnd = this._getNodeLastElement(rootElement);
 
-            argumentBegin.setAttribute(ATTR_LE_ARG_BEGIN,
-                (argumentBegin.getAttribute(ATTR_LE_ARG_BEGIN)||"") + " " +
-                    ownerModuleId + "," + label);
-            argumentEnd.setAttribute(ATTR_LE_ARG_END,
-                (argumentEnd.getAttribute(ATTR_LE_ARG_END)||"") + " " +
-                    ownerModuleId + "," + label);
-        }
+            argumentBegin.setAttribute(
+                ATTR_LE_ARG_BEGIN,
+                (argumentBegin.getAttribute(ATTR_LE_ARG_BEGIN) || "") + " " + ownerModuleId + "," + label,
+            );
+            argumentEnd.setAttribute(
+                ATTR_LE_ARG_END,
+                (argumentEnd.getAttribute(ATTR_LE_ARG_END) || "") + " " + ownerModuleId + "," + label,
+            );
+        },
     },
 
     _leTagNamedArgument: {
         value: function (ownerModuleId, label, element, name) {
-            element.setAttribute(ATTR_LE_ARG,
-                ownerModuleId + "," + label + "," + name);
-        }
+            element.setAttribute(ATTR_LE_ARG, ownerModuleId + "," + label + "," + name);
+        },
     },
 
     _bindTemplateParametersToArguments: {
@@ -2651,13 +2670,16 @@ Component.addClassProperties(
                     let parameterElement = parameters[key];
                     let argument = templateArguments ? templateArguments[key] : void 0;
                     let contents;
-                    if ((key === "*") /** || (key === "each") */) {
-                        if (this._element.childElementCount === 0 &&
-                            !(this._element.firstChild &&
+                    if (key === "*" /** || (key === "each") */) {
+                        if (
+                            this._element.childElementCount === 0 &&
+                            !(
+                                this._element.firstChild &&
                                 this._element.firstChild.data &&
-                                this._element.firstChild.data.trim())
+                                this._element.firstChild.data.trim()
+                            )
                         ) {
-                         //We're missing an argument, we're going to check if we have a default
+                            //We're missing an argument, we're going to check if we have a default
                             if (parameterElement && parameterElement.childElementCount > 0) {
                                 let range = this._element.ownerDocument.createRange();
                                 range.selectNodeContents(parameterElement);
@@ -2687,7 +2709,9 @@ Component.addClassProperties(
                     if (contents) {
                         if (contents instanceof Element) {
                             let { classList } = parameterElement;
-                            let  contentsClassList = contents.component ? contents.component.classList : contents.classList;
+                            let contentsClassList = contents.component
+                                ? contents.component.classList
+                                : contents.classList;
 
                             for (let i = 0, length = classList.length; i < length; i++) {
                                 contentsClassList.add(classList[i]);
@@ -2711,7 +2735,7 @@ Component.addClassProperties(
                 }
             }
             this.templateArgumentByParameter = boundParameters;
-        }
+        },
     },
 
     _validateTemplateArguments: {
@@ -2729,8 +2753,7 @@ Component.addClassProperties(
             // Only the star argument is allowed.
             for (param in templateArguments) {
                 if (param !== "*" && !(param in templateParameters)) {
-                    return new Error('"' + param + '" parameter does ' +
-                        'not exist in ' + this.templateModuleId);
+                    return new Error('"' + param + '" parameter does ' + "not exist in " + this.templateModuleId);
                 }
             }
 
@@ -2739,11 +2762,13 @@ Component.addClassProperties(
             if (elementWithStarParameter) {
                 for (param in templateParameters) {
                     if (param !== "*" && elementWithStarParameter.contains(templateParameters[param])) {
-                        return new Error('"' + param + '" parameter cannot be used within an element with the star parameter');
+                        return new Error(
+                            '"' + param + '" parameter cannot be used within an element with the star parameter',
+                        );
                     }
                 }
             }
-        }
+        },
     },
 
     /**
@@ -2756,7 +2781,7 @@ Component.addClassProperties(
      */
     prepareForActivationEvents: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -2783,7 +2808,7 @@ Component.addClassProperties(
             }
 
             this.preparedForActivationEvents = true;
-        }
+        },
     },
 
     _performDomContentChanges: {
@@ -2823,7 +2848,7 @@ Component.addClassProperties(
                 }
                 this._shouldClearDomContentOnNextDraw = false;
             }
-        }
+        },
     },
 
     /**
@@ -2832,7 +2857,7 @@ Component.addClassProperties(
      */
     prepareForDraw: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -2847,7 +2872,7 @@ Component.addClassProperties(
      */
     draw: {
         enumerable: false,
-        value: Function.noop
+        value: Function.noop,
     },
 
     /**
@@ -2865,7 +2890,7 @@ Component.addClassProperties(
      */
     willDraw: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     /**
@@ -2883,56 +2908,52 @@ Component.addClassProperties(
      */
     didDraw: {
         enumerable: false,
-        value: Function.noop
+        value: Function.noop,
     },
-
 
     _didDraw: {
         enumerable: false,
-        value: function(frameTime) {
-            if(this._updatesLayoutProperties) {
-                var ownerStyle = this.ownerComponent && this.ownerComponent.element && this.ownerComponent.element.style;
+        value: function (frameTime) {
+            if (this._updatesLayoutProperties) {
+                var ownerStyle =
+                    this.ownerComponent && this.ownerComponent.element && this.ownerComponent.element.style;
 
-                if(ownerStyle) {
+                if (ownerStyle) {
                     var boundingRect = this.element.getBoundingClientRect(),
                         identifier = this.identifier;
 
-                    if(this._updatesLayoutPropertyX) {
+                    if (this._updatesLayoutPropertyX) {
                         ownerStyle.setProperty(`--${identifier}X`, boundingRect.x);
                     }
-                    if(this._updatesLayoutPropertyY) {
+                    if (this._updatesLayoutPropertyY) {
                         ownerStyle.setProperty(`--${identifier}Y`, boundingRect.y);
                     }
-                    if(this._updatesLayoutPropertyWidth) {
+                    if (this._updatesLayoutPropertyWidth) {
                         ownerStyle.setProperty(`--${identifier}Width`, boundingRect.width);
                     }
-                    if(this._updatesLayoutPropertyHeight) {
+                    if (this._updatesLayoutPropertyHeight) {
                         ownerStyle.setProperty(`--${identifier}Height`, boundingRect.height);
                     }
-                    if(this._updatesLayoutPropertyTop) {
+                    if (this._updatesLayoutPropertyTop) {
                         ownerStyle.setProperty(`--${identifier}Top`, boundingRect.top);
                         this.top = boundingRect.top;
                     }
-                    if(this._updatesLayoutPropertyRight) {
+                    if (this._updatesLayoutPropertyRight) {
                         ownerStyle.setProperty(`--${identifier}Right`, boundingRect.right);
                         this.right = boundingRect.right;
                     }
-                    if(this._updatesLayoutPropertyBottom) {
+                    if (this._updatesLayoutPropertyBottom) {
                         ownerStyle.setProperty(`--${identifier}Bottom`, boundingRect.bottom);
                         this.bottom = boundingRect.bottom;
                     }
-                    if(this._updatesLayoutPropertyLeft) {
+                    if (this._updatesLayoutPropertyLeft) {
                         ownerStyle.setProperty(`--${identifier}Left`, boundingRect.left);
                         this.left = boundingRect.left;
                     }
-
                 }
-
-
-
             }
             this.didDraw(frameTime);
-        }
+        },
     },
 
     /**
@@ -2940,7 +2961,7 @@ Component.addClassProperties(
      * @private
      */
     _addedToDrawList: {
-        value: false
+        value: false,
     },
 
     _addToParentsDrawList: {
@@ -2953,22 +2974,24 @@ Component.addClassProperties(
                     parentComponent._addToDrawList(this);
                     if (this.drawListLogger.isDebug) {
                         //jshint -W106
-                        this.drawListLogger.debug(loggerToString(this) + " added to " + loggerToString(parentComponent)  + "'s drawList");
+                        this.drawListLogger.debug(
+                            loggerToString(this) + " added to " + loggerToString(parentComponent) + "'s drawList",
+                        );
                         //jshint +W106
                     }
                 } else if (this.drawListLogger.isDebug) {
-                        this.drawListLogger.debug(this, "parentComponent is null");
+                    this.drawListLogger.debug(this, "parentComponent is null");
                 }
             }
-        }
+        },
     },
 
     _needsDraw: {
-        value: false
+        value: false,
     },
 
     _needsDrawInDeserialization: {
-        value: false
+        value: false,
     },
 
     /**
@@ -3014,7 +3037,7 @@ Component.addClassProperties(
                     }
                 }
             }
-        }
+        },
     },
 
     /**
@@ -3022,7 +3045,7 @@ Component.addClassProperties(
      * @private
      */
     _drawList: {
-        value: null
+        value: null,
     },
 
     __addToDrawList: {
@@ -3037,7 +3060,7 @@ Component.addClassProperties(
                     childComponent._addedToDrawList = true;
                 }
             }
-        }
+        },
     },
 
     /**
@@ -3050,12 +3073,12 @@ Component.addClassProperties(
         value: function (childComponent) {
             this.__addToDrawList(childComponent);
             this._addToParentsDrawList();
-        }
+        },
     },
 
     _templateElement: {
         enumerable: false,
-        value: null
+        value: null,
     },
 
     // Pointer Claiming
@@ -3085,7 +3108,7 @@ Component.addClassProperties(
     surrenderPointer: {
         value: function (pointer, demandingComponent) {
             return true;
-        }
+        },
     },
 
     // Composers
@@ -3095,7 +3118,7 @@ Component.addClassProperties(
      */
     _composerList: {
         value: null,
-        serializable: false
+        serializable: false,
     },
 
     composerList: {
@@ -3106,7 +3129,7 @@ Component.addClassProperties(
 
             return this._composerList;
         },
-        serializable: false
+        serializable: false,
     },
 
     /**
@@ -3114,10 +3137,11 @@ Component.addClassProperties(
      * @function
      * @param {Composer} composer
      */
-    addComposer: {  // What if the same composer instance is added to more than one component?
+    addComposer: {
+        // What if the same composer instance is added to more than one component?
         value: function (composer) {
             this.addComposerForElement(composer, composer.element);
-        }
+        },
     },
 
     /**
@@ -3133,14 +3157,16 @@ Component.addClassProperties(
             composer.element = element;
             this.composerList.push(composer);
 
-            if (!this._firstDraw) {  // prepareForDraw has already happened so do the loading here
+            if (!this._firstDraw) {
+                // prepareForDraw has already happened so do the loading here
                 if (!composer.lazyLoad) {
                     this.loadComposer(composer);
-                } else if (this.preparedForActivationEvents) { // even though it's lazyLoad prepareForActivationEvents has already happened
+                } else if (this.preparedForActivationEvents) {
+                    // even though it's lazyLoad prepareForActivationEvents has already happened
                     this.loadComposer(composer);
                 }
             }
-        }
+        },
     },
 
     /**
@@ -3153,7 +3179,7 @@ Component.addClassProperties(
             if (this._composerList && this._composerList.indexOf(composer) > -1) {
                 Target.prototype.loadComposer.call(this, composer);
             }
-        }
+        },
     },
 
     /**
@@ -3166,7 +3192,7 @@ Component.addClassProperties(
             if (this._composerList && this._composerList.indexOf(composer) > -1) {
                 Target.prototype.unloadComposer.call(this, composer);
             }
-        }
+        },
     },
 
     /**
@@ -3179,7 +3205,7 @@ Component.addClassProperties(
     scheduleComposer: {
         value: function (composer) {
             this.rootComponent.addToComposerList(composer);
-        }
+        },
     },
 
     /**
@@ -3199,7 +3225,7 @@ Component.addClassProperties(
                     }
                 }
             }
-        }
+        },
     },
 
     /**
@@ -3214,12 +3240,11 @@ Component.addClassProperties(
 
                 for (var i = 0, length = composerList.length; i < length; i++) {
                     this.unloadComposer(composerList[i]);
-
                 }
 
                 composerList.length = 0;
             }
-        }
+        },
     },
 
     /**
@@ -3228,11 +3253,11 @@ Component.addClassProperties(
      * @default null
      */
     localizer: {
-        value: null
+        value: null,
     },
 
     _waitForLocalizerMessages: {
-        value: false
+        value: false,
     },
 
     /**
@@ -3293,7 +3318,7 @@ Component.addClassProperties(
                     this.canDrawGate.setField("messages", false);
 
                     var self = this;
-                    this.localizer.messagesPromise.then(function(messages) {
+                    this.localizer.messagesPromise.then(function (messages) {
                         if (logger.isDebug) {
                             logger.debug(self, "got messages from localizer");
                         }
@@ -3304,7 +3329,7 @@ Component.addClassProperties(
                     this.canDrawGate.setField("messages", true);
                 }
             }
-        }
+        },
     },
 
     // Drag & Drop operations
@@ -3316,7 +3341,7 @@ Component.addClassProperties(
             } else {
                 this.unregisterDraggable();
             }
-        }
+        },
     },
 
     handleDroppableChange: {
@@ -3326,7 +3351,7 @@ Component.addClassProperties(
             } else {
                 this.unregisterDroppable();
             }
-        }
+        },
     },
 
     /**
@@ -3336,7 +3361,7 @@ Component.addClassProperties(
         value: function () {
             this.dragManager.registerDraggable(this);
             this.classList.add("mod-draggable");
-        }
+        },
     },
 
     /**
@@ -3346,7 +3371,7 @@ Component.addClassProperties(
         value: function () {
             this.dragManager.unregisterDraggable(this);
             this.classList.remove("mod-draggable");
-        }
+        },
     },
 
     /**
@@ -3359,7 +3384,7 @@ Component.addClassProperties(
         value: function () {
             this.dragManager.registerDroppable(this);
             this.classList.add("mod-droppable");
-        }
+        },
     },
 
     /**
@@ -3369,11 +3394,11 @@ Component.addClassProperties(
         value: function () {
             this.dragManager.unregisterDroppable(this);
             this.classList.remove("mod-droppable");
-        }
+        },
     },
 
     _draggableContainer: {
-        value: null
+        value: null,
     },
 
     draggableContainer: {
@@ -3388,7 +3413,7 @@ Component.addClassProperties(
         },
         get: function () {
             return this._draggableContainer;
-        }
+        },
     },
 
     /**
@@ -3407,7 +3432,7 @@ Component.addClassProperties(
      * @default false
      */
     _enclosesSize: {
-        value: false
+        value: false,
     },
 
     // enclosesSize
@@ -3422,7 +3447,7 @@ Component.addClassProperties(
             if (this._enclosesSize !== value) {
                 this._enclosesSize = value;
             }
-        }
+        },
     },
 
     /**
@@ -3432,7 +3457,7 @@ Component.addClassProperties(
      * @default "inline-size"
      */
     enclosedSizeType: {
-        value: "inline-size"
+        value: "inline-size",
     },
     /**
      * Holds the DOM element providing CSS Size containment
@@ -3441,7 +3466,7 @@ Component.addClassProperties(
      * @default null
      */
     _cssContainerElement: {
-        value: null
+        value: null,
     },
 
     //
@@ -3452,43 +3477,43 @@ Component.addClassProperties(
      * Stores values that need to be set on the element. Cleared each draw cycle.
      * @private
      */
-     __elementAttributeValues: {
-         value: null
-     },
-     _elementAttributeValues: {
-         get: function() {
-             return this.__elementAttributeValues || (this.__elementAttributeValues = {});
-         }
-     },
+    __elementAttributeValues: {
+        value: null,
+    },
+    _elementAttributeValues: {
+        get: function () {
+            return this.__elementAttributeValues || (this.__elementAttributeValues = {});
+        },
+    },
 
     /**
      * Stores the descriptors of the properties that can be set on this control
      * @private
      */
     _elementAttributeDescriptors: {
-        value: null
+        value: null,
     },
-
 
     _getElementAttributeDescriptor: {
         value: function (attributeName) {
-            var attributeDescriptor, instance = this;
+            var attributeDescriptor,
+                instance = this;
             // walk up the prototype chain from the instance to NativeControl's prototype
             // if _elementAttributeDescriptors is falsy, stop.
-            while(instance && instance._elementAttributeDescriptors) {
+            while (instance && instance._elementAttributeDescriptors) {
                 attributeDescriptor = instance._elementAttributeDescriptors[attributeName];
-                if(attributeDescriptor) {
+                if (attributeDescriptor) {
                     break;
                 } else {
                     instance = Object.getPrototypeOf(instance);
                 }
             }
             return attributeDescriptor;
-        }
+        },
     },
 
     __shouldBuildIn: {
-        value: true
+        value: true,
     },
 
     /*
@@ -3521,11 +3546,11 @@ Component.addClassProperties(
                     this._buildIn();
                 }
             }
-        }
+        },
     },
 
     __shouldBuildOut: {
-        value: false
+        value: false,
     },
 
     _shouldBuildOut: {
@@ -3541,7 +3566,7 @@ Component.addClassProperties(
                     this._buildOut();
                 }
             }
-        }
+        },
     },
 
     buildInInitialAnimation: {
@@ -3558,7 +3583,7 @@ Component.addClassProperties(
                 }
             }
             return animation;
-        }
+        },
     },
 
     buildInSwitchAnimation: {
@@ -3574,7 +3599,7 @@ Component.addClassProperties(
                 }
             }
             return animation;
-        }
+        },
     },
 
     buildOutInitialAnimation: {
@@ -3592,7 +3617,7 @@ Component.addClassProperties(
                 }
             }
             return animation;
-        }
+        },
     },
 
     buildOutSwitchAnimation: {
@@ -3608,31 +3633,31 @@ Component.addClassProperties(
                 }
             }
             return animation;
-        }
+        },
     },
 
     buildInAnimation: {
-        value: null
+        value: null,
     },
 
     buildOutAnimation: {
-        value: null
+        value: null,
     },
 
     buildInAnimationOverride: {
-        value: null
+        value: null,
     },
 
     buildOutAnimationOverride: {
-        value: null
+        value: null,
     },
 
     _activeBuildInAnimation: {
-        value: null
+        value: null,
     },
 
     _activeBuildOutAnimation: {
-        value: null
+        value: null,
     },
 
     _updateActiveBuildAnimations: {
@@ -3647,11 +3672,11 @@ Component.addClassProperties(
             } else {
                 this._activeBuildOutAnimation = this.buildOutAnimation;
             }
-        }
+        },
     },
 
     _currentBuildAnimation: {
-        value: null
+        value: null,
     },
 
     _buildIn: {
@@ -3670,14 +3695,17 @@ Component.addClassProperties(
                 }
                 if (this._currentBuildAnimation) {
                     this._currentBuildAnimation.play();
-                    this._currentBuildAnimation.finished.then(function () {
-                        self._currentBuildAnimation.cancel();
-                        self._currentBuildAnimation = null;
-                        self.dispatchEventNamed("buildInEnd", true, true);
-                    }, function () {});
+                    this._currentBuildAnimation.finished.then(
+                        function () {
+                            self._currentBuildAnimation.cancel();
+                            self._currentBuildAnimation = null;
+                            self.dispatchEventNamed("buildInEnd", true, true);
+                        },
+                        function () {},
+                    );
                 }
             }
-        }
+        },
     },
 
     _buildOut: {
@@ -3694,19 +3722,22 @@ Component.addClassProperties(
             if (this._element && this._element.parentNode && this._element.parentNode.component) {
                 if (this._currentBuildAnimation) {
                     this._currentBuildAnimation.play();
-                    this._currentBuildAnimation.finished.then(function () {
-                        var parent = self.parentComponent;
-                        self._currentBuildAnimation.cancel();
-                        self._currentBuildAnimation = null;
-                        self.detachFromParentComponent();
-                        self.buildInAnimationOverride = null;
-                        self.buildOutAnimationOverride = null;
-                        if (self._element.parentNode.component) {
-                            self._element.parentNode.removeChild(self._element);
-                        }
-                        self._isElementAttachedToParent = false;
-                        parent.dispatchEventNamed("buildOutEnd", true, true);
-                    }, function () {});
+                    this._currentBuildAnimation.finished.then(
+                        function () {
+                            var parent = self.parentComponent;
+                            self._currentBuildAnimation.cancel();
+                            self._currentBuildAnimation = null;
+                            self.detachFromParentComponent();
+                            self.buildInAnimationOverride = null;
+                            self.buildOutAnimationOverride = null;
+                            if (self._element.parentNode.component) {
+                                self._element.parentNode.removeChild(self._element);
+                            }
+                            self._isElementAttachedToParent = false;
+                            parent.dispatchEventNamed("buildOutEnd", true, true);
+                        },
+                        function () {},
+                    );
                 } else {
                     this.detachFromParentComponent();
                     this.buildInAnimationOverride = null;
@@ -3719,18 +3750,17 @@ Component.addClassProperties(
                     }
                 }
             }
-        }
+        },
     },
     _willEnterDocument: {
-
         value: function () {
             var event;
 
             event = new CustomEvent("willEnterDocument", {
                 details: {
-                    component: this
+                    component: this,
                 },
-                bubbles: false
+                bubbles: false,
             });
             this.dispatchEvent(event);
             this.inDocument = true;
@@ -3744,13 +3774,13 @@ Component.addClassProperties(
             if (this.__shouldBuildOut) {
                 this._buildOut();
             }
-        }
+        },
     },
 
     _componentsPendingBuildOutForEachFunction: {
         value: function (component) {
             component._shouldBuildOut = true;
-        }
+        },
     },
 
     _childWillEnterDocument: {
@@ -3759,7 +3789,7 @@ Component.addClassProperties(
                 this._componentsPendingBuildOut.forEach(this._componentsPendingBuildOutForEachFunction);
                 this._componentsPendingBuildOut.clear();
             }
-        }
+        },
     },
 
     /**
@@ -3771,7 +3801,7 @@ Component.addClassProperties(
      *                  enters the document.
      */
 
-// callbacks
+    // callbacks
 
     _enterDocument: {
         value: function (firstTime) {
@@ -3798,17 +3828,17 @@ Component.addClassProperties(
                 attributes = originalElement.attributes;
                 if (attributes) {
                     length = attributes.length;
-                    for (i=0; i < length; i++) {
+                    for (i = 0; i < length; i++) {
                         name = attributes[i].name;
                         value = attributes[i].value;
 
                         descriptor = this._getElementAttributeDescriptor(name, this);
                         // check if this attribute from the markup is a well-defined attribute of the component
-                        if (descriptor || (typeof this[name] !== 'undefined')) {
+                        if (descriptor || typeof this[name] !== "undefined") {
                             // only set the value if a value has not already been set by binding
-                            if (typeof this._elementAttributeValues[name] === 'undefined') {
+                            if (typeof this._elementAttributeValues[name] === "undefined") {
                                 this._elementAttributeValues[name] = value;
-                                if(this[name] === null || this[name] === undefined) {
+                                if (this[name] === null || this[name] === undefined) {
                                     this[name] = value;
                                 }
                             }
@@ -3816,8 +3846,7 @@ Component.addClassProperties(
                     }
                 }
 
-
-/*
+                /*
                 var attributes, i, length, name, value, attributeName, descriptor;
                 attributes = originalElement.attributes;
                 if (attributes) {
@@ -3842,11 +3871,11 @@ Component.addClassProperties(
 */
 
                 // textContent is a special case since it isn't an attribute
-                descriptor = this._getElementAttributeDescriptor('textContent', this);
-                if(descriptor) {
+                descriptor = this._getElementAttributeDescriptor("textContent", this);
+                if (descriptor) {
                     // check if this element has textContent
                     var textContent = originalElement.textContent;
-                    if (typeof this._elementAttributeValues.textContent === 'undefined') {
+                    if (typeof this._elementAttributeValues.textContent === "undefined") {
                         this._elementAttributeValues.textContent = textContent;
                         if (this.textContent === null || this.textContent === undefined) {
                             this.textContent = textContent;
@@ -3861,15 +3890,15 @@ Component.addClassProperties(
                     for (attributeName in this._elementAttributeDescriptors) {
                         if (this._elementAttributeDescriptors.hasOwnProperty(attributeName)) {
                             descriptor = this._elementAttributeDescriptors[attributeName];
-                            var _name = "_"+attributeName;
-                            if ((this[_name] === null) && descriptor !== null && "value" in descriptor) {
+                            var _name = "_" + attributeName;
+                            if (this[_name] === null && descriptor !== null && "value" in descriptor) {
                                 this[_name] = descriptor.value;
                             }
                         }
                     }
                 }
             }
-        }
+        },
     },
 
     /**
@@ -3884,40 +3913,38 @@ Component.addClassProperties(
                 descriptor;
 
             //Buffered/deferred element attribute values
-            if((_elementAttributeValues = this.__elementAttributeValues) !== null) {
+            if ((_elementAttributeValues = this.__elementAttributeValues) !== null) {
                 var attributeNames = Object.keys(_elementAttributeValues);
-                for(var i=0, attributeName; (attributeName = attributeNames[i]); i++) {
-                        //value = this[attributeName];
-                        value = _elementAttributeValues[attributeName];
-                        descriptor = this._getElementAttributeDescriptor(attributeName, this);
-                        if(descriptor) {
-
-                            if(descriptor.dataType === 'boolean') {
-                                if(value === true) {
-                                    element[attributeName] = true;
-                                    element.setAttribute(attributeName, attributeName.toLowerCase());
+                for (var i = 0, attributeName; (attributeName = attributeNames[i]); i++) {
+                    //value = this[attributeName];
+                    value = _elementAttributeValues[attributeName];
+                    descriptor = this._getElementAttributeDescriptor(attributeName, this);
+                    if (descriptor) {
+                        if (descriptor.dataType === "boolean") {
+                            if (value === true) {
+                                element[attributeName] = true;
+                                element.setAttribute(attributeName, attributeName.toLowerCase());
+                            } else {
+                                element[attributeName] = false;
+                                element.removeAttribute(attributeName);
+                            }
+                        } else {
+                            if (typeof value !== "undefined") {
+                                if (attributeName === "textContent") {
+                                    element.textContent = value;
                                 } else {
-                                    element[attributeName] = false;
-                                    element.removeAttribute(attributeName);
+                                    //https://developer.mozilla.org/en/DOM/element.setAttribute
+                                    element.setAttribute(attributeName, value);
                                 }
                             } else {
-                                if(typeof value !== 'undefined') {
-                                    if(attributeName === 'textContent') {
-                                        element.textContent = value;
-                                    } else {
-                                        //https://developer.mozilla.org/en/DOM/element.setAttribute
-                                        element.setAttribute(attributeName, value);
-                                    }
-                                } else {
-                                    element.setAttribute(attributeName, "");
-                                }
+                                element.setAttribute(attributeName, "");
                             }
-
-                        } else {
-                            element.setAttribute(attributeName, value === undefined ? "" : String(value));
                         }
+                    } else {
+                        element.setAttribute(attributeName, value === undefined ? "" : String(value));
+                    }
 
-                        delete _elementAttributeValues[attributeName];
+                    delete _elementAttributeValues[attributeName];
                 }
             }
 
@@ -3928,21 +3955,24 @@ Component.addClassProperties(
             //If we need to keep an extra container in that case, we should probabaly reuse that element
             //instead of creating a new one.
             if (this.enclosesSize && !this._cssContainerElement) {
+                if (element.tagName === "HTML" || element.tagName === "BODY") {
+                    let containerName =
+                        this.constructor.name === "Component"
+                            ? !!this.identifier
+                                ? null
+                                : this.identifier
+                            : this.constructor.name;
 
-                if((element.tagName === "HTML") || (element.tagName === "BODY")) {
-                    let containerName = this.constructor.name === "Component" 
-                        ? !!this.identifier
-                            ? null
-                            : this.identifier
-                        : this.constructor.name;
-
-                    if(containerName) {
+                    if (containerName) {
                         element.style.setProperty("container", `${this.constructor.name} / ${this.enclosedSizeType}`);
                     }
                 } else {
                     // Create the container
                     this._cssContainerElement = document.createElement("div");
-                    this._cssContainerElement.style.setProperty("container", `${this.constructor.name} / ${this.enclosedSizeType}`);
+                    this._cssContainerElement.style.setProperty(
+                        "container",
+                        `${this.constructor.name} / ${this.enclosedSizeType}`,
+                    );
                     this._cssContainerElement.classList.add(`${this.constructor.name}-container`);
 
                     // Place the new container right before the original element
@@ -3952,7 +3982,7 @@ Component.addClassProperties(
                     this._cssContainerElement.append(element);
                 }
 
-            // Check if we need to unwrap the element
+                // Check if we need to unwrap the element
             } else if (!this.enclosesSize && this._cssContainerElement) {
                 // Place the original element back before the container
                 this._cssContainerElement.before(element);
@@ -3967,33 +3997,32 @@ Component.addClassProperties(
 
             //Layout
             var style = element && element.style;
-            if(style) {
-                if(this.top) {
+            if (style) {
+                if (this.top) {
                     style.setProperty("top", this.top);
                 }
-                if(this.right) {
+                if (this.right) {
                     style.setProperty("right", this.right);
                 }
-                if(this.bottom) {
+                if (this.bottom) {
                     style.setProperty("bottom", this.bottom);
                 }
-                if(this.left) {
+                if (this.left) {
                     style.setProperty("left", this.left);
                 }
             }
-
-        }
+        },
     },
 
     /**
      * @private
      */
     _classList: {
-        value: null
+        value: null,
     },
 
     _classListDirty: {
-        value: false
+        value: false,
     },
 
     /**
@@ -4017,7 +4046,7 @@ Component.addClassProperties(
                 this._initializeClassListFromElement(this.element);
             }
             return this._classList;
-        }
+        },
     },
 
     /**
@@ -4031,7 +4060,6 @@ Component.addClassProperties(
                     // we don't want to subscribe then unsubscribe and subscribe again to the ClassList Changes,
                     // So we don't access to the getter of the property classList.
                     this._classList = new Set();
-
                 } else {
                     if (this._unsubscribeToClassListChanges) {
                         this._unsubscribeToClassListChanges();
@@ -4046,14 +4074,14 @@ Component.addClassProperties(
 
                 this._subscribeToToClassListChanges();
             }
-        }
+        },
     },
 
     /**
      * @private
      */
     _unsubscribeToClassListChanges: {
-        value: null
+        value: null,
     },
 
     /**
@@ -4062,14 +4090,14 @@ Component.addClassProperties(
     _subscribeToToClassListChanges: {
         value: function () {
             this._unsubscribeToClassListChanges = this._classList.addRangeChangeListener(this, "classList");
-        }
+        },
     },
 
     handleClassListRangeChange: {
         value: function (plus, minus) {
             this._classListDirty = true;
             this.needsDraw = true;
-        }
+        },
     },
 
     _drawClassListIntoComponent: {
@@ -4087,10 +4115,10 @@ Component.addClassProperties(
                     }
                 }
 
-                elementClassList.add(...classList)
+                elementClassList.add(...classList);
                 this._classListDirty = false;
             }
-        }
+        },
     },
 
     dispose: {
@@ -4102,11 +4130,12 @@ Component.addClassProperties(
                 this._element = null;
             }
 
-            let childComponents = this.childComponents, i = 0;
+            let childComponents = this.childComponents,
+                i = 0;
             while (childComponents[i]) {
                 childComponents[i].dispose();
             }
-        }
+        },
     },
 
     loadUserInterfaceDescriptor: {
@@ -4119,33 +4148,29 @@ Component.addClassProperties(
                 constructor,
                 promise;
 
-            this.canDrawGate.setField(
-                this.constructor.userInterfaceDescriptorLoadedField,
-                false
-            );
-
+            this.canDrawGate.setField(this.constructor.userInterfaceDescriptorLoadedField, false);
 
             objectDescriptor = object.objectDescriptor;
-            if(objectDescriptor) {
-                if(!Promise.is(objectDescriptor)) {
+            if (objectDescriptor) {
+                if (!Promise.is(objectDescriptor)) {
                     promise = Promise.resolve(objectDescriptor);
-                }
-                else {
+                } else {
                     promise = objectDescriptor;
                     objectDescriptor = undefined;
                 }
             }
 
-            if(!promise && this.application.mainService) {
+            if (!promise && this.application.mainService) {
                 objectDescriptor = this.application.mainService.objectDescriptorForObject(object);
 
-                if(objectDescriptor) {
+                if (objectDescriptor) {
                     promise = Promise.resolve(objectDescriptor);
                 }
             }
 
-            if(!promise) {
-                if (typeof object === "object" &&
+            if (!promise) {
+                if (
+                    typeof object === "object" &&
                     (constructor = object.constructor) &&
                     constructor.objectDescriptorModuleId
                 ) {
@@ -4156,7 +4181,7 @@ Component.addClassProperties(
                     "componentWillUseObjectDescriptorModuleIdForObject",
                     this,
                     objectDescriptorModuleId,
-                    object
+                    object,
                 );
 
                 if (objectDescriptorModuleIdCandidate) {
@@ -4168,7 +4193,7 @@ Component.addClassProperties(
                     if (objectDescriptorModuleIdCandidate) {
                         objectDescriptor = getObjectDescriptorWithModuleId(
                             objectDescriptorModuleId,
-                            infoDelegate ? infoDelegate.require : require
+                            infoDelegate ? infoDelegate.require : require,
                         );
                     } else {
                         objectDescriptor = constructor.objectDescriptor;
@@ -4180,7 +4205,6 @@ Component.addClassProperties(
                 }
             }
 
-
             promise = promise.then(function (objectDescriptor) {
                 var moduleInfo = Montage.getInfoForObject(self),
                     packageName = moduleInfo.require.packageDescription.name,
@@ -4189,12 +4213,10 @@ Component.addClassProperties(
                     userInterfaceDescriptorModuleIdCandidate;
 
                 if (objectDescriptor && objectDescriptor.userInterfaceDescriptorModules) {
-                    userInterfaceDescriptorModuleId =
-                        objectDescriptor.userInterfaceDescriptorModules[moduleId];
+                    userInterfaceDescriptorModuleId = objectDescriptor.userInterfaceDescriptorModules[moduleId];
 
                     if (!userInterfaceDescriptorModuleId) {
-                        userInterfaceDescriptorModuleId =
-                            objectDescriptor.userInterfaceDescriptorModules['*'];
+                        userInterfaceDescriptorModuleId = objectDescriptor.userInterfaceDescriptorModules["*"];
                     }
                 }
 
@@ -4202,16 +4224,16 @@ Component.addClassProperties(
                     "componentWillUseUserInterfaceDescriptorModuleIdForObject",
                     self,
                     userInterfaceDescriptorModuleId,
-                    object
+                    object,
                 );
 
-                if (objectDescriptor && userInterfaceDescriptorModuleId &&
+                if (
+                    objectDescriptor &&
+                    userInterfaceDescriptorModuleId &&
                     (userInterfaceDescriptorModuleIdCandidate === userInterfaceDescriptorModuleId ||
                         !userInterfaceDescriptorModuleIdCandidate)
                 ) {
-                    if (
-                        userInterfaceDescriptorModuleId === objectDescriptor.userInterfaceDescriptorModules['*']
-                    ) {
+                    if (userInterfaceDescriptorModuleId === objectDescriptor.userInterfaceDescriptorModules["*"]) {
                         return objectDescriptor.userInterfaceDescriptor;
                     }
 
@@ -4219,7 +4241,8 @@ Component.addClassProperties(
                 } else if (userInterfaceDescriptorModuleIdCandidate) {
                     infoDelegate = infoDelegate || Montage.getInfoForObject(self.delegate);
 
-                    return (infoDelegate.require || require).async(userInterfaceDescriptorModuleIdCandidate)
+                    return (infoDelegate.require || require)
+                        .async(userInterfaceDescriptorModuleIdCandidate)
                         .then(function (userInterfaceDescriptorModule) {
                             return userInterfaceDescriptorModule.montageObject;
                         });
@@ -4227,12 +4250,9 @@ Component.addClassProperties(
             });
 
             return promise.finally(function () {
-                self.canDrawGate.setField(
-                    self.constructor.userInterfaceDescriptorLoadedField,
-                    true
-                );
+                self.canDrawGate.setField(self.constructor.userInterfaceDescriptorLoadedField, true);
             });
-        }
+        },
     },
 
     /**
@@ -4240,62 +4260,61 @@ Component.addClassProperties(
      * for corresponding keys.
      * @private
      */
-    _superMakePropertyObservable : {
-        value: PropertyChanges.prototype.makePropertyObservable
+    _superMakePropertyObservable: {
+        value: PropertyChanges.prototype.makePropertyObservable,
     },
     makePropertyObservable: {
-        value: function(key) {
-
-            switch(key) {
-                case 'x':
+        value: function (key) {
+            switch (key) {
+                case "x":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyX = true;
                     break;
 
-                case 'y':
+                case "y":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyY = true;
                     break;
 
-                case 'width':
+                case "width":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyWidth = true;
                     break;
 
-                case 'height':
+                case "height":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyHeight = true;
                     break;
 
-               case 'top':
+                case "top":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyTop = true;
                     break;
 
-                case 'right':
+                case "right":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyRight = true;
                     break;
 
-                case 'bottom':
+                case "bottom":
                     this._updatesLayoutProperties = true;
                     this._updatesLayoutPropertyBottom = true;
                     break;
 
-               case 'left':
-                this._updatesLayoutProperties = true;
-                this._updatesLayoutPropertyLeft = true;
-                break;
-        }
-            this._superMakePropertyObservable( key);
-        }
+                case "left":
+                    this._updatesLayoutProperties = true;
+                    this._updatesLayoutPropertyLeft = true;
+                    break;
+            }
+            this._superMakePropertyObservable(key);
+        },
     },
 
     _updatesLayoutProperties: {
-        value: 0
+        value: 0,
     },
     _updatesLayoutPropertyX: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyX: {
         get: function () {
@@ -4304,18 +4323,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyX !== value) {
                 this._updatesLayoutPropertyX = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _updatesLayoutPropertyY: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyY: {
         get: function () {
@@ -4324,18 +4343,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyY !== value) {
                 this._updatesLayoutPropertyY = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _updatesLayoutPropertyWidth: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyWidth: {
         get: function () {
@@ -4344,18 +4363,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyWidth !== value) {
                 this._updatesLayoutPropertyWidth = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-    }
+        },
     },
 
     _updatesLayoutPropertyHeight: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyHeight: {
         get: function () {
@@ -4364,18 +4383,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyHeight !== value) {
                 this._updatesLayoutPropertyHeight = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _updatesLayoutPropertyTop: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyTop: {
         get: function () {
@@ -4384,18 +4403,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyTop !== value) {
                 this._updatesLayoutPropertyTop = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _updatesLayoutPropertyRight: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyRight: {
         get: function () {
@@ -4404,18 +4423,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyRight !== value) {
                 this._updatesLayoutPropertyRight = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _updatesLayoutPropertyBottom: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyBottom: {
         get: function () {
@@ -4424,19 +4443,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyBottom !== value) {
                 this._updatesLayoutPropertyBottom = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
-
     _updatesLayoutPropertyLeft: {
-        value: false
+        value: false,
     },
     updatesLayoutPropertyLeft: {
         get: function () {
@@ -4445,18 +4463,18 @@ Component.addClassProperties(
         set: function (value) {
             if (this._updatesLayoutPropertyLeft !== value) {
                 this._updatesLayoutPropertyLeft = value;
-                if(value) {
+                if (value) {
                     this._updatesLayoutProperties++;
                 } else {
                     this._updatesLayoutProperties--;
                 }
                 this.needsDraw = true;
             }
-        }
+        },
     },
 
     _top: {
-        value: undefined
+        value: undefined,
     },
     top: {
         get: function () {
@@ -4467,10 +4485,10 @@ Component.addClassProperties(
                 this._top = value;
                 this.needsDraw = true;
             }
-        }
+        },
     },
     _right: {
-        value: undefined
+        value: undefined,
     },
     right: {
         get: function () {
@@ -4481,10 +4499,10 @@ Component.addClassProperties(
                 this._right = value;
                 this.needsDraw = true;
             }
-        }
+        },
     },
     _bottom: {
-        value: undefined
+        value: undefined,
     },
     bottom: {
         get: function () {
@@ -4495,10 +4513,10 @@ Component.addClassProperties(
                 this._bottom = value;
                 this.needsDraw = true;
             }
-        }
+        },
     },
     _left: {
-        value: undefined
+        value: undefined,
     },
     left: {
         get: function () {
@@ -4509,959 +4527,1009 @@ Component.addClassProperties(
                 this._left = value;
                 this.needsDraw = true;
             }
-        }
-    }
-
-
+        },
+    },
 });
 
 /**
  * @class RootComponent
  * @extends Component
  */
-var RootComponent = Component.specialize( /** @lends RootComponent.prototype */{
-    constructor: {
-        value: function RootComponent() {
-            this._drawTree = this._drawTree.bind(this);
-            this._readyToDrawListIndex = new Map();
-            this._addedStyleSheetsByTemplate = new WeakMap();
-        }
-    },
-
-    /**
-     * @private
-     * @function
-     * @returns itself
-     */
-    init: {
-        value: function () {
-            this.bodyComponent = new Component();
-            this.bodyComponent.hasTemplate = false;
-            this.bodyComponent.element = document.body;
-            this.addChildComponent(this.bodyComponent);
-            return this;
-        }
-    },
-
-    needsDraw: {
-        enumerable: true,
-        get: function () {
-            return !!this._needsDraw;
+var RootComponent = Component.specialize(
+    /** @lends RootComponent.prototype */ {
+        constructor: {
+            value: function RootComponent() {
+                this._drawTree = this._drawTree.bind(this);
+                this._readyToDrawListIndex = new Map();
+                this._addedStyleSheetsByTemplate = new WeakMap();
+            },
         },
-        set: function (value) {
-            if (this._needsDraw !== value) {
-                this._needsDraw = !!value;
-                if (value) {
-                    var childComponents = this.childComponents;
-                    //jshint -W106
-                    for (var i = 0, childComponent; (childComponent = childComponents[i]); i++) {
-                        if (needsDrawLogger.isDebug) {
-                            needsDrawLogger.debug(this, "needsDraw = true for: " + childComponent._montage_metadata.exportedSymbol);
+
+        /**
+         * @private
+         * @function
+         * @returns itself
+         */
+        init: {
+            value: function () {
+                this.bodyComponent = new Component();
+                this.bodyComponent.hasTemplate = false;
+                this.bodyComponent.element = document.body;
+                this.addChildComponent(this.bodyComponent);
+                return this;
+            },
+        },
+
+        needsDraw: {
+            enumerable: true,
+            get: function () {
+                return !!this._needsDraw;
+            },
+            set: function (value) {
+                if (this._needsDraw !== value) {
+                    this._needsDraw = !!value;
+                    if (value) {
+                        var childComponents = this.childComponents;
+                        //jshint -W106
+                        for (var i = 0, childComponent; (childComponent = childComponents[i]); i++) {
+                            if (needsDrawLogger.isDebug) {
+                                needsDrawLogger.debug(
+                                    this,
+                                    "needsDraw = true for: " + childComponent._montage_metadata.exportedSymbol,
+                                );
+                            }
+                            childComponent.needsDraw = true;
                         }
-                        childComponent.needsDraw = true;
+                        //jshint +W106
                     }
-                    //jshint +W106
                 }
-            }
-        }
-    },
+            },
+        },
 
-    canDrawGate: {
-        get: function () {
-            return this._canDrawGate || (this._canDrawGate = new Gate().initWithDelegate(this));
-        }
-    },
+        canDrawGate: {
+            get: function () {
+                return this._canDrawGate || (this._canDrawGate = new Gate().initWithDelegate(this));
+            },
+        },
 
-    _clearNeedsDrawTimeOut: {
-        value: null
-    },
+        _clearNeedsDrawTimeOut: {
+            value: null,
+        },
 
-    _needsDrawList: {
-        value: []
-    },
+        _needsDrawList: {
+            value: [],
+        },
 
-    _cannotDrawList: {
-        value: null
-    },
+        _cannotDrawList: {
+            value: null,
+        },
 
-    /**
-     * @function
-     * @param {Object} component
-     */
-    componentBlockDraw: {
-        value: function (component) {
-            this._cannotDrawList = (this._cannotDrawList ? this._cannotDrawList : new Set());
-            this._cannotDrawList.add(component);
-            if (this._clearNeedsDrawTimeOut) {
-                clearTimeout(this._clearNeedsDrawTimeOut);
+        /**
+         * @function
+         * @param {Object} component
+         */
+        componentBlockDraw: {
+            value: function (component) {
+                this._cannotDrawList = this._cannotDrawList ? this._cannotDrawList : new Set();
+                this._cannotDrawList.add(component);
+                if (this._clearNeedsDrawTimeOut) {
+                    clearTimeout(this._clearNeedsDrawTimeOut);
+                    this._clearNeedsDrawTimeOut = null;
+                }
+            },
+        },
+
+        // TODO: implement this with a flag on the component
+        isComponentWaitingNeedsDraw: {
+            value: function (component) {
+                return this._cannotDrawList.has(component) || this._needsDrawList.indexOf(component) >= 0;
+            },
+        },
+
+        /**
+         * @function
+         * @param {Object} component
+         * @param {number} value
+         */
+        componentCanDraw: {
+            value: function (component, value) {
+                if (value) {
+                    if (!this._cannotDrawList) {
+                        return;
+                    }
+                    this._cannotDrawList.delete(component);
+                    this._needsDrawList.push(component);
+                    if (this._cannotDrawList.size === 0 && this._needsDrawList.length > 0) {
+                        if (!this._clearNeedsDrawTimeOut) {
+                            var self = this;
+                            // Wait to clear the needsDraw list as components could be loaded synchronously
+                            this._clearNeedsDrawTimeOut = setTimeout(function () {
+                                self._clearNeedsDrawList();
+                            }, 0);
+                        }
+                    }
+                } else {
+                    if (this._clearNeedsDrawTimeOut) {
+                        clearTimeout(this._clearNeedsDrawTimeOut);
+                        this._clearNeedsDrawTimeOut = null;
+                    }
+                }
+            },
+        },
+
+        _clearNeedsDrawList: {
+            value: function () {
+                var component,
+                    i,
+                    length,
+                    needsDrawList = this._needsDrawList;
+                length = needsDrawList.length;
+                for (i = 0; i < length; i++) {
+                    component = needsDrawList[i];
+                    if (
+                        component.needsDraw ||
+                        // Maybe the component doesn't need to draw but has child
+                        // components that do.
+                        (component._drawList && component._drawList.length > 0)
+                    ) {
+                        component._addToParentsDrawList();
+                    }
+                }
                 this._clearNeedsDrawTimeOut = null;
-            }
-        }
-    },
+                needsDrawList.length = 0;
+            },
+        },
 
-    // TODO: implement this with a flag on the component
-    isComponentWaitingNeedsDraw: {
-        value: function (component) {
-            return this._cannotDrawList.has(component) ||
-                this._needsDrawList.indexOf(component) >= 0;
-        }
-    },
-
-    /**
-     * @function
-     * @param {Object} component
-     * @param {number} value
-     */
-    componentCanDraw: {
-        value: function (component, value) {
-            if (value) {
+        /**
+         * @function
+         * @param {Component} componentId
+         */
+        removeFromCannotDrawList: {
+            value: function (component) {
                 if (!this._cannotDrawList) {
                     return;
                 }
+
                 this._cannotDrawList.delete(component);
-                this._needsDrawList.push(component);
+
                 if (this._cannotDrawList.size === 0 && this._needsDrawList.length > 0) {
                     if (!this._clearNeedsDrawTimeOut) {
                         var self = this;
-                        // Wait to clear the needsDraw list as components could be loaded synchronously
                         this._clearNeedsDrawTimeOut = setTimeout(function () {
                             self._clearNeedsDrawList();
                         }, 0);
                     }
                 }
-            } else {
-                if (this._clearNeedsDrawTimeOut) {
-                    clearTimeout(this._clearNeedsDrawTimeOut);
-                    this._clearNeedsDrawTimeOut = null;
-                }
-            }
-        }
-    },
-
-    _clearNeedsDrawList: {
-        value: function () {
-            var component, i, length, needsDrawList = this._needsDrawList;
-            length = needsDrawList.length;
-            for (i = 0; i < length; i++) {
-                component = needsDrawList[i];
-                if (component.needsDraw ||
-                    // Maybe the component doesn't need to draw but has child
-                    // components that do.
-                    (component._drawList && component._drawList.length > 0)) {
-                    component._addToParentsDrawList();
-                }
-            }
-            this._clearNeedsDrawTimeOut = null;
-            needsDrawList.length = 0;
-        }
-    },
-
-    /**
-     * @function
-     * @param {Component} componentId
-     */
-    removeFromCannotDrawList: {
-        value: function (component) {
-            if (!this._cannotDrawList) {
-                return;
-            }
-
-            this._cannotDrawList.delete(component);
-
-            if (this._cannotDrawList.size === 0 && this._needsDrawList.length > 0) {
-                if (!this._clearNeedsDrawTimeOut) {
-                    var self = this;
-                    this._clearNeedsDrawTimeOut = setTimeout(function () {
-                        self._clearNeedsDrawList();
-                    }, 0);
-                }
-            }
-        }
-    },
-
-    _cancelDrawIfScheduled: {
-        value: function () {
-            var requestedAnimationFrame = this.requestedAnimationFrame,
-                cancelAnimationFrame = this.cancelAnimationFrame;
-            if (requestedAnimationFrame !== null) {
-                if (!this._frameTime) { // Only cancel it is not already in a drawTree call
-                    if (logger.isDebug) {
-                        logger.debug(this, "clearing draw");
-                    }
-                    if (cancelAnimationFrame) {
-                        cancelAnimationFrame(requestedAnimationFrame);
-                    } else {
-                        clearTimeout(requestedAnimationFrame);
-                    }
-                    this.requestedAnimationFrame = null;
-                }
-            }
-        }
-    },
-
-    /**
-     * Adds the passed in child component to the drawList.
-     * @private
-     */
-    _addToDrawList: {
-        value: function (childComponent) {
-            this.__addToDrawList(childComponent);
-            if (this.drawListLogger.isDebug) {
-                this.drawListLogger.debug(this, this.canDrawGate.value, this.requestedAnimationFrame);
-            }
-            this.drawTree();
+            },
         },
-        enumerable: false
-    },
 
-    /**
-     * Adds the passed in composer to the list of composers to be executed
-     * in the next draw cycle and requests a draw cycle if one has not been
-     * requested yet.
-     * @function
-     * @param {Composer} composer
-     */
-    addToComposerList: {
-        value: function (composer) {
-            this.composerList.push(composer);
-
-            if (drawLogger.isDebug) {
-                drawLogger.debug(this, composer, "Added to composer list");
-            }
-            // If a draw is already in progress this.drawTree() will not schedule another one, so track
-            // that a composer requested a draw in case a new draw does need to be scheduled when the
-            // current loop is done
-            this._scheduleComposerRequest = true;
-            this.drawTree();
-        }
-    },
-
-    // Create a second composer list so that the lists can be swapped during a draw instead of creating a new array every time
-    composerListSwap: {
-        get: function () {
-            if (!this._composerListSwap) {
-                this._composerListSwap = [];
-            }
-
-            return this._composerListSwap;
-        }
-    },
-
-    _composerListSwap: {
-        value: null
-    },
-
-    /*
-     * Flag to track if a composer is requesting a draw
-     * @private
-     */
-    _scheduleComposerRequest: {
-        value: false
-    },
-
-    /**
-     * The value returned by requestAnimationFrame.
-     * If a request has been scheduled but not run yet, else null.
-     * @private
-     * @type {number}
-     * @default null
-     */
-    requestedAnimationFrame: {
-        value: null,
-        enumerable: false
-    },
-
-    /**
-     * @private
-     * @function
-     */
-    requestAnimationFrame: {
-        value: (global.requestAnimationFrame || global.webkitRequestAnimationFrame ||
-                    global.mozRequestAnimationFrame ||  global.msRequestAnimationFrame),
-        enumerable: false
-    },
-
-    /**
-     * @private
-     * @function
-     */
-    cancelAnimationFrame: {
-        value: (global.cancelAnimationFrame ||  global.webkitCancelAnimationFrame ||
-                    global.mozCancelAnimationFrame || global.msCancelAnimationFrame),
-        enumerable: false
-    },
-
-    /**
-     * Set to the current time of the frame while drawing is in progress.
-     * The frame time is either supplied by the requestAnimationFrame callback if available in the browser, or by using Date.now if it is a setTimeout.
-     * @private
-     */
-    _frameTime: {
-        value: null
-    },
-
-    /**
-     * oldSource and diff are used to detect DOM modifications outside of the
-     * draw loop, but only if drawLogger.isDebug is true.
-     * @private
-     */
-    _oldSource: {
-        value: null
-    },
-    _diff: {
-        // Written by John Resig. Used under the Creative Commons Attribution 2.5 License.
-        // http://ejohn.org/projects/javascript-diff-algorithm/
-        value: function ( o, n ) {
-            var ns = {},
-                os = {};
-
-            function isNullOrUndefined(o) {
-                return o === undefined || o === null;
-            }
-
-            for (var i = 0; i < n.length; i++ ) {
-                if (isNullOrUndefined(ns[n[i]])) {
-                    ns[n[i]] = {
-                        rows: [],
-                        o: null
-                    };
+        _cancelDrawIfScheduled: {
+            value: function () {
+                var requestedAnimationFrame = this.requestedAnimationFrame,
+                    cancelAnimationFrame = this.cancelAnimationFrame;
+                if (requestedAnimationFrame !== null) {
+                    if (!this._frameTime) {
+                        // Only cancel it is not already in a drawTree call
+                        if (logger.isDebug) {
+                            logger.debug(this, "clearing draw");
+                        }
+                        if (cancelAnimationFrame) {
+                            cancelAnimationFrame(requestedAnimationFrame);
+                        } else {
+                            clearTimeout(requestedAnimationFrame);
+                        }
+                        this.requestedAnimationFrame = null;
+                    }
                 }
-                ns[n[i]].rows.push( i );
-            }
+            },
+        },
 
-            for (i = 0; i < o.length; i++ ) {
-                if (isNullOrUndefined(os[o[i]])) {
-                    os[o[i]] = {
-                        rows: [],
-                        n: null
-                    };
+        /**
+         * Adds the passed in child component to the drawList.
+         * @private
+         */
+        _addToDrawList: {
+            value: function (childComponent) {
+                this.__addToDrawList(childComponent);
+                if (this.drawListLogger.isDebug) {
+                    this.drawListLogger.debug(this, this.canDrawGate.value, this.requestedAnimationFrame);
                 }
-                os[o[i]].rows.push(i);
-            }
+                this.drawTree();
+            },
+            enumerable: false,
+        },
 
-            for (i in ns ) {
-                if (
-                    ns[i].rows.length === 1 &&
-                        !isNullOrUndefined(os[i]) &&
-                            os[i].rows.length === 1
-                ) {
-                    n[ns[i].rows[0]] = {
-                        text: n[ns[i].rows[0]],
-                        row: os[i].rows[0]
-                    };
-                    o[ os[i].rows[0] ] = {
-                        text: o[ os[i].rows[0] ],
-                        row: ns[i].rows[0]
-                    };
+        /**
+         * Adds the passed in composer to the list of composers to be executed
+         * in the next draw cycle and requests a draw cycle if one has not been
+         * requested yet.
+         * @function
+         * @param {Composer} composer
+         */
+        addToComposerList: {
+            value: function (composer) {
+                this.composerList.push(composer);
+
+                if (drawLogger.isDebug) {
+                    drawLogger.debug(this, composer, "Added to composer list");
                 }
-            }
+                // If a draw is already in progress this.drawTree() will not schedule another one, so track
+                // that a composer requested a draw in case a new draw does need to be scheduled when the
+                // current loop is done
+                this._scheduleComposerRequest = true;
+                this.drawTree();
+            },
+        },
 
-            for (i = 0; i < n.length - 1; i++ ) {
-                if (
-                    !isNullOrUndefined(n[i].text) && isNullOrUndefined(n[i+1].text) &&
-                        n[i].row + 1 < o.length && isNullOrUndefined(o[ n[i].row + 1 ].text) &&
-                            n[i+1] === o[ n[i].row + 1 ]
-                ) {
-                    n[i+1] = { text: n[i+1], row: n[i].row + 1 };
-                    o[n[i].row+1] = { text: o[n[i].row+1], row: i + 1 };
+        // Create a second composer list so that the lists can be swapped during a draw instead of creating a new array every time
+        composerListSwap: {
+            get: function () {
+                if (!this._composerListSwap) {
+                    this._composerListSwap = [];
                 }
-            }
 
-            for (i = n.length - 1; i > 0; i-- ) {
-                if (
-                    !isNullOrUndefined(n[i].text) && isNullOrUndefined(n[i - 1].text) &&
-                        n[i].row > 0 && isNullOrUndefined(o[ n[i].row - 1].text) &&
-                            n[i - 1] === o[ n[i].row - 1 ]
-                ) {
-                    n[i - 1] = {
-                        text: n[i - 1],
-                        row: n[i].row - 1
-                    };
-                    o[n[i].row-1] = {
-                        text: o[n[i].row-1],
-                        row: i - 1
-                    };
+                return this._composerListSwap;
+            },
+        },
+
+        _composerListSwap: {
+            value: null,
+        },
+
+        /*
+         * Flag to track if a composer is requesting a draw
+         * @private
+         */
+        _scheduleComposerRequest: {
+            value: false,
+        },
+
+        /**
+         * The value returned by requestAnimationFrame.
+         * If a request has been scheduled but not run yet, else null.
+         * @private
+         * @type {number}
+         * @default null
+         */
+        requestedAnimationFrame: {
+            value: null,
+            enumerable: false,
+        },
+
+        /**
+         * @private
+         * @function
+         */
+        requestAnimationFrame: {
+            value:
+                global.requestAnimationFrame ||
+                global.webkitRequestAnimationFrame ||
+                global.mozRequestAnimationFrame ||
+                global.msRequestAnimationFrame,
+            enumerable: false,
+        },
+
+        /**
+         * @private
+         * @function
+         */
+        cancelAnimationFrame: {
+            value:
+                global.cancelAnimationFrame ||
+                global.webkitCancelAnimationFrame ||
+                global.mozCancelAnimationFrame ||
+                global.msCancelAnimationFrame,
+            enumerable: false,
+        },
+
+        /**
+         * Set to the current time of the frame while drawing is in progress.
+         * The frame time is either supplied by the requestAnimationFrame callback if available in the browser, or by using Date.now if it is a setTimeout.
+         * @private
+         */
+        _frameTime: {
+            value: null,
+        },
+
+        /**
+         * oldSource and diff are used to detect DOM modifications outside of the
+         * draw loop, but only if drawLogger.isDebug is true.
+         * @private
+         */
+        _oldSource: {
+            value: null,
+        },
+        _diff: {
+            // Written by John Resig. Used under the Creative Commons Attribution 2.5 License.
+            // http://ejohn.org/projects/javascript-diff-algorithm/
+            value: function (o, n) {
+                var ns = {},
+                    os = {};
+
+                function isNullOrUndefined(o) {
+                    return o === undefined || o === null;
                 }
-            }
 
-            return {
-                o: o,
-                n: n
-            };
-        }
-    },
+                for (var i = 0; i < n.length; i++) {
+                    if (isNullOrUndefined(ns[n[i]])) {
+                        ns[n[i]] = {
+                            rows: [],
+                            o: null,
+                        };
+                    }
+                    ns[n[i]].rows.push(i);
+                }
 
-    /**
-     * @private
-     */
-    _previousDrawDate: {
-        enumerable: false,
-        value: 0
-    },
+                for (i = 0; i < o.length; i++) {
+                    if (isNullOrUndefined(os[o[i]])) {
+                        os[o[i]] = {
+                            rows: [],
+                            n: null,
+                        };
+                    }
+                    os[o[i]].rows.push(i);
+                }
 
-    /**
-     * @private
-     */
-    _documentResources: {
-        value: null
-    },
+                for (i in ns) {
+                    if (ns[i].rows.length === 1 && !isNullOrUndefined(os[i]) && os[i].rows.length === 1) {
+                        n[ns[i].rows[0]] = {
+                            text: n[ns[i].rows[0]],
+                            row: os[i].rows[0],
+                        };
+                        o[os[i].rows[0]] = {
+                            text: o[os[i].rows[0]],
+                            row: ns[i].rows[0],
+                        };
+                    }
+                }
 
-    /**
-     * @private
-     */
-    _needsStylesheetsDraw: {
-        value: false
-    },
+                for (i = 0; i < n.length - 1; i++) {
+                    if (
+                        !isNullOrUndefined(n[i].text) &&
+                        isNullOrUndefined(n[i + 1].text) &&
+                        n[i].row + 1 < o.length &&
+                        isNullOrUndefined(o[n[i].row + 1].text) &&
+                        n[i + 1] === o[n[i].row + 1]
+                    ) {
+                        n[i + 1] = { text: n[i + 1], row: n[i].row + 1 };
+                        o[n[i].row + 1] = { text: o[n[i].row + 1], row: i + 1 };
+                    }
+                }
 
-    /**
-     * @private
-     * Those 3 arrays keep related data at the same index
-     */
-    _stylesheets: {
-        value: []
-    },
-    _cssLayerNames: {
-        value: []
-    },
-    _stylesheetsclassListScopes: {
-        value: []
-    },
+                for (i = n.length - 1; i > 0; i--) {
+                    if (
+                        !isNullOrUndefined(n[i].text) &&
+                        isNullOrUndefined(n[i - 1].text) &&
+                        n[i].row > 0 &&
+                        isNullOrUndefined(o[n[i].row - 1].text) &&
+                        n[i - 1] === o[n[i].row - 1]
+                    ) {
+                        n[i - 1] = {
+                            text: n[i - 1],
+                            row: n[i].row - 1,
+                        };
+                        o[n[i].row - 1] = {
+                            text: o[n[i].row - 1],
+                            row: i - 1,
+                        };
+                    }
+                }
 
-    /**
-     * @function
-     */
-    addStylesheetWithClassListScopeInCSSLayerName: {
-        value: function (style, classListScope, cssLayerName) {
-            
-            this._stylesheets.push(style);
-            this._stylesheetsclassListScopes.push(classListScope ? `.${this._stylesheets.join.call(classListScope,".")}` : undefined);
-            this._cssLayerNames.push(cssLayerName);
-            this._needsStylesheetsDraw = true;
-        }
-    },
-    _addedStyleSheetsByTemplate: {
-        value: null
-    },
+                return {
+                    o: o,
+                    n: n,
+                };
+            },
+        },
 
-    _addCssLayerOrder: {
-        value: function () {
-            let cssLayers = global.require.modDependencies();
-                cssLayers.push(global.require.config.name),
-                styleElement = document.createElement('style');
+        /**
+         * @private
+         */
+        _previousDrawDate: {
+            enumerable: false,
+            value: 0,
+        },
 
-            styleElement.textContent = `@layer ${cssLayers.map((layer) => {
-                return layer.replace(".", "_");
-            }).join(", ")};`; 
+        /**
+         * @private
+         */
+        _documentResources: {
+            value: null,
+        },
 
-            styleElement.setAttribute("data-mod-id", "mod-layer-statement")
+        /**
+         * @private
+         */
+        _needsStylesheetsDraw: {
+            value: false,
+        },
 
-            document.head.firstChild.before(styleElement);
-            return styleElement;
-        }
-    },
-    
-    addStyleSheetsFromTemplate: {
-        value: function(template, cssLayerName) {
+        /**
+         * @private
+         * Those 3 arrays keep related data at the same index
+         */
+        _stylesheets: {
+            value: [],
+        },
+        _cssLayerNames: {
+            value: [],
+        },
+        _stylesheetsclassListScopes: {
+            value: [],
+        },
 
-            if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._cssLayerOrderElement) {
-                this._cssLayerOrderElement = document.querySelector('[data-mod-id="mod-layer-statement"]') || this._addCssLayerOrder();
-            }
-            
-            cssLayerName = cssLayerName.replace(".", "_");
-            if(!this._addedStyleSheetsByTemplate.has(template)) {
-                var resources = template.getResources(),
-                    ownerDocument = this.element.ownerDocument,
-                    styles = resources.createStylesForDocument(ownerDocument),
-                    componentElementClassList = (template.document.querySelector("body > [data-mod-id]"))?.classList;
+        /**
+         * @function
+         */
+        addStylesheetWithClassListScopeInCSSLayerName: {
+            value: function (style, classListScope, cssLayerName) {
+                this._stylesheets.push(style);
+                this._stylesheetsclassListScopes.push(
+                    classListScope ? `.${this._stylesheets.join.call(classListScope, ".")}` : undefined,
+                );
+                this._cssLayerNames.push(cssLayerName);
+                this._needsStylesheetsDraw = true;
+            },
+        },
+        _addedStyleSheetsByTemplate: {
+            value: null,
+        },
 
-                /*
+        _addCssLayerOrder: {
+            value: function () {
+                let cssLayers = global.require.modDependencies();
+                (cssLayers.push(global.require.config.name), (styleElement = document.createElement("style")));
+
+                styleElement.textContent = `@layer ${cssLayers
+                    .map((layer) => {
+                        return layer.replace(".", "_");
+                    })
+                    .join(", ")};`;
+
+                styleElement.setAttribute("data-mod-id", "mod-layer-statement");
+
+                document.head.firstChild.before(styleElement);
+                return styleElement;
+            },
+        },
+
+        addStyleSheetsFromTemplate: {
+            value: function (template, cssLayerName) {
+                if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._cssLayerOrderElement) {
+                    this._cssLayerOrderElement =
+                        document.querySelector('[data-mod-id="mod-layer-statement"]') || this._addCssLayerOrder();
+                }
+
+                cssLayerName = cssLayerName.replace(".", "_");
+                if (!this._addedStyleSheetsByTemplate.has(template)) {
+                    var resources = template.getResources(),
+                        ownerDocument = this.element.ownerDocument,
+                        styles = resources.createStylesForDocument(ownerDocument),
+                        componentElementClassList = template.document.querySelector("body > [data-mod-id]")?.classList;
+
+                    /*
                     What we need to scope is a selector made of all the classes of the template's root element
 
                     template.document.querySelector("[data-mod-id=owner]").classList
 
                 */
 
-                for (var i = 0, style; (style = styles[i]); i++) {
+                    for (var i = 0, style; (style = styles[i]); i++) {
                         /*
                             Flow is one component where the owner's element doesn't have data-mod-id="owner", but data-mod-id="montage-flow".
                             So to avoid that we'll consider the root element the first direct child of the body that has a data-mod-id attribute
                         */
-                        this.addStylesheetWithClassListScopeInCSSLayerName(style, componentElementClassList, cssLayerName);
+                        this.addStylesheetWithClassListScopeInCSSLayerName(
+                            style,
+                            componentElementClassList,
+                            cssLayerName,
+                        );
                     }
-                this._addedStyleSheetsByTemplate.set(template,true);
-            }
-        }
-    },
-    __bufferDocumentFragment: {
-        value: null,
-    },
-    _bufferDocumentFragment: {
-         get: function() {
-             return this.__bufferDocumentFragment || ( this.__bufferDocumentFragment = this._element.ownerDocument.createDocumentFragment());
-        }
-    },
-    /**
-     * @private
-     */
-    drawStylesheets: {
-        value: function () {
+                    this._addedStyleSheetsByTemplate.set(template, true);
+                }
+            },
+        },
+        __bufferDocumentFragment: {
+            value: null,
+        },
+        _bufferDocumentFragment: {
+            get: function () {
+                return (
+                    this.__bufferDocumentFragment ||
+                    (this.__bufferDocumentFragment = this._element.ownerDocument.createDocumentFragment())
+                );
+            },
+        },
+        /**
+         * @private
+         */
+        drawStylesheets: {
+            value: function () {
                 var documentResources = this._documentResources,
-                stylesheets = this._stylesheets,
-                stylesheetsclassListScopes = this._stylesheetsclassListScopes,
-                cssLayerNames = this._cssLayerNames,
-                stylesheet,
-                documentHead = documentResources._document.head,
-                bufferDocumentFragment = this._bufferDocumentFragment;
+                    stylesheets = this._stylesheets,
+                    stylesheetsclassListScopes = this._stylesheetsclassListScopes,
+                    cssLayerNames = this._cssLayerNames,
+                    stylesheet,
+                    documentHead = documentResources._document.head,
+                    bufferDocumentFragment = this._bufferDocumentFragment;
 
-            while ((stylesheet = stylesheets.shift())) {
-                documentResources.addStyle(stylesheet,bufferDocumentFragment, stylesheetsclassListScopes.shift(), cssLayerNames.shift());
-            }
+                while ((stylesheet = stylesheets.shift())) {
+                    documentResources.addStyle(
+                        stylesheet,
+                        bufferDocumentFragment,
+                        stylesheetsclassListScopes.shift(),
+                        cssLayerNames.shift(),
+                    );
+                }
 
-            /*
-                Add all stylesheets after the CSS layer statement in the DOM to ensure the 
+                /*
+                Add all stylesheets after the CSS layer statement in the DOM to ensure the
                 order defined in the statement is honored.
             */
-            if (documentHead.firstElementChild === this._cssLayerOrderElement) {
-                documentHead.firstElementChild.after(bufferDocumentFragment);
-            }
-            
-            this._needsStylesheetsDraw = false;
-        }
-    },
-
-    /**
-     * @private
-     */
-    drawTree: {
-        value: function drawTree() {
-            if (this.requestedAnimationFrame === null) { // 0 is a valid requestedAnimationFrame value
-                var requestAnimationFrame = this.requestAnimationFrame;
-                if (requestAnimationFrame) {
-                    this.requestedAnimationFrame = requestAnimationFrame(this._drawTree);
-                } else {
-                    // Shim based in Erik Möller's code at
-                    // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
-                    var currentDate = Date.now(),
-                        miliseconds = 17 - currentDate + this._previousDrawDate;
-
-                    if (miliseconds < 0) {
-                        miliseconds = 0;
-                    }
-                    this.requestedAnimationFrame = setTimeout(this._drawTree, miliseconds);
-                    this._previousDrawDate = currentDate + miliseconds;
+                if (documentHead.firstElementChild === this._cssLayerOrderElement) {
+                    documentHead.firstElementChild.after(bufferDocumentFragment);
                 }
-                this._scheduleComposerRequest = false;
-            }
+
+                this._needsStylesheetsDraw = false;
+            },
         },
-        enumerable: false
-    },
 
-    _drawTree: {
-        value: function (timestamp) {
-            var drawPerformanceStartTime;
+        /**
+         * @private
+         */
+        drawTree: {
+            value: function drawTree() {
+                if (this.requestedAnimationFrame === null) {
+                    // 0 is a valid requestedAnimationFrame value
+                    var requestAnimationFrame = this.requestAnimationFrame;
+                    if (requestAnimationFrame) {
+                        this.requestedAnimationFrame = requestAnimationFrame(this._drawTree);
+                    } else {
+                        // Shim based in Erik Möller's code at
+                        // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
+                        var currentDate = Date.now(),
+                            miliseconds = 17 - currentDate + this._previousDrawDate;
 
-            // Add all stylesheets needed by the components since last
-            // draw.
-            if (this._needsStylesheetsDraw) {
-                this.drawStylesheets();
-            }
+                        if (miliseconds < 0) {
+                            miliseconds = 0;
+                        }
+                        this.requestedAnimationFrame = setTimeout(this._drawTree, miliseconds);
+                        this._previousDrawDate = currentDate + miliseconds;
+                    }
+                    this._scheduleComposerRequest = false;
+                }
+            },
+            enumerable: false,
+        },
 
-            // Wait for all stylesheets to be loaded, do not proceeed
-            // with the draw cycle until all needed stylesheets are
-            // ready.
-            // We need to do this because adding the stylesheets won't
-            // make them immediately available for styling even if the
-            // file is already loaded.
-            if (!this._documentResources.areStylesLoaded) {
+        _drawTree: {
+            value: function (timestamp) {
+                var drawPerformanceStartTime;
+
+                // Add all stylesheets needed by the components since last
+                // draw.
+                if (this._needsStylesheetsDraw) {
+                    this.drawStylesheets();
+                }
+
+                // Wait for all stylesheets to be loaded, do not proceeed
+                // with the draw cycle until all needed stylesheets are
+                // ready.
+                // We need to do this because adding the stylesheets won't
+                // make them immediately available for styling even if the
+                // file is already loaded.
+                if (!this._documentResources.areStylesLoaded) {
+                    if (drawPerformanceLogger.isDebug) {
+                        console.log("Draw Cycle Waiting Stylesheets: ", this._documentResources._expectedStyles.length);
+                    }
+
+                    this.requestedAnimationFrame = null;
+                    this.drawTree();
+                    return;
+                }
+
                 if (drawPerformanceLogger.isDebug) {
-                    console.log("Draw Cycle Waiting Stylesheets: ", this._documentResources._expectedStyles.length);
+                    if (window.performance) {
+                        drawPerformanceStartTime = window.performance.now();
+                    } else {
+                        drawPerformanceStartTime = Date.now();
+                    }
                 }
-
-                this.requestedAnimationFrame = null;
-                this.drawTree();
-                return;
-            }
-
-            if (drawPerformanceLogger.isDebug) {
-                if (window.performance) {
-                    drawPerformanceStartTime = window.performance.now();
-                } else {
-                    drawPerformanceStartTime = Date.now();
+                this._frameTime = timestamp ? timestamp : Date.now();
+                if (this._clearNeedsDrawTimeOut) {
+                    this._clearNeedsDrawList();
                 }
-            }
-            this._frameTime = (timestamp ? timestamp : Date.now());
-            if (this._clearNeedsDrawTimeOut) {
-                this._clearNeedsDrawList();
-            }
-            if (drawLogger.isDebug) {
-                // Detect any DOM modification since the previous draw
-                var newSource = document.body.innerHTML;
-                if (this._oldSource && newSource !== this._oldSource) {
-                    var warning = ["DOM modified outside of the draw loop"];
-                    var out = this._diff(this._oldSource.split("\n"), newSource.split("\n"));
-                    for (var i = 0; i < out.n.length; i++) {
-                        if (out.n[i].text === undefined || out.n[i].text === null) {
-                            warning.push('+ ' + out.n[i]);
-                        } else {
-                            for (var n = out.n[i].row + 1; n < out.o.length && (out.o[n].text === undefined || out.o[n].text === null); n++) {
-                                warning.push('- ' + out.o[n]);
+                if (drawLogger.isDebug) {
+                    // Detect any DOM modification since the previous draw
+                    var newSource = document.body.innerHTML;
+                    if (this._oldSource && newSource !== this._oldSource) {
+                        var warning = ["DOM modified outside of the draw loop"];
+                        var out = this._diff(this._oldSource.split("\n"), newSource.split("\n"));
+                        for (var i = 0; i < out.n.length; i++) {
+                            if (out.n[i].text === undefined || out.n[i].text === null) {
+                                warning.push("+ " + out.n[i]);
+                            } else {
+                                for (
+                                    var n = out.n[i].row + 1;
+                                    n < out.o.length && (out.o[n].text === undefined || out.o[n].text === null);
+                                    n++
+                                ) {
+                                    warning.push("- " + out.o[n]);
+                                }
                             }
                         }
+                        console.warn(warning.join("\n"));
                     }
-                    console.warn(warning.join("\n"));
+
+                    console.group((timestamp ? drawLogger.toTimeString(new Date(timestamp)) + " " : "") + "Draw Fired");
                 }
 
-                console.group((timestamp ? drawLogger.toTimeString(new Date(timestamp)) + " " : "") + "Draw Fired");
-            }
+                this.drawIfNeeded();
 
-            this.drawIfNeeded();
+                if (drawPerformanceLogger.isDebug) {
+                    var drawPerformanceEndTime;
+                    if (window.performance) {
+                        drawPerformanceEndTime = window.performance.now();
+                    } else {
+                        drawPerformanceEndTime = Date.now();
+                    }
 
-            if (drawPerformanceLogger.isDebug) {
-                var drawPerformanceEndTime;
-                if (window.performance) {
-                    drawPerformanceEndTime = window.performance.now();
-                } else {
-                    drawPerformanceEndTime = Date.now();
+                    console.log(
+                        "Draw Cycle Time: ",
+                        drawPerformanceEndTime - drawPerformanceStartTime,
+                        ", Components: ",
+                        this._lastDrawComponentsCount,
+                    );
                 }
 
-                console.log("Draw Cycle Time: ",
-                    drawPerformanceEndTime - drawPerformanceStartTime,
-                    ", Components: ", this._lastDrawComponentsCount);
-            }
-
-            if (drawLogger.isDebug) {
-                console.groupEnd();
-                this._oldSource =  document.body.innerHTML;
-            }
-            this._frameTime = null;
-            if (this._scheduleComposerRequest) {
-                this.drawTree();
-            }
-        }
-    },
-
-    /**
-     * @private
-     */
-    _readyToDrawList: {
-        enumerable: false,
-        value: []
-    },
-
-    /**
-     * @private
-     */
-    _readyToDrawListIndex: {
-        enumerable: false,
-        value: null
-    },
-
-    /**
-     * @function
-     * @param {Component} component Component to add
-     */
-    addToDrawCycle: {
-        value: function (component) {
-            var needsDrawListIndex = this._readyToDrawListIndex, length, composer;
-
-            if (needsDrawListIndex.has(component)) {
-                // Requesting a draw of a component that has already been drawn in the current cycle
                 if (drawLogger.isDebug) {
-                    if(this !== rootComponent) {
-                        drawLogger.debug(loggerToString(this) + " added to the draw cycle twice, this should not happen.");
+                    console.groupEnd();
+                    this._oldSource = document.body.innerHTML;
+                }
+                this._frameTime = null;
+                if (this._scheduleComposerRequest) {
+                    this.drawTree();
+                }
+            },
+        },
+
+        /**
+         * @private
+         */
+        _readyToDrawList: {
+            enumerable: false,
+            value: [],
+        },
+
+        /**
+         * @private
+         */
+        _readyToDrawListIndex: {
+            enumerable: false,
+            value: null,
+        },
+
+        /**
+         * @function
+         * @param {Component} component Component to add
+         */
+        addToDrawCycle: {
+            value: function (component) {
+                var needsDrawListIndex = this._readyToDrawListIndex,
+                    length,
+                    composer;
+
+                if (needsDrawListIndex.has(component)) {
+                    // Requesting a draw of a component that has already been drawn in the current cycle
+                    if (drawLogger.isDebug) {
+                        if (this !== rootComponent) {
+                            drawLogger.debug(
+                                loggerToString(this) + " added to the draw cycle twice, this should not happen.",
+                            );
+                        }
+                    }
+                    return;
+                }
+                this._readyToDrawList.push(component);
+                this._readyToDrawListIndex.set(component, true);
+
+                component._updateComponentDom();
+            },
+        },
+
+        _lastDrawComponentsCount: {
+            value: null,
+        },
+
+        _sortByLevel: {
+            value: function (component1, component2) {
+                return component1._treeLevel - component2._treeLevel;
+            },
+        },
+
+        /**
+         * @private
+         * @function
+         * @returns Boolean true if all the components that needed to draw have drawn
+         */
+        drawIfNeeded: {
+            value: function drawIfNeeded() {
+                var needsDrawList = this._readyToDrawList,
+                    component,
+                    i,
+                    j,
+                    start = 0,
+                    firstDrawEvent,
+                    composerList = this._composerList,
+                    composer,
+                    composerListLength,
+                    frameTime,
+                    isDrawLoggerDebug = drawLogger.isDebug;
+
+                needsDrawList.length = 0;
+                this._readyToDrawListIndex.clear();
+
+                // Process the composers first so that any components that need to be newly drawn due to composer changes
+                // get added in this cycle
+                if (composerList && (composerListLength = composerList.length) > 0) {
+                    this._composerList = this.composerListSwap; // Swap between two arrays instead of creating a new array each draw cycle
+
+                    for (i = 0; i < composerListLength; i++) {
+                        composer = composerList[i];
+                        composer.needsFrame = false;
+                        composer.frame(frameTime || (frameTime = this._frameTime));
+                    }
+
+                    composerList.length = 0;
+                    this._composerListSwap = composerList;
+                }
+
+                this._drawIfNeeded(0);
+                j = needsDrawList.length;
+
+                //
+                // willDraw
+                //
+                if (isDrawLoggerDebug) {
+                    console.groupCollapsed(
+                        "willDraw - " +
+                            needsDrawList.length +
+                            (needsDrawList.length > 1 ? " components." : " component."),
+                    );
+                }
+                while (start < j) {
+                    for (i = start; i < j; i++) {
+                        component = needsDrawList[i];
+                        if (typeof component.willDraw === "function") {
+                            component.willDraw(frameTime || (frameTime = this._frameTime));
+                        }
+                        if (isDrawLoggerDebug) {
+                            drawLogger.debug("Level " + component._treeLevel + " " + loggerToString(component));
+                        }
+                    }
+                    this._drawIfNeeded(0);
+                    start = j;
+                    j = needsDrawList.length;
+                }
+                //
+                // draw
+                //
+                if (isDrawLoggerDebug) {
+                    console.groupEnd();
+                    console.group(
+                        "draw - " + needsDrawList.length + (needsDrawList.length > 1 ? " components." : " component."),
+                    );
+                }
+                // Sort the needsDraw list so that any newly added items are drawn in the correct order re: parent-child
+                needsDrawList.sort(this._sortByLevel);
+
+                for (i = 0; i < j; i++) {
+                    component = needsDrawList[i];
+                    component.needsDraw = false;
+                }
+                this.requestedAnimationFrame = null; // Allow a needsDraw called during a draw to schedule the next draw
+                // TODO: add the possibility to display = "none" the body during development (IKXARIA-3631).
+                for (i = j - 1; i >= 0; i--) {
+                    component = needsDrawList[i];
+                    component._draw(frameTime || (frameTime = this._frameTime));
+                    component.draw(frameTime || (frameTime = this._frameTime));
+                    if (isDrawLoggerDebug) {
+                        drawLogger.debug("Level " + component._treeLevel + " " + loggerToString(component));
                     }
                 }
-                return;
-            }
-            this._readyToDrawList.push(component);
-            this._readyToDrawListIndex.set(component, true);
-
-            component._updateComponentDom();
-        }
-    },
-
-
-    _lastDrawComponentsCount: {
-        value: null
-    },
-
-    _sortByLevel: {
-        value: function (component1, component2) {
-            return component1._treeLevel - component2._treeLevel;
-        }
-    },
-
-    /**
-     * @private
-     * @function
-     * @returns Boolean true if all the components that needed to draw have drawn
-    */
-    drawIfNeeded:{
-        value: function drawIfNeeded() {
-            var needsDrawList = this._readyToDrawList, component, i, j, start = 0, firstDrawEvent,
-                composerList = this._composerList, composer, composerListLength,
-                frameTime,
-                isDrawLoggerDebug = drawLogger.isDebug;
-
-            needsDrawList.length = 0;
-            this._readyToDrawListIndex.clear();
-
-            // Process the composers first so that any components that need to be newly drawn due to composer changes
-            // get added in this cycle
-            if (composerList && (composerListLength = composerList.length) > 0) {
-                this._composerList = this.composerListSwap; // Swap between two arrays instead of creating a new array each draw cycle
-
-                for (i = 0; i < composerListLength; i++) {
-                    composer = composerList[i];
-                    composer.needsFrame = false;
-                    composer.frame((frameTime || (frameTime = this._frameTime)));
+                //
+                // didDraw
+                //
+                if (isDrawLoggerDebug) {
+                    console.groupEnd();
+                    console.groupCollapsed(
+                        "didDraw - " +
+                            needsDrawList.length +
+                            (needsDrawList.length > 1 ? " components." : " component."),
+                    );
                 }
-
-                composerList.length = 0;
-                this._composerListSwap = composerList;
-            }
-
-            this._drawIfNeeded(0);
-            j = needsDrawList.length;
-
-            //
-            // willDraw
-            //
-            if (isDrawLoggerDebug) {
-                console.groupCollapsed("willDraw - " + needsDrawList.length +
-                    (needsDrawList.length > 1 ? " components." : " component."));
-            }
-            while (start < j) {
-                for (i = start; i < j; i++) {
+                if (!this._didDrawEvent) {
+                    this._didDrawEvent = new CustomEvent("didDraw", {
+                        bubbles: false,
+                    });
+                }
+                for (i = 0; i < j; i++) {
                     component = needsDrawList[i];
-                    if (typeof component.willDraw === "function") {
-                        component.willDraw((frameTime || (frameTime = this._frameTime)));
+                    component._didDraw(frameTime || (frameTime = this._frameTime));
+                    component.dispatchEvent(this._didDrawEvent);
+                    if (!component._completedFirstDraw) {
+                        firstDrawEvent = document.createEvent("CustomEvent");
+                        firstDrawEvent.initCustomEvent("firstDraw", true, false, null);
+                        component.dispatchEvent(firstDrawEvent);
+                        component._completedFirstDraw = true;
                     }
                     if (isDrawLoggerDebug) {
                         drawLogger.debug("Level " + component._treeLevel + " " + loggerToString(component));
                     }
                 }
-                this._drawIfNeeded(0);
-                start = j;
-                j = needsDrawList.length;
-            }
-            //
-            // draw
-            //
-            if (isDrawLoggerDebug) {
-                console.groupEnd();
-                console.group("draw - " + needsDrawList.length +
-                                    (needsDrawList.length > 1 ? " components." : " component."));
-            }
-            // Sort the needsDraw list so that any newly added items are drawn in the correct order re: parent-child
-            needsDrawList.sort(this._sortByLevel);
 
-            for (i = 0; i < j; i++) {
-                component = needsDrawList[i];
-                component.needsDraw = false;
-            }
-            this.requestedAnimationFrame = null; // Allow a needsDraw called during a draw to schedule the next draw
-            // TODO: add the possibility to display = "none" the body during development (IKXARIA-3631).
-            for (i = j-1; i >= 0; i--) {
-                component = needsDrawList[i];
-                component._draw((frameTime || (frameTime = this._frameTime)));
-                component.draw((frameTime || (frameTime = this._frameTime)));
-                if (isDrawLoggerDebug) {
-                    drawLogger.debug("Level " + component._treeLevel + " " + loggerToString(component));
-                }
-            }
-            //
-            // didDraw
-            //
-            if (isDrawLoggerDebug) {
-                console.groupEnd();
-                console.groupCollapsed("didDraw - " + needsDrawList.length +
-                                    (needsDrawList.length > 1 ? " components." : " component."));
-            }
-            if (!this._didDrawEvent) {
-                this._didDrawEvent = new CustomEvent("didDraw", {
-                    bubbles: false
-                });
-            }
-            for (i = 0; i < j; i++) {
-                component = needsDrawList[i];
-                component._didDraw((frameTime || (frameTime = this._frameTime)));
-                component.dispatchEvent(this._didDrawEvent);
-                if (!component._completedFirstDraw) {
+                //Now root Component:
+                if (!this._completedFirstDraw) {
                     firstDrawEvent = document.createEvent("CustomEvent");
                     firstDrawEvent.initCustomEvent("firstDraw", true, false, null);
-                    component.dispatchEvent(firstDrawEvent);
-                    component._completedFirstDraw = true;
+                    this.dispatchEvent(firstDrawEvent);
+                    this._completedFirstDraw = true;
                 }
+
                 if (isDrawLoggerDebug) {
-                    drawLogger.debug("Level " + component._treeLevel + " " + loggerToString(component));
+                    console.groupEnd();
                 }
-            }
 
-            //Now root Component:
-            if (!this._completedFirstDraw) {
-                firstDrawEvent = document.createEvent("CustomEvent");
-                firstDrawEvent.initCustomEvent("firstDraw", true, false, null);
-                this.dispatchEvent(firstDrawEvent);
-                this._completedFirstDraw = true;
-            }
+                if (drawPerformanceLogger.isDebug) {
+                    this._lastDrawComponentsCount = needsDrawList.length;
+                }
 
-
-
-            if (isDrawLoggerDebug) {
-                console.groupEnd();
-            }
-
-            if (drawPerformanceLogger.isDebug) {
-                this._lastDrawComponentsCount = needsDrawList.length;
-            }
-
-            return !!needsDrawList.length;
-        }
-    },
-
-    /**
-     * @private
-     * @type {DOMElement}
-     * @default null
-     */
-    element: {
-        get:function () {
-            return this._element;
+                return !!needsDrawList.length;
+            },
         },
-        set:function (document) {
-            defaultEventManager.registerEventHandlerForElement(this, document);
-            this._element = document.documentElement;
-            this._documentResources = DocumentResources.getInstanceForDocument(document);
-        }
+
+        /**
+         * @private
+         * @type {DOMElement}
+         * @default null
+         */
+        element: {
+            get: function () {
+                return this._element;
+            },
+            set: function (document) {
+                defaultEventManager.registerEventHandlerForElement(this, document);
+                this._element = document.documentElement;
+                this._documentResources = DocumentResources.getInstanceForDocument(document);
+            },
+        },
+
+        willDraw: {
+            value: function () {
+                this.dragManager.willDraw();
+            },
+        },
+
+        draw: {
+            value: function () {
+                this.dragManager.draw();
+            },
+        },
+
+        visualStyle: {
+            get: function () {
+                var main;
+                if (!this._visualStyle && this.bodyComponent) {
+                    main = this.bodyComponent.childComponents[0];
+                    this._visualStyle = main && main.visualStyle;
+                }
+                return this._visualStyle;
+            },
+        },
     },
-
-    willDraw: {
-        value: function () {
-            this.dragManager.willDraw();
-        }
-    },
-
-    draw: {
-        value: function () {
-            this.dragManager.draw();
-        }
-    },
-
-    visualStyle: {
-        get: function () {
-            var main;
-            if (!this._visualStyle && this.bodyComponent) {
-                main = this.bodyComponent.childComponents[0];
-                this._visualStyle = main && main.visualStyle;
-            }
-            return this._visualStyle;
-        }
-    }
-
-
-});
+);
 
 exports.__root__ = rootComponent = new RootComponent().init();
 rootComponent.identifier = "rootComponent";
 
 //https://github.com/kangax/html-minifier/issues/63
 //http://www.w3.org/TR/html-markup/global-attributes.html
-Component.addAttributes( /** @lends module:mod/ui/control.Control# */ {
-
-/**
+Component.addAttributes(
+    /** @lends module:mod/ui/control.Control# */ {
+        /**
     Specifies the shortcut key(s) that gives focuses to or activates the element.
     @see {@link http://www.w3.org/TR/html5/editing.html#the-accesskey-attribute}
     @type {string}
     @default null
 */
-    accesskey: null,
+        accesskey: null,
 
-/**
+        /**
     Specifies if the content is editable or not. Valid values are "true", "false", and "inherit".
     @see {@link http://www.w3.org/TR/html5/editing.html#contenteditable}
     @type {string}
     @default null
 
 */
-    contenteditable: null,
+        contenteditable: null,
 
-/**
+        /**
     Specifies the ID of a <code>menu</code> element in the DOM to use as the element's context menu.
     @see  {@link http://www.w3.org/TR/html5/interactive-elements.html#attr-contextmenu}
     @type {string}
     @default null
 */
-    contextmenu: null,
+        contextmenu: null,
 
-/**
+        /**
     Specifies the elements element's text directionality. Valid values are "ltr", "rtl", and "auto".
     @see {@link http://www.w3.org/TR/html5/elements.html#the-dir-attribute}
     @type {string}
     @default null
 */
-    dir: null,
+        dir: null,
 
-/**
+        /**
     Specifies if the element is draggable. Valid values are "true", "false", and "auto".
     @type {string}
     @default null
     @see {@link http://www.w3.org/TR/html5/dnd.html#the-draggable-attribute}
 */
-    draggable: null,
+        draggable: null,
 
-/**
+        /**
     Specifies the behavior that's taken when an item is dropped on the element. Valid values are "copy", "move", and "link".
     @type {string}
     @see {@link http://www.w3.org/TR/html5/dnd.html#the-dropzone-attribute}
 */
-    dropzone: null,
+        dropzone: null,
 
-/**
+        /**
     When specified on an element, it indicates that the element should not be displayed.
     @type {boolean}
     @default false
 */
-    hidden: {dataType: 'boolean'},
-    id: null,
+        hidden: { dataType: "boolean" },
+        id: null,
 
-/**
+        /**
     Specifies the primary language for the element's contents and for any of the element's attributes that contain text.
     @type {string}
     @default null
     @see {@link http://www.w3.org/TR/html5/elements.html#attr-lang}
 */
-    lang: null,
+        lang: null,
 
-/**
+        /**
     Specifies if element should have its spelling and grammar checked by the browser. Valid values are "true", "false".
     @type {string}
     @default null
     @see {@link http://www.w3.org/TR/html5/editing.html#attr-spellcheck}
 */
-    spellcheck: null,
+        spellcheck: null,
 
-// /**
-//     The CSS styling attribute.
-//     @type {string}
-//     @default null
-//     @see {@link http://www.w3.org/TR/html5/elements.html#the-style-attribute}
-// */
-//     style: null,
+        // /**
+        //     The CSS styling attribute.
+        //     @type {string}
+        //     @default null
+        //     @see {@link http://www.w3.org/TR/html5/elements.html#the-style-attribute}
+        // */
+        //     style: null,
 
-/**
+        /**
      Specifies the relative order of the element for the purposes of sequential focus navigation.
      @type {number}
      @default null
      @see {@link http://www.w3.org/TR/html5/editing.html#attr-tabindex}
 */
-    tabindex: null,
+        tabindex: null,
 
-/**
+        /**
     Specifies advisory information about the element, used as a tooltip when hovering over the element, and other purposes.
     @type {string}
     @default null
     @see {@link http://www.w3.org/TR/html5/elements.html#the-title-attribute}
 */
-    title: null
-});
+        title: null,
+    },
+);
