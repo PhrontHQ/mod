@@ -2,7 +2,8 @@
  * @module data/main.mod/converter/i-s-o-8601-date-string-to-date-component-values-callback-converter
  * @requires mod/core/converter/converter
  */
-var Converter = require("./converter").Converter;
+const Converter = require("./converter").Converter;
+require("core/extras/string")
 
 
 /**
@@ -14,7 +15,7 @@ var ISO8601DateStringToDateComponentValuesCallbackConverter = exports.ISO8601Dat
 
     callback: {
         value: function (year, month, day, hours, minutes, seconds, milliseconds) {
-            return  Array.prototype.slice.call(arguments);
+            return Array.prototype.slice.call(arguments);
         }
     },
 
@@ -32,33 +33,40 @@ var ISO8601DateStringToDateComponentValuesCallbackConverter = exports.ISO8601Dat
      */
     convert: {
         value: function (s) {
-            if(typeof s === "string") {
-                var b = s.split(/\D/),
-                hasQuotePadding =  (b[0] === "" && b[b.length-1] === ""),
-                yearIndex, monthIndex, dayIndex, hourIndex, minuteIndex, secondIndex, millisecondIndex;
+            if (typeof s === "string") {
 
-            if(hasQuotePadding) {
-                yearIndex = 1;
-                monthIndex = 2;
-                dayIndex = 3;
-                hourIndex = 4;
-                minuteIndex = 5;
-                secondIndex = 6;
-                millisecondIndex = 7;
-            } else {
-                yearIndex = 0;
-                monthIndex = 1;
-                dayIndex = 2;
-                hourIndex = 3;
-                minuteIndex = 4;
-                secondIndex = 5;
-                millisecondIndex = 6;
-            }
+                //This is initially implemented from a Date Range stand point, where infinity means there's no end to the range, it's open
+                if (s.caseInsensitiveEquals("infinity")) {
+                    return null;
+                } else {
+                    var b = s.split(/\D/),
+                        hasQuotePadding = (b[0] === "" && b[b.length - 1] === ""),
+                        yearIndex, monthIndex, dayIndex, hourIndex, minuteIndex, secondIndex, millisecondIndex;
 
-            //--b[monthIndex];                  // Adjust month number, 0 based in Date.UTC()
-            b[millisecondIndex] = b[millisecondIndex].substr(0,3); // Microseconds to milliseconds
-            return this.callback(b[yearIndex], b[monthIndex], b[dayIndex], b[hourIndex], b[minuteIndex], b[secondIndex], b[millisecondIndex]);
+                    if (hasQuotePadding) {
+                        yearIndex = 1;
+                        monthIndex = 2;
+                        dayIndex = 3;
+                        hourIndex = 4;
+                        minuteIndex = 5;
+                        secondIndex = 6;
+                        millisecondIndex = 7;
                     } else {
+                        yearIndex = 0;
+                        monthIndex = 1;
+                        dayIndex = 2;
+                        hourIndex = 3;
+                        minuteIndex = 4;
+                        secondIndex = 5;
+                        millisecondIndex = 6;
+                    }
+
+                    //--b[monthIndex];                  // Adjust month number, 0 based in Date.UTC()
+                    b[millisecondIndex] = b[millisecondIndex].substr(0, 3); // Microseconds to milliseconds
+                    return this.callback(b[yearIndex], b[monthIndex], b[dayIndex], b[hourIndex], b[minuteIndex], b[secondIndex], b[millisecondIndex]);
+
+                }
+            } else {
                 return null;
             }
         }
