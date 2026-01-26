@@ -160,7 +160,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     /**
      * Handles the end of thumb transition animations
      */
-    handleTransitionEnd = (event) => {
+    handleTransitionEnd = (_event) => {
         if (this._isChangingSelection) {
             this.element?.classList.remove("mod--readyForAnimation");
             this._readyForAnimation = false;
