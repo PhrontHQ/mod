@@ -202,7 +202,8 @@ function parseHtmlDependencies(text/*, location*/) {
 var html_regex = /(.*\/)?(?=[^\/]+\.html$)/,
     json_regex = /(?=[^\/]+\.json$)/,
     mjson_regex = /(?=[^\/]+\.(?:mjson|meta)$)/,
-    reel_regex = /(.*\/)?([^\/]+)\.reel|mod\/\2$/;
+    // reel_regex = /(.*\/)?([^\/]+)\.(?:reel|mod)\/\2$/;
+    reel_regex = /(.*\/)?([^\/]+)\.(?:reel|mod)$/;
 MontageBoot.TemplateLoader = function (config, load) {
     return function (moduleId, module) {
 
@@ -241,20 +242,29 @@ MontageBoot.TemplateLoader = function (config, load) {
         } else if (json) {
             return load(id, module);
         } else if (reelModule) {
-            return load(id, module)
+            let result = load(id, module);
+            if (!result.then) {
+                result = Promise.resolve(result);
+            }
+            return result
             .then(function () {
-                var reelHtml = URL.resolve(module.location, reelModule[2] + ".html");
+                var htmlModuleId = URL.resolve(module.id + "/", reelModule[2] + ".html"),
+                    reelHtml = URL.resolve(module.require.location, htmlModuleId);
+
                 return FS.stat(URL.parse(reelHtml).pathname)
                 .then(function (stat) {
                     if (stat.isFile()) {
-                        module.extraDependencies = [id + ".html"];
+                        module.extraDependencies = [htmlModuleId];
                     }
                 }, function (error) {
                     // not a problem
                     // mod/ui/loader.mod/loader.html": Error: ENOENT: no such file or directory
                     console.log(error.message);
                 });
-            });
+            }).catch(function (e) {
+                console.error("Failed to load reel/mod", id);
+                console.error(e);
+            })
         } else {
             return load(id, module);
         }

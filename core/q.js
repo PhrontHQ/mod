@@ -33,15 +33,20 @@ Object.defineProperty(Q, "longStackSupport", {
 
 Q.reject = B.rejected;
 Q.defer = function() {
-    var b = B.pending();
-    b.resolve = bind(b.resolve, b);
-    b.reject = bind(b.reject, b);
+    var deferred = {},
+        promise = new Promise(function (resolve, reject) {
+        deferred.resolve = bind(resolve, deferred);
+        deferred.reject = bind(reject, deferred);
+    })
+    deferred.promise = promise;
+    // b.resolve = bind(b.resolve, b);
+    // b.reject = bind(b.reject, b);
     //b.progress doesn't exists anymore
     //b.notify = bind(b.progress, b);
-    b.makeNodeResolver = function() {
+    deferred.makeNodeResolver = function() {
         return this.asCallback;
     };
-    return b;
+    return deferred;
 };
 Q.all = B.all;
 Q.allSettled = B.allSettled;
