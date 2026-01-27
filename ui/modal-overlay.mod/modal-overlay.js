@@ -23,7 +23,7 @@ var ModalOverlay = exports.ModalOverlay = Overlay.specialize(/** @lends ModalOve
         value: function (firstTime) {
             var body;
 
-            Overlay.enterDocument.call(this, firstTime);
+            Overlay.prototype.enterDocument.call(this, firstTime);
 
             if (firstTime) {
                 body = this.element.ownerDocument.body;
