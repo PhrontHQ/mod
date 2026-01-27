@@ -51,6 +51,14 @@ var ATTR_LE_COMPONENT = "data-montage-le-component",
     ATTR_LE_ARG_END = "data-montage-le-arg-end",
     _defaultDragManager;
 
+/**
+ * Represents the set of attributes that can be used to identify a component
+ * in the DOM.
+ * @const
+ * @type {Set<string>}
+ */
+const MOD_ID_ATTRIBUTES = new Set(["id", "data-mod-id", "data-montage-id"]);
+
 function loggerToString(object) {
     if (!object) {
         return "NIL";
@@ -2463,87 +2471,162 @@ Component.addClassProperties({
         },
     },
 
+    /**
+     * Replaces the host element with the template element in the DOM,
+     * transferring attributes and event listeners.
+     * @private
+     */
     _replaceElementWithTemplate: {
         enumerable: false,
         value: function () {
-            var element = this.element,
-                template = this._templateElement,
-                attributes = this.element.attributes,
-                attributeName,
-                value,
-                i,
-                attribute,
-                templateAttributeValue,
-                _montage_le_flag = attributes.length ? global._montage_le_flag : false;
+            // Here the element represents the original host element that comes
+            // from the template instantiation. It will be replaced by the template element.
+            const { element: hostElement, _templateElement: templateElement } = this;
 
-            // TODO: get a spec for this, what attributes should we merge?
-            for (i = 0; (attribute = attributes[i]); i++) {
-                attributeName = attribute.nodeName;
-                //jshint -W106
-                if (_montage_le_flag && attributeName === ATTR_LE_COMPONENT) {
-                    //jshint +W106
-                    value = attribute.nodeValue;
-                } else if (
-                    attributeName === "id" ||
-                    attributeName === "data-mod-id" ||
-                    attributeName === "data-montage-id"
-                ) {
-                    value = attribute.nodeValue;
-                } else {
-                    templateAttributeValue = template.getAttribute(attributeName) || "";
-                    if (templateAttributeValue) {
-                        /*
-                            Assuming only style and class are actually multi-value and we merge them
-                        */
-                        if (attributeName === "style") {
-                            value = templateAttributeValue;
-                            value += "; ";
-                            value += attribute.nodeValue;
-                        } else if (attributeName === "class") {
-                            value = templateAttributeValue;
-                            value += " ";
-                            value += attribute.nodeValue;
-                        } else {
-                            value = attribute.nodeValue;
-                        }
-                    } else {
-                        value = attribute.nodeValue;
-                    }
+            this._applyHostAttributesToTemplateElement(hostElement, templateElement);
+            this._initializeClassListFromElement(templateElement);
+            this._swapDOMElement(hostElement, templateElement);
+            this._handleProcessedDomArg(hostElement, templateElement);
+            this._finalizeTemplateReplacement(templateElement);
+        },
+    },
+
+    /**
+     * Merges attributes from the original host element into the template element.
+     * @param {Element} hostElement - The original host element.
+     * @param {Element} templateElement - The template element.
+     * @private
+     */
+    _applyHostAttributesToTemplateElement: {
+        value: function (hostElement, templateElement) {
+            const resolutionOptions = {
+                shouldCheckLeFlag: hostElement.attributes.length && global._montage_le_flag,
+                // TODO: We might want to make this configurable in the future
+                // TODO: Consider merging other attributes like "data-*" attributes?
+                // TODO: Could be made into a constant
+                attributesToMerge: ["style", "class"],
+                attributeMergeSeparators: {
+                    style: "; ",
+                    class: " ",
+                },
+            };
+
+            for (const attribute of hostElement.attributes) {
+                const value = this._resolveAttributeCollision(templateElement, attribute, resolutionOptions);
+                templateElement.setAttribute(attribute.nodeName, value);
+            }
+        },
+    },
+
+    /**
+     * Resolves attribute collisions between the host element and the template element.
+     * @param {Element} templateElement - The template element.
+     * @param {Attr} hostAttribute - The attribute from the host element.
+     * @param {Object} resolutionOptions - Options for collision resolution.
+     * @param {boolean} resolutionOptions.shouldCheckLeFlag - Whether to check for the special `LE` attribute.
+     * @param {Array<string>} resolutionOptions.attributesToMerge - List of attributes that should be merged.
+     * @param {Object} resolutionOptions.attributeMergeSeparators - Separators for merging attributes.
+     * @returns {string} - The resolved attribute value.
+     * @private
+     */
+    _resolveAttributeCollision: {
+        enumerable: false,
+        value: function (templateElement, hostAttribute, resolutionOptions) {
+            const { shouldCheckLeFlag = false, attributeMergeSeparators, attributesToMerge } = resolutionOptions;
+            const { nodeName, nodeValue } = hostAttribute;
+
+            // Handle special `LE` component attribute
+            if (shouldCheckLeFlag && nodeName === ATTR_LE_COMPONENT) return nodeValue;
+
+            // "ID" attributes pass through unchanged
+            if (MOD_ID_ATTRIBUTES.has(nodeName)) return nodeValue;
+
+            const elementValue = templateElement.getAttribute(nodeName);
+
+            // Merge "mergeable" attributes (e.g., style, class), others pass through
+            if (elementValue && attributesToMerge.includes(nodeName)) {
+                const isSeparatorDefined = Object.prototype.hasOwnProperty.call(attributeMergeSeparators, nodeName);
+
+                if (!isSeparatorDefined) {
+                    throw new Error(`No separator defined for merging attribute: ${nodeName}`);
                 }
 
-                template.setAttribute(attributeName, value);
+                return `${elementValue}${attributeMergeSeparators[nodeName]}${nodeValue}`;
             }
 
-            this._initializeClassListFromElement(template);
+            return nodeValue;
+        },
+    },
 
-            if (element.parentNode) {
-                element.parentNode.replaceChild(template, element);
-            } else if (!this._canDrawOutsideDocument) {
-                console.warn("Warning: Trying to replace element ", element, " which has no parentNode");
+    /**
+     * FIXME: What is this for?
+     * @Benoit: ???
+     */
+    _handleProcessedDomArg: {
+        value: function (hostElement, templateElement) {
+            if (!hostElement.hasAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE)) return;
+
+            const paramValue = hostElement.getAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
+
+            if (this.parentComponent.templateArgumentByParameter) {
+                this.parentComponent.templateArgumentByParameter[paramValue] = templateElement;
             }
 
-            this.eventManager.unregisterEventHandlerForElement(element);
-            this.eventManager.registerEventHandlerForElement(this, template);
-            this._element = template;
-            if (element.hasAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE)) {
-                value = element.getAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
-                if (this.parentComponent.templateArgumentByParameter)
-                    this.parentComponent.templateArgumentByParameter[value] = template;
-                //TODO Assess whether it would be more performant to track processed dom args
-                // in the parent in pure JS rather than the arg element in the DOM
-                element.removeAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
-            }
+            // TODO: Assess whether it would be more performant to track processed dom args
+            // in the parent in pure JS rather than the arg element in the DOM
+            hostElement.removeAttribute(this.PROCESSED_DOM_ARG_ATTRIBUTE);
+        },
+    },
+
+    /**
+     * Finalizes the template replacement by updating internal references.
+     * @param {Element} templateElement - The template element.
+     * @private
+     */
+    _finalizeTemplateReplacement: {
+        value: function (templateElement) {
+            // Swap the reference to the element
+            this._element = templateElement;
             this._templateElement = null;
 
-            // if the DOM content of the component was changed before the
-            // template has been drawn then we assume that this change is
-            // meant to set the original content of the component and not to
-            // replace the entire template with it, that wouldn't make much
-            // sense.
+            // If DOM content of the component was changed before the template has been drawn,
+            // treat it as original content rather than a full template replacement
             if (this._newDomContent) {
                 this._newDomContent = null;
                 this._shouldClearDomContentOnNextDraw = false;
             }
+        },
+    },
+
+    /**
+     * Replaces the old DOM element with the new one in the DOM tree,
+     * transferring event listeners from the old element to the new one.
+     * @param {Element} oldElement - The old DOM element.
+     * @param {Element} newElement - The new DOM element.
+     * @private
+     */
+    _swapDOMElement: {
+        value: function (oldElement, newElement) {
+            if (oldElement.parentNode) {
+                oldElement.parentNode.replaceChild(newElement, oldElement);
+            } else if (!this._canDrawOutsideDocument) {
+                console.warn("Warning: Trying to replace element", oldElement, "which has no parentNode");
+            }
+
+            this._transferEventListeners(oldElement, newElement);
+        },
+    },
+
+    /**
+     * Transfers event listeners from the old element to the new element.
+     * @param {Element} oldElement - The old DOM element.
+     * @param {Element} newElement - The new DOM element.
+     * @private
+     */
+    _transferEventListeners: {
+        value: function (oldElement, newElement) {
+            this.eventManager.unregisterEventHandlerForElement(oldElement);
+            this.eventManager.registerEventHandlerForElement(this, newElement);
         },
     },
 
