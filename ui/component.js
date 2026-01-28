@@ -59,6 +59,21 @@ var ATTR_LE_COMPONENT = "data-montage-le-component",
  */
 const MOD_ID_ATTRIBUTES = new Set(["id", "data-mod-id", "data-montage-id"]);
 
+/**
+ * Default options for attribute collision resolution.
+ * @param {Array<string>} resolutionOptions.attributesToMerge - List of attributes that should be merged.
+ * @param {Object} resolutionOptions.attributeMergeSeparators - Separators for merging attributes.
+ */
+const DEFAULT_ATTRIBUTE_MERGE_OPTIONS = {
+    // TODO: We might want to make this configurable in the future
+    // TODO: Consider merging other attributes like "data-*" attributes?
+    attributesToMerge: ["style", "class"],
+    attributeMergeSeparators: {
+        style: "; ",
+        class: " ",
+    },
+};
+
 function loggerToString(object) {
     if (!object) {
         return "NIL";
@@ -2499,21 +2514,13 @@ Component.addClassProperties({
      */
     _applyHostAttributesToTemplateElement: {
         value: function (hostElement, templateElement) {
-            const resolutionOptions = {
-                shouldCheckLeFlag: hostElement.attributes.length && global._montage_le_flag,
-                // TODO: We might want to make this configurable in the future
-                // TODO: Consider merging other attributes like "data-*" attributes?
-                // TODO: Could be made into a constant
-                attributesToMerge: ["style", "class"],
-                attributeMergeSeparators: {
-                    style: "; ",
-                    class: " ",
-                },
-            };
+            const shouldCheckLeFlag = hostElement.attributes.length && global._montage_le_flag;
 
             for (const attribute of hostElement.attributes) {
-                const value = this._resolveAttributeCollision(templateElement, attribute, resolutionOptions);
-                templateElement.setAttribute(attribute.nodeName, value);
+                templateElement.setAttribute(
+                    attribute.nodeName,
+                    this._resolveAttributeCollision(templateElement, attribute, shouldCheckLeFlag),
+                );
             }
         },
     },
@@ -2523,16 +2530,14 @@ Component.addClassProperties({
      * @param {Element} templateElement - The template element.
      * @param {Attr} hostAttribute - The attribute from the host element.
      * @param {Object} resolutionOptions - Options for collision resolution.
-     * @param {boolean} resolutionOptions.shouldCheckLeFlag - Whether to check for the special `LE` attribute.
-     * @param {Array<string>} resolutionOptions.attributesToMerge - List of attributes that should be merged.
-     * @param {Object} resolutionOptions.attributeMergeSeparators - Separators for merging attributes.
+     * @param {boolean} shouldCheckLeFlag - Whether to check for the special `LE` attribute.
      * @returns {string} - The resolved attribute value.
      * @private
      */
     _resolveAttributeCollision: {
         enumerable: false,
-        value: function (templateElement, hostAttribute, resolutionOptions) {
-            const { shouldCheckLeFlag = false, attributeMergeSeparators, attributesToMerge } = resolutionOptions;
+        value: function (templateElement, hostAttribute, shouldCheckLeFlag) {
+            const { attributeMergeSeparators, attributesToMerge } = DEFAULT_ATTRIBUTE_MERGE_OPTIONS;
             const { nodeName, nodeValue } = hostAttribute;
 
             // Handle special `LE` component attribute
