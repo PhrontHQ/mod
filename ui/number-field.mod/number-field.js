@@ -12,40 +12,49 @@ var TextInput = require("ui/text-input").TextInput,
    @class module:"mod/ui/number-field.mod".NumberField
    @extends module:mod/ui/text-input.TextInput
  */
-var NumberField = exports.NumberField = TextInput.specialize({
+exports.NumberField = class NumberField extends TextInput {
 
-    enterDocument:{
-        value: function(firstTime) {
-            this.super(firstTime);
-            this.converter = new RangeEnforcer();
-            this.converter.min = this.min;
-            this.converter.max = this.max;
-        }
-    },
+    enterDocument(firstTime) {
+        super.enterDocument(firstTime);
+        this.converter = new RangeEnforcer();
+        this.converter.min = this.min;
+        this.converter.max = this.max;
+    }
 
-    hasTemplate: {value: true }
-});
+    static {
 
-NumberField.addAttributes(/** @lends module:"mod/ui/number-field.mod".NumberField */{
+        TextInput.defineProperties(NumberField.prototype, {
 
-/**
-    The maximum value displayed but the number control.
-    @type {number}
-    @default null
-*/
-    max: {dataType: 'number'},
+            hasTemplate: {value: true }
 
-/**
-    The minimum value displayed but the number control.
-    @type {number}
-    @default null
-*/
-    min: {dataType: 'number'},
+        })
 
-/**
-    The amount the number changes with each step.
-    @type {number}
-    @default null
-*/
-    step: null // number or 'any'
-});
+        NumberField.addAttributes(/** @lends module:"mod/ui/number-field.mod".NumberField */{
+
+            /**
+                The maximum value displayed but the number control.
+                @type {number}
+                @default null
+            */
+                max: {dataType: 'number'},
+
+            /**
+                The minimum value displayed but the number control.
+                @type {number}
+                @default null
+            */
+                min: {dataType: 'number'},
+
+            /**
+                The amount the number changes with each step.
+                @type {number}
+                @default null
+            */
+                step: null // number or 'any'
+        });
+
+    }
+
+};
+
+

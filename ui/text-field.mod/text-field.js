@@ -9,10 +9,9 @@ var TextInput = require("ui/text-input").TextInput,
    @extends module:mod/ui/text-input.TextInput
 
  */
-exports.TextField = TextInput.specialize({
-    constructor: {
-        value: function TextField() {
-            this.super(this); // super
+exports.TextField = class TextField extends TextInput{
+    constructor() {
+            super(); // super
 
             this._keyComposer = new KeyComposer();
             this._keyComposer.component = this;
@@ -20,30 +19,32 @@ exports.TextField = TextInput.specialize({
             this.addComposer(this._keyComposer);
 
         }
-    },
 
-    hasTemplate: {
-        value: true
-    },
+    handleKeyPres(evt) {
+        if (this.disabled || evt.keyComposer !== this._keyComposer) {
+            return;
+        }
 
-    handleKeyPress: {
-        value: function (evt) {
-            if (this.disabled || evt.keyComposer !== this._keyComposer) {
-                return;
+        this.takeValueFromElement();
+        this.dispatchActionEvent();
+    }
+
+    prepareForActivationEvents() {
+        TextInput.prototype.prepareForActivationEvents.call(this) ;
+        this._keyComposer.addEventListener("keyPress", this, false);
+    }
+
+    static {
+
+        TextInput.defineProperties(TextField.prototype, {
+
+            hasTemplate: {
+                value: true
             }
 
-            this.takeValueFromElement();
-            this.dispatchActionEvent();
-        }
-    },
+        })
 
-    prepareForActivationEvents: {
-        value: function () {
-            TextInput.prototype.prepareForActivationEvents.call(this) ;
-            this._keyComposer.addEventListener("keyPress", this, false);
-        }
     }
 
 
-
-});
+};

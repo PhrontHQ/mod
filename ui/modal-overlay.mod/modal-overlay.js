@@ -12,55 +12,21 @@ var CLASS_PREFIX = "modalOverlay-mod";
  * @class ModalOverlay
  * @extends Overlay
  */
-var ModalOverlay = exports.ModalOverlay = Overlay.specialize(/** @lends ModalOverlay.prototype # */ {
+exports.ModalOverlay = class ModalOverlay extends Overlay {
 
-    elementCSSClassName: {
-        value: "modalOverlay-mod"
-    },
-
-
-    enterDocument: {
-        value: function (firstTime) {
-            var body;
-
-            Overlay.prototype.enterDocument.call(this, firstTime);
+    enterDocument(firstTime) {
+        var body;
+            
+            super.enterDocument(firstTime);
 
             if (firstTime) {
                 body = this.element.ownerDocument.body;
                 body.appendChild(this.modalMaskElement);
             }
-        }
-    },
-
-    _queue: {
-        value: []
-    },
-
-    _showPromise: {
-        value: null
-    },
-
-    _dismissOnExternalInteraction: {
-        value: false
-    },
-
-    hasModalMask: {
-        value: true
-    },
-
-    _slotComponent: {
-        value: null
-    },
-
-    /**
-     * Returns a promise for the show of the overlay. A modal overlay might not
-     * be immediately shown if another modal overlay is being shown. When this
-     * is the case then only after the previous overlay is hidden will the
-     * overlay be shown.
-     */
-    show: {
-        value: function (component) {
-            var queue = this._queue,
+    }
+    
+    show(component) {
+        var queue = this._queue,
                 ix = queue.indexOf(this),
                 promise;
 
@@ -70,7 +36,7 @@ var ModalOverlay = exports.ModalOverlay = Overlay.specialize(/** @lends ModalOve
             // immediately and return a solved promise.
             if (ix === -1) {
                 if (queue.length === 0) {
-                    this.super();
+                    super.show();
                     promise = Promise.resolve();
                 } else {
                     promise = this._showPromise = {};
@@ -104,18 +70,16 @@ var ModalOverlay = exports.ModalOverlay = Overlay.specialize(/** @lends ModalOve
             }
 
             return promise;
-        }
-    },
+    }
 
-    hide: {
-        value: function () {
-            var queue = this._queue,
+    hide() {
+        var queue = this._queue,
                 ix = queue.indexOf(this),
                 nextOverlay;
 
             if (ix === 0) {
                 queue.shift();
-                this.super();
+                super.hide();
                 if (queue.length > 0) {
                     nextOverlay = queue[0];
                     nextOverlay._showPromise.resolve();
@@ -125,23 +89,49 @@ var ModalOverlay = exports.ModalOverlay = Overlay.specialize(/** @lends ModalOve
                 queue.splice(ix, 1);
                 this._showPromise.reject(new Error("Modal Overlay position in the queue is not 0"));
             }
-        }
-    },
+    }
 
-    draw: {
-        value: function () {
-            this.super();
+    draw() {
+        super.draw();
 
-            if (this._isShown && this.hasModalMask) {
-                this.modalMaskElement.classList.add(`${this.elementCSSClassName}-modalMask--visible`);
-            } else {
-                this.modalMaskElement.classList.remove(`${this.elementCSSClassName}-modalMask--visible`);
-            }
+        if (this._isShown && this.hasModalMask) {
+            this.modalMaskElement.classList.add(`${this.elementCSSClassName}-modalMask--visible`);
+        } else {
+            this.modalMaskElement.classList.remove(`${this.elementCSSClassName}-modalMask--visible`);
         }
     }
 
-});
+    static {
 
-if (window.MontageElement) {
-    MontageElement.define("modal-overlay-mod", ModalOverlay);
+        Overlay.defineProperties(ModalOverlay.prototype, {
+
+            elementCSSClassName: {
+                value: "modalOverlay-mod"
+            },
+
+            _queue: {
+                value: []
+            },
+
+            _showPromise: {
+                value: null
+            },
+
+            _dismissOnExternalInteraction: {
+                value: false
+            },
+
+            hasModalMask: {
+                value: true
+            },
+
+            _slotComponent: {
+                value: null
+            },
+
+        })
+    }
+
 }
+
+

@@ -1,26 +1,19 @@
 var Cell = require("../cell.mod").Cell;
 
-exports.CellObjects = Cell.specialize({
+exports.CellObjects = class CellObjects extends Cell {
 
-    constructor: {
-        value: function CellObjects() {}
-    },
 
-    enterDocument: {
-        value: function (isFirstTime) {
-            this.super(isFirstTime);
-            if (isFirstTime) {
-                this._element.addEventListener("click", this);
-            }
-        }
-    },
-
-    handleClick: {
-        value: function () {
-            if (this.hasExpandButton) {
-                this.expandButton.focus();
-            }
+    enterDocument (isFirstTime) {
+        super.enterDocument(isFirstTime);
+        if (isFirstTime) {
+            this._element.addEventListener("click", this);
         }
     }
 
-});
+    handleClick () {
+        if (this.hasExpandButton) {
+            this.expandButton.focus();
+        }
+    }
+
+};

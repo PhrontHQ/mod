@@ -1,11 +1,10 @@
 {
-	"name": "teach-radio-mod",
+	"name": "teach-label-mod",
     "version": "0.1.0",
-	"private": true,
     "dependencies": {
         "mod": "*"
     },
     "mappings": {
-        "mod": "../../../../"
+        "mod": "../../../"
     }
 }

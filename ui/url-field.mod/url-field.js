@@ -8,16 +8,21 @@ var TextField = require("ui/text-field.mod").TextField;
    @extends module:mod/ui/text-field.TextField
 
  */
-const UrlField = exports.UrlField = TextField.specialize({
-    constructor: {
-        value: function UrlField() {
-            this.super(this); // super
-        }
-    },
-
-    hasTemplate: {
-        value: true
+exports.UrlField = class UrlField extends TextField {
+    constructor() {
+        super(); // super
     }
 
+    static {
 
-});
+        TextField.defineProperties(UrlField.prototype, {
+
+            hasTemplate: {
+                value: true
+            }
+
+        })
+
+    }
+
+};
