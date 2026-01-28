@@ -2494,8 +2494,8 @@ Component.addClassProperties({
     _replaceElementWithTemplate: {
         enumerable: false,
         value: function () {
-            // Here the element represents the original host element that comes
-            // from the template instantiation. It will be replaced by the template element.
+            // Capture the current DOM instance (host) and the incoming template.
+            // It will be replaced by the template element.
             const { element: hostElement, _templateElement: templateElement } = this;
 
             this._applyHostAttributesToTemplateElement(hostElement, templateElement);
@@ -2618,6 +2618,7 @@ Component.addClassProperties({
                 console.warn("Warning: Trying to replace element", oldElement, "which has no parentNode");
             }
 
+            // Ensure events are properly routed
             this._transferEventListeners(oldElement, newElement);
         },
     },
