@@ -1,10 +1,10 @@
 {
-    "name": "mod-demo",
+    "name": "data-app",
     "version": "1.0.0",
     "dependencies": {
         "mod": "*"
     },
-     "mappings": {
-        "mod": "../"
+    "mappings": {
+        "mod": "../../"
     }
 }
