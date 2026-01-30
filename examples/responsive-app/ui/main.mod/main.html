@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "owner"},
+                        "visualStyle": {"@": "visualStyle"}
+                    }
+                },
+                "image": {
+                    "prototype": "mod/ui/image.mod",
+                    "values": {
+                        "element": {"#": "image"},
+                        "src": "assets/img/866-1024x1024.jpg",
+                        "enclosesSize": true
+                    }
+                },
+                "visualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+                        "controlBorderWidth": "0.5px",
+                        "controlBorderRadius": "8px",
+                        "controlLabelSize": "16px",
+                        "controlBackgroundFill": "rgba(243, 244, 246, 1)",
+                        "controlSelectionFill": "rgba(252, 252, 252, 1)",
+                        "textFill": "rgba(0, 0, 0, 1)",
+                        "raisedSurfaceFill": "rgba(255, 255, 255, 1)"
+                    }
+                },
+                "segmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "segmentedControl"},
+                        "options": {"<-": "@owner.menuOptions"},
+                        "selection": "home",
+                        "valuePath": "value",
+                        "enclosesSize": true
+                    }
+                },
+                "segmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "segmentedControlSegment"},
+                        "value": {"<-": "@segmentedControl:segment.object.label"}
+                    }
+                },
+                "list": {
+                    "prototype": "mod/ui/repetition.mod",
+                    "values": {
+                        "content": {"<-": "@owner.items"},
+                        "element": {"#": "list"}
+                    }
+                },
+                "listItem": {
+                    "prototype": "ui/list-item.mod",
+                     "values": {
+                        "item": {"<-": "@list:iteration.object"},
+                        "element": {"#": "listItem"},
+                        "enclosesSize": true
+                    }
+                },
+                "footer": {
+                    "prototype": "ui/footer.mod",
+                    "values": {
+                        "element": {"#": "footer"},
+                        "visualStyle": {"@": "footerVisualStyle"}
+                    }
+                },
+                "footerVisualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+                        "controlBorderRadius": "16px"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="owner" class="Main">
+            <header class="Main-header">
+                <h1 class="Main-title">Responsive App Demo</h1>
+                <div data-mod-id="image" class="Main-logo"></div>
+            </header>
+            <nav class="Main-nav">
+                <div data-mod-id="segmentedControl">
+                    <div data-mod-id="segmentedControlSegment"></div>
+                </div>
+            </nav>
+            <section class="Main-content">
+                <div data-mod-id="list" class="Main-List">
+                    <div data-mod-id="listItem" class="Main-ListItem"></div>
+                </div>
+            </section>
+            <footer data-mod-id="footer" class="Main-footer"></footer>
+        </div>
+    </body>
+</html>

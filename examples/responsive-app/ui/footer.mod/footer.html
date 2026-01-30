@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="footer.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "owner"}
+                    }
+                },
+                "button": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "button"},
+                        "label": "Click Me"
+                    }
+                },
+                "dangerButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "visualStyle": {"@": "dangerVisualStyle"},
+                        "element": {"#": "dangerButton"},
+                        "label": "Delete"
+                    }
+                },
+                "dangerVisualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+                        "raisedSurfaceFill": "rgba(220, 53, 69, 1)",
+                        "controlBorderWidth": "0px",
+                        "textFill": "rgba(255, 255, 255, 1)",
+                        "_FIXME": "Visual-style properties should be inherited from the closest ancestor with a visual style. @see controlBorderRadius from footerVisualStyle in main.mod/main.html"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <footer data-mod-id="owner" class="Footer">
+            <div data-mod-id="button" class="Footer-button"></div>
+            <div data-mod-id="dangerButton" class="Footer-dangerButton"></div>
+        </footer>
+    </body>
+</html>
