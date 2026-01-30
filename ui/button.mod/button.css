@@ -1,40 +1,31 @@
-/* WILL NOT BE FOUND */
-/* .ModButton { 
-    border: solid 1px;
+.ModButton {
+    border-style: solid;
+    border-width: var(--visual-style-control-border-width);
     border-color: var(--visual-style-control-border-fill);
+    background-color: var(--visual-style-raised-surface-fill);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    font-weight: 600;
+    font-weight: var(--visual-style-control-text-weight);
+    padding: var(--visual-style-control-buffer);
     position: relative;
     border-radius: var(--visual-style-control-border-radius);
-
     /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-    /*transition: background-color 0.2s ease-in-out;
+    transition: background-color 0.2s ease-in-out;
     gap: 6px;
-} */
-
-
-.ModButton {
-        border-style: solid;
-        border-width: var(--visual-style-control-border-width);
-        border-color: var(--visual-style-control-border-fill);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        font-weight: var(--visual-style-control-text-weight);
-        padding: var(--visual-style-control-buffer);
-        position: relative;
-        border-radius: var(--visual-style-control-border-radius);
-        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-        transition: background-color 0.2s ease-in-out;
-        gap: 6px;
-        color: var(--visual-style-text-color);
+    color: var(--visual-style-text-fill);
 
     &:hover {
         cursor: pointer;
+
+        /* Mix the background with 10% of the text color */
+        background-color: color-mix(in srgb, var(--visual-style-raised-surface-fill), currentColor 10%);
+    }
+
+    &:active {
+        /* Mix the background with 15% of the text color */
+        background-color: color-mix(in srgb, var(--visual-style-raised-surface-fill), currentColor 15%);
     }
 
     /* Main Orientation */
@@ -57,21 +48,21 @@
         flex-direction: column-reverse;
     }
 
-    /** 
-     * FIXME: Hide temporally empty elements wait for this pr to be merged: 
-     * https://github.com/PhrontHQ/mod/pull/37 
+    /**
+     * FIXME: Hide temporally empty elements wait for this pr to be merged:
+     * https://github.com/PhrontHQ/mod/pull/37
      */
-    >div:empty {
+    > div:empty {
         display: none;
     }
 
     /* Visual Specifications */
 
-    >.ModButton-visual {
+    > .ModButton-visual {
         position: relative;
     }
 
-    >svg.ModButton-visual {
+    > svg.ModButton-visual {
         fill: currentColor;
     }
 
