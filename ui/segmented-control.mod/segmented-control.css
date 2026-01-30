@@ -128,19 +128,5 @@
                 }
             }
         }
-
-        /* "Tiny Mode" (e.g., for toolbars) */
-        @container (max-width: 250px) {
-            > .ModSegmentedControl-container {
-                > .ModSegmentedControl-segments {
-                    > .ModSegmentedControl-segment {
-                        padding: 0.15rem 0.3rem;
-                        font-size: 0.625rem;
-                        min-height: 1.75rem;
-                        gap: 0.2rem;
-                    }
-                }
-            }
-        }
     }
 }
