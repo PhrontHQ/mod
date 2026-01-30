@@ -2590,7 +2590,11 @@ Component.addClassProperties({
 
             // Setup internal references and CSS container properties
             this._cssContainerElement = hostElement;
+            // TODO: instead of setting a style attribute container-type", we could use a "super" class.
             this._cssContainerElement.style.setProperty("container-type", this.enclosedSizeType);
+
+            // TODO: Use a more specific class name to avoid potential conflicts, use the layer as prefix?
+            this._cssContainerElement.classList.add(`${this.constructor.name}CssContainer`);
 
             // Inject template into the host rather than replacing it
             this._cssContainerElement.append(templateElement);
