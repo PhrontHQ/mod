@@ -1,0 +1,53 @@
+.Main {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 16px;
+
+    > .Main-header {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 12px;
+
+        > .Main-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        > .Main-logo {
+            flex-shrink: 0;
+            height: 48px;
+            width: 48px;
+
+            > img {
+                border-radius: 4px;
+            }
+        }
+    }
+}
+
+/* Tablets */
+@media screen and (min-width: 768px) {
+    .Main {
+        > .Main-header {
+            justify-content: space-between;
+            flex-direction: row;
+
+            > .Main-title {
+                font-size: 2rem;
+            }
+
+            > .Main-logo {
+                /* 16/9 ratio */
+                width: 128px;
+                height: 72px;
+            }
+        }
+
+        > .Main-nav {
+            max-width: 600px;
+        }
+    }
+}
