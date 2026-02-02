@@ -1,10 +1,10 @@
-var Montage = require("mod/core/core").Montage;
+var Target = require("mod/core/target").Target;
 
 /**
  * @class Movie
  * @extends Montage
  */
-exports.Movie = Montage.specialize({
+exports.Movie = Target.specialize({
 
     category: {
         value: undefined

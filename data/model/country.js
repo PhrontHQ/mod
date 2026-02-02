@@ -34,7 +34,7 @@ exports.Country = class Country extends DataObject {
                 value: undefined,
             },
             name: {
-                value: undefined,
+                value: undefined
             },
             phoneCode: {
                 value: undefined,

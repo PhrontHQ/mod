@@ -7,15 +7,17 @@
     },
 
     "kids": {
-        "prototype": "logic/data/model/movie",
+        "prototype": "spec/data/logic/model/category",
         "values": {
+            "identifier": "019a4e83-203a-78da-9f3f-5ca7e65cf418",
             "name": "Kids"
         }
     },
 
     "horror": {
-        "prototype": "logic/data/model/movie",
+        "prototype": "spec/data/logic/model/category",
         "values": {
+            "identifier": "019a4e83-203a-7ec0-833e-77836a3f216f",
             "name": "Horror"
         }
     }

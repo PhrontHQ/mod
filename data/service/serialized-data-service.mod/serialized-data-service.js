@@ -1,5 +1,3 @@
-const { filter } = require("bluebird");
-
 const RawDataService = require("../raw-data-service").RawDataService,
     
     DataObject = require("../../model/data-object").DataObject,
@@ -10,7 +8,6 @@ const RawDataService = require("../raw-data-service").RawDataService,
 
 
     const assign = require("../../../core/frb/assign");
-const { Organization } = require("../../model/party/organization");
 
 /**
  * @class SerializedDataService
@@ -457,10 +454,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let recordKeys = Object.keys(record),
             mappingPromises = [];
 
-            
 
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {
-            this._mapRawDataPropertyToObject (record, recordKeys[i], object, mappingPromises, mainService);
+            this._mapRawDataPropertyToObject(record, recordKeys[i], object, mappingPromises, mainService);
         }
 
         if(mappingPromises.length) {
@@ -477,8 +473,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     handleReadOperation(readOperation) {
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
         // data operations, verify here whether this service should handle the operation.
-        if (!this.handlesType(readOperation.target)) return;
 
+        if (!this.handlesType(readOperation.target)) return;
 
         //TJ If there is no delegate, callDelegateMethod returns null which throws an error. Do we need a null check or should we ALWAYS have a delegate?
         let delegatePromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation) || Promise.resolve(readOperation);
@@ -533,11 +529,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     if (!readOperation.data.readExpressions) {
                         return filteredRawData
                     }
-                    return this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]);
+                    return filteredRawData.length ? this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]) : filteredRawData;
                 }).then((filteredRawData) => {
-                    filteredRawData = filteredRawData && filteredRawData.filter((item) => {
+                    filteredRawData = filteredRawData && Array.isArray(filteredRawData) ? filteredRawData.filter((item) => {
                         return !!item;
-                    });
+                    }) : [filteredRawData];
                     return this._finalizeHandleReadOperation(readOperation, filteredRawData);
                 })
                 .catch((error) => {

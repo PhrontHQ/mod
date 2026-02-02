@@ -6,11 +6,19 @@
         ]
     },
 
+    "categories": {
+        "object": "spec/data/logic/instance/category/main.mjson"
+    },
+
     "toyStory": {
         "prototype": "spec/data/logic/model/movie",
         "values": {
+            "identifier": "019a4e83-203a-7b3f-bff1-04f145c37b5f",
             "title": "Toy Story",
-            "releaseDate": "11/22/1995"
+            "releaseDate": "11/22/1995",
+            "category": {
+                "=": "@categories.filter{identifier == '019a4e83-203a-78da-9f3f-5ca7e65cf418'}.0"
+            }
         }
     },
 
@@ -18,7 +26,11 @@
         "prototype": "spec/data/logic/model/movie",
         "values": {
             "title": "The Shining",
-            "releaseDate": "05/23/1980"
+            "releaseDate": "05/23/1980",
+            "identifier": "019a4e83-203b-7ceb-a764-459cadc9f0af",
+            "category": {
+                "=": "@categories.filter{identifier == '019a4e83-203a-7ec0-833e-77836a3f216f'}.0"
+            }
         }
     }
 }

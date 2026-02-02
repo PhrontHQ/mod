@@ -13,24 +13,30 @@ describe("SerializedDataService", () => {
     let serializedDataService;
     let mainService;
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         mainService = new DataService();
+        mainService.isUniquing = true;
         serializedDataService = new SerializedDataService();
         defaultEventManager.application.mainService = mainService;
 
         // Register some instances for testing
-        serializedDataService.registerTypeForInstancesLocation(Country, "spec/data/logic/model/countries.mjson");
+        serializedDataService.registerTypeForInstancesLocation(Country, "spec/data/logic/instance/country/countries.mjson");
         serializedDataService.registerTypeForInstancesLocation(
             MovieDescriptor,
             "spec/data/logic/instance/movie/main.mjson"
         );
+        serializedDataService.registerTypeForInstancesLocation(
+            CategoryDescriptor,
+            "spec/data/logic/instance/category/main.mjson"
+        );
 
-        await mainService.registerChildService(serializedDataService, [Country, MovieDescriptor]);
+        await mainService.registerChildService(serializedDataService, [Country, MovieDescriptor, CategoryDescriptor]);
 
         // FIXME: temporary workaround to ensure the child service has the type registered
         // @benoit: What am I missing here?
         serializedDataService.types.push(Country);
         serializedDataService.types.push(MovieDescriptor);
+        serializedDataService.types.push(CategoryDescriptor);
     });
 
     afterEach(() => {
@@ -117,4 +123,40 @@ describe("SerializedDataService", () => {
         expect(countries.length).toBe(1);
         expect(countries[0].name).toBe("France");
     });
+
+    it("can handle readOperation with readExpression", async () => {
+        const criteria = new Criteria().initWithExpression("title == $.title", {
+            title: "The Shining",
+        });
+        const query = DataQuery.withTypeAndCriteria(MovieDescriptor, criteria);
+        query.readExpressions = ["category"];
+
+        // Act
+        const categories = await mainService.fetchData(query);
+
+        // Assert
+        expect(categories.length).toBe(1);
+        expect(categories[0].name).toBe("Horror");
+    })
+
+    it("can gracefully handle readOperation with readExpression when it can't find source object", (done) => {
+        const criteria = new Criteria().initWithExpression("title == $.title", {
+            title: "The Shawshank Redemption",
+        });
+        const query = DataQuery.withTypeAndCriteria(MovieDescriptor, criteria);
+        query.readExpressions = ["category"];
+
+        // Act
+
+        mainService.fetchData(query).then(function (categories) {
+            // Assert
+            expect(categories.length).toBe(0);
+            done();
+        }).catch((e) => {
+            expect(!!e).toBe(false)
+            done();
+        });
+
+        
+    })
 });
