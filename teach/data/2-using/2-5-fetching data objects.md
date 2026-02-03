@@ -10,7 +10,7 @@ A DataQuery describes the data that one want to read from the sources of data co
 * criteria: an instance of Criteria, describes the set of conditions on the type of object fetched that must be true to be included in the results of the query.
 * orderings: an array of DataOrdering objects (mod/data/model/data-ordering.js) which indicate how the fetched data are expected to be ordered.
 * readExpressions: An array of frb expressions describing properties and (nested) relationships that should be prefetched on objects returned by the dtaa query
-* fetchLimit: The maximum amount of data to be returned by the query
+* sizeLimit: The maximum amount of data to be returned by the query
 
 ### Criteria
 

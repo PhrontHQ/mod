@@ -12,7 +12,7 @@ A mod has
 - a UserExperience's tree/graph of sections - the data model, which should be able to editable by user or AI
 - a tree of ui components that render the sections
 
-Notes: We want in the future the ability for a user, or a user's AI agent, to modlulate what component renders what section, down ultimaterly to individual controls used to render/edit properties
+Notes: We want in the future the ability for a user, or a user's AI agent, to modulate what component renders what section, down ultimaterly to individual controls used to render/edit properties
 
 A user's "activity" is the record / receipt of what they have done over time. It could also be calles Trail - as in leaving a trail.
 
