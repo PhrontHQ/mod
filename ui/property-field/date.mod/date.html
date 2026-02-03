@@ -27,7 +27,10 @@
             "values": {
                 "element": {"#": "input"},
                 "placeholder": {"<-": "@owner.placeholder"},
-                "value": {"<->": "@owner.value"}
+                "value": {"<->": "@owner.value"},
+                "min": {"<-": "@owner.min.defined() ? @owner.dateToDateInputStringConverter.convert(@owner.min) : null"},
+                "max": {"<-": "@owner.max.defined() ? @owner.dateToDateInputStringConverter.convert(@owner.max) : null"},
+                "step": {"<-": "@owner.step"}
             }
         },
 

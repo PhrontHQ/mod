@@ -56,6 +56,16 @@
                     }
                 },
 
+                "wrappedDateFieldWithMinMax": {
+                    "prototype": "mod/ui/property-field/date.mod",
+                    "values": {
+                        "element": {"#": "wrappedDateFieldWithMinMax"},
+                        "label": "End Date",
+                        "min": {"=": "@owner.minDate"},
+                        "max": {"=": "@owner.maxDate"}
+                    }
+                },
+
                 "wrappedNumberField": {
                     "prototype": "mod/ui/property-field/number.mod",
                     "values": {
@@ -86,6 +96,7 @@
                 <div data-mod-id="wrappedErrorTextField" class="Main-wrappedErrorTextField"></div>
                 <div data-mod-id="wrappedTextArea" class="Main-wrappedTextArea"></div>
                 <div data-mod-id="wrappedDateField" class="Main-wrappedDateField"></div>
+                <div data-mod-id="wrappedDateFieldWithMinMax" class="Main-wrappedDateField"></div>
                 <input type="date"></input>
                 <div data-mod-id="wrappedNumberField" class="Main-wrappedNumberField"></div>
                 <div data-mod-id="wrappedUrlField" class="Main-wrappedUrlField"></div>

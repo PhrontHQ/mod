@@ -1,5 +1,6 @@
 const { InternationalDateToStringFormatter } = require("../../../core/converter/international-date-to-string-formatter");
 const { PressComposer } = require("composer/press-composer");
+const dateToDateInputStringConverter = require("../../../core/converter/date-to-date-input-string-converter").singleton
 
 /**
  * @module "ui/date.mod"
@@ -20,6 +21,12 @@ exports.Date = Component.specialize(/** @lends Date.prototype */{
                     self._isEditMode = true;
                 }
             });
+        }
+    },
+
+    dateToDateInputStringConverter: {
+        get: function () {
+            return dateToDateInputStringConverter;
         }
     },
 
