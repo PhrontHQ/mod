@@ -397,7 +397,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
     }
 
     _addResource(url, classListScope, cssLayerName) {
-        this._resources[url] = { classListScope, cssLayerName } || true;
+        this._resources[url] = { classListScope, cssLayerName };
     }
 
     _scopeStylesheetRulesWithSelectorInCSSLayerName(stylesheet, classListScope, cssLayerName) {
