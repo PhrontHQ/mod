@@ -112,8 +112,6 @@ exports.DocumentResources = class DocumentResources extends Montage {
             } else if (this.isResourcePreloading(url)) {
                 return this.getResourcePreloadedPromise(url);
             }
-
-            return this._importScript(script);
         }
 
         return this._importScript(script);
