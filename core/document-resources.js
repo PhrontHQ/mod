@@ -400,14 +400,6 @@ exports.DocumentResources = class DocumentResources extends Montage {
         this._resources[url] = { classListScope, cssLayerName } || true;
     }
 
-    _cssRuleSelectorTextScopeReplacer(match, p1, p2, p3, offset, string, groups) {
-        return ":scope";
-    }
-
-    _updateCSSRuleWithScope(cssRule, scopeName, scopeNameRegexp) {
-        cssRule.selectorText = cssRule.selectorText.replaceAll(scopeNameRegexp, ":scope");
-    }
-
     _scopeStylesheetRulesWithSelectorInCSSLayerName(stylesheet, classListScope, cssLayerName) {
         if (classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function") {
             const classListScopeRegexp = new RegExp(`(${classListScope})+(?=$)|(${classListScope})+(?= >)`, "dg");
