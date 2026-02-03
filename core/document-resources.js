@@ -52,7 +52,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
                 let styleSheets = this._document.styleSheets;
 
                 for (let i = 0, styleSheet; (styleSheet = styleSheets[i]); i++) {
-                    let ix = this._expectedStyles.indexOf(styleSheet.href);
+                    const ix = this._expectedStyles.indexOf(styleSheet.href);
 
                     if (ix >= 0) {
                         this._expectedStyles.splice(ix, 1);
