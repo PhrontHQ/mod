@@ -6,6 +6,7 @@ var Montage = require("montage").Montage,
 
 var PROPERTIES = [
     {name: "baseSurfaceFill", variable: "--visual-style-base-surface-fill", defaultValue: "hsl(0, 0%, 100%)"},
+    /* Would we need a controlRaisedSurfaceFill ? Or do raisedSurfaces only exist in controls? */
     {name: "raisedSurfaceFill", variable: "--visual-style-raised-surface-fill", backup: "baseSurfaceFill"},
     {name: "elevatedSurfaceFill", variable: "--visual-style-elevated-surface-fill", backup: "baseSurfaceFill"},
 
