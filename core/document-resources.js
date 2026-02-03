@@ -47,16 +47,14 @@ exports.DocumentResources = class DocumentResources extends Montage {
     }
 
     get areStylesLoaded() {
-        if (this._isPollingDocumentStyleSheets) {
-            if (this._expectedStyles.length > 0) {
-                let styleSheets = this._document.styleSheets;
+        if (this._isPollingDocumentStyleSheets && this._expectedStyles.length > 0) {
+            const styleSheets = this._document.styleSheets;
 
-                for (let i = 0, styleSheet; (styleSheet = styleSheets[i]); i++) {
-                    const ix = this._expectedStyles.indexOf(styleSheet.href);
+            for (let i = 0, styleSheet; (styleSheet = styleSheets[i]); i++) {
+                const ix = this._expectedStyles.indexOf(styleSheet.href);
 
-                    if (ix >= 0) {
-                        this._expectedStyles.splice(ix, 1);
-                    }
+                if (ix >= 0) {
+                    this._expectedStyles.splice(ix, 1);
                 }
             }
         }
