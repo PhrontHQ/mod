@@ -10,6 +10,23 @@ var PROPERTIES = [
     {name: "raisedSurfaceFill", variable: "--visual-style-raised-surface-fill", backup: "baseSurfaceFill"},
     {name: "elevatedSurfaceFill", variable: "--visual-style-elevated-surface-fill", backup: "baseSurfaceFill"},
 
+    /* Should we add these?
+
+        {name: "baseSurfaceHoverFill", variable: "--visual-style-base-surface-hover-fill", defaultValue: "hsl(0, 0%, 100%)"},
+        {name: "raisedSurfaceHoverFill", variable: "--visual-style-raised-surface-hover-fill", backup: "baseSurfaceFill"},
+        {name: "elevatedSurfaceHoverFill", variable: "--visual-style-elevated-surface-hover-fill", backup: "baseSurfaceFill"},
+
+        {name: "baseSurfaceActiveFill", variable: "--visual-style-base-surface-active-fill", defaultValue: "hsl(0, 0%, 100%)"},
+        {name: "raisedSurfaceActiveFill", variable: "--visual-style-raised-surface-active-fill", backup: "baseSurfaceFill"},
+        {name: "elevatedSurfaceActiveFill", variable: "--visual-style-elevated-surface-active-fill", backup: "baseSurfaceFill"},
+
+        {name: "baseSurfaceFocusFill", variable: "--visual-style-base-surface-focus-fill", defaultValue: "hsl(0, 0%, 100%)"},
+        {name: "raisedSurfaceFocusFill", variable: "--visual-style-raised-surface-focus-fill", backup: "baseSurfaceFill"},
+        {name: "elevatedSurfaceFocusFill", variable: "--visual-style-elevated-surface-focus-fill", backup: "baseSurfaceFill"},
+
+    */
+
+
     {name: "controlBackgroundFill", variable: "--visual-style-control-background-fill", defaultValue: "hsl(0, 0%, 86%)"},
     {name: "controlSecondaryBackgroundFill", variable: "--visual-style-control-secondary-background-fill", backup: "controlBackgroundFill"},
     {name: "controlTertiaryBackgroundFill", variable: "--visual-style-control-tertiary-background-fill", backup: "controlSecondaryBackgroundFill"},
