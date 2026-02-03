@@ -110,7 +110,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
         if (url) {
             if (this.isResourcePreloaded(url)) {
-                return Promise.resolve();
+                return Promise.resolveUndefined();
             } else if (this.isResourcePreloading(url)) {
                 return this.getResourcePreloadedPromise(url);
             }
@@ -264,7 +264,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
         }
 
         if (skipPreload || this.isResourcePreloaded(url)) {
-            return Promise.resolve();
+            return Promise.resolveUndefined();
         } else if (this.isResourcePreloading(url)) {
             return this.getResourcePreloadedPromise(url);
         }
@@ -384,7 +384,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
             this.setResourcePreloadedPromise(url, promise);
         } else {
-            promise = Promise.resolve();
+            promise = Promise.resolveUndefined();
         }
 
         // This is one of the very few ocasions where we go around the draw
