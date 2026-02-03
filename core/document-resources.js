@@ -324,6 +324,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
     }
 
     _preloadResource(url) {
+        // TODO: Maybe we could use only one AbortController per domain/document?
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this._SCRIPT_TIMEOUT);
 
