@@ -15,7 +15,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
     static {
         Montage.defineProperties(this.prototype, {
-            domain: { value: global.location ? global.location.protocol + "//" + global.location.host : "" },
+            domain: { value: global.location?.origin ?? "" },
             _isPollingDocumentStyleSheets: { value: false },
             _SCRIPT_TIMEOUT: { value: 5_000 },
             _expectedStyles: { value: null },
