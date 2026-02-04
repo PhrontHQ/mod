@@ -320,18 +320,10 @@ exports.DocumentResources = class DocumentResources extends Montage {
     }
 
     _preloadResource(url) {
-        // TODO: Maybe we could use only one AbortController per domain/document?
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), this._SCRIPT_TIMEOUT);
-
-        const promise = fetch(url, { signal: controller.signal })
+        const promise = fetch(url, { signal: AbortSignal.timeout(this._SCRIPT_TIMEOUT) })
             // We catch the error here to ensure the promise resolves.
             .catch((error) => error)
-            .finally(() => {
-                // Cleanup timer and set state regardless of success/failure
-                clearTimeout(timeoutId);
-                this.setResourcePreloaded(url);
-            });
+            .finally(() => this.setResourcePreloaded(url));
 
         this.setResourcePreloadedPromise(url, promise);
 
