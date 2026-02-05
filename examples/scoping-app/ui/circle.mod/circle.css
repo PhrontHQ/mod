@@ -7,12 +7,15 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        position: relative;
     }
 }
 
 .secret {
-    color: white;
-    font-weight: bold;
+    &::after {
+        content: "Secret";
+        position: absolute;
+    }
 }
 
 @layer scoping-app {
