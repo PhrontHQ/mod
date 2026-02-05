@@ -798,6 +798,7 @@ Component.addClassProperties({
                     this.blockDrawGate.setField("element", true);
                 }
             }
+
             this._initializeClassListFromElement(value);
         },
     },
@@ -5075,9 +5076,7 @@ var RootComponent = Component.specialize(
                 (cssLayers.push(global.require.config.name), (styleElement = document.createElement("style")));
 
                 styleElement.textContent = `@layer ${cssLayers
-                    .map((layer) => {
-                        return layer.replace(".", "_");
-                    })
+                    .map((layer) => layer.stringByRemovingSuffix(".mod"))
                     .join(", ")};`;
 
                 styleElement.setAttribute("data-mod-id", "mod-layer-statement");
@@ -5094,7 +5093,8 @@ var RootComponent = Component.specialize(
                         document.querySelector('[data-mod-id="mod-layer-statement"]') || this._addCssLayerOrder();
                 }
 
-                cssLayerName = cssLayerName.replace(".", "_");
+                cssLayerName = cssLayerName.stringByRemovingSuffix(".mod");
+
                 if (!this._addedStyleSheetsByTemplate.has(template)) {
                     var resources = template.getResources(),
                         ownerDocument = this.element.ownerDocument,
