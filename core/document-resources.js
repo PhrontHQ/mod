@@ -370,10 +370,14 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
         // Loop backwards to find the last @import rule
         while (i-- > 0) {
-            if (!(cssRules[i] instanceof CSSImportRule)) break;
+            if (cssRules[i] instanceof CSSImportRule) {
+                // We found the last @import.
+                // The safe insertion point is immediately after it.
+                return i + 1;
+            }
         }
 
-        return i;
+        return 0;
     }
 
     /**
