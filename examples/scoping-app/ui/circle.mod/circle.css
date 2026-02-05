@@ -1,31 +1,52 @@
-@scope (.Circle) {
-    :scope {
-        width: 100px;
-        height: 100px;
-        background-color: lightcoral;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-    }
-}
+/* [data-mod-id="circle:examples/scoping-app/ui/circle.mod"] OR a ClassName + (suffix: examples/scoping-app/ui/circle.mod) -> goes container css */
+/* [data-mod-id="circle
+"] { */
 
-.secret {
-    &::after {
-        content: "Secret";
-        position: absolute;
-    }
-}
+/* COMPONENT */
+/* TOGGLE HERE */
+@layer circle {
+    /* CSS CONTAINER */
+    .module-id-circle {
+        /* TOGGLE HERE */
+        all: revert;
 
-@layer scoping-app {
-    @scope (.Circle .inner) {
-        :scope {
-            width: 50px;
-            height: 50px;
+        * {
+            all: revert;
+        }
+
+        /* + bug in chrome */
+
+        .Circle {
+            width: 100px;
+            height: 100px;
+            background-color: lightcoral;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* } */
+
+        /* examples/scoping-app/ui/circle.mod */
+        /* @scope and @layer are no blockers anymore */
+
+        .inner {
+            /* border-magic:  */
+            width: 30px;
+            height: 30px;
+            display: block;
             background-color: white;
             border-radius: 50%;
-            margin: auto;
+
+            .test {
+                width: 10px;
+                height: 10px;
+                /* display: block; */
+                background-color: cyan;
+                border-radius: 50%;
+            }
         }
     }
 }
