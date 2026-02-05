@@ -426,7 +426,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
             // Skip some Pseudo class (e.g., :root) that can't be scoped
             // TODO: we possibly need a more complete list of such pseudo-classes
-            if (rule.selectorText === ":root") continue;
+            if (rule.selectorText === ":root" || !rule.selectorText) continue;
 
             // Modify selectors to use :scope
             rule.selectorText = rule.selectorText
