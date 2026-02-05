@@ -93,7 +93,7 @@
     "secureLocation": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "signedLocation",
+            "name": "secureLocation",
             "valueType": "URL"
         }
     },

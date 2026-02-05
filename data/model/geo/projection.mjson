@@ -35,7 +35,7 @@
 
     "units": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "units",
             "cardinality": 1,
             "valueType": "object"
