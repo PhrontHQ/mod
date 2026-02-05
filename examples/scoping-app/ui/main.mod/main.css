@@ -1,0 +1,22 @@
+.MainCssContainer {
+    background-color: lightgray;
+}
+
+/* @scope (.scoping-app.MainCssContainer) {
+    .inner {
+        height: 45px;
+        width: 45px;
+        background-color: lightseagreen !important;
+        border: 1px solid black;
+    }
+}
+
+/* Can maybe be workarounded with the container */
+/* @scope (.scoping-app.MainCssContainer) to (.scoping-app.Main) {
+    .inner {
+        height: 45px;
+        width: 45px;
+        background-color: lightseagreen !important;
+        border: 1px solid black;
+    }
+}  */
