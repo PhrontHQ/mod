@@ -348,6 +348,8 @@ exports.DocumentResources = class DocumentResources extends Montage {
         const insertionIndex = this._findSafeCssRuleInsertionPoint(stylesheet);
         const currentRule = stylesheet.cssRules[insertionIndex];
 
+        console.log("Current rule at insertion index:", insertionIndex, currentRule);
+
         // Exit early if we encounter a layer rule, as no further action is needed
         if (currentRule instanceof CSSLayerBlockRule) return;
 

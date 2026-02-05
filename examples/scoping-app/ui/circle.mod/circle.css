@@ -10,6 +10,11 @@
     }
 }
 
+.secret {
+    color: white;
+    font-weight: bold;
+}
+
 @layer scoping-app {
     @scope (.Circle .inner) {
         :scope {
