@@ -36,7 +36,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
              */
             automaticallyAddsCSSLayerToUnscoppedCSS: { value: true },
             _scopeSelectorRegExp: { value: /@scope\s*\(([^)]+)\)/ },
-            automaticallyAddsCSSScope: { value: true },
+            automaticallyAddsCSSScope: { value: false },
         });
     }
 
