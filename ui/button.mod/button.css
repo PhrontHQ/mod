@@ -1,5 +1,9 @@
 .ModButton {
+    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+    transition: background-color 0.2s ease-in-out;
     border-style: solid;
+    gap: 6px;
+
     border-width: var(--visual-style-control-border-width);
     border-color: var(--visual-style-control-border-fill);
     background-color: var(--visual-style-raised-surface-fill);
@@ -11,9 +15,6 @@
     padding: var(--visual-style-control-buffer);
     position: relative;
     border-radius: var(--visual-style-control-border-radius);
-    /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-    transition: background-color 0.2s ease-in-out;
-    gap: 6px;
     color: var(--visual-style-text-fill);
 
     &:hover {
