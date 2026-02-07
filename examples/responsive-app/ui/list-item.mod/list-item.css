@@ -1,0 +1,43 @@
+.ListItem {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    background-color: #f9f9f9;
+    gap: 8px;
+
+    .ListItem-title {
+        font-weight: bold;
+        flex: 0 0 150px;
+    }
+
+    .ListItem-description {
+        color: #666;
+        font-size: 0.9rem;
+        flex: 1;
+    }
+
+    @container (min-width: 400px) {
+        gap: 16px;
+        padding: 12px 16px;
+
+        .ListItem-description {
+            font-size: 0.95rem;
+        }
+    }
+
+    @container (min-width: 600px) {
+        flex-direction: row;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 24px;
+
+        .ListItem-title {
+            font-size: 1.2rem;
+        }
+
+        .ListItem-description {
+            font-size: 1rem;
+        }
+    }
+}
