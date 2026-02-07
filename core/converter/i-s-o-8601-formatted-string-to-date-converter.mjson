@@ -1,0 +1,25 @@
+{
+    "converter_descriptor": {
+        "object": "./converter.mjson"
+    },
+    "root": {
+        "prototype": "../meta/module-object-descriptor",
+        "values": {
+            "name": "ISO8601FormattedStringToDateConverter",
+            "customPrototype": false,
+            "parent": {
+                "@": "converter_descriptor"
+            },
+            "propertyDescriptors": [],
+            "propertyDescriptorGroups": {},
+            "validationRules": [],
+            "objectDescriptorModule": {
+                "%": "./i-s-o-8601-formatted-string-to-date-converter.mjson"
+            },
+            "exportName": "ISO8601FormattedStringToDateConverter",
+            "module": {
+                "%": "./i-s-o-8601-formatted-string-to-date-converter"
+            }
+        }
+    }
+}
