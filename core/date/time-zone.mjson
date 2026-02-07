@@ -12,11 +12,11 @@
             ],
             "propertyDescriptorGroups": {
                 "all": [
-                { "@": "identifier" },
-                { "@": "location" },
-                { "@": "tznames" },
-                { "@": "latitude" },
-                { "@": "longitude" }
+                    { "@": "identifier" },
+                    { "@": "location" },
+                    { "@": "tznames" },
+                    { "@": "latitude" },
+                    { "@": "longitude" }
                 ]
             },
             "validationRules": [],
@@ -60,7 +60,7 @@
     "longitude": {
         "prototype": "../meta/property-descriptor",
         "values": {
-            "name": "latitude",
+            "name": "longitude",
             "valueType": "number"
         }
     }
