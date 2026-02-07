@@ -5,8 +5,7 @@
             "name": "WebSocketSessionConnection",
             "propertyDescriptors": [
                 {"@": "session"},
-                {"@": "serverConnectionId"},
-                {"@": "existenceTimeRange"}
+                {"@": "serverConnectionId"}
             ],
             "objectDescriptorModule": {
                 "%": "./web-socket-session-connection.mjson"
@@ -44,18 +43,6 @@
             "valueType": "string",
             "isSearchable": true
         }
-    },
-    "existenceTimeRange": {
-        "prototype": "../../../core/meta/property-descriptor",
-        "values": {
-            "name": "existenceTimeRange",
-            "valueType": "date",
-            "cardinality": 1,
-            "valueDescriptor": {"@": "range_descriptor"}
-        }
-    },
-    "range_descriptor": {
-        "object": "../../../core/range.mjson"
     }
 
 }
