@@ -3552,9 +3552,9 @@ RawDataService.addClassProperties({
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
                 }
-                else {
-                    console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
-                }
+                // else {
+                //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
+                // }
                 //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
             }
 
