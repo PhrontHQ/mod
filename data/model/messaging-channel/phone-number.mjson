@@ -56,7 +56,7 @@
             "name": "country",
             "valueType": "object",
             "cardinality": 1,
-            "valueDescriptor": {"@": "PartySMSNumberDescriptor"}
+            "valueDescriptor": {"@": "CountryDescriptor"}
         }
     },
     "nationalNumber": {
@@ -121,7 +121,7 @@
     "supportsRichCommunication": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "supportsiMessage",
+            "name": "supportsRichCommunication",
             "valueType": "boolean",
             "defaultValue": false,
             "description": "Indicates that the telephone number supports Rich Communication Services (RCS)"
