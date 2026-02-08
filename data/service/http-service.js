@@ -414,7 +414,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                             // //Set the primary key:
                                             // rawDataObject[qualifiedProperties[0]] = criteriaParameters;
 
-                                            // console.once.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
+                                            // console.warn.once("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions);
 
                                             // //console.warn("No Mapping found for readOperation on "+ readOperation.target.name+ " for "+ readExpressions+" and criteria: ",readOperation.criteria);
                                             // for(let i = 0, countI = readExpressions.length, iReadExpression, iPropertyDescriptor; (i < countI); i++ ) {
@@ -436,7 +436,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                         } else {
                                             let error = new Error("No Mapping found " + readOperation.target.name + " " + readOperation.data.readExpressions);
 
-                                            console.once.error(error.message);
+                                            console.error.once(error.message);
                                             if (readOperation.clientId) {
                                                 error.stack = null;
                                             }

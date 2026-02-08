@@ -620,7 +620,7 @@ RawDataService.addClassProperties({
                     rule = mapping.objectMappingRuleForPropertyName(propertyName);
 
                 if(!rule) {
-                    console.warn("objectDescriptor '"+objectDescriptor.name+"': No Object Mapping Rule Found For Property Named '"+propertyName);
+                    console.warn.once(`${this.identifier}: No Object Mapping Rule Found For ${objectDescriptor.name} property named '${propertyName}'`);
                     return Promise.resolveNull;
                 }
                 

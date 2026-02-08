@@ -4,13 +4,7 @@ if (typeof window !== "undefined") {
     document._montageTiming.loadStartTime = Date.now();
 }
 
-console.once = new Proxy(console, {
-    
-    apply: (target, thisArg, argumentsList) => {
-        console.debug("Proxy apply Handler");
-        return target.apply(thisArg, argumentsList);
-    }
-})
+
 
 console._groupTime = Object.create(null);
 console.groupTime = function(name) {
@@ -45,5 +39,22 @@ console.groupTimeCount = function(name) {
     var groupTimeEntry = this._groupTime[name];
     return groupTimeEntry.count;
 };
+
+
+//Keep at the end so we act on all:
+for(let consoleKeys = Object.keys(console), countI = consoleKeys.length, i=0, iMethod; (i<countI); i++) {
+
+    iMethod = consoleKeys[i];
+    const onceCache = new Set();
+    console[iMethod].once = new Proxy(console[iMethod], {
+        
+        apply: (target, thisArg, argumentsList) => {
+            if(!onceCache.hasEqual(argumentsList)) {
+                onceCache.add(argumentsList);
+                return target.apply(thisArg, argumentsList);
+            }
+        }
+    });
+}
 
 module.exports.console = global.console;
