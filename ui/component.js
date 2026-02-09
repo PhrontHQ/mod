@@ -74,6 +74,9 @@ const DEFAULT_ATTRIBUTE_MERGE_OPTIONS = {
     },
 };
 
+// Flag to avoid repeating warning enclosesSize messages
+let hasWarnedEnclosesSize = false;
+
 function loggerToString(object) {
     if (!object) {
         return "NIL";
@@ -2495,12 +2498,19 @@ Component.addClassProperties({
         enumerable: false,
         value: function () {
             // Capture the current DOM instance (host) and the incoming template.
-            // It will be replaced by the template element.
+            // Depending on configuration, the host will either be swapped out
+            // or converted into a CSS container.
             const { element: hostElement, _templateElement: templateElement } = this;
 
             this._applyHostAttributesToTemplateElement(hostElement, templateElement);
+
+            if (this.enclosesSize) {
+                this._retainHostElementAsContainer(hostElement, templateElement);
+            } else {
+                this._swapDOMElement(hostElement, templateElement);
+            }
+
             this._initializeClassListFromElement(templateElement);
-            this._swapDOMElement(hostElement, templateElement);
             this._handleProcessedDomArg(hostElement, templateElement);
             this._finalizeTemplateReplacement(templateElement);
         },
@@ -2556,10 +2566,44 @@ Component.addClassProperties({
                     throw new Error(`No separator defined for merging attribute: ${nodeName}`);
                 }
 
+                // When using css container queries, template element attribute values take precedence
+                if (this.enclosesSize) return elementValue;
+
                 return `${elementValue}${attributeMergeSeparators[nodeName]}${nodeValue}`;
             }
 
             return nodeValue;
+        },
+    },
+
+    /**
+     * Configures the host element to act as a CSS container and appends the template
+     * instead of replacing the host.
+     * @param {Element} hostElement - The original host element.
+     * @param {Element} templateElement - The template element.
+     * @private
+     */
+    _retainHostElementAsContainer: {
+        value: function (hostElement, templateElement) {
+            // Remove ID to prevent collisions or logic errors in the host
+            hostElement.removeAttribute("data-mod-id");
+
+            // Setup internal references and CSS container properties
+            // TODO: instead of setting a style attribute container-type", we could use a "super" class.
+            // Let's wait for the scoping & layering feature to be more mature before we add more classes to the host element.
+            hostElement.style.setProperty("container-type", this.enclosedSizeType);
+
+            // TODO: Use a more specific class name to avoid potential conflicts, use the layer as prefix?
+            // Let's wait for the scoping & layering feature to be more mature before we add more classes to the host element.
+            hostElement.classList.add(`${this.constructor.name}CssContainer`);
+
+            // Inject template into the host rather than replacing it
+            hostElement.append(templateElement);
+
+            this._cssContainerElement = hostElement;
+
+            // Ensure events are properly routed
+            this._transferEventListeners(hostElement, templateElement);
         },
     },
 
@@ -3536,6 +3580,11 @@ Component.addClassProperties({
             if (this._enclosesSize !== value) {
                 this._enclosesSize = value;
             }
+
+            // TODO: remove this warning when the feature is stable
+            if (value) {
+                console.once.warn("enclosesSize is an experimental feature. Use with caution.");
+            }
         },
     },
 
@@ -4035,50 +4084,6 @@ Component.addClassProperties({
 
                     delete _elementAttributeValues[attributeName];
                 }
-            }
-
-            // Handle containerization
-            // Check if we need to wrap the element
-            //TODO: When a component is instanciated, it is given an element. If a component has a tenplate,
-            // that element is replaced by the component's element coming from its template.
-            //If we need to keep an extra container in that case, we should probabaly reuse that element
-            //instead of creating a new one.
-            if (this.enclosesSize && !this._cssContainerElement) {
-                if (element.tagName === "HTML" || element.tagName === "BODY") {
-                    let containerName =
-                        this.constructor.name === "Component"
-                            ? !!this.identifier
-                                ? null
-                                : this.identifier
-                            : this.constructor.name;
-
-                    if (containerName) {
-                        element.style.setProperty("container", `${this.constructor.name} / ${this.enclosedSizeType}`);
-                    }
-                } else {
-                    // Create the container
-                    this._cssContainerElement = document.createElement("div");
-                    this._cssContainerElement.style.setProperty(
-                        "container",
-                        `${this.constructor.name} / ${this.enclosedSizeType}`,
-                    );
-                    this._cssContainerElement.classList.add(`${this.constructor.name}-container`);
-
-                    // Place the new container right before the original element
-                    element.before(this._cssContainerElement);
-
-                    // Move the original element inside the new container
-                    this._cssContainerElement.append(element);
-                }
-
-                // Check if we need to unwrap the element
-            } else if (!this.enclosesSize && this._cssContainerElement) {
-                // Place the original element back before the container
-                this._cssContainerElement.before(element);
-
-                // Remove the now-empty container
-                this._cssContainerElement.remove();
-                this._cssContainerElement = null;
             }
 
             // classList

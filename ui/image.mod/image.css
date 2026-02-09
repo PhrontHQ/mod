@@ -1,3 +1,11 @@
-.image-mod[hidden] {
-    display: none !important;
+.ModImage {
+    object-fit: cover;
+    object-position: center center;
+
+    /* Remove bottom inline spacing */
+    display: block;
+
+    &[hidden] {
+        display: none !important;
+    }
 }
