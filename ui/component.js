@@ -3583,7 +3583,7 @@ Component.addClassProperties({
 
             // TODO: remove this warning when the feature is stable
             if (value) {
-                console.once.warn("enclosesSize is an experimental feature. Use with caution.");
+                console.warn.once("enclosesSize is an experimental feature. Use with caution.");
             }
         },
     },
