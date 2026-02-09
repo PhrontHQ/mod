@@ -2589,15 +2589,18 @@ Component.addClassProperties({
             hostElement.removeAttribute("data-mod-id");
 
             // Setup internal references and CSS container properties
-            this._cssContainerElement = hostElement;
             // TODO: instead of setting a style attribute container-type", we could use a "super" class.
-            this._cssContainerElement.style.setProperty("container-type", this.enclosedSizeType);
+            // Let's wait for the scoping & layering feature to be more mature before we add more classes to the host element.
+            hostElement.style.setProperty("container-type", this.enclosedSizeType);
 
             // TODO: Use a more specific class name to avoid potential conflicts, use the layer as prefix?
-            this._cssContainerElement.classList.add(`${this.constructor.name}CssContainer`);
+            // Let's wait for the scoping & layering feature to be more mature before we add more classes to the host element.
+            hostElement.classList.add(`${this.constructor.name}CssContainer`);
 
             // Inject template into the host rather than replacing it
-            this._cssContainerElement.append(templateElement);
+            hostElement.append(templateElement);
+
+            this._cssContainerElement = hostElement;
 
             // Ensure events are properly routed
             this._transferEventListeners(hostElement, templateElement);
@@ -3579,9 +3582,8 @@ Component.addClassProperties({
             }
 
             // TODO: remove this warning when the feature is stable
-            if (value && !hasWarnedEnclosesSize) {
-                console.warn("enclosesSize is an experimental feature. Use with caution.");
-                hasWarnedEnclosesSize = true;
+            if (value) {
+                console.once.warn("enclosesSize is an experimental feature. Use with caution.");
             }
         },
     },
