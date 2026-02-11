@@ -44,14 +44,15 @@ console.groupTimeCount = function(name) {
 //Keep at the end so we act on all:
 for(let consoleKeys = Object.keys(console), countI = consoleKeys.length, i=0, iMethod; (i<countI); i++) {
 
-    iMethod = consoleKeys[i];
+    iMethod = console[consoleKeys[i]];
     const onceCache = new Set();
-    console[iMethod].once = new Proxy(console[iMethod], {
+    iMethod.once = function() {};
+    iMethod.once = new Proxy(iMethod.once, {
         
         apply: (target, thisArg, argumentsList) => {
             if(!onceCache.hasEqual(argumentsList)) {
                 onceCache.add(argumentsList);
-                return target.apply(thisArg, argumentsList);
+                return iMethod.apply(thisArg, argumentsList);
             }
         }
     });
