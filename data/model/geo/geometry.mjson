@@ -1,7 +1,7 @@
 {
     "root": {
         "prototype": "core/meta/module-object-descriptor",
-        "properties": {
+        "values": {
             "name": "Geometry",
             "propertyDescriptors": [
                 {"@": "identifier"},
@@ -16,7 +16,7 @@
 
     "identifier": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "identifier",
             "valueType": "string"
         }
@@ -24,7 +24,7 @@
 
     "coordinates": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "coordinates",
             "valueType": "object"
         }
