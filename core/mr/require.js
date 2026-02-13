@@ -256,6 +256,10 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
             i = 0,
             part;
 
+        if (!packageLock || !packageLock.packages) {
+            return packageName;
+        }
+
         while ((aPackage = packageLock.packages[aPackagePath])) {
 
             if(!aPackage.dependencies) {
@@ -413,6 +417,14 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         }
     }
 
+    function findPackageMain(packageDescription) {
+        let pkgExports = packageDescription.exports,
+            rootExports = pkgExports && pkgExports["."] ? pkgExports["."] : pkgExports,
+            cjsExport = rootExports && rootExports.require;
+
+        return cjsExport || packageDescription.main;
+    }
+
     function addDependencyToContext(context, dependee, dependency) {
         let dependees = context.dependees,
             dependencyByDependeeCount = context.dependencyByDependeeCount,
@@ -540,14 +552,14 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
                         // otherwise we assume target is a module
                         if (bkValue[0] === '.') {
                             bkValue = URLResolve(location, bkValue);
-                            bkValue = bkValue.stringByRemovingPrefix(location);
+                            bkValue = bkValue.replace(location, "");
                         }
 
-                        // if (bkValue.lastIndexOf('.') !== -1) {
-                        //     //kValue = bkValue.stringByRemovingSuffix(".js");
+                        if (bkValue.lastIndexOf('.') !== -1) {
+                            //kValue = bkValue.stringByRemovingSuffix(".js");
                         //Will remove if present
-                        bkValue = bkValue.stringByRemovingPathExtension();
-                        //}
+                        // bkValue = bkValue.stringByRemovingPathExtension();
+                        }
 
 
                     } else {
@@ -623,7 +635,7 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
         // loaded definition from the given path.
         modules[""] = {
             id: "",
-            redirect: config.normalizeId(config.resolve(description.main, ""), config),
+            redirect: config.normalizeId(config.resolve(findPackageMain(description), ""), config),
             location: config.location
         };
 

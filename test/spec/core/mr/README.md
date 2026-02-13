@@ -1,0 +1,1 @@
+mr specs are within the sub-project at `mod/core/mr/test`

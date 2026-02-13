@@ -147,7 +147,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/meta/event-descriptor-spec", node: false },
         { name: "spec/meta/expression-validation-rule-spec" },
 
-        // Data
+        // Geo
         { name: "spec/geo/circle" },
         { name: "spec/geo/geometry" },
         { name: "spec/geo/geometry-collection" },

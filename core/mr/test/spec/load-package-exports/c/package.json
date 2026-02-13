@@ -1,0 +1,7 @@
+{
+    "name": "test-exports",
+    "main": "c.js",
+    "exports": {
+        "require": "./c.cjs"
+    }
+}

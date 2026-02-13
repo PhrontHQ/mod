@@ -1,7 +1,0 @@
-{
-	"_args": [],
-    "dependencies": {
-        "http-server": "1",
-        "url": "2"
-    }
-}
