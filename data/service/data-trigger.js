@@ -881,12 +881,13 @@ exports.DataTrigger.prototype = Object.create(
                 var self = this,
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
-                    //this._setValueStatus(object, status);
-                    status.promise = new Promise(function (resolve, reject) {
-                        status.resolve = resolve;
-                        status.reject = reject;
-                    });
-                    self._fetchObjectProperty(object);
+                    ////this._setValueStatus(object, status);
+                    // status.promise = new Promise(function (resolve, reject) {
+                    //     status.resolve = resolve;
+                    //     status.reject = reject;
+                    // });
+                    // self._fetchObjectProperty(object);
+                    status.promise = self._fetchObjectProperty(object);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
@@ -901,96 +902,98 @@ exports.DataTrigger.prototype = Object.create(
          */
         _fetchObjectProperty: {
             value: function (object) {
-                var self = this;
-                //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
-                this._service
-                    .fetchObjectProperty(object, this._propertyName)
-                    .then((propertyValue) => {
-                        this._service._objectsBeingMapped.add(object);
+                var self = this,
+                    fetchPromise;
 
+                    fetchPromise = this._service.fetchObjectProperty(object, this._propertyName);
+
+                //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
+                return fetchPromise.then((propertyValue) => {
+                    this._service._objectsBeingMapped.add(object);
+
+                    /**
+                     * If there's a propertyValue, it's the actual result of the fetch
+                     * and bipassed the existing path where the mapping would have added the value
+                     * on object by the time we get back here. So since it wasn't done, we do it here.
+                     */
+                    if (propertyValue === null) {
+                        object[self._propertyName] = propertyValue;
+                    } else if (propertyValue) {
                         /**
-                         * If there's a propertyValue, it's the actual result of the fetch
-                         * and bipassed the existing path where the mapping would have added the value
-                         * on object by the time we get back here. So since it wasn't done, we do it here.
+                         * If there's no value at all on the object, we go ahead and set it
                          */
-                        if (propertyValue === null) {
-                            object[self._propertyName] = propertyValue;
-                        } else if (propertyValue) {
-                            /**
-                             * If there's no value at all on the object, we go ahead and set it
-                             */
-                            let localValue = object[self._privatePropertyName];
-                            if (!localValue) {
-                                if (self.propertyDescriptor.cardinality > 1) {
-                                    object[self._propertyName] = propertyValue;
-                                } else if (
-                                    /**
-                                     * When we fetch a property of an object that's not a relationship,
-                                     * typically a basic type, the value is returned and mapped to the existing object already.
-                                     * If that's the case, propertyValue[0] would be the object itself.
-                                     * If that's the case, then there's nothing to do.
-                                     *
-                                     * Benoit: 5/5/2022 - FIXME. We need to assess wether we'd propertyValue could be return
-                                     * as a value in an array for a to-one, or just the objecy as expected.
-                                     * Adding a check for that as the code apparently expected an array with only a value in it.
-                                     */
-                                    (propertyValue = Array.isArray(propertyValue)
-                                        ? propertyValue[0]
-                                        : propertyValue) !== object
-                                ) {
-                                    object[self._propertyName] = propertyValue;
-                                }
-                            } else if (self.propertyDescriptor.cardinality > 1) {
-                                /**
-                                 * We now initialize to-Many to empty array/collections.
-                                 * So if there's an empty value on the object, we fill, if it has values, we merge
-                                 */
-                                if (Array.isArray(localValue)) {
-                                    if (self.propertyDescriptor.hasUniqueValues && localValue.length > 0) {
-                                        for (let iValue of propertyValue) {
-                                            if (!localValue.includes(iValue)) {
-                                                localValue.push(iValue);
-                                            }
-                                        }
-                                    } else {
-                                        localValue.push(...propertyValue);
-                                    }
-                                } else if (localValue instanceof Set) {
-                                    localValue.addEach(propertyValue);
-                                } else if (localValue instanceof Map) {
-                                    localValue.addEach(propertyValue);
-                                }
+                        let localValue = object[self._privatePropertyName];
+                        if (!localValue) {
+                            if (self.propertyDescriptor.cardinality > 1) {
+                                object[self._propertyName] = propertyValue;
                             } else if (
                                 /**
-                                 * We should not be in a position where a property is fetched for a toOne/type and there's already a value,
-                                 * unless it was set by client code while the fetch was happening. We should ideally tell the user as this is
-                                 * really an update, and hopefully the stack will treat as such.
+                                 * When we fetch a property of an object that's not a relationship,
+                                 * typically a basic type, the value is returned and mapped to the existing object already.
+                                 * If that's the case, propertyValue[0] would be the object itself.
+                                 * If that's the case, then there's nothing to do.
                                  *
-                                 * TODO: VERIFY that a property set before it is fetched ends up being processed as an update.
+                                 * Benoit: 5/5/2022 - FIXME. We need to assess wether we'd propertyValue could be return
+                                 * as a value in an array for a to-one, or just the objecy as expected.
+                                 * Adding a check for that as the code apparently expected an array with only a value in it.
                                  */
-                                Array.isArray(propertyValue)
-                                    ? propertyValue[0] !== undefined && propertyValue[0] !== localValue
-                                    : propertyValue !== localValue
+                                (propertyValue = Array.isArray(propertyValue)
+                                    ? propertyValue[0]
+                                    : propertyValue) !== object
                             ) {
-                                console.warn(
-                                    "property " + self._propertyName + "'s value was resolved by fetch to ",
-                                    propertyValue,
-                                    ", but current value is now: ",
-                                    object[self._propertyName]
-                                );
+                                object[self._propertyName] = propertyValue;
                             }
+                        } else if (self.propertyDescriptor.cardinality > 1) {
+                            /**
+                             * We now initialize to-Many to empty array/collections.
+                             * So if there's an empty value on the object, we fill, if it has values, we merge
+                             */
+                            if (Array.isArray(localValue)) {
+                                if (self.propertyDescriptor.hasUniqueValues && localValue.length > 0) {
+                                    for (let iValue of propertyValue) {
+                                        if (!localValue.includes(iValue)) {
+                                            localValue.push(iValue);
+                                        }
+                                    }
+                                } else {
+                                    localValue.push(...propertyValue);
+                                }
+                            } else if (localValue instanceof Set) {
+                                localValue.addEach(propertyValue);
+                            } else if (localValue instanceof Map) {
+                                localValue.addEach(propertyValue);
+                            }
+                        } else if (
+                            /**
+                             * We should not be in a position where a property is fetched for a toOne/type and there's already a value,
+                             * unless it was set by client code while the fetch was happening. We should ideally tell the user as this is
+                             * really an update, and hopefully the stack will treat as such.
+                             *
+                             * TODO: VERIFY that a property set before it is fetched ends up being processed as an update.
+                             */
+                            Array.isArray(propertyValue)
+                                ? propertyValue[0] !== undefined && propertyValue[0] !== localValue
+                                : propertyValue !== localValue
+                        ) {
+                            console.warn(
+                                "property " + self._propertyName + "'s value was resolved by fetch to ",
+                                propertyValue,
+                                ", but current value is now: ",
+                                object[self._propertyName]
+                            );
                         }
-                        self._service._objectsBeingMapped.delete(object);
-                        return self._fulfillObjectPropertyFetch(object, /*error*/ undefined, propertyValue);
-                    })
-                    .catch((error) => {
-                        console.error(
-                            'DataTrigger Error _fetchObjectProperty for property "' + self._propertyName + '"',
-                            error
-                        );
-                        self._service._objectsBeingMapped.delete(object);
-                        return self._fulfillObjectPropertyFetch(object, error);
-                    });
+                    }
+                    self._service._objectsBeingMapped.delete(object);
+                    return self._fulfillObjectPropertyFetch(object, /*error*/ undefined, propertyValue);
+                })
+                .catch((error) => {
+                    console.error(
+                        'DataTrigger Error _fetchObjectProperty for property "' + self._propertyName + '"',
+                        error
+                    );
+                    self._service._objectsBeingMapped.delete(object);
+                    return self._fulfillObjectPropertyFetch(object, error);
+                });
             },
         },
 
@@ -999,12 +1002,14 @@ exports.DataTrigger.prototype = Object.create(
                 var status = this._getValueStatus(object);
                 this._setValueStatus(object, null);
                 if (status && !error) {
-                    status.resolve(propertyValue);
+                    // status.resolve(propertyValue);
+                    return propertyValue;
                 } else if (status && error) {
                     console.error(error);
-                    status.reject(error);
+                    // status.reject(error);
+                    return null;
                 }
-                return null;
+                // return null;
             },
         },
     }
