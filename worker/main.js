@@ -184,7 +184,7 @@ if(!useMr) {
             computedModuleId = `${PATH.relative(module.path, mainModule.path)}/main.mjson`;
         /*
             For reducing code packaged and deployed, we need a valid moduleId for the main project's main.json file.
-            Since phront is a direct dependency, we're pretty sure of the location this file will have regarding the project's root.mjson:
+            Since Mod is a direct dependency, we're pretty sure of the location this file will have regarding the project's root.mjson:
 
             '../../../main.mjson'
 
