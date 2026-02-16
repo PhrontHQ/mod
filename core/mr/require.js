@@ -422,7 +422,11 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
             rootExports = pkgExports && pkgExports["."] ? pkgExports["."] : pkgExports,
             cjsExport = rootExports && rootExports.require;
 
-        return cjsExport || packageDescription.main;
+        return typeof cjsExport === "string" 
+        ? cjsExport
+        : typeof cjsExport === "object"
+            ?  cjsExport.default
+            : packageDescription.main;
     }
 
     function addDependencyToContext(context, dependee, dependency) {

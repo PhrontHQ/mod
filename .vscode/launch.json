@@ -66,7 +66,6 @@
         },
         {
             "type": "node",
-            "runtimeVersion": "18",
             "request": "launch",
             "name": "npm test mr",
             "program": "${workspaceFolder}/core/mr/test/run-node.js"

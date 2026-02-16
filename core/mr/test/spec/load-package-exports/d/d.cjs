@@ -29,29 +29,4 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 </copyright> */
 
-var test = require("test");
-module.exports = require.loadPackage("a")
-.then(function (a) {
-    return a.async("");
-})
-.then(function () {
-    return require.loadPackage("b")
-})
-.then(function (b) {
-    return b.async("");
-})
-.then(function () {
-    return require.loadPackage("c")
-})
-.then(function (c) {
-    return c.async("");
-})
-.then(function () {
-    return require.loadPackage("d")
-})
-.then(function (d) {
-    return d.async("");
-})
-.then(function () {
-    test.print("DONE", "info");
-})
+module.exports = 10;

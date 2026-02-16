@@ -1,0 +1,10 @@
+{
+    "name": "test-exports",
+    "main": "d.js",
+    "exports": {
+        "require": {
+            "types":"./d.d.cts",
+            "default":"./d.cjs"
+        }
+    }
+}
