@@ -17,9 +17,8 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      * @param {Object} [options] - An object with formatting options for Intl.DateTimeFormat
      */
     constructor: {
-        value: function DateRangeToStringConverter(locales, options) {
-            this.locales = locales;
-            this.options = options;
+        value: function DateRangeToStringConverter() {
+            this.dateTimeFormat = new Intl.DateTimeFormat(this.locales, this.options);
         }
     },
 
@@ -28,7 +27,7 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      * @type {string|string[]}
      */
     locales: {
-        value: null,
+        value: "en-US",
         writable: true
     },
 
@@ -37,7 +36,7 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      * @type {Object}
      */
     options: {
-        value: null,
+        value: {year: "numeric"},
         writable: true
     },
 
@@ -50,8 +49,7 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      */
     convert: {
         value: function (range) {
-            const dateTimeFormat = new Intl.DateTimeFormat(this.locales, this.options);
-            return dateTimeFormat.formatRange(range.begin, range.end);
+            return this.dateTimeFormat.formatRange(range.begin, range.end);
         }
     }
 });
