@@ -941,25 +941,27 @@ exports.DataTrigger.prototype = Object.create(
                                     object[self._propertyName] = propertyValue;
                                 }
                             } else if (self.propertyDescriptor.cardinality > 1) {
-                                /**
-                                 * We now initialize to-Many to empty array/collections.
-                                 * So if there's an empty value on the object, we fill, if it has values, we merge
-                                 */
-                                if (Array.isArray(localValue)) {
-                                    if (self.propertyDescriptor.hasUniqueValues && localValue.length > 0) {
-                                        for (let iValue of propertyValue) {
-                                            if (!localValue.includes(iValue)) {
-                                                localValue.push(iValue);
+
+                                    /**
+                                     * We now initialize to-Many to empty array/collections.
+                                     * So if there's an empty value on the object, we fill, if it has values, we merge
+                                     */
+                                    if (Array.isArray(localValue) && propertyValue.length > 0) {
+                                        if (self.propertyDescriptor.hasUniqueValues && localValue.length > 0) {
+                                            for (let iValue of propertyValue) {
+                                                if (!localValue.includes(iValue)) {
+                                                    localValue.push(iValue);
+                                                }
                                             }
+                                        } else {
+                                            localValue.push(...propertyValue);
                                         }
-                                    } else {
-                                        localValue.push(...propertyValue);
+                                    } else if (localValue instanceof Set && localValue.size > 0) {
+                                        localValue.addEach(propertyValue);
+                                    } else if (localValue instanceof Map && localValue.size > 0) {
+                                        localValue.addEach(propertyValue);
                                     }
-                                } else if (localValue instanceof Set) {
-                                    localValue.addEach(propertyValue);
-                                } else if (localValue instanceof Map) {
-                                    localValue.addEach(propertyValue);
-                                }
+
                             } else if (
                                 /**
                                  * We should not be in a position where a property is fetched for a toOne/type and there's already a value,
