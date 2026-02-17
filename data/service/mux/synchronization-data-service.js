@@ -313,16 +313,29 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject SYNCING", dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
                 }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
-                this.mainService.registerChangedDataObject(dataObject);
-                this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
+                /*
+                    We're trying to avoid an object being fetched fromn the destinationDataService
+                    to be flagged as being changed, where we do want that for anything else
+                */
+                if(dataObject.dataIdentifier.dataService !== this.destinationDataService) {
+                    this.mainService.registerChangedDataObject(dataObject);
+                    this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
+                }
+
             } 
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
                 }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
-                this.mainService.registerChangedDataObject(dataObject);
-                this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
+                /*
+                    We're trying to avoid an object being fetched fromn the destinationDataService
+                    to be flagged as being changed, where we do want that for anything else
+                */
+                if(dataObject.dataIdentifier.dataService !== this.destinationDataService) {
+                    this.mainService.registerChangedDataObject(dataObject);
+                    this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
+                }
         } else {
             if (propertyDescriptor._valueDescriptorReference) {
                 this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject NOT SYNCING", dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
