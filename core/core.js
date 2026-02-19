@@ -1280,9 +1280,9 @@ Montage.defineProperty(Montage.prototype, "version", {
  * This is an evolution to progressively remove the reliance on the additional
  * serializable property set on JS PropertyDescritpors, and instead relay on setting in ObjectDescriptors
  * property descriptors. The range of value is unusual as it is a blend of string and boolean....
- * 
+ *
  * Posible values: "reference" | "value" | "auto" | false,
- * 
+ *
  * @type {string | boolean} .
  */
 
@@ -1303,7 +1303,7 @@ Montage.defineProperty(Montage.prototype, "_buildSerializablePropertyNames", {
 
         let _serializablePropertyNames,
             legacySerializablePropertyNames = Montage.getSerializablePropertyNames(this);
-            
+
         Montage.defineProperty(Object.getPrototypeOf(this), "_serializablePropertyNames", {
             value: (_serializablePropertyNames = this.objectDescriptor
                     ? this.objectDescriptor.serializablePropertyDescriptors.map((aPropertyDescriptor) => {
@@ -1356,60 +1356,112 @@ Montage.defineProperty(Montage, "equals", {
 });
 
 /**
- * This method calls the method named with the identifier prefix if it exists.
- * Example: If the name parameter is "shouldDoSomething" and the caller's identifier is "bob", then
- * this method will try and call "bobShouldDoSomething"
+ * Calls the delegate method with the specified name if it exists on the delegate object.
+ * Uses caching to avoid repeated method lookups since delegate methods are unlikely to be removed dynamically.
  *
- * TODO: Cache!!!! We're unlikely to remove a delegate method dynamically, so we should avoid checking all
- * that and just cache the function found, using a weak map, so don't retain delegates.
+ * The method first attempts to find a method with the pattern `{identifier}{Name}` on the delegate,
+ * where the first letter of the name parameter is capitalized. If not found, it falls back to
+ * looking for a method with the exact name.
  *
  * @function Montage#callDelegateMethod
- * @param {string} name
-*/
+ * @param {string} name - The name of the delegate method to call
+ * @param {...*} args - Additional arguments to pass to the delegate method
+ * @returns {*} The return value of the delegate method, or undefined if no method was found or no delegate exists
+ *
+ * @example
+ * // If this.identifier is "bob" and name is "shouldDoSomething"
+ * // This will try to call "bobShouldDoSomething" on the delegate
+ * const result = this.callDelegateMethod("shouldDoSomething", arg1, arg2);
+ */
 Montage.defineProperty(Montage.prototype, "callDelegateMethod", {
     value: function (name) {
-        var delegate = this.delegate, delegateFunction;
+        const delegateFunction = this.getDelegateMethod(name);
 
-        if (delegate) {
-
-            var delegateFunctionName = this.identifier;
-            delegateFunctionName += name.toCapitalized();
-
-            if (
-                typeof this.identifier === "string" &&
-                    typeof delegate[delegateFunctionName] === FUNCTION
-            ) {
-                delegateFunction = delegate[delegateFunctionName];
-            } else if (typeof delegate[name] === FUNCTION) {
-                delegateFunction = delegate[name];
-            }
-
-            if (delegateFunction) {
-                //Using modern JS:
-                // Destructure the array to skip the first element
-                const [, ...rest] = arguments;
-                return delegateFunction.call(delegate, ...rest);
-
-                // if(arguments.length === 2) {
-                //     return delegateFunction.call(delegate,arguments[1]);
-                // }
-                // else if(arguments.length === 3) {
-                //     return delegateFunction.call(delegate,arguments[1],arguments[2]);
-                // }
-                // else if(arguments.length === 4) {
-                //     return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3]);
-                // }
-                // else if(arguments.length === 5) {
-                //     return delegateFunction.call(delegate,arguments[1],arguments[2],arguments[3],arguments[4]);
-                // }
-                // else {
-                //     // remove first argument
-                //     ARRAY_PROTOTYPE.shift.call(arguments);
-                //     return delegateFunction.apply(delegate, arguments);
-                // }
-            }
+        if (this.delegate && delegateFunction) {
+            const [, ...rest] = arguments;
+            return delegateFunction.call(this.delegate, ...rest);
         }
     }
+});
+
+/**
+ * Checks whether the delegate object has a method that responds to the specified name.
+ * This method uses the same lookup logic as callDelegateMethod and getDelegateMethod.
+ *
+ * @function Montage#respondsToDelegateMethod
+ * @param {string} name - The name of the delegate method to check for
+ * @returns {boolean} True if the delegate has a method that responds to the given name, false otherwise
+ *
+ * @example
+ * // Check if delegate can handle "shouldDoSomething"
+ * if (this.respondsToDelegateMethod("shouldDoSomething")) {
+ *     this.callDelegateMethod("shouldDoSomething", data);
+ * }
+ */
+Montage.defineProperty(Montage.prototype, "respondsToDelegateMethod", {
+    value: function (name) {
+        return typeof this.getDelegateMethod(name) === FUNCTION;
+    }
+});
+
+// WeakMap to cache delegate methods - won't retain delegates when they're garbage collected
+const delegateMethodCache = new WeakMap();
+
+/**
+ * Retrieves a delegate method by name, using caching for performance optimization.
+ *
+ * The method searches for delegate methods in the following order:
+ * 1. First tries `{identifier}{Name}` where Name is the capitalized version of the name parameter
+ * 2. Falls back to the exact method name if the prefixed version doesn't exist
+ *
+ * Results are cached using a WeakMap to avoid repeated lookups while ensuring
+ * delegates can still be garbage collected when no longer referenced.
+ *
+ * @function Montage#getDelegateMethod
+ * @param {string} name - The name of the delegate method to retrieve
+ * @returns {Function|undefined} The delegate method function if found, undefined otherwise
+ *
+ * @example
+ * // If this.identifier is "list" and name is "shouldSelectItem"
+ * // This will look for "listShouldSelectItem" first, then "shouldSelectItem"
+ * const method = this.getDelegateMethod("shouldSelectItem");
+ * if (method) {
+ *     method.call(this.delegate, item);
+ * }
+ */
+Montage.defineProperty(Montage.prototype, "getDelegateMethod", {
+    value: function (name) {
+        if (!this.delegate) return;
+
+        const delegate = this.delegate;
+        let delegateCache = delegateMethodCache.get(delegate);
+
+        if (!delegateCache) {
+            delegateCache = new Map();
+            delegateMethodCache.set(delegate, delegateCache);
+        }
+
+        // Check if we already have the function cached
+        if (delegateCache.has(name))  return delegateCache.get(name);
+
+        let delegateFunctionName = this.identifier;
+        let delegateFunction;
+
+        delegateFunctionName += name.toCapitalized();
+
+        if (typeof this.identifier === "string" && typeof delegate[delegateFunctionName] === FUNCTION) {
+            delegateFunction = delegate[delegateFunctionName];
+        } else if (typeof delegate[name] === FUNCTION) {
+            delegateFunction = delegate[name];
+        }
+
+        // Cache the delegate function if it exists
+        if (delegateFunction) {
+            delegateCache.set(name, delegateFunction);
+        }
+
+        return delegateFunction;
+    },
 });
 
 // Property Changes
