@@ -15,6 +15,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
     static {
         Montage.defineProperties(this.prototype, {
+            enclosesComponentStylesheetsInCSSLayer: { value: true },
             domain: { value: global.location?.origin ?? "" },
             _isPollingDocumentStyleSheets: { value: false },
             _SCRIPT_TIMEOUT: { value: 5_000 },
@@ -22,21 +23,6 @@ exports.DocumentResources = class DocumentResources extends Montage {
             _resources: { value: null },
             _preloaded: { value: null },
             _document: { value: null },
-
-            // Scope and Layering configuration
-            /**
-             * #WARNING - EXPERIMENTAL if true, it will trigger the use of the _scopeStylesheetRulesWithSelectorInCSSLayerName() method
-             * above to wrap an component's CSS into a @scope rule. modifying selectors such that they work within the new @scope, meaning
-             * using pseudo selector :scope as necessary.
-             *
-             * This works in some limited use cases and would need a lot more subtlety to be robust, reliable
-             * and useful
-             *
-             * @property {boolean}
-             */
-            automaticallyAddsCSSLayerToUnscoppedCSS: { value: true },
-            _scopeSelectorRegExp: { value: /scope\(([^()]*)\)/g },
-            automaticallyAddsCSSScope: { value: false },
         });
     }
 
@@ -125,85 +111,15 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
             if (index >= 0) {
                 this._expectedStyles.splice(index, 1);
-
                 const cssContext = this.cssContextForResource(target.href);
-                const classListScope = cssContext.classListScope;
-                const cssLayerName = cssContext.cssLayerName;
-                const stylesheet = target.sheet;
-                const cssRules = stylesheet.cssRules;
 
-                /**
-                 * Adding CSS Layers, and Scoping for components in dev mode.
-                 * When we mop, we'll add it in the CSS.
-                 *
-                 * target.ownerDocument is the page's document.
-                 * We captured the Component's element's classes before we got here, in this._resources[target.href]
-                 *
-                 * @scope (.ComponentElementClass1.ComponentElementClass2) {
-                 *     -> All Component's CSS file's rules needs to be relocated here <-
-                 *  }
-                 *
-                 * target.ownerDocument.styleSheets, but we need the component's element's classList
-                 */
+                if (cssContext && typeof cssContext === "object") {
+                    const stylesheet = target.sheet;
 
-                if (classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function") {
-                    let iStart = 0;
-
-                    // Insert the scope rule, after any CSSImportRule
-                    while (cssRules[iStart] instanceof CSSImportRule) {
-                        iStart++;
-                    }
-
-                    // If it's not using CSS Layers
-                    if (!(cssRules[iStart] instanceof CSSLayerBlockRule)) {
-                        // If it's not using CSSScope
-                        if (!(cssRules[iStart] instanceof CSSScopeRule) && this.automaticallyAddsCSSScope) {
-                            this._scopeStylesheetRulesWithSelectorInCSSLayerName(
-                                stylesheet,
-                                classListScope,
-                                cssLayerName,
-                            );
-                        } else if (cssRules[iStart] instanceof CSSScopeRule) {
-                            // Add the layer name in scope
-                            const scopeSelectorRegExp = this._scopeSelectorRegExp;
-                            const scopeRule = stylesheet.cssRules[iStart];
-                            const scopeRuleCSSText = scopeRule.cssText;
-                            let scopeSelector;
-                            let match;
-
-                            // Delete current scopeRule
-                            stylesheet.deleteRule(iStart);
-
-                            while ((match = scopeSelectorRegExp.exec(scopeRuleCSSText)) !== null) {
-                                scopeSelector = `.${cssLayerName}${match[1]}`;
-                                scopeRuleCSSText = scopeRuleCSSText.replace(match[1], scopeSelector);
-                            }
-
-                            stylesheet.insertRule(scopeRuleCSSText);
-                        }
-
-                        let scopeRule = stylesheet.cssRules[iStart];
-
-                        // If the CSS is scoped, we move it into the CSSLayerBlockRule
-                        if (scopeRule && scopeRule instanceof CSSScopeRule) {
-                            stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
-                            let packageLayer = stylesheet.cssRules[iStart];
-
-                            scopeRule = stylesheet.cssRules[++iStart];
-
-                            stylesheet.deleteRule(iStart);
-                            packageLayer.insertRule(scopeRule.cssText);
-                        } else if (this.automaticallyAddsCSSLayerToUnscoppedCSS) {
-                            stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
-                            let packageLayer = stylesheet.cssRules[iStart];
-
-                            // We layer all rules
-                            for (let i = cssRules.length - 1; i > iStart; i--) {
-                                packageLayer.insertRule(cssRules[i].cssText);
-                                stylesheet.deleteRule(i);
-                            }
-                        }
-                    }
+                    // Adding CSS Layers, and Scoping for components in dev mode.
+                    // When we mop, we'll add it in the CSS.
+                    // @benoit: do we have a flag for dev mode?
+                    this._wrapStyleSheetInLayer(stylesheet, cssContext);
                 }
             }
 
@@ -212,7 +128,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
         }
     }
 
-    addStyle(element, DOMParent, classListScope, cssLayerName) {
+    addStyle(element, DOMParent, context) {
         let url = element.getAttribute("href");
 
         if (url) {
@@ -220,7 +136,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
             if (this.hasResource(url)) return;
 
-            this._addResource(url, classListScope, cssLayerName);
+            this._addResource(url, context);
             this._expectedStyles.push(url);
 
             if (!this._isPollingDocumentStyleSheets) {
@@ -385,34 +301,72 @@ exports.DocumentResources = class DocumentResources extends Montage {
         return promise;
     }
 
-    _addResource(url, classListScope, cssLayerName) {
-        this._resources[url] = { classListScope, cssLayerName };
+    /**
+     * Registers a resource with its associated CSS context.
+     *
+     * @param {string} url The URL of the resource.
+     */
+    _addResource(url, context = {}) {
+        this._resources[url] = context;
     }
 
-    _scopeStylesheetRulesWithSelectorInCSSLayerName(stylesheet, classListScope, cssLayerName) {
-        if (classListScope && stylesheet.disabled === false && typeof CSSScopeRule === "function") {
-            const classListScopeRegexp = new RegExp(`(${classListScope})+(?=$)|(${classListScope})+(?= >)`, "dg");
-            const classListScopeContentRegexp = new RegExp(`(${classListScope})+(?=[.,:,\s,>]|$)`, "dg");
-            const cssRules = stylesheet.cssRules;
-            let iStart = 0;
+    /**
+     * Modifies an existing CSSStyleSheet in-place to wrap it in a scoped layer structure.
+     *
+     * @param {CSSStyleSheet} sheet - The existing CSSStyleSheet to modify.
+     * @param {Object} cssContext - The CSS context.
+     * @returns {CSSStyleSheet} The modified stylesheet instance.
+     */
+    _wrapStyleSheetInLayer(sheet, cssContext) {
+        // Validate requirements for scoping and layering
+        if (!CSSLayerBlockRule || !CSSScopeRule || sheet.disabled) return;
 
-            // Insert the scope rule, but after any CSSImportRule
-            while (cssRules[iStart] instanceof CSSImportRule) {
-                iStart++;
+        try {
+            const { moduleLayerClassName, moduleLayerPath } = cssContext;
+            const rulesToWrap = [];
+            let insertionIndex = 0;
+
+            // Iterate backwards so deleting rules doesn't shift indices of unvisited rules
+            for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
+                const rule = sheet.cssRules[i];
+
+                const isImport = rule instanceof CSSImportRule;
+                const isLayer = rule instanceof CSSLayerBlockRule || rule instanceof CSSLayerStatementRule;
+                const isRoot = rule instanceof CSSStyleRule && rule.selectorText?.startsWith(":root");
+
+                if (!isImport && !isLayer && !isRoot) {
+                    // Unshift to maintain the original top-to-bottom order
+                    rulesToWrap.unshift(rule.cssText);
+                    sheet.deleteRule(i);
+                    insertionIndex = i;
+                }
             }
 
-            stylesheet.insertRule(`@scope (.${cssLayerName}${classListScope}) {}`, iStart);
-            const scopeRule = cssRules[iStart];
+            if (rulesToWrap.length === 0) return sheet;
 
-            // Now loop on rules to move - re-create them as there's no other way :-(
-            for (let i = cssRules.length - 1; i > iStart; i--) {
-                cssRules[i].selectorText = cssRules[i].selectorText
-                    .replaceAll(classListScopeRegexp, ":scope")
-                    .replaceAll(classListScopeContentRegexp, "");
+            const extractedCssText = rulesToWrap.join("\n");
 
-                scopeRule.insertRule(cssRules[i].cssText);
-                stylesheet.deleteRule(i);
-            }
+            // Create the new wrapped CSS string
+            const wrappedCss = `@layer ${moduleLayerPath} {
+                @scope (.${moduleLayerClassName}) {
+                    :scope, * { all: revert-layer !important; }
+                }
+
+                @layer style {
+                    * {
+                        all: revert;
+                    }
+
+                    ${extractedCssText}
+                }
+            }`;
+
+            // Insert the new wrapped CSS into the existing stylesheet
+            sheet.insertRule(wrappedCss, insertionIndex);
+        } catch (error) {
+            console.error("Unable to wrap scoped stylesheet (likely cross-origin)", error);
         }
+
+        return sheet;
     }
 };

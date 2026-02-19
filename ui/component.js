@@ -33,6 +33,8 @@ var Montage = require("../core/core").Montage,
     currentEnvironment = require("core/environment").currentEnvironment,
     PropertyChanges = require("core/collections/listen/property-changes");
 
+const kebabCaseConverter = require("../core/converter/kebab-case-converter").singleton;
+
 /*
     For supporting Live Edit in apps connected to the studio, the connected app sets the global:
      _montage_le_flag = true;
@@ -798,6 +800,7 @@ Component.addClassProperties({
                     this.blockDrawGate.setField("element", true);
                 }
             }
+
             this._initializeClassListFromElement(value);
         },
     },
@@ -2683,7 +2686,7 @@ Component.addClassProperties({
     _addTemplateStylesIfNeeded: {
         value: function () {
             if (this._templateDocumentPart) {
-                this.rootComponent.addStyleSheetsFromTemplate(this._templateDocumentPart.template, this.packageName);
+                this.rootComponent.addStyleSheetsFromTemplate(this._templateDocumentPart.template, this);
             }
         },
     },
@@ -5042,90 +5045,148 @@ var RootComponent = Component.specialize(
          * @private
          * Those 3 arrays keep related data at the same index
          */
-        _stylesheets: {
-            value: [],
+        _stylesheetContexts: {
+            value: new Map(),
         },
+
         _cssLayerNames: {
-            value: [],
+            value: new Set(),
         },
-        _stylesheetsclassListScopes: {
-            value: [],
+
+        _addedStyleSheetsByTemplate: {
+            value: null,
+        },
+
+        extensionModuleIdRegex: {
+            value: /\.(mod|reel|js|css|ts)$/i,
+        },
+
+        moduleLayerNameRegex: {
+            value: /[^a-z0-9\-]+/gi,
+        },
+
+        trimDotsRegex: {
+            value: /(^\.+|\.+$)/g,
+        },
+
+        enclosesComponentStylesheetsInCSSLayer: {
+            get: function () {
+                return this._documentResources.enclosesComponentStylesheetsInCSSLayer;
+            },
         },
 
         /**
          * @function
          */
-        addStylesheetWithClassListScopeInCSSLayerName: {
-            value: function (style, classListScope, cssLayerName) {
-                this._stylesheets.push(style);
-                this._stylesheetsclassListScopes.push(
-                    classListScope ? `.${this._stylesheets.join.call(classListScope, ".")}` : undefined,
-                );
-                this._cssLayerNames.push(cssLayerName);
+        registerComponentStyle: {
+            value: function (component, stylesheetElement) {
+                const moduleId = component.fullModuleId.trim().toLowerCase().replace(this.extensionModuleIdRegex, "");
+                const moduleLayerClassName = kebabCaseConverter.convert(moduleId);
+
+                const moduleLayerPath = moduleId
+                    .replace(this.moduleLayerNameRegex, ".")
+                    .replace(this.trimDotsRegex, "");
+
+                const layerNames = moduleLayerPath.split(".");
+
+                let layersHaveChanged = false;
+                const previousSize = this._cssLayerNames.size;
+
+                for (const layerName of layerNames) {
+                    if (!this._cssLayerNames.has(layerName)) {
+                        this._cssLayerNames.add(layerName);
+                    }
+                }
+
+                layersHaveChanged = this._cssLayerNames.size > previousSize;
+
+                if (layersHaveChanged && this.enclosesComponentStylesheetsInCSSLayer) {
+                    this._updateCssLayerOrder();
+                }
+
+                this._stylesheetContexts.set(stylesheetElement, {
+                    moduleLayerClassName,
+                    moduleLayerPath,
+                });
+
+                component.classList.add(moduleLayerClassName);
                 this._needsStylesheetsDraw = true;
             },
         },
-        _addedStyleSheetsByTemplate: {
-            value: null,
+
+        /**
+         * Updates the @layer statement in the head.
+         */
+        _updateCssLayerOrder: {
+            value: function () {
+                this._addCssLayerOrderElementIfNeeded();
+
+                const layerList = Array.from(this._cssLayerNames);
+
+                // TODO: @Benoit probably not the best way of doing it, maybe we should throttle it...
+                this._cssLayerOrderElement.textContent = `@layer ${layerList.join(", ")};`;
+
+                return this._cssLayerOrderElement;
+            },
         },
 
-        _addCssLayerOrder: {
+        _addCssLayerOrderElementIfNeeded: {
             value: function () {
-                let cssLayers = global.require.modDependencies();
-                (cssLayers.push(global.require.config.name), (styleElement = document.createElement("style")));
+                if (!this.enclosesComponentStylesheetsInCSSLayer || !!this._cssLayerOrderElement) {
+                    return false;
+                }
 
-                styleElement.textContent = `@layer ${cssLayers
-                    .map((layer) => {
-                        return layer.replace(".", "_");
-                    })
-                    .join(", ")};`;
+                const cssLayers = global.require.modDependencies();
+                const styleElement = document.createElement("style");
+                cssLayers.push(global.require.config.name);
+
+                for (let i = 0; i < cssLayers.length; i++) {
+                    const cleanId = cssLayers[i].trim().toLowerCase().replace(this.extensionModuleIdRegex, "");
+                    this._cssLayerNames.add(cleanId);
+                }
 
                 styleElement.setAttribute("data-mod-id", "mod-layer-statement");
 
-                document.head.firstChild.before(styleElement);
-                return styleElement;
+                if (document.head.firstChild) {
+                    document.head.firstChild.before(styleElement);
+                } else {
+                    document.head.appendChild(styleElement);
+                }
+
+                this._cssLayerOrderElement = styleElement;
+
+                return true;
             },
         },
 
         addStyleSheetsFromTemplate: {
-            value: function (template, cssLayerName) {
-                if (this._documentResources.automaticallyAddsCSSLayerToUnscoppedCSS && !this._cssLayerOrderElement) {
-                    this._cssLayerOrderElement =
-                        document.querySelector('[data-mod-id="mod-layer-statement"]') || this._addCssLayerOrder();
-                }
-
-                cssLayerName = cssLayerName.replace(".", "_");
+            value: function (template, component) {
                 if (!this._addedStyleSheetsByTemplate.has(template)) {
-                    var resources = template.getResources(),
-                        ownerDocument = this.element.ownerDocument,
-                        styles = resources.createStylesForDocument(ownerDocument),
-                        componentElementClassList = template.document.querySelector("body > [data-mod-id]")?.classList;
+                    const resources = template.getResources();
+                    const styles = resources.createStylesForDocument(this.element.ownerDocument);
 
-                    /*
-                    What we need to scope is a selector made of all the classes of the template's root element
-
-                    template.document.querySelector("[data-mod-id=owner]").classList
-
-                */
+                    /**
+                     * What we need to scope is a selector made of all the classes of the template's root element
+                     * template.document.querySelector("[data-mod-id=owner]").classList
+                     */
 
                     for (var i = 0, style; (style = styles[i]); i++) {
-                        /*
-                            Flow is one component where the owner's element doesn't have data-mod-id="owner", but data-mod-id="montage-flow".
-                            So to avoid that we'll consider the root element the first direct child of the body that has a data-mod-id attribute
-                        */
-                        this.addStylesheetWithClassListScopeInCSSLayerName(
-                            style,
-                            componentElementClassList,
-                            cssLayerName,
-                        );
+                        /**
+                         * Flow is one component where the owner's element doesn't have data-mod-id="owner", but data-mod-id="montage-flow".
+                         * So to avoid that we'll consider the root element the first direct child of the body that has a data-mod-id attribute
+                         */
+                        this.registerComponentStyle(component, style);
                     }
+
                     this._addedStyleSheetsByTemplate.set(template, true);
                 }
             },
         },
+
         __bufferDocumentFragment: {
             value: null,
         },
+
         _bufferDocumentFragment: {
             get: function () {
                 return (
@@ -5140,21 +5201,15 @@ var RootComponent = Component.specialize(
         drawStylesheets: {
             value: function () {
                 var documentResources = this._documentResources,
-                    stylesheets = this._stylesheets,
-                    stylesheetsclassListScopes = this._stylesheetsclassListScopes,
-                    cssLayerNames = this._cssLayerNames,
-                    stylesheet,
+                    stylesheetContexts = this._stylesheetContexts,
                     documentHead = documentResources._document.head,
                     bufferDocumentFragment = this._bufferDocumentFragment;
 
-                while ((stylesheet = stylesheets.shift())) {
-                    documentResources.addStyle(
-                        stylesheet,
-                        bufferDocumentFragment,
-                        stylesheetsclassListScopes.shift(),
-                        cssLayerNames.shift(),
-                    );
+                for (const [stylesheetElement, context] of stylesheetContexts.entries()) {
+                    documentResources.addStyle(stylesheetElement, bufferDocumentFragment, context);
                 }
+
+                stylesheetContexts.clear();
 
                 /*
                 Add all stylesheets after the CSS layer statement in the DOM to ensure the
