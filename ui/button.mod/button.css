@@ -31,21 +31,21 @@
 
     /* Main Orientation */
 
-    &.mod--vertical {
+    &.mod--orientation-vertical {
         flex-direction: column;
     }
 
-    &.mod--horizontal {
+    &.mod--orientation-horizontal {
         flex-direction: row;
     }
 
     /* Main Axis Direction */
 
-    &.mod--horizontal.mod--end {
+    &.mod--orientation-horizontal.mod--position-end {
         flex-direction: row-reverse;
     }
 
-    &.mod--vertical.mod--end {
+    &.mod--orientation-vertical.mod--position-end {
         flex-direction: column-reverse;
     }
 
