@@ -1,68 +1,64 @@
 @layer Mod {
+    @scope (.Mod-Button) {
+        :scope {
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            font-weight: 600;
+            position: relative;
 
-@scope (.Mod-Button) {
+            /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+            transition: background-color 0.2s ease-in-out;
+            gap: 6px;
+        }
 
+        :hover {
+            cursor: pointer;
+        }
 
-    :scope {
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box;
-        font-weight: 600;
-        position: relative;
+        /* Main Orientation */
 
-        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-        transition: background-color .2s ease-in-out;
-        gap: 6px;
-    }
+        .mod--vertical {
+            flex-direction: column;
+        }
 
-    :hover {
-        cursor: pointer;
-    }
+        .mod--horizontal {
+            flex-direction: row;
+        }
 
-    /* Main Orientation */
+        /* Main Axis Direction */
 
-    .mod--vertical {
-        flex-direction: column;
-    }
+        .mod--horizontal.mod--end {
+            flex-direction: row-reverse;
+        }
 
-    .mod--horizontal {
-        flex-direction: row;
-    }
+        .mod--vertical.mod--end {
+            flex-direction: column-reverse;
+        }
 
-    /* Main Axis Direction */
+        /* Hide Empty Elements */
+        > div:empty {
+            display: none;
+        }
 
-    .mod--horizontal.mod--end {
-        flex-direction: row-reverse;
-    }
+        /* Image Specifications */
 
-    .mod--vertical.mod--end {
-        flex-direction: column-reverse;
-    }
+        > .ModButton-image {
+            position: relative;
+        }
 
-    /* Hide Empty Elements */
-    >div:empty {
-        display: none;
-    }
+        > svg.ModButton-image {
+            fill: currentColor;
+        }
 
-    /* Image Specifications */
+        /* Pending State */
 
-    >.ModButton-image {
-        position: relative;
-    }
-
-    >svg.ModButton-image {
-        fill: currentColor;
-    }
-
-    /* Pending State */
-
-    .mod--pending {
-        pointer-events: none;
-        /* FIXME: Temporary arbitrary values, waiting for Button Themes */
-        opacity: 0.75;
-    }
-
+        .mod--pending {
+            pointer-events: none;
+            /* FIXME: Temporary arbitrary values, waiting for Button Themes */
+            opacity: 0.75;
+        }
     }
 }
