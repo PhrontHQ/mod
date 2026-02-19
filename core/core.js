@@ -359,6 +359,7 @@ require("./shim/array");
 require("./extras/object");
 // require("./extras/date");
 require("./extras/element");
+require("./extras/style");
 require("./extras/function");
 require("./extras/map");
 require("./extras/regexp");
