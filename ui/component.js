@@ -2492,6 +2492,41 @@ Component.addClassProperties({
         },
     },
 
+    extensionModuleIdRegex: {
+        value: /\.(mod|reel|js|css|ts)$/i,
+    },
+
+    _normalizedModuleId: {
+        value: null,
+    },
+
+    normalizedModuleId: {
+        get: function () {
+            if (!this._normalizedModuleId) {
+                this._normalizedModuleId = this.fullModuleId
+                    .trim()
+                    .toLowerCase()
+                    .replace(this.extensionModuleIdRegex, "");
+            }
+
+            return this._normalizedModuleId;
+        },
+    },
+
+    _moduleLayerClassName: {
+        value: null,
+    },
+
+    moduleLayerClassName: {
+        get: function () {
+            if (!this._moduleLayerClassName) {
+                this._moduleLayerClassName = kebabCaseConverter.convert(this.normalizedModuleId);
+            }
+
+            return this._moduleLayerClassName;
+        },
+    },
+
     /**
      * Replaces the host element with the template element in the DOM,
      * transferring attributes and event listeners.
@@ -2504,6 +2539,9 @@ Component.addClassProperties({
             // Depending on configuration, the host will either be swapped out
             // or converted into a CSS container.
             const { element: hostElement, _templateElement: templateElement } = this;
+
+            // Apply the module layer class to the component's element to ensure styles are properly scoped
+            this.classList.add(this.moduleLayerClassName);
 
             this._applyHostAttributesToTemplateElement(hostElement, templateElement);
 
@@ -5057,10 +5095,6 @@ var RootComponent = Component.specialize(
             value: null,
         },
 
-        extensionModuleIdRegex: {
-            value: /\.(mod|reel|js|css|ts)$/i,
-        },
-
         moduleLayerNameRegex: {
             value: /[^a-z0-9\-]+/gi,
         },
@@ -5080,10 +5114,7 @@ var RootComponent = Component.specialize(
          */
         registerComponentStyle: {
             value: function (component, stylesheetElement) {
-                const moduleId = component.fullModuleId.trim().toLowerCase().replace(this.extensionModuleIdRegex, "");
-                const moduleLayerClassName = kebabCaseConverter.convert(moduleId);
-
-                const moduleLayerPath = moduleId
+                const moduleLayerPath = component.normalizedModuleId
                     .replace(this.moduleLayerNameRegex, ".")
                     .replace(this.trimDotsRegex, "");
 
@@ -5105,11 +5136,10 @@ var RootComponent = Component.specialize(
                 }
 
                 this._stylesheetContexts.set(stylesheetElement, {
-                    moduleLayerClassName,
+                    moduleLayerClassName: component.moduleLayerClassName,
                     moduleLayerPath,
                 });
 
-                component.classList.add(moduleLayerClassName);
                 this._needsStylesheetsDraw = true;
             },
         },
@@ -5119,11 +5149,10 @@ var RootComponent = Component.specialize(
          */
         _updateCssLayerOrder: {
             value: function () {
-                this._addCssLayerOrderElementIfNeeded();
-
                 const layerList = Array.from(this._cssLayerNames);
 
                 // TODO: @Benoit probably not the best way of doing it, maybe we should throttle it...
+                // TODO: how do we decide the priority of the layers?
                 this._cssLayerOrderElement.textContent = `@layer ${layerList.join(", ")};`;
 
                 return this._cssLayerOrderElement;
@@ -5140,9 +5169,12 @@ var RootComponent = Component.specialize(
                 const styleElement = document.createElement("style");
                 cssLayers.push(global.require.config.name);
 
+                // Add `mod` as the root layer.
+                this._cssLayerNames.add("mod");
+
                 for (let i = 0; i < cssLayers.length; i++) {
-                    const cleanId = cssLayers[i].trim().toLowerCase().replace(this.extensionModuleIdRegex, "");
-                    this._cssLayerNames.add(cleanId);
+                    const moduleId = cssLayers[i].trim().toLowerCase().replace(this.extensionModuleIdRegex, "");
+                    this._cssLayerNames.add(moduleId);
                 }
 
                 styleElement.setAttribute("data-mod-id", "mod-layer-statement");
@@ -5161,6 +5193,8 @@ var RootComponent = Component.specialize(
 
         addStyleSheetsFromTemplate: {
             value: function (template, component) {
+                this._addCssLayerOrderElementIfNeeded();
+
                 if (!this._addedStyleSheetsByTemplate.has(template)) {
                     const resources = template.getResources();
                     const styles = resources.createStylesForDocument(this.element.ownerDocument);
