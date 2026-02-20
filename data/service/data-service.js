@@ -1,30 +1,30 @@
 const Object = global.Object, //Cache for scope traversal performance
-    Montage = require("../../core/core").Montage,
-    Target = require("../../core/target").Target,
-    defaultEventManager = require("../../core/event/event-manager").defaultEventManager,
-    ObjectDescriptor = require("../../core/meta/object-descriptor").ObjectDescriptor,
+    Montage = require("core/core").Montage,
+    Target = require("core/target").Target,
+    defaultEventManager = require("core/event/event-manager").defaultEventManager,
+    ObjectDescriptor = require("core/meta/object-descriptor").ObjectDescriptor,
     AuthorizationManager = require("./authorization-manager").defaultAuthorizationManager,
     AuthorizationPolicy = require("./authorization-policy").AuthorizationPolicy,
     AuthenticationPolicy = require("./authentication-policy").AuthenticationPolicy,
     IdentityManager = require("./identity-manager").IdentityManager,
     DataObjectDescriptor = require("../model/data-object-descriptor").DataObjectDescriptor,
-    Criteria = require("../../core/criteria").Criteria,
+    Criteria = require("core/criteria").Criteria,
     DataQuery = require("../model/data-query").DataQuery,
     DataStream = require("./data-stream").DataStream,
     DataTrigger = require("./data-trigger").DataTrigger,
-    Map = require("../../core/collections/map"),
-    Promise = require("../../core/promise").Promise,
-    Set = require("../../core/collections/set"),
-    CountedSet = require("../../core/counted-set").CountedSet,
-    ObjectPool = require("../../core/object-pool").ObjectPool,
+    Map = require("core/collections/map"),
+    Promise = require("core/promise").Promise,
+    Set = require("core/collections/set"),
+    CountedSet = require("core/counted-set").CountedSet,
+    ObjectPool = require("core/object-pool").ObjectPool,
     DataEvent = require("../model/data-event").DataEvent,
-    PropertyDescriptor = require("../../core/meta/property-descriptor").PropertyDescriptor,
-    DeleteRule = require("../../core/meta/property-descriptor").DeleteRule,
-    deprecate = require("../../core/deprecate"),
-    currentEnvironment = require("../../core/environment").currentEnvironment,
-    PropertyChanges = require("../../core/collections/listen/property-changes"),
+    PropertyDescriptor = require("core/meta/property-descriptor").PropertyDescriptor,
+    DeleteRule = require("core/meta/property-descriptor").DeleteRule,
+    deprecate = require("core/deprecate"),
+    currentEnvironment = require("core/environment").currentEnvironment,
+    PropertyChanges = require("core/collections/listen/property-changes"),
     DataOperation = require("./data-operation").DataOperation,
-    Locale = require("../../core/locale").Locale,
+    Locale = require("core/locale").Locale,
     ReadEvent = require("../model/read-event").ReadEvent,
     DataOperationErrorNames = require("./data-operation").DataOperationErrorNames,
     Transaction = require("../model/transaction").Transaction,
@@ -33,8 +33,8 @@ const Object = global.Object, //Cache for scope traversal performance
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
     ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject;
 
-require("../../core/extras/string");
-require("../../core/extras/date");
+require("core/extras/string");
+require("core/extras/date");
 require("core/extras/function");
 
 var AuthorizationPolicyType = new Montage();
