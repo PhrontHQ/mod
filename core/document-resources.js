@@ -1,6 +1,7 @@
 const Montage = require("./core").Montage;
 const Promise = require("./promise").Promise;
 const URL = require("./mini-url");
+const currentEnvironment = require("./environment").currentEnvironment;
 
 exports.DocumentResources = class DocumentResources extends Montage {
     static getInstanceForDocument(_document) {
@@ -15,7 +16,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
     static {
         Montage.defineProperties(this.prototype, {
-            enclosesComponentStylesheetsInCSSLayer: { value: true },
+            wrapsComponentStylesheetsInCSSLayer: { value: true },
             domain: { value: global.location?.origin ?? "" },
             _isPollingDocumentStyleSheets: { value: false },
             _SCRIPT_TIMEOUT: { value: 5_000 },
@@ -302,24 +303,26 @@ exports.DocumentResources = class DocumentResources extends Montage {
     }
 
     /**
-     * Registers a resource with its associated CSS context.
+     * Registers a resource with its associated context information
      *
      * @param {string} url The URL of the resource.
+     * @param {{}} [resourceContext={}] An optional context object containing resource related information,
+     * such as moduleLayerClassName and moduleLayerPath when importing a stylesheet resource.
      */
-    _addResource(url, context = {}) {
-        this._resources[url] = context;
+    _addResource(url, resourceContext = {}) {
+        this._resources[url] = resourceContext;
     }
 
     /**
      * Modifies an existing CSSStyleSheet in-place to wrap it in a scoped layer structure.
      *
      * @param {CSSStyleSheet} sheet - The existing CSSStyleSheet to modify.
-     * @param {Object} cssContext - The CSS context.
+     * @param {{moduleLayerClassName: string, moduleLayerPath: string}} cssContext - The CSS context.
      * @returns {CSSStyleSheet} The modified stylesheet instance.
      */
     _wrapStyleSheetInLayer(sheet, cssContext) {
         // Validate requirements for scoping and layering
-        if (!CSSLayerBlockRule || !CSSScopeRule || sheet.disabled) return;
+        if (!currentEnvironment.isLocalModding || !CSSLayerBlockRule || !CSSScopeRule || sheet.disabled) return;
 
         try {
             const { moduleLayerClassName, moduleLayerPath } = cssContext;
@@ -330,6 +333,8 @@ exports.DocumentResources = class DocumentResources extends Montage {
             for (let i = sheet.cssRules.length - 1; i >= 0; i--) {
                 const rule = sheet.cssRules[i];
 
+                // TODO: this is an incomplete list of possibilities
+                // that part is experimental, we might need to add more constraints.
                 const isImport = rule instanceof CSSImportRule;
                 const isLayer = rule instanceof CSSLayerBlockRule || rule instanceof CSSLayerStatementRule;
                 const isRoot = rule instanceof CSSStyleRule && rule.selectorText?.startsWith(":root");
