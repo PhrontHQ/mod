@@ -109,6 +109,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
     handleReadOperation(readOperation) {
         let readOperationCompletionPromise;
 
+        if(readOperation.target.name === "EmploymentPosition" && (readOperation.data?.readExpressions?.[0] === "childPositions" || readOperation.data?.readExpressions?.[0] === "parentPosition")) {
+            console.debug(this.name+" handleReadOperation(): EmploymentPosition read operation "+readOperation.id+" for "+readOperation.data.readExpressions+", "+readOperation.criteria.toString());
+        }
+
         /*
             This is to temporarily prevents a RawDataService to attempt to handle a readOperation that comes
             from a query coming from a mapping's converter that will have a very RawData-specific criteria that
@@ -599,32 +603,18 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                 than it might work, but that's a bit reaching
                             */
                             if (originDataSnapshot) {
+
+                                /*
+                                    If dataOperation has an originDataSnapshot. we evaluate the rule's expression
+                                    to see if it yields a result. This could be the embedded data of a relationship
+                                    or a basic type.
+
+                                    But if it yields a result, this is the raw data we need as the response
+                                */
                                 mappingScope = mappingScope.nest(originDataSnapshot);
-
-
-                                if ((iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter) || (iRawDataMappingRule.reverter instanceof RawEmbeddedHierarchyValueToObjectConverter)) {
-                                    // if( (iRawDataMappingRule.reverter instanceof RawEmbeddedValueToObjectConverter)) {
-
-                                    let originValue = iObjectRule.evaluate(mappingScope);
-                                    if (!Promise.is(originValue)) {
-                                        let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, originValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
-                                        rawDataOperations.push(responseOperation);
-                                    } else {
-                                        (readExpressionPromises || (readExpressionPromises = [])).push(originValue);
-                                        originValue.then((resolvedOriginValue) => {
-                                            console.debug("iObjectRule: ", iObjectRule);
-                                            console.debug("originDataSnapshot: ", originDataSnapshot);
-                                            console.debug("dataOperation: ", dataOperation);
-                                            let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, resolvedOriginValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
-                                            rawDataOperations.push(responseOperation);
-                                        });
-                                    }
-
-                                } else {
-                                    iReadOperation.criteria = iRawDataMappingRule.reverter.convertCriteriaForValue(iObjectRule.expression(mappingScope));
-                                    //iReadOperation.criteria = iRawDataMappingRuleConverter.convertCriteriaForValue(criteria.parameters.id);
-                                    rawDataOperations.push(iReadOperation);
-                                }
+                                let snapshpotValue = iObjectRule.expression(mappingScope);
+                                let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, snapshpotValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
+                                rawDataOperations.push(responseOperation);
                             } else {
                                 console.log("can't fetch further");
                             }
