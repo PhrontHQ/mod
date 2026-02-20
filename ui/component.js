@@ -359,6 +359,8 @@ var rootComponent;
  */
 var Component = (exports.Component = class Component extends Target {
     static userInterfaceDescriptorLoadedField = "userInterfaceDescriptorLoaded";
+    static normalizedIdCache = new Map();
+    static layerClassNameCache = new Map();
 
     /**
      * Add the specified properties as properties of this component.
@@ -2496,34 +2498,31 @@ Component.addClassProperties({
         value: /\.(mod|reel|js|css|ts)$/i,
     },
 
-    _normalizedModuleId: {
-        value: null,
-    },
-
     normalizedModuleId: {
         get: function () {
-            if (!this._normalizedModuleId) {
-                this._normalizedModuleId = this.fullModuleId
-                    .trim()
-                    .toLowerCase()
-                    .replace(this.extensionModuleIdRegex, "");
+            const cache = Component.normalizedIdCache;
+
+            // If we haven't seen this full ID before, calculate and store it
+            if (!cache.has(this.fullModuleId)) {
+                const normalized = this.fullModuleId.trim().toLowerCase().replace(Component.extensionRegex, "");
+                cache.set(this.fullModuleId, normalized);
             }
 
-            return this._normalizedModuleId;
+            return cache.get(this.fullModuleId);
         },
-    },
-
-    _moduleLayerClassName: {
-        value: null,
     },
 
     moduleLayerClassName: {
         get: function () {
-            if (!this._moduleLayerClassName) {
-                this._moduleLayerClassName = kebabCaseConverter.convert(this.normalizedModuleId);
+            const cache = Component.layerClassNameCache;
+            const key = this.normalizedModuleId;
+
+            // If we haven't converted this specific ID yet, calculate and store it
+            if (!cache.has(key)) {
+                cache.set(key, kebabCaseConverter.convert(key));
             }
 
-            return this._moduleLayerClassName;
+            return cache.get(key);
         },
     },
 
