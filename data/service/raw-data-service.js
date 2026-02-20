@@ -1,3 +1,5 @@
+const { last } = require("../../core/frb/operators");
+
 var DataService = require("./data-service").DataService,
     assign = require("../../../core/frb/assign"),
     compile = require("../../core/frb/compile-evaluator"),
@@ -1552,6 +1554,7 @@ RawDataService.addClassProperties({
                 var mapping = this.mappingForType(type);
                 if(mapping && mapping.rawDataPrimaryKeyCompiledExpressions) {
                     throw "-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData);
+                    // console.error("-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData))
                 }
             }
         }
@@ -1662,7 +1665,9 @@ RawDataService.addClassProperties({
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
 
                     iUpdatedRawDataValue = rawData[rawDataKeys[i]];
-                    if (isFromUpdate && iUpdatedRawDataValue && ((iHasAddedValues = iUpdatedRawDataValue.hasOwnProperty("addedValues")) || (iHasRemovedValues = iUpdatedRawDataValue.hasOwnProperty("removedValues")))) {
+                    iHasAddedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("addedValues");
+                    iHasRemovedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("removedValues");
+                    if (isFromUpdate && (iHasAddedValues || iHasRemovedValues)) {
                         
                         canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
@@ -1759,6 +1764,13 @@ RawDataService.addClassProperties({
                     }
                 }
 
+                if (dataIdentifier.objectDescriptor.name === "Person") {
+                    console.log("Person.updateSnapshot", {
+                        rawData: Object.assign({}, rawData),
+                        snapshot: Object.assign({}, snapshot)
+                    });
+                }
+
                 return rawData;
             }
         }
@@ -1773,6 +1785,18 @@ RawDataService.addClassProperties({
     removeSnapshot: {
         value: function (dataIdentifier) {
             this._snapshot.delete(dataIdentifier);
+        }
+    },
+
+    /**
+     * Removes the pending snapshot of the values of record for the DataIdentifier argument
+     *
+     * @private
+     * @argument {DataIdentifier} dataIdentifier
+     */
+    removePendingSnapshot: {
+        value: function (dataIdentifier) {
+            this._pendingSnapshot.delete(dataIdentifier);
         }
     },
 
@@ -1845,13 +1869,18 @@ RawDataService.addClassProperties({
     pendingSnapshotForDataIdentifier: {
         value: function (dataIdentifier) {
             let pendingSnapshot = this._pendingSnapshot.get(dataIdentifier);
+            let tmpPendingSnapshot;
             if(!pendingSnapshot) {
                 let snapshot = this.snapshotForDataIdentifier(dataIdentifier);
 
                 if(snapshot) {
+                    tmpPendingSnapshot = Object.assign({}, snapshot);
                     pendingSnapshot = Object.create(snapshot);
                     this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
                 }
+            }
+            if (dataIdentifier.objectDescriptor.name === "Person" && pendingSnapshot) {
+                console.log("Person.pendingSnapshotForDataIdentifier", Object.assign({}, pendingSnapshot), tmpPendingSnapshot);
             }
             return pendingSnapshot;
         }
@@ -4427,6 +4456,13 @@ RawDataService.addClassProperties({
                 //     //when saved, but what if save fails and changes happen in-between?
                 //     operationData[aRawProperty] = aPropertyChanges;
 
+                if (object.objectDescriptor.name === "Person") {
+                    console.log("Person.processObjectChanges", {
+                        lastReadSnapshot: Object.assign({}, lastReadSnapshot),
+                        rawDataSnapshot: Object.assign({}, rawDataSnapshot)
+                    });
+                }
+
                 return this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
 
             }
@@ -4648,6 +4684,16 @@ RawDataService.addClassProperties({
                 snapshot = this.pendingSnapshotForDataIdentifier(dataIdentifier);
                 if(!snapshot && !isNewObject) {
                     console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
+                }
+
+                if (object.objectDescriptor.name === "Person") {
+                    console.log("Person.makeSaveOperation", {
+                        pendingSnapshotLocked: snapshot && Object.assign({}, snapshot),
+                        pendingSnapshot: snapshot,
+                        operationData: operationData,
+                        dataSnapshotPassedToOperation: dataSnapshot,
+                        criteria: criteria && Object.assign({}, criteria)
+                    });
                 }
 
                 if (localizableProperties && localizableProperties.size) {
@@ -4958,15 +5004,22 @@ RawDataService.addClassProperties({
                                     self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);    
                                 }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data);
-
+                                self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === UpdateOperation || iOperation.type === NoOpOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
+                                if (iDataIdentifier.objectDescriptor.name === "Person") {
+                                    console.log("Person.recordSnapshotAfterSave", {
+                                        data: iOperation.data
+                                    });
+                                }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data, true);
+                                self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === DeleteOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
 
                                 //Removes the snapshot we have for iDataIdentifier
                                 self.removeSnapshot(iDataIdentifier);
+                                self.removePendingSnapshot(iDataIdentifier);
                             }
 
                         }
