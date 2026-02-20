@@ -5103,9 +5103,9 @@ var RootComponent = Component.specialize(
             value: /(^\.+|\.+$)/g,
         },
 
-        enclosesComponentStylesheetsInCSSLayer: {
+        wrapsComponentStylesheetsInCSSLayer: {
             get: function () {
-                return this._documentResources.enclosesComponentStylesheetsInCSSLayer;
+                return this._documentResources.wrapsComponentStylesheetsInCSSLayer;
             },
         },
 
@@ -5131,7 +5131,7 @@ var RootComponent = Component.specialize(
 
                 layersHaveChanged = this._cssLayerNames.size > previousSize;
 
-                if (layersHaveChanged && this.enclosesComponentStylesheetsInCSSLayer) {
+                if (layersHaveChanged && this.wrapsComponentStylesheetsInCSSLayer) {
                     this._updateCssLayerOrder();
                 }
 
@@ -5161,7 +5161,7 @@ var RootComponent = Component.specialize(
 
         _addCssLayerOrderElementIfNeeded: {
             value: function () {
-                if (!this.enclosesComponentStylesheetsInCSSLayer || !!this._cssLayerOrderElement) {
+                if (!this.wrapsComponentStylesheetsInCSSLayer || !!this._cssLayerOrderElement) {
                     return false;
                 }
 
