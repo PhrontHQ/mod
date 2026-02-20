@@ -5172,7 +5172,8 @@ var RootComponent = Component.specialize(
                 layersHaveChanged = this._cssLayerNames.size > previousSize;
 
                 if (layersHaveChanged && this.wrapsComponentStylesheetsInCSSLayer) {
-                    this._updateCssLayerOrder();
+                    this._needsToUpdateCssLayerOrder = true;
+                    this.needsDraw = true;
                 }
 
                 this._stylesheetContexts.set(stylesheetElement, {
@@ -5187,15 +5188,14 @@ var RootComponent = Component.specialize(
         /**
          * Updates the @layer statement in the head.
          */
-        _updateCssLayerOrder: {
+        _updateCssLayerOrderIfNeeded: {
             value: function () {
+                if (!this._needsToUpdateCssLayerOrder) return;
                 const layerList = Array.from(this._cssLayerNames);
 
-                // TODO: @Benoit probably not the best way of doing it, maybe we should throttle it...
                 // TODO: how do we decide the priority of the layers?
                 this._cssLayerOrderElement.textContent = `@layer ${layerList.join(", ")};`;
-
-                return this._cssLayerOrderElement;
+                this._needsToUpdateCssLayerOrder = false;
             },
         },
 
@@ -5635,6 +5635,7 @@ var RootComponent = Component.specialize(
 
         draw: {
             value: function () {
+                this._updateCssLayerOrderIfNeeded();
                 this.dragManager.draw();
             },
         },
