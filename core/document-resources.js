@@ -119,7 +119,6 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
                     // Adding CSS Layers, and Scoping for components in dev mode.
                     // When we mop, we'll add it in the CSS.
-                    // @benoit: do we have a flag for dev mode?
                     this._wrapStyleSheetInLayer(stylesheet, cssContext);
                 }
             }
