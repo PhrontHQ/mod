@@ -5149,10 +5149,6 @@ var RootComponent = Component.specialize(
             value: /[^a-z0-9\-]+/gi,
         },
 
-        trimDotsRegex: {
-            value: /(^\.+|\.+$)/g,
-        },
-
         wrapsComponentStylesheetsInCSSLayer: {
             get: function () {
                 return this._documentResources.wrapsComponentStylesheetsInCSSLayer;
@@ -5164,14 +5160,9 @@ var RootComponent = Component.specialize(
          */
         registerComponentStyle: {
             value: function (component, stylesheetElement) {
-                const moduleLayerPath = component.normalizedModuleId
-                    .replace(this.moduleLayerNameRegex, ".")
-                    .replace(this.trimDotsRegex, "");
-
-                const layerNames = moduleLayerPath.split(".");
-
-                let layersHaveChanged = false;
+                const layerNames = component.normalizedModuleId.split(this.moduleLayerNameRegex);
                 const previousSize = this._cssLayerNames.size;
+                let layersHaveChanged = false;
 
                 for (const layerName of layerNames) {
                     if (!this._cssLayerNames.has(layerName)) {
@@ -5187,7 +5178,7 @@ var RootComponent = Component.specialize(
 
                 this._stylesheetContexts.set(stylesheetElement, {
                     moduleLayerClassName: component.moduleLayerClassName,
-                    moduleLayerPath,
+                    moduleLayerPath: layerNames.join("."),
                 });
 
                 this._needsStylesheetsDraw = true;
