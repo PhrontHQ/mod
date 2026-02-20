@@ -3,20 +3,19 @@ if (!window.__mod__styleImportantForcerInitialized) {
 
     const styleObserver = new MutationObserver((mutations) => {
         for (const mutation of mutations) {
-            // We only care about style attribute changes
-            if (mutation.attributeName !== "style") return;
-
-            const el = mutation.target;
+            const element = mutation.target;
+            const style = element.style;
+            const length = style.length;
 
             // Iterate through all CSS properties currently applied to the element inline
-            for (let i = 0; i < el.style.length; i++) {
-                const propName = el.style[i];
-                const priority = el.style.getPropertyPriority(propName);
+            for (let i = 0; i < length; i++) {
+                const propName = style[i];
+                const priority = style.getPropertyPriority(propName);
 
                 // If the property doesn't have the '!important' flag, force it
                 if (priority !== "important") {
-                    const value = el.style.getPropertyValue(propName);
-                    el.style.setProperty(propName, value, "important");
+                    const value = style.getPropertyValue(propName);
+                    style.setProperty(propName, value, "important");
                 }
             }
         }
