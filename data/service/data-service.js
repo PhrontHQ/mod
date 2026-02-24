@@ -3818,7 +3818,7 @@ DataService.addClassProperties(
 
                     if (pendingTransactions && pendingTransactions.length) {
                         for (var i = 0, countI = pendingTransactions.length; i < countI; i++) {
-                            if (pendingTransactions[i].createdDataObjects.get(object.objectDescriptor).has(object)) {
+                            if (pendingTransactions[i].createdDataObjects.get(object.objectDescriptor)?.has(object)) {
                                 return true;
                             }
                         }
