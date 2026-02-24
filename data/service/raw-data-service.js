@@ -2102,18 +2102,18 @@ RawDataService.addClassProperties({
             var mapping = objectDescriptor && this.mappingForType(objectDescriptor);
 
 
-            // if (!mapping) {
-            //     if (objectDescriptor) {
-            //         mapping = this._objectDescriptorMappings.get(objectDescriptor);
-            //         if (!mapping) {
-            //             mapping = DataMapping.withObjectDescriptor(objectDescriptor);
-            //             this._objectDescriptorMappings.set(objectDescriptor, mapping);
-            //         }
-            //     }
-            //     else {
-            //         mapping = this._defaultDataMapping;
-            //     }
-            // }
+            if (!mapping) {
+                if (objectDescriptor) {
+                    mapping = this._objectDescriptorMappings.get(objectDescriptor);
+                    if (!mapping) {
+                        mapping = DataMapping.withObjectDescriptor(objectDescriptor);
+                        this._objectDescriptorMappings.set(objectDescriptor, mapping);
+                    }
+                }
+                else {
+                    mapping = this._defaultDataMapping;
+                }
+            }
 
             return mapping;
         }
