@@ -130,6 +130,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     _logTypeEvent(objectDescriptor, /*message, element1, element2, ... elementN*/) {
+        return;
+        
         let args = Array.from(arguments),
             logArgs = args.slice(1);
         if (typeof logArgs[0] === "string") {
@@ -517,15 +519,25 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 /*
                     Prefix properties in criteria
                 */
-                let readOperationCriteria = readOperation.criteria,
+                let isInstanceCriteria = (readOperation.criteria.name === 'InstanceCriteria');
+
+                let readOperationCriteria = isInstanceCriteria ? readOperation.hints.rawCriteria : readOperation.criteria,
                 originDataSnapshotCriteria = readOperationCriteria.criteriaPrefixedWithExpression(`originDataSnapshot.${rawDataService.identifier}`);
                 originDataSnapshotCriteria.name = "originDataSnapshotLookUp";
                 //We need to create a new DataOperation()
                 let originDataSnapshotReadOperation = new DataOperation();
                 originDataSnapshotReadOperation.type = DataOperation.Type.ReadOperation;
-                originDataSnapshotReadOperation.target = readOperation.target;
+                originDataSnapshotReadOperation.target = isInstanceCriteria ? readOperation.hints.valueDescriptor : readOperation.target;
                 originDataSnapshotReadOperation.identity = readOperation.identity;
                 originDataSnapshotReadOperation.data = readOperation.data;
+
+                //Messy for now as we update the approch but if isInstanceCriteria is true
+                //then we need to remove read originDataSnapshotReadOperation.data.readExpressions,
+                //As they are properties of readOperation.target, the type of the instance for which we're fetching the property
+                //but now originDataSnapshotReadOperation.target is the type of the "destination" of the property
+                if(isInstanceCriteria) {
+                    delete originDataSnapshotReadOperation.data.readExpressions;
+                }
                 originDataSnapshotReadOperation.criteria = originDataSnapshotCriteria;
 
                 /*
@@ -702,7 +714,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //We might want to ask the delegate his take on what readExpressions to use 
             readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
             //readExpressions = readCompletedOperation.,referrer?.data?.readExpressions,
-            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData),
+            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData, readCompletedOperation),
             typeForRawData = this.objectTypeForRawData(objectDescriptor, rawData);
 
         rawDataService.recordSnapshot(dataIdentifier,  rawData);

@@ -2361,6 +2361,202 @@ DataService.addClassProperties(
         },
 
         /**
+         * Create a criteria identifying instance
+         * cached in _criteriaByInstance WeakMap which is shared on a prototype
+         * so every DataTrigger handling a different property of the same object will be able to reuse it
+         *
+         * @method
+         * @argument {Object} object
+         * @returns {external:Promise}
+         */
+        _criteriaByInstance: {
+            value: new WeakMap()
+        },
+        criteriaForInstance: {
+            value: function(instance) {
+                let criteria = this._criteriaByInstance.get(instance);
+                if(!criteria) {
+                    criteria = new Criteria().initWithExpression("this == $", instance);
+                    criteria.name = "InstanceCriteria";
+                    this._criteriaByInstance.set(instance, criteria);
+                }
+                return criteria;
+            }
+        },
+
+        /**
+         * This method takes care of acquiring an object's property if it hasn't been yet
+         *
+         * @method
+         * @argument {Object} instance
+         * @argument {String} propertyName
+         * @returns {external:Promise}
+         */
+        fetchInstanceProperty: {
+            value: function (instance, propertyName) {
+                var self = this,
+                    objectDescriptor = this.objectDescriptorForObject(instance),
+                    propertyDescriptor = objectDescriptor?.propertyDescriptorNamed(propertyName);
+
+                if(!propertyDescriptor) {
+                    objectDescriptor 
+                    ? console.warn(`${objectDescriptor?.name} fetchInstanceProperty: no descriptor found for property ${propertyName} `)
+                    : console.warn(`No ObjectDescriptor found for insatnce ${instance}`);
+
+                    return Promise.nullPromise;
+                } else {
+                    return this.fetchInstanceValueForPropertyDescriptor(instance, propertyDescriptor);
+                }
+            }
+        },
+
+        /**
+         * This method takes care of acquiring an object's property if it hasn't been yet
+         *
+         * @method
+         * @argument {Object} instance
+         * @argument {PropertyDescriptor} propertyDescriptor
+         * @returns {external:Promise}
+         */
+        fetchInstanceValueForPropertyDescriptor: {
+            value: function (instance, propertyDescriptor) {
+
+                //console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+ this.dataIdentifierForObject(instance)+", property: "+propertyName);
+
+                let promise = this.registeredPromiseForInstancePropertyDescriptor(instance, propertyDescriptor);
+                if(!promise) {
+
+
+                    var self = this,
+                        objectDescriptor = this.objectDescriptorForObject(instance),
+                        isObjectCreated = this.isObjectCreated(instance);
+
+                    /* 
+                        If an instance is created and didn't come from an origin data service 
+                        then there's no way we could fetch a property from somewhere
+                    */
+                    if(isObjectCreated && !instance.originDataSnapshot) {
+                        /*
+                            return Promise.resolve(null);
+                            
+                            was coded under the assumption that if an instance is just created, there can't be any property we could get for it.
+                            But here's a use case where this is wrong: 
+                                - a UserIdentity instance is fetched through an auth raw data service doing the login via an identity provider.
+                                - with an SynchronizationService above, so the raw data service doing the login via an identity provider is an origin service
+                                - that UserIdentity is now treated as created as it is intended to be saved in SynchronizationService's destination service
+                                - Which will happen as part of the (websocket) session being created by passing the UserIdentity
+                                - and that websocket isn't opened yet
+                                - most likely because I removed UserIdenty and AuthToken from the model in mod, so WebSocketDataService hasn't yet handled a fetch yet 
+                                - We're fetching the user associated with the UserIdentity
+                                - if we weren't shorting with return Promise.resolve(null), we're building a fetch
+                                - that fetch should trigger opening the socket, saving the UserIdentity via the destinationService
+                                - no person will be found for that user
+                                - so an origin data service related to the ClientOAuthDataService will handle the readOperation
+                                - in order to do so, it needs an access token that it will fetch
+                                - that fetch will be handled by the ClientOAuthDataService
+                                - the token is returned
+                                - the origin data service fetch the person/profile rsw data
+                                - that gets converted to a Person
+                                - returned via this method to fullfill the user property on the UserIdentity
+                                - and then that Person and its relation to the UserIdentitu should be saved in the destination service
+
+                        */
+                        promise = Promise.resolve(null);
+                    } else {
+
+                        //TODO: leverage this as used in the foreign key value converter to find the instance locally first
+                        //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
+
+
+                        var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.criteriaForInstance(instance));
+                        propertyNameQuery.readExpressions = [propertyDescriptor.name];
+
+                        //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+
+                        promise = DataService.mainService.fetchData(propertyNameQuery)
+                        .then((fetchResult) => {
+
+                            // console.debug("instance === fetchResult[0]", instance === fetchResult[0]);
+                            if(Array.isArray(fetchResult)) {
+                                if(fetchResult[0] !== instance) {
+                                    if(propertyDescriptor.cardinality === 1) {
+                                        return fetchResult[0] || null;
+                                    } else {
+                                        return fetchResult;
+                                    }    
+                                }
+                            } else {
+                            /*
+                                Bug fix fetchResult should always be an array resolving from fetchData(), but in case there's been an exception,
+                                keeping 
+                            */
+                                console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+                                return fetchResult[propertyName];
+                            }
+                        });
+                    }
+
+                    //Cache the promise
+                    this.registerPromiseForInstancePropertyDescriptor(promise, instance, propertyDescriptor);
+                }
+
+                //Return it
+                return promise;
+            }
+        },
+
+        _isFetchInstancePropertyValuesMicrotaskQueued: {
+            value: false
+        },
+
+        registerPromiseForInstancePropertyDescriptor: {
+            value: function(promise, instance, propertyDescriptor) {
+
+
+                /*
+                    Now we need to scheduled a queueMicrotask() if it's not done.
+                */
+                if(!this.constructor.prototype._isFetchInstancePropertyValuesMicrotaskQueued) {
+                    this.constructor.prototype._isFetchInstancePropertyValuesMicrotaskQueued = true;
+                    queueMicrotask(() => {
+                        this._fetchInstancePropertyValues();
+                    });
+                }
+            }
+        },
+
+        /**
+         * This method returns a cached promise for the result of fetching the value of instance's property 
+         * described by propertyDescriptor
+         *
+         * @method
+         * @argument {Object} instance
+         * @argument {PropertyDescriptor} propertyDescriptor
+         * @returns {external:Promise}
+         */
+        registeredPromiseForInstancePropertyDescriptor: {
+            value: function(instance, propertyDescriptor) {
+                console.log("registeredPromiseForInstancePropertyDescriptor");
+                return null;
+            }
+        },
+
+        unregisterPromiseForInstancePropertyDescriptor: {
+            value: function(promise, instance, propertyDescriptor) {
+
+            }
+        },
+
+        _fetchInstancePropertyValues: {
+            value: function() {
+                console.log("_fetchInstancePropertyValues()");
+
+            }
+        },
+
+
+
+        /**
          * Fetch the value of a data object's property, possibly asynchronously.
          *
          * The default implementation of this method delegates the fetching to a

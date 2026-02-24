@@ -528,13 +528,20 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         let readExpressions = dataOperation.data?.readExpressions,
             readExpressionsCount = readExpressions?.length || 0;
 
-        if (dataOperation?.criteria?.name === "rawDataPrimaryKeyCriteria" && readExpressions?.length > 0) {
+        if ((dataOperation?.criteria?.name === "rawDataPrimaryKeyCriteria" || dataOperation?.criteria?.name === "InstanceCriteria") && readExpressions?.length > 0) {
             var objectDescriptor = dataOperation.target,
                 mapping = this.mappingForType(objectDescriptor),
                 rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
                 primaryKeyPropertyDescriptors = mapping.primaryKeyPropertyDescriptors,
                 criteria = dataOperation.criteria,
+                dataOperationOriginDataSnapshot = dataOperation.hints?.originDataSnapshot,
                 readExpressionPromises;
+
+            
+            //By precaution for now:
+            if(dataOperation?.criteria?.name === "InstanceCriteria" && !dataOperationOriginDataSnapshot) {
+                dataOperationOriginDataSnapshot = dataOperation?.criteria.parameters.originDataSnapshot;
+            }
 
             /*
                 We'd need a way to struture how to inform what readExpression a RawDataService can combine.
@@ -567,7 +574,8 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                     iReadOperation.data = dataOperation.data;
 
 
-                    let originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier],
+                    //TODO: OPTIMIZE - this shouldn't be in the for loop
+                    let originDataSnapshot = dataOperationOriginDataSnapshot?.[this.identifier],
                         iRawDataMappingRules = mapping.rawDataMappingRulesForObjectProperty(iExpression),
                         iRawDataMappingRulesIterator = iRawDataMappingRules && iRawDataMappingRules.values(),
                         iRawDataMappingRule;
@@ -593,7 +601,8 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
                         if (readExpressionsCount === 1) {
                             let mappingScope = mapping._scope.nest(dataOperation),
-                                originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier];
+                                //TODO: OPTIMIZE - this is already done above?!!
+                                originDataSnapshot = dataOperationOriginDataSnapshot?.[this.identifier];
 
                             /*
                                 FIXME: not all aspects of RawForeignValueToObjectConverter's query creation have migrated to a more

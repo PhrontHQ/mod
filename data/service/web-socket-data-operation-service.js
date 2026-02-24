@@ -811,6 +811,10 @@ WebSocketDataOperationService.addClassProperties({
                 return;
             }
 
+            if(readOperation.target.name === "EmploymentPosition" && (readOperation.data?.readExpressions?.[0] === "childPositions" || readOperation.data?.readExpressions?.[0] === "parentPosition")) {
+                console.debug(this.name+" handleReadOperation(): EmploymentPosition read operation "+readOperation.id+" for "+readOperation.data.readExpressions+", "+readOperation.criteria.toString());
+            }
+
 
             /*
                 This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
@@ -858,6 +862,20 @@ WebSocketDataOperationService.addClassProperties({
                 built on top of a worker.
             */
             if(this.application.identity && this.handlesType(operation.target)) {
+
+
+
+                /*
+                    We're moving towards readOperations to be still object-level operation versions
+                    of the data query / data set. So we need to go from an instance-level criteria
+                    to a raw-data level criteria
+
+                    However we can't modify the operation directly as it would impact other listners
+                */
+               if(operation.criteria?.name === "InstanceCriteria") {
+                    this.willHandleInstancePropertyValueReadOperation(operation);
+               }
+
 
                 /*
                     Benoit on 11/7/2025: This logically impacts RawDataService's

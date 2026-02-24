@@ -558,6 +558,52 @@ RawDataService.addClassProperties({
             this.rawDataDone(stream);
         }
     },
+    
+
+    willHandleInstancePropertyValueReadOperation: {
+        value: function(readOperation) {
+
+
+            
+            let instance = readOperation.criteria.parameters,
+                // isInstanceCreated = this.mainService.isObjectCreated(instance),
+                instanceSnapshot = this.snapshotForObject(instance);
+            if(instanceSnapshot) {
+                /*
+                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+                */
+                let mapping = this.mappingForType(instance.objectDescriptor),
+                    rawDataPrimaryKeys = mapping.rawDataPrimaryKeys,
+                    propertyName = readOperation.data.readExpressions[0],
+                    rule = mapping.objectMappingRuleForPropertyName(propertyName),
+                    requirements = rule?.requirements,
+                    hintSnapshot = {};
+
+                //This would be excuted by other RawDataServices as well, so we override
+                readOperation.hints = {snapshot: hintSnapshot};
+
+                //make sure we have the object's primary 
+                for (let i = 0, countI = rawDataPrimaryKeys ? rawDataPrimaryKeys.length : 0; (i < countI); i++) {
+                    hintSnapshot[rawDataPrimaryKeys[i]] = instanceSnapshot[rawDataPrimaryKeys[i]];
+                }
+
+                for(let i=0, countI = requirements.length; (i<countI); i++) {
+                    //This could be a part of the primary key as well
+                    if(!hintSnapshot.hasOwnProperty(requirements[i])) {
+                        hintSnapshot[requirements[i]] = instanceSnapshot[requirements[i]];
+                    }
+                }
+
+                //readOperation.criteria.parameters is the instance for which we fetch the properties
+                //So if somehow the originDataSnapshot is not on the object, which right now gets serialized with it
+                //in the case of the WebSocketDataOperationService, we add it to the operation if it's in the object snapshot
+                //Otherwise, a RawDataService will have to get it on its own
+                if(!readOperation.criteria.parameters.originDataSnapshot && instanceSnapshot.originDataSnapshot) {
+                    hintSnapshot.originDataSnapshot = instanceSnapshot.originDataSnapshot;
+                }
+            }
+        }
+    },
 
 
     fetchRawObjectProperty: {
@@ -1083,6 +1129,10 @@ RawDataService.addClassProperties({
                             } else {
                                 propertyValue = criteriaParameters[secondArgSyntax.args[1].value];
                             }
+                        } if (firstArgSyntax.type === "value" && secondArgSyntax.type == "parameters" && query.criteria.name === 'InstanceCriteria') {
+                            propertyName = rawDataPrimaryKeys[i];
+                            propertyValue = criteriaParameters.snapshot[rawDataPrimaryKeys[i]];
+                       
                         } else {
                             propertyName = secondArgSyntax.args[1].value;
                             propertyValue = criteriaParameters[firstArgSyntax.args[1].value];
@@ -3541,6 +3591,11 @@ RawDataService.addClassProperties({
             */
 
             if(operation.rawDataService === this) {
+                let referrer = this.referrerForDataOperation(operation);
+                if(referrer?.target.name === "EmploymentPosition" && (referrer?.data?.readExpressions?.[0] === "childPositions" || referrer?.data?.readExpressions?.[0] === "parentPosition")) {
+                    console.debug(this.name+" handleReadCompletedOperation(): EmploymentPosition read operation "+operation.referrerId+" for "+referrer.data.readExpressions+", "+referrer.criteria.toString());
+                }
+
             
                 //The read is complete
                 this.handleReadUpdateOperation(operation);

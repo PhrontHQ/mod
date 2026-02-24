@@ -1630,9 +1630,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             this._prepareRawDataToObjectRule(rule, propertyDescriptor, locales);
 
 
-            return  isRelationship ?                                this._resolveRelationship(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
-                    propertyDescriptor && !isDerived ?              this._resolveProperty(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
-                                                                    null;
+            return  isRelationship 
+                ? this._resolveRelationship(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) 
+                : propertyDescriptor && !isDerived 
+                    ? this._resolveProperty(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) 
+                    : null;
+        }
+    },
+    _fetchRelationship: {
+        value: function(object, propertyDescriptor) {
+            //internally fetchInstanceProperty() wastes time finding the propertyDescriptor from the property name... not great
+            return this.service.mainService.fetchInstanceValueForPropertyDescriptor(object, propertyDescriptor);
         }
     },
     _resolveRelationship: {
@@ -1640,7 +1648,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //console.debug( this.service.dataIdentifierForObject(object).objectDescriptor.name+" - "+propertyDescriptor.name+" _resolveRelationship on object id: "+ this.service.dataIdentifierForObject(object).primaryKey);
             var self = this,
                 hasInverse = !!propertyDescriptor.inversePropertyName,
+                //Future Ex Way?
                 ruleEvaluationResult = rule.evaluate(scope),
+                //Future way
+                // ruleEvaluationResult = this._fetchRelationship(object, propertyDescriptor),
                 penultimateStep;
                 //data;
 

@@ -121,7 +121,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
     _fetchConvertedDataForObjectDescriptorCriteria: {
-        value: function(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged) {
+        value: function(typeToFetch, instance, criteria, currentRule, registerMappedPropertiesAsChanged) {
             var self = this;
 
             return this.service ? this.service.then(function (service) {
@@ -203,9 +203,15 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         }
                         /* HACK END — TO GET originId sent in DataOperation without impacting main postgreSQL path */
 
-                        var query = DataQuery.withTypeAndCriteria(typeToFetch, criteria);
+                        //var query = DataQuery.withTypeAndCriteria(typeToFetch, criteria);
+                        //typeToFetch is the type of the values of the property we're acting on. We're going to put in the hint for now
+                        var query = DataQuery.withTypeAndCriteria(instance.objectDescriptor, service.rootService.criteriaForInstance(instance));
 
-                        query.hints = {rawDataService: service};
+                        query.hints = {
+                            valueDescriptor: typeToFetch,
+                            rawDataService: service,
+                            rawCriteria: criteria
+                        };
 
                         if(registerMappedPropertiesAsChanged){
                             query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
@@ -217,10 +223,11 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
+                            2/23/2026 - as we move to higher level criteria, we need to include readExpressions no matter what
                         */
-                        if(currentRule && !currentRule.propertyDescriptor._valueDescriptorReference) {
+                        //if(currentRule && !currentRule.propertyDescriptor._valueDescriptorReference) {
                             query.readExpressions = [currentRule.targetPath];
-                        }
+                        //}
 
                     /*
                         When we fetch objects that have inverse relationships on each others none can complete their mapRawDataProcess because the first one's promise for mapping the relationship to the second never commpletes because the second one itself has it's raw data the foreignKey to the first and attemps to do so by default on processing operations, where the previous way was only looping on requisite proprties. If both relationships were requisite, on each side we'd end up with the same problem.
@@ -438,7 +445,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     },
 
     combinesFetchData: {
-        value: true
+        value: false
     },
     _isCombineFetchDataMicrotaskQueued: {
         value: false
@@ -541,7 +548,12 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                         if(countJ == 0) {
                             if(iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)) {
+                                // This lead to objects whose properties were fullfilled to end up sharing the very same array - combinedFetchedValues
+                                // Which is not good. At all... 
+                                // WAS: iFetchPromise.resolve(combinedFetchedValues);
+                                //iFetchPromise.resolve(Array.from(combinedFetchedValues));
                                 iFetchPromise.resolve(combinedFetchedValues);
+
                             } else {
                                 iFetchPromise.resolve(null);
                             }
@@ -731,7 +743,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             aCriteria;
                         while (anObjectDescriptor = mapIterator.next().value) {
                             aCriteria = this.convertCriteriaForValue(groupMap.get(anObjectDescriptor));
-                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged));
+                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, scope.parent.rootObjectBeingMapped, aCriteria, currentRule, registerMappedPropertiesAsChanged));
 
                         }
 
@@ -758,7 +770,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             foreignKeyValue = v[rawDataProperty],
                             aCriteria = this.convertCriteriaForValue(foreignKeyValue);
 
-                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged);
+                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, scope.parent.rootObjectBeingMapped, aCriteria, currentRule, registerMappedPropertiesAsChanged);
 
                         } else {
                             return Promise.resolve(null);
@@ -772,7 +784,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                     return this._descriptorToFetch.then(function (typeToFetch) {
 
-                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
+                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, scope.parent.rootObjectBeingMapped, criteria, currentRule, registerMappedPropertiesAsChanged);
 
                         // if (self.serviceIdentifier) {
                         //     criteria.parameters.serviceIdentifier = self.serviceIdentifier;
