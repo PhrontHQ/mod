@@ -1851,9 +1851,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if (this._isAsync(result)) {
                 self = this;
                 result.then(function (value) {
-                    propertyName;
-                    scope;
-                    rule;
                     self._setRawDataPropertyValueIfNeeded(rawData, propertyName, value, lastReadSnapshot, rawDataSnapshot);
                     // rawData[propertyName] = value;
                     return null;
@@ -2081,7 +2078,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
 
                 if(addedResultIsPromise && removedResultIsPromise) {
-                    return Promise.all([addedResultIsPromise, removedResultIsPromise]);
+                    return Promise.all([addedResult, removedResult]);
                 } else if(addedResultIsPromise) {
                     return addedResult;
                 } else if(removedResultIsPromise) {
