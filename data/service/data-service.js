@@ -4550,10 +4550,6 @@ DataService.addClassProperties(
                     //inversePropertyDescriptor,
                     self = this;
 
-                if (dataObject.objectDescriptor.name === "Person" && (addedValues || removedValues)) {
-                    console.log("DataService._registerDataObjectChangesFromEvent", key, addedValues, removedValues);
-                }
-
                 /*
                 Benoit refactoring saveChanges: shouldn't we be able to know that if there are no changesForDataObject, as we create on, it would ve the only time we'd have to call:
 

@@ -1764,13 +1764,6 @@ RawDataService.addClassProperties({
                     }
                 }
 
-                if (dataIdentifier.objectDescriptor.name === "Person") {
-                    console.log("Person.updateSnapshot", {
-                        rawData: Object.assign({}, rawData),
-                        snapshot: Object.assign({}, snapshot)
-                    });
-                }
-
                 return rawData;
             }
         }
@@ -1878,9 +1871,6 @@ RawDataService.addClassProperties({
                     pendingSnapshot = Object.create(snapshot);
                     this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
                 }
-            }
-            if (dataIdentifier.objectDescriptor.name === "Person" && pendingSnapshot) {
-                console.log("Person.pendingSnapshotForDataIdentifier", Object.assign({}, pendingSnapshot), tmpPendingSnapshot);
             }
             return pendingSnapshot;
         }
@@ -4705,16 +4695,6 @@ RawDataService.addClassProperties({
                 snapshot = this.pendingSnapshotForDataIdentifier(dataIdentifier);
                 if(!snapshot && !isNewObject) {
                     console.warn("pendingSnapshotForDataIdentifier: NO SNAPSHOT FOUND FOR "+dataIdentifier);
-                }
-
-                if (object.objectDescriptor.name === "Person") {
-                    console.log("Person.makeSaveOperation", {
-                        pendingSnapshotLocked: snapshot && Object.assign({}, snapshot),
-                        pendingSnapshot: snapshot,
-                        operationData: operationData,
-                        dataSnapshotPassedToOperation: dataSnapshot,
-                        criteria: criteria && Object.assign({}, criteria)
-                    });
                 }
 
                 if (localizableProperties && localizableProperties.size) {
