@@ -218,7 +218,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
                         */
-                        if(currentRule && !currentRule.propertyDescriptor._valueDescriptorReference) {
+                        if(((currentRule && (!currentRule.propertyDescriptor._valueDescriptorReference || !currentRule.propertyDescriptor.valueDescriptor)) && !(queryParts.readExpressions.includes(currentRule.targetPath))) || (currentRule.propertyDescriptor._valueDescriptorReference === currentRule.propertyDescriptor.owner)) {
                             query.readExpressions = [currentRule.targetPath];
                         }
 
