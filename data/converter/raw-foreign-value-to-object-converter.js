@@ -877,10 +877,14 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             //forEach skipps over holes of a sparse array
                             v.forEach(function(value) {
                                 /*
-                                    Make sure we have a valid data object anf not null nor undefined before  trying to get their primary key
+                                    Make sure we have a valid data object anf not null nor undefined before trying to get their primary key
                                 */
                                 if(value) {
                                     result.push(service.dataIdentifierForObject(value).primaryKey);
+                                } else {
+                                    //TODO: Is this safe? It was added because, in some cases, you may want to preserve a sparse array. E.g. The
+                                    //array has a fixed length, but not all values are defined
+                                    result.push(value);
                                 }
                             });
                             currentRule = null;

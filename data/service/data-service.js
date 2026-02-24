@@ -4550,6 +4550,10 @@ DataService.addClassProperties(
                     //inversePropertyDescriptor,
                     self = this;
 
+                if (dataObject.objectDescriptor.name === "Person" && (addedValues || removedValues)) {
+                    console.log("DataService._registerDataObjectChangesFromEvent", key, addedValues, removedValues);
+                }
+
                 /*
                 Benoit refactoring saveChanges: shouldn't we be able to know that if there are no changesForDataObject, as we create on, it would ve the only time we'd have to call:
 
@@ -4661,6 +4665,7 @@ DataService.addClassProperties(
 
                     if (!manyChanges) {
                         manyChanges = {};
+                        manyChanges.index = changeEvent.index;
                         changesForDataObject.set(key, manyChanges);
                     }
 
@@ -4692,7 +4697,8 @@ DataService.addClassProperties(
                             var registeredRemovedValues = manyChanges.removedValues;
                             if (!registeredRemovedValues) {
                                 if (!isDataObjectBeingMapped) {
-                                    manyChanges.removedValues = registeredRemovedValues = new Set(removedValues);
+                                    manyChanges.removedValues = removedValues;
+                                    manyChanges.removedValuesSet = registeredRemovedValues = new Set(removedValues);
                                 }
                                 self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
                                     dataObject,
@@ -4752,11 +4758,13 @@ DataService.addClassProperties(
                             */
                                 if (Array.isArray(manyChanges) && manyChanges.equals(addedValues)) {
                                     manyChanges = {};
+                                    manyChanges.index = changeEvent.index;
                                     changesForDataObject.set(key, manyChanges);
                                 }
 
                                 if (!isDataObjectBeingMapped) {
-                                    manyChanges.addedValues = registeredAddedValues = new Set(addedValues);
+                                    manyChanges.addedValues = addedValues;
+                                    manyChanges.addedValuesSet = registeredAddedValues = new Set(addedValues);
                                 }
                                 self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
                                     dataObject,

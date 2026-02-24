@@ -4456,14 +4456,35 @@ RawDataService.addClassProperties({
                 //     //when saved, but what if save fails and changes happen in-between?
                 //     operationData[aRawProperty] = aPropertyChanges;
 
-                if (object.objectDescriptor.name === "Person") {
-                    console.log("Person.processObjectChanges", {
-                        lastReadSnapshot: Object.assign({}, lastReadSnapshot),
-                        rawDataSnapshot: Object.assign({}, rawDataSnapshot)
-                    });
+
+                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+                if (this._isAsync(result)) {
+                    return result.then((output) => {
+                        let mapping = this.mappingForObject(object),
+                            rawRules = mapping.rawDataMappingRulesForObjectPropertyName(aProperty),
+                            rawDataProperty;
+                        
+                        if(rawRules) {
+                            var iterator = rawRules.values();
+
+                            while((rule = iterator.next().value)) {
+                                rawDataProperty = rule.targetPath;
+                                if (operationData[rawDataProperty]) {
+                                    operationData[rawDataProperty].index = aPropertyChanges.index;
+                                }
+                                if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
+                                    operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
+                                }
+                            }
+                        }
+
+                        return output;
+                    })
+                } else {
+                    return result;
                 }
 
-                return this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+                // return this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
 
             }
             else {
@@ -5007,11 +5028,6 @@ RawDataService.addClassProperties({
                                 self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === UpdateOperation || iOperation.type === NoOpOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
-                                if (iDataIdentifier.objectDescriptor.name === "Person") {
-                                    console.log("Person.recordSnapshotAfterSave", {
-                                        data: iOperation.data
-                                    });
-                                }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data, true);
                                 self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === DeleteOperation) {

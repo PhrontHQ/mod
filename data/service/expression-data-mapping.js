@@ -1851,6 +1851,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if (this._isAsync(result)) {
                 self = this;
                 result.then(function (value) {
+                    propertyName;
+                    scope;
+                    rule;
                     self._setRawDataPropertyValueIfNeeded(rawData, propertyName, value, lastReadSnapshot, rawDataSnapshot);
                     // rawData[propertyName] = value;
                     return null;
@@ -2011,7 +2014,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     _mapObjectPropertyToRawDataProperty: {
         value: function(object, propertyName, data,  rawPropertyName, added, removed, _rule, lastReadSnapshot, rawDataSnapshot) {
 
-            if((added && added.size > 0) || (removed && removed.size > 0 )) {
+            if((added && added.length > 0) || (removed && removed.length > 0 )) {
                 var tmpExtendObject,
                     //We derived object so we can pretend the value of the property is alternatively added, then removed, to get the mapping done.
                     //tmpExtendObject = Object.create(object),
@@ -2026,7 +2029,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                 data[rawPropertyName] = aPropertyChanges;
 
-                if(added && added.size > 0) {
+                if(added && added.length > 0) {
                     /*
                         Here we have a situation where in the most common case object[propertyName] is not equal to the content of added, like if there were pre-exising values.
 
@@ -2038,7 +2041,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     tmpExtendObject = {};
                     for(i=0, countI = requirements.length; ( i<countI); i++ ) {
                         //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
-                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? Array.from(added) : object[requirements[i]];
+                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? added : object[requirements[i]];
                     }
 
                     //tmpExtendObject[propertyName] = Array.from(added);
@@ -2054,7 +2057,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     }
                 }
 
-                if(removed && removed.size > 0 ) {
+                if(removed && removed.length > 0 ) {
 
                     requirements = (requirements || _rule.requirements);
                     // tmpExtendObject[propertyName] = Array.from(result);
@@ -2062,7 +2065,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                     for(i=0, countI = requirements.length; ( i<countI); i++ ) {
                         //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
-                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? Array.from(removed) : object[requirements[i]];
+                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? removed : object[requirements[i]];
                     }
 
                     removedResult = this.__mapObjectToRawDataProperty(tmpExtendObject, diffData, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
@@ -2080,9 +2083,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 if(addedResultIsPromise && removedResultIsPromise) {
                     return Promise.all([addedResultIsPromise, removedResultIsPromise]);
                 } else if(addedResultIsPromise) {
-                    return addedResultIsPromise;
+                    return addedResult;
                 } else if(removedResultIsPromise) {
-                    return removedResultIsPromise;
+                    return removedResult;
                 }
 
                 return;
@@ -2113,6 +2116,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 isRelationship = propertyDescriptor && propertyDescriptor.valueDescriptor,
                 value;
 
+
+                
 
 
                 if (isRelationship && rule.converter) {
