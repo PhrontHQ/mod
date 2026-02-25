@@ -531,6 +531,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     }
                     return filteredRawData.length ? this._valueForRawDataAndReadExpression(readOperation.target, filteredRawData[0], readOperation.data.readExpressions[0]) : filteredRawData;
                 }).then((filteredRawData) => {
+                    //Filter is a problem here, it can introduce undefined/null values, plus create a new array, which isn't ideal
                     filteredRawData = filteredRawData && Array.isArray(filteredRawData) ? filteredRawData.filter((item) => {
                         return !!item;
                     }) : [filteredRawData];
@@ -568,6 +569,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 if (!this._shouldLazilyLoadManagedObjects) {
                     if (Array.isArray(value)) {
+                        //Filter is a problem here, it can introduce undefined/null values, plus create a new array, which isn't ideal
                         value = value.map((item) => {
                             dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
                             snapshot = this.snapshotForDataIdentifier(dataIdentifer);
@@ -582,6 +584,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     return value;
                 } else {
                     return this._readObjectsWithType(relObjectDescriptor).then((instances) => {
+                        //Filter is a problem here, it can introduce undefined/null values, plus create a new array, which isn't ideal
                         if (Array.isArray(value)) {
                             value = value.map((item) => {
                                 dataIdentifer = this.dataIdentifierForTypePrimaryKey(relObjectDescriptor, item);
@@ -619,6 +622,17 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let readOperationTarget = readOperation.target,
             readExpressions = readOperation.data && readOperation.data.readExpressions,
             responseOperationTarget;
+
+        /*
+            FIX ME: we end up here with rawData === [undefined] or [null], none of it is a valid response for a readCompletedOperation's data
+            This is caused by preceding code that puts promises in an array that resolves to undefined or null. It needs to be refactor not happen 
+            in the first place so we don't have to sanitize here, which is wastefull
+        */
+        for(let i=0, countI=rawData.length; (i<countI); i++) {
+            if(rawData[i] === undefined || rawData[i] === null) {
+                rawData.splice(i,1);
+            }
+        }
 
         if (readExpressions) {
             for (let iPropertyName of readOperation.data.readExpressions) {
