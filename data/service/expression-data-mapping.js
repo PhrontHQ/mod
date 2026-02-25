@@ -1439,7 +1439,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 TODO: We may need to pass an additional 'mappedProperties' array argument to collect and communicate 
                 back to our service
             */
-            _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions)
+            _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions, mappingScope);
 
             promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged);
             

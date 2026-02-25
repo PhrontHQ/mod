@@ -401,8 +401,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
     }
 
-    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, scope) {
-        let rootObject = scope && scope.rootObjectBeingMapped;
+    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, dataOperation, readExpressions, mappingScope) {
+        let rootObject = mappingScope && mappingScope.rootObjectBeingMapped;
 
         if (!rootObject) {
             return;

@@ -2149,9 +2149,9 @@ RawDataService.addClassProperties({
      *                             call that invoked this method.
      */
     mappingWillMapRawDataToObject: {
-        value: function (mapping, rawData, dataObject, context, readExpressions) {
+        value: function (mapping, rawData, dataObject, context, readExpressions, mappingScope) {
             let delegateRawData;
-            if((delegateRawData = this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, rawData, dataObject, context, readExpressions))) {
+            if((delegateRawData = this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, rawData, dataObject, context, readExpressions, mappingScope))) {
                 return delegateRawData;
             } else {
                 return rawData;
