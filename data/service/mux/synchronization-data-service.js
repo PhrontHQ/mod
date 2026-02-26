@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person", "PartyPostalAddress", "EmploymentPositionStaffing"
+                "Person", "EmploymentPosition", "EmploymentPositionStaffing"
             ]);
         }
         return this.__trackedTypes;
@@ -310,14 +310,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             if(!this.mainService.isObjectCreated(dataObject)) {
                 // propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
                 if (propertyDescriptor._valueDescriptorReference) {
-                    this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject SYNCING", dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
+                    this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
                 }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
                 /*
                     We're trying to avoid an object being fetched fromn the destinationDataService
                     to be flagged as being changed, where we do want that for anything else
                 */
-                if(dataObject.dataIdentifier.dataService !== this.destinationDataService) {
+                // if(dataObject.dataIdentifier.dataService !== this.destinationDataService) {
+                if (this._rawDataServiceObjects.has(dataObject)) {
                     this.mainService.registerChangedDataObject(dataObject);
                     this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
                 }
@@ -325,20 +326,20 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             } 
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
                 if (propertyDescriptor._valueDescriptorReference) {
-                    this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                    this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
                 }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
                 /*
                     We're trying to avoid an object being fetched fromn the destinationDataService
                     to be flagged as being changed, where we do want that for anything else
                 */
-                if(dataObject.dataIdentifier.dataService !== this.destinationDataService) {
+                if (this._rawDataServiceObjects.has(dataObject)) {
                     this.mainService.registerChangedDataObject(dataObject);
                     this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
                 }
         } else {
             if (propertyDescriptor._valueDescriptorReference) {
-                this._logTypeEvent(dataObject.objectDescriptor, "SyncDataService.registerChangedObject NOT SYNCING", dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject NOT SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
             }
         }
     }
@@ -381,7 +382,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if (propertyDescriptor.cardinality === Infinity) {
             changeEvent.addedValues.forEach((nestedObject) => {
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
-                    this._logTypeEvent(nestedObject.objectDescriptor, `Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+                    this._logTypeEvent(nestedObject.objectDescriptor, `${nestedObject.dataIdentifier.dataService.name} Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
                 }
                 this.startTrackingChangesForObjectBeingMapped(nestedObject);
                 this._objectsToTrackChangesWhileBeingMapped.set(rootObject, nestedObject);
@@ -390,7 +391,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         } else {
             // if (this.shouldTrackChangesForObjectBeingMapped(changeEvent.keyValue)) {
             if (propertyDescriptor._valueDescriptorReference) {
-                this._logTypeEvent(rootObject.objectDescriptor, `Register ${changeEvent.keyValue?.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
+                this._logTypeEvent(rootObject.objectDescriptor, `${rootObject.dataIdentifier.dataService.name} Register ${changeEvent.keyValue?.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
             }
             this.startTrackingChangesForObjectBeingMapped(rootObject);
             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
@@ -401,15 +402,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
     }
 
-    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, dataOperation, readExpressions, mappingScope) {
-        let rootObject = mappingScope && mappingScope.rootObjectBeingMapped;
+    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, dataOperation, readExpressions, scope) {
+        let rootObject = scope && scope.rootObjectBeingMapped;
 
         if (!rootObject) {
             return;
         }
 
         if (this.isSyncingObject(rootObject) || this.shouldTrackChangesForObjectBeingMapped(rootObject)) {
-            this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} via ${rootObject.objectDescriptor.name}`);
+            this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} (${object.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})via ${rootObject.objectDescriptor.name} (${rootObject.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})`);
             this.startTrackingChangesForObjectBeingMapped(rootObject, object);
             this._objectsToTrackChangesWhileBeingMapped.set(rootObject, object);
             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(object, rootObject);
@@ -796,7 +797,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //         }
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
-        this._logTypeEvent(dataObject.objectDescriptor, `Track changes for object being mapped ${dataObject.objectDescriptor.name}`);
+        this._logTypeEvent(dataObject.objectDescriptor, `Track changes for object being mapped ${dataObject.objectDescriptor.name} (${dataObject.dataIdentifier.dataService.name}/${dataObject.dataIdentifier.primaryKey})`);
         this.startTrackingChangesForObjectBeingMapped(dataObject);
 
 
@@ -1015,7 +1016,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         //Now register the object by it's destinationDataService-issued dataIdentifier as well
         //this.destinationDataService.dataIdentifierForObject should find one by now, but it doesn't one will get created
-        this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForObject(object));
+        if (rawDataService !== this.destinationDataService) {
+            this._rawDataServiceObjects = this._rawDataServiceObjects || new Set();
+            this._rawDataServiceObjects.add(object);
+            this.startTrackingChangesForObjectBeingMapped(object);
+            this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForObject(object));
+        }
+
     
     }
 
