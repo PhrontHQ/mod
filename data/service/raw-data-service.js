@@ -1552,6 +1552,7 @@ RawDataService.addClassProperties({
                 var mapping = this.mappingForType(type);
                 if(mapping && mapping.rawDataPrimaryKeyCompiledExpressions) {
                     throw "-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData);
+                    // console.error("-dataIdentifierForTypeRawData(): Primary key missing for type '"+type.name+", rawData "+JSON.stringify(rawData))
                 }
             }
         }
@@ -1662,7 +1663,9 @@ RawDataService.addClassProperties({
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
 
                     iUpdatedRawDataValue = rawData[rawDataKeys[i]];
-                    if (isFromUpdate && iUpdatedRawDataValue && ((iHasAddedValues = iUpdatedRawDataValue.hasOwnProperty("addedValues")) || (iHasRemovedValues = iUpdatedRawDataValue.hasOwnProperty("removedValues")))) {
+                    iHasAddedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("addedValues");
+                    iHasRemovedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("removedValues");
+                    if (isFromUpdate && (iHasAddedValues || iHasRemovedValues)) {
                         
                         canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
@@ -1773,6 +1776,18 @@ RawDataService.addClassProperties({
     removeSnapshot: {
         value: function (dataIdentifier) {
             this._snapshot.delete(dataIdentifier);
+        }
+    },
+
+    /**
+     * Removes the pending snapshot of the values of record for the DataIdentifier argument
+     *
+     * @private
+     * @argument {DataIdentifier} dataIdentifier
+     */
+    removePendingSnapshot: {
+        value: function (dataIdentifier) {
+            this._pendingSnapshot.delete(dataIdentifier);
         }
     },
 
@@ -4427,7 +4442,35 @@ RawDataService.addClassProperties({
                 //     //when saved, but what if save fails and changes happen in-between?
                 //     operationData[aRawProperty] = aPropertyChanges;
 
-                return this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+
+                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+                if (this._isAsync(result)) {
+                    return result.then((output) => {
+                        let mapping = this.mappingForObject(object),
+                            rawRules = mapping.rawDataMappingRulesForObjectPropertyName(aProperty),
+                            rawDataProperty;
+                        
+                        if(rawRules) {
+                            var iterator = rawRules.values();
+
+                            while((rule = iterator.next().value)) {
+                                rawDataProperty = rule.targetPath;
+                                if (operationData[rawDataProperty]) {
+                                    operationData[rawDataProperty].index = aPropertyChanges.index;
+                                }
+                                if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
+                                    operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
+                                }
+                            }
+                        }
+
+                        return output;
+                    })
+                } else {
+                    return result;
+                }
+
+                // return this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
 
             }
             else {
@@ -4958,15 +5001,17 @@ RawDataService.addClassProperties({
                                     self.rootService.registerUniqueObjectWithDataIdentifier(iObject, iDataIdentifier);    
                                 }
                                 self.recordSnapshot(iDataIdentifier, iOperation.data);
-
+                                self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === UpdateOperation || iOperation.type === NoOpOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
                                 self.recordSnapshot(iDataIdentifier, iOperation.data, true);
+                                self.removePendingSnapshot(iDataIdentifier);
                             } else if (iOperation.type === DeleteOperation) {
                                 iDataIdentifier = self.dataIdentifierForObject(iObject);
 
                                 //Removes the snapshot we have for iDataIdentifier
                                 self.removeSnapshot(iDataIdentifier);
+                                self.removePendingSnapshot(iDataIdentifier);
                             }
 
                         }
