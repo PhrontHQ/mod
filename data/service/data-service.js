@@ -5005,7 +5005,7 @@ DataService.addClassProperties(
             },
         },
 
-        unregisterPendingTransaction: {
+        unregisterPendingTransactionPromise: {
             value: function (transaction) {
                 if (this._promisesByPendingTransactions) {
                     this._promisesByPendingTransactions.delete(transaction);
@@ -5647,8 +5647,8 @@ DataService.addClassProperties(
                         */
 
                                 //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-                                // self.removePendingTransaction(transaction);
-                                self.unregisterPendingTransaction(transaction);
+                                self.removePendingTransaction(transaction);
+                                self.unregisterPendingTransactionPromise(transaction);
                                 resolve(transaction);
                             })
                             .catch(function (error) {
@@ -5705,7 +5705,7 @@ DataService.addClassProperties(
                         rejectFunction(error);
                     })
                     .finally(() => {
-                        this.unregisterPendingTransaction(transaction);
+                        this.unregisterPendingTransactionPromise(transaction);
                     });
             },
         },
