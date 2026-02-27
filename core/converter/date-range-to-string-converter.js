@@ -26,19 +26,52 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      * The locales for date formatting.
      * @type {string|string[]}
      */
-    locales: {
+    _locales: {
         value: "en-US",
         writable: true
     },
+    locales: {
+        get: function( ) {
+            return this._locales;
+        },
+        set: function(value) {
+            if(value !== this._locales) {
+                this._locales = value;
+                this.dateTimeFormat = new Intl.DateTimeFormat(this.locales, this.options);
+            }
+        },
+    },
+
 
     /**
      * The options for date formatting.
      * @type {Object}
      */
-    options: {
+    _options: {
         value: {year: "numeric"},
         writable: true
     },
+    options: {
+        get: function( ) {
+            return this._options;
+        },
+        set: function(value) {
+            if(value !== this._options) {
+                this._options = value;
+                this.dateTimeFormat = new Intl.DateTimeFormat(this.locales, this.options);
+            }
+        },
+    },
+
+    rangeFormatSeparatorPart: {
+        get: function() {
+            if(!this.dateTimeFormat._rangeFormatSeparatorPart) {
+                this.dateTimeFormat._rangeFormatSeparatorPart = this.dateTimeFormat.formatRangeToParts(null, new Date())[1].value;
+            }
+            return this.dateTimeFormat._rangeFormatSeparatorPart;
+        }
+    },
+
 
     /**
      * Converts a date range to a formatted string representation.
@@ -49,7 +82,20 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
      */
     convert: {
         value: function (range) {
-            return this.dateTimeFormat.formatRange(range.begin, range.end);
+
+            if(!range.begin || !range.end) {
+                let begin = range.begin || null,
+                    end = range.end || null,
+                    rangeFormattedParts = this.dateTimeFormat.formatRangeToParts(begin, end);
+                
+                return !begin && !end
+                    ? this.rangeFormatSeparatorPart
+                    : begin && !end
+                        ? `${rangeFormattedParts[0].value}${rangeFormattedParts[1].value}`
+                        : `${rangeFormattedParts[1].value}${rangeFormattedParts[2].value}`;
+            } else {
+                return this.dateTimeFormat.formatRange(range.begin, range.end);
+            }
         }
     }
 });
