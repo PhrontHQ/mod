@@ -568,7 +568,8 @@ RawDataService.addClassProperties({
             var self = this,
                 objectDescriptor = this.objectDescriptorForObject(object),
                 propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
-                isObjectCreated = this.isObjectCreated(object);
+                isObjectCreated = this.isObjectCreated(object),
+                idOrder;
 
             /* 
                 If an object is created and didn't come from an origin data service 
@@ -640,6 +641,9 @@ RawDataService.addClassProperties({
                             return Promise.resolve(null);
                         }
                         hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
+                        if (Array.isArray(objectSnapshot[requirements[i]])) {
+                            idOrder = objectSnapshot[requirements[i]];
+                        }
                     }
 
 
@@ -670,7 +674,33 @@ RawDataService.addClassProperties({
                 .then((fetchResult) => {
 
                     // console.debug("object === fetchResult[0]", object === fetchResult[0]);
+                    /*******
+                     * 2/27/2026
+                     * 
+                     * TODO: Incororpate ordered and sparse arrays into the model. 
+                     * 
+                     * The logic below is necessary 
+                     * because the query generated in postgres fails to do 2 things. 
+                     * 1. Include null values of a sparse array
+                     * 2. Maintain the order of the values in the DB. 
+                     * 
+                     */
                     if(Array.isArray(fetchResult)) {
+                        if (idOrder) {
+                            let reordered = [],
+                                resultsById = new Map();
+                            fetchResult.forEach(function (object) {
+                                resultsById.set(object.dataIdentifier.primaryKey, object);
+                            });
+                            for (let i = 0, countI = idOrder.length; i < countI; i++) {
+                                if (idOrder[i]) {
+                                    reordered.push(resultsById.get(idOrder[i]))
+                                } else {
+                                    reordered.push(idOrder[i]);
+                                }
+                            }
+                            fetchResult = reordered;
+                        }
                         if(fetchResult[0] !== object) {
                             if(propertyDescriptor.cardinality === 1) {
                                 return fetchResult[0] || null;
@@ -1123,7 +1153,7 @@ RawDataService.addClassProperties({
         value: function (stream, rawData, context) {
 
             if(!rawData) {
-                console.warn("stream received null rawData in result from operatinon ", context);
+                console.warn(`${this.name} Stream received null rawData in result from operation `, context);
                 return;
             }
 

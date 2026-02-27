@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person", "EmploymentPosition", "EmploymentPositionStaffing"
+                "JobRole"
             ]);
         }
         return this.__trackedTypes;
@@ -1220,9 +1220,23 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                         this._logTypeEvent(readCompletedOperation.referrer.target, "<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": changes SAVED from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
-                        let createdDataObjects = transaction.createdDataObjects;
 
-                        return fetchedObjects;
+
+                        /******
+                         * 2/27/2026
+                         * 
+                         * TODO: Revisit. The call below should not be necessary. 
+                         * 
+                         * There is a bug that allows fetchedObjects to be returned after savedChanges before 
+                         * the fetchedObjects all have a snapshot registered in destinationDataService. This prevents
+                         * us from populating destinationDataServiceRawData correctly. The call below 
+                         * is a brute force way to ensure that all pendingTransactions (include the one that will register 
+                         * the snapshot) for the fetched objects are complete. 
+                         * 
+                         ********/
+                        return mainService.pendingTransactionPromiseForObjects(fetchedObjects).then(function () {
+                            return fetchedObjects;
+                        });
                     })
                 });
         })

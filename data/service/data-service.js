@@ -3908,7 +3908,7 @@ DataService.addClassProperties(
 
                 if (this.isObjectCreated(dataObject)) {
                     console.warn(
-                        `DataService can't register a new object (${objectDescriptor.name} in changedDataObjects`
+                        `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
                     );
                     return;
                 }
@@ -4747,7 +4747,7 @@ DataService.addClassProperties(
                                 isDataObjectBeingMapped
                             );
                         } else {
-                            var registeredAddedValues = manyChanges.addedValues;
+                            var registeredAddedValues = manyChanges.addedValuesSet;
                             if (!registeredAddedValues) {
                                 /*
                                 FIXME: we ended up here with manyChanges being an array, containing the same value as addedValues. And we end up setting addedValues property on that array. So let's correct it. We might not want to track toMany as set at all, and just stick to added /remove. This might happens on remove as well, we need to check further.
@@ -4770,17 +4770,22 @@ DataService.addClassProperties(
                                     isDataObjectBeingMapped
                                 );
                             } else {
+                                let shouldAdd = true;
                                 for (i = 0, countI = addedValues.length; i < countI; i++) {
                                     if (!isDataObjectBeingMapped) {
+                                        shouldAdd = !addedValues[i] || !registeredAddedValues.has(addedValues[i]);
                                         registeredAddedValues.add(addedValues[i]);
                                     }
-                                    self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
-                                        dataObject,
-                                        propertyDescriptor,
-                                        addedValues[i],
-                                        inversePropertyDescriptor,
-                                        isDataObjectBeingMapped
-                                    );
+                                    if (shouldAdd) {
+                                        self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
+                                            dataObject,
+                                            propertyDescriptor,
+                                            addedValues[i],
+                                            inversePropertyDescriptor,
+                                            isDataObjectBeingMapped
+                                        );
+                                    }
+
                                 }
                             }
                         }
@@ -5683,6 +5688,69 @@ DataService.addClassProperties(
                 this.registerPendingTransactionPromise(transaction, pendingTransactionPromise);
 
                 return pendingTransactionPromise;
+
+            }
+        },
+
+        pendingTransactionPromiseForObjects: {
+            value: function (objects) {
+                let pendingTransactions = this._pendingTransactions;
+
+                if (pendingTransactions && pendingTransactions.length) {
+
+                    let firstPendingTransactionsCreatingChangedDataObjectsPromise,
+                        pendingTransactionsCreatingChangedDataObjectsPromises;
+
+                    /* 
+                        TODO WIP
+                        Nested loop, really need to be optimized as we build up the transactions, 
+                        but let's get to work first and then we'll optimize.
+
+                        There can only be one pending transaction with the creation of iObject
+                        so we bail out if we find it
+                    */
+
+                    //Loop on ObjectDescriptors with instances being updated
+
+                    for (let j = 0, countJ = objects.length; j < countJ; j++) {
+                        let object = objects[j];
+
+                        for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
+                            let iPendingTransaction = pendingTransactions[i];
+
+                            if (iPendingTransaction.createdDataObjects.has(object.objectDescriptor)) {
+                                let createdDataObjects = iPendingTransaction.createdDataObjects.get(object.objectDescriptor);
+
+                                    if(createdDataObjects.has(object)) {
+
+                                        if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                            firstPendingTransactionsCreatingChangedDataObjectsPromise = this.registeredPromiseForPendingTransaction(iPendingTransaction);
+                                        } else {
+                                            if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                                                pendingTransactionsCreatingChangedDataObjectsPromises = new Set();
+                                                pendingTransactionsCreatingChangedDataObjectsPromises.add(firstPendingTransactionsCreatingChangedDataObjectsPromise);
+                                            }
+                                            pendingTransactionsCreatingChangedDataObjectsPromises.add(this.registeredPromiseForPendingTransaction(iPendingTransaction));
+                                        }
+                                        break;
+                                    }
+
+                            }
+                        }
+                    }
+                        if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                            if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                return firstPendingTransactionsCreatingChangedDataObjectsPromise;
+                            } else {
+                                return Promise.resolveUndefined;
+                            }
+                        } else {
+                            return Promise.all(Array.from(pendingTransactionsCreatingChangedDataObjectsPromises))
+                        }
+                    } else {
+                        return Promise.resolveUndefined;
+                    }
+
 
             }
         },

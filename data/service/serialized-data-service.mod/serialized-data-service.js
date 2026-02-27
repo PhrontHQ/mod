@@ -428,13 +428,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                                 mappingPromises.push(
                                     this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
-                                    .then((iObjectValue) => {
-                                        values.push(iObjectValue);
-                                    })
                                 );
                             }
-                            return Promise.all(mappingPromises).then(() => {
-                                object[property].splice.apply(object[property], [0, Infinity].concat(values));
+                            return Promise.all(mappingPromises).then((values) => {
+                                object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                                 return;
                             });
 
@@ -563,7 +560,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 if (!this.handlesType(relObjectDescriptor)) {
                     //Needs to be implemented
-                    console.error("SerializedDataService cannot resolve relationship for object that is not also managed by the serializedDataService")
+                    console.error(`SerializedDataService cannot resolve relationship for object that is not also managed by the serializedDataService - ${objectDescriptor.name} -> ${relObjectDescriptor.name}`)
                     return null;
                 }
 
