@@ -783,7 +783,7 @@ exports.DataTrigger.prototype = Object.create(
                 // Resolve any pending promise for this trigger's property value.
                 if (status) {
                     // this._setValueStatus(object, null);
-                    status.resolve(currentValue);
+                    // status.resolve(currentValue);
                 }
                 this._setValueStatus(object, null);
 
@@ -882,16 +882,26 @@ exports.DataTrigger.prototype = Object.create(
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
                     //this._setValueStatus(object, status);
-                    status.promise = new Promise(function (resolve, reject) {
-                        status.resolve = resolve;
-                        status.reject = reject;
-                    });
-                    self._fetchObjectProperty(object);
+                    // status.promise = new Promise(function (resolve, reject) {
+                    //     status.resolve = resolve;
+                    //     status.reject = reject;
+                    // });
+                    status.promise = self._fetchObjectProperty(object);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
             },
         },
+
+        /**
+         * Tenporary optionality for testing
+         * @private 
+         * @proeprty
+         */
+        _useFetchData: {
+            value: false
+        },
+
 
         /**
          * @private
@@ -901,10 +911,18 @@ exports.DataTrigger.prototype = Object.create(
          */
         _fetchObjectProperty: {
             value: function (object) {
-                var self = this;
+                var self = this,
+                    fetchPromise;
+
+
+                if(this._useFetchData) {
+                    //To be pulled from branch uplevel-criteria-1. It's not implemented here but this._useFetchData defaults to false
+                    fetchPromise = this._service.fetchInstanceValueForPropertyDescriptor(object, this.propertyDescriptor);
+                } else {
+                    fetchPromise = this._service.fetchObjectProperty(object, this._propertyName);
+                }
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
-                this._service
-                    .fetchObjectProperty(object, this._propertyName)
+                return fetchPromise
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 
@@ -1000,12 +1018,12 @@ exports.DataTrigger.prototype = Object.create(
             value: function (object, error, propertyValue) {
                 var status = this._getValueStatus(object);
                 this._setValueStatus(object, null);
-                if (status && !error) {
-                    status.resolve(propertyValue);
-                } else if (status && error) {
-                    console.error(error);
-                    status.reject(error);
-                }
+                // if (status && !error) {
+                //     status.resolve(propertyValue);
+                // } else if (status && error) {
+                //     console.error(error);
+                //     status.reject(error);
+                // }
                 return null;
             },
         },
