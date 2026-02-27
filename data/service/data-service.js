@@ -4690,7 +4690,7 @@ DataService.addClassProperties(
                                 isDataObjectBeingMapped
                             );
                         } else {
-                            var registeredRemovedValues = manyChanges.removedValues;
+                            var registeredRemovedValues = manyChanges.removedValuesSet;
                             if (!registeredRemovedValues) {
                                 if (!isDataObjectBeingMapped) {
                                     manyChanges.removedValues = removedValues;
