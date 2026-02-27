@@ -29,6 +29,7 @@ var DataService = require("./data-service").DataService,
     syntaxProperties = require("../../core/frb/syntax-properties"),
     //DataEvent = (require)("../model/data-event").DataEvent,
     DataObject = require("../model/data-object").DataObject,
+    CountedSet = require("core/counted-set").CountedSet,
     DataQuery = require("../model/data-query").DataQuery;
 
 require("../../core/collections/shim-object");
@@ -2363,16 +2364,20 @@ RawDataService.addClassProperties({
                 let mappedProperties = this.delegate ? [] : null;
 
                 /*
-                    When we fetch objects that have inverse relationships on each others none could complete their mapRawDataProcess because the first one's promise for mapping the relationship to the second never commpletes because the second one itself has it's raw data's foreignKey value to the first one converted/fetched, unique object is found, but that second mapping attenpt to map it gets stuck on the reverse to the second, etc...
-
+                    When we fetch objects that have inverse relationships on each others none could complete their mapRawDataProcess because the first one's promise for mapping the relationship to the second never commpletes 
+                    because the second one itself has it's raw data's foreignKey value to the first one converted/fetched, unique object is found, but that second mapping attenpt to map it gets stuck on the reverse to the second, etc...
                     So to break the cycle, if there's a known snapshot and the object is being mapped, then we don't return a promise, knowing there's already one pending for the first pass.
+
+                    2/26/2026 - _objectsBeingMapped() strategy proved incomplete: some mapping, different then ones in-motion, would basically be turned away.
+                    Adding tracking of the unique record/rawData anonymous objects carrying the value, in this._rawDataBeingMappedByObject seems to solve that issue.
+                     More testing needed but this is a preliminary implementation that proves it's working: TODO: combine both to clean up
                 */
                 snapshot = this.snapshotForObject(object);
                 //Changed order of snapshot being set before mapping so that doesn't work
                 //if(Object.equals(snapshot,record) ) {
 
                 //Replacing with:
-                if (this._objectsBeingMapped.has(object)) {
+                if (this._objectsBeingMapped.has(object) && this._rawDataBeingMappedByObject?.get(object)?.has(record)) {
                     return Promise.resolve(object);
 
                     // if(this._objectsBeingMapped.has(object)) {
@@ -2385,6 +2390,18 @@ RawDataService.addClassProperties({
                     //     return undefined;
                     // }
                 }
+                
+                if(!this._rawDataBeingMappedByObject) {
+                    this._rawDataBeingMappedByObject = new WeakMap();
+                }
+
+                let rawDataBeingMappedSet;
+                if(!(this._rawDataBeingMappedByObject.has(object))) {
+                    this._rawDataBeingMappedByObject.set(object, (rawDataBeingMappedSet = new CountedSet()));
+                } else {
+                    rawDataBeingMappedSet = this._rawDataBeingMappedByObject.get(object);
+                }
+                rawDataBeingMappedSet.add(record);
 
 
                 this._objectsBeingMapped.add(object);
@@ -2403,6 +2420,7 @@ RawDataService.addClassProperties({
                         if (!this._isAsync(result)) {
                             // self._deleteMapRawDataToObjectPromise(record, object);
                             this._objectsBeingMapped.delete(object);
+                            rawDataBeingMappedSet.delete(object);
                             this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                             return result;
@@ -2412,6 +2430,7 @@ RawDataService.addClassProperties({
 
                                 // self._deleteMapRawDataToObjectPromise(record, object);
                                 this._objectsBeingMapped.delete(object);
+                                rawDataBeingMappedSet.delete(object);
                                 this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                                 return resolved;
@@ -2419,6 +2438,7 @@ RawDataService.addClassProperties({
 
                                 // self._deleteMapRawDataToObjectPromise(record, object);
                                 this._objectsBeingMapped.delete(object);
+                                rawDataBeingMappedSet.delete(object);
                                 this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidFail", this, mapping, record, object, context, mappedProperties, mappingError);
 
                             });
@@ -2428,6 +2448,7 @@ RawDataService.addClassProperties({
                     }, (mappingError) => {
                         // self._deleteMapRawDataToObjectPromise(record, object);
                         this._objectsBeingMapped.delete(object);
+                        rawDataBeingMappedSet.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidFail", this, mapping, record, object, context, mappedProperties, mappingError);
                         throw mappingError;
                     });
@@ -2436,6 +2457,7 @@ RawDataService.addClassProperties({
                     if (!this._isAsync(result)) {
 
                         this._objectsBeingMapped.delete(object);
+                        rawDataBeingMappedSet.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                         return Promise.resolve(result);
@@ -2445,12 +2467,14 @@ RawDataService.addClassProperties({
 
                             // self._deleteMapRawDataToObjectPromise(record, object);
                             this._objectsBeingMapped.delete(object);
+                            rawDataBeingMappedSet.delete(object);
                             this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                             return resolved;
                         }, (mappingError) => {
                             // self._deleteMapRawDataToObjectPromise(record, object);
                             this._objectsBeingMapped.delete(object);
+                            rawDataBeingMappedSet.delete(object);
                             this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidFail", this, mapping, record, object, context, mappedProperties, mappingError);
 
                         });
@@ -2468,6 +2492,7 @@ RawDataService.addClassProperties({
 
                     // self._deleteMapRawDataToObjectPromise(record, object);
                     this._objectsBeingMapped.delete(object);
+                    rawDataBeingMappedSet.delete(object);
                     this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                     return Promise.resolve(result);
@@ -2476,12 +2501,14 @@ RawDataService.addClassProperties({
                     return result.then((resolved) => {
                         // self._deleteMapRawDataToObjectPromise(record, object);
                         this._objectsBeingMapped.delete(object);
+                        rawDataBeingMappedSet.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidComplete", this, mapping, record, object, context, mappedProperties);
 
                         return resolved;
                     }, (mappingError) => {
                         // self._deleteMapRawDataToObjectPromise(record, object);
                         this._objectsBeingMapped.delete(object);
+                        rawDataBeingMappedSet.delete(object);
                         this.callDelegateMethod("rawDataServiceMappingRawDataToObjectDidFail", this, mapping, record, object, context, mappedProperties, mappingError);
                     });
                     //return result;
