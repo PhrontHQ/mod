@@ -637,7 +637,7 @@ RawDataService.addClassProperties({
                             If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
                             So we can save time and return right away
                         */
-                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule.converter.convertSyntax.type === "has") {
+                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax.type === "has") {
                             return Promise.resolve(null);
                         }
                         hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
