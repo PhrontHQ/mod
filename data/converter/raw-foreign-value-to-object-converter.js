@@ -438,7 +438,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     },
 
     combinesFetchData: {
-        value: true
+        value: false
     },
     _isCombineFetchDataMicrotaskQueued: {
         value: false
@@ -847,7 +847,20 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                 //     });
                 // } else {
-                    return Promise.resolve(null);
+
+
+                    //At this point, the only thing we can do is asked for that relationship for that id
+
+                    // let criteria = service.rawCriteriaForObject(scope.parent.rootObjectBeingMapped, typeToFetch);
+                    // return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
+                    //return Promise.resolve(null);
+                    console.debug(service.name+".fetchRawObjectProperty("+scope.parent.rootObjectBeingMapped.objectDescriptor.name+" instance, "+this.currentRule.targetPath);
+                    return service.fetchRawObjectProperty(scope.parent.rootObjectBeingMapped, this.currentRule.targetPath)
+                    .then((value) => {
+                        console.debug(service.name+".fetchRawObjectProperty("+scope.parent.rootObjectBeingMapped.objectDescriptor.name+" instance, "+this.currentRule.targetPath + " value is "+value);
+                        return value;
+                    });
+                    // return Promise.resolve(null);
                 //}
 
             }
