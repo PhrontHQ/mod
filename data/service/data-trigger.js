@@ -654,8 +654,8 @@ exports.DataTrigger.prototype = Object.create(
                     isMap,
                     initialValue,
                     dispatchChange = arguments.length >= 3 ? _dispatchChange : true,
-                    //shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
-                    shouldFetch = undefined;
+                    shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
+                    //shouldFetch = undefined;
 
                 // Get the value's current status and update that status to indicate
                 // the value has been obtained. This way if the setter called below
