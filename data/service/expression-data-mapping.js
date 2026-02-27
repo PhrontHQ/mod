@@ -1620,7 +1620,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             //Try to pass on the locales context to prepare the rule:
             if(context instanceof DataOperation) {
-                var referrerOperation = this.service.referrerForDataOperation(context);
+                //With more dynamic handling of DataOperations by something like the SynchronizationDataService,
+                //it's possible that the service may not be as aware as it should (to be investigated) about tracking context's referrer.
+                var referrerOperation =  context.referrer || this.service.referrerForDataOperation(context);
 
                 if(referrerOperation && referrerOperation.criteria && referrerOperation.criteria.parameters) {
                     locales = referrerOperation.criteria.parameters.DataServiceUserLocales;
