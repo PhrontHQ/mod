@@ -28,6 +28,12 @@ var Montage = require("../../core/core").Montage,
      * @type {Set}
      */
     objectDescriptors: {
+        get: function () {
+            return new Set(this.objectDescriptorsWithChanges);
+        }
+    },
+
+    objectDescriptorsWithChanges: {
         value: undefined
     },
 

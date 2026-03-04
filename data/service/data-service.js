@@ -3305,16 +3305,18 @@ DataService.addClassProperties(
         },
         objectDescriptorsWithChanges: {
             get: function () {
-                return this._objectDescriptorsWithChanges || (this._objectDescriptorsWithChanges = new CountedSet());
+                // return this._objectDescriptorsWithChanges || (this._objectDescriptorsWithChanges = new CountedSet());
+                return this._defaultTransaction.objectDescriptorsWithChanges;
             },
         },
         createdDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    if (!this._createdDataObjects) {
-                        this._createdDataObjects = new Map();
-                    }
-                    return this._createdDataObjects;
+                    // if (!this._createdDataObjects) {
+                    //     this._createdDataObjects = new Map();
+                    // }
+                    // return this._createdDataObjects;
+                    return this._defaultTransaction.createdDataObjects;
                 } else {
                     return this.rootService.createdDataObjects;
                 }
@@ -3891,10 +3893,11 @@ DataService.addClassProperties(
         changedDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    if (!this._changedDataObjects) {
-                        this._changedDataObjects = new Map();
-                    }
-                    return this._changedDataObjects;
+                    // if (!this._changedDataObjects) {
+                    //     this._changedDataObjects = new Map();
+                    // }
+                    // return this._changedDataObjects;
+                    return this._defaultTransaction.updatedDataObjects;
                 } else {
                     return this.rootService.changedDataObjects;
                 }
@@ -3965,7 +3968,8 @@ DataService.addClassProperties(
         dataObjectChanges: {
             get: function () {
                 if (this.isRootService) {
-                    return this._dataObjectChanges || (this._dataObjectChanges = new Map());
+                    // return this._dataObjectChanges || (this._dataObjectChanges = new Map());
+                    return this._defaultTransaction.dataObjectChanges;
                 } else {
                     return this.rootService.dataObjectChanges;
                 }
@@ -4816,8 +4820,9 @@ DataService.addClassProperties(
         deletedDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    this._deletedDataObjects = this._deletedDataObjects || new Map();
-                    return this._deletedDataObjects;
+                    // this._deletedDataObjects = this._deletedDataObjects || new Map();
+                    // return this._deletedDataObjects;
+                    return this._defaultTransaction.deletedDataObjects;
                 } else {
                     return this.rootService.deletedDataObjects;
                 }
@@ -5293,11 +5298,17 @@ DataService.addClassProperties(
          */
         discardChanges: {
             value: function () {
-                this.createdDataObjects.clear();
-                this.changedDataObjects.clear();
-                this.deletedDataObjects.clear();
-                this.dataObjectChanges.clear();
-                this.objectDescriptorsWithChanges.clear();
+                // this.createdDataObjects.clear();
+                // this.changedDataObjects.clear();
+                // this.deletedDataObjects.clear();
+                // this.dataObjectChanges.clear();
+                // this.objectDescriptorsWithChanges.clear();
+            },
+        },
+
+        _resetDefaultTransaction: {
+            value: function () {
+                this._defaultTransaction = this._createEmptyTransaction();
             },
         },
 
@@ -5307,6 +5318,30 @@ DataService.addClassProperties(
 
         isAutosaveScheduled: {
             value: false,
+        },
+
+        _defaultTransaction: {
+            get: function () {
+                if (!this.__defaultTransaction) {
+                    this.__defaultTransaction = this._createEmptyTransaction();
+                }
+                return this.__defaultTransaction;
+            },
+            set: function (value) {
+                this.__defaultTransaction = value;
+            }
+        },
+
+        _createEmptyTransaction: {
+            value: function () {
+                let transaction = new Transaction();
+                transaction.createdDataObjects = new Map();
+                transaction.updatedDataObjects = new Map();
+                transaction.deletedDataObjects = new Map();
+                transaction.objectDescriptorsWithChanges = new CountedSet();
+                transaction.dataObjectChanges = new Map();
+                return transaction;
+            }
         },
 
         saveChanges: {
@@ -5335,17 +5370,24 @@ DataService.addClassProperties(
                     }
                 }
 
-                var transaction = new Transaction(),
-                    self = this,
+                // var transaction = new Transaction(),
+                var transaction = this._defaultTransaction,
                     //Ideally, this should be saved in IndexedDB/PGLite so if something happen
                     //we can at least try to recover.
-                    createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
-                    changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
-                    deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
-                    dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)), //Map
-                    objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
-                        this.objectDescriptorsWithChanges
-                    ));
+                    // createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
+                    // changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
+                    // deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
+                    // dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)); //Map
+                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
+                    //     this.objectDescriptorsWithChanges
+                    // ));
+                    createdDataObjects = this.createdDataObjects, //Map
+                    changedDataObjects =  this.changedDataObjects, //Map
+                    deletedDataObjects = this.deletedDataObjects, //Map
+                    dataObjectChanges = this.dataObjectChanges; //Map
+                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
+                    //     this.objectDescriptorsWithChanges
+                    // ));
 
                 //console.log("saveChanges: transaction-"+this.identifier, transaction);
                 console.log(
@@ -5357,16 +5399,9 @@ DataService.addClassProperties(
                     deletedDataObjects
                 );
 
-                // move to _saveChangesForTransaction()
-                //this.addPendingTransaction(transaction);
 
                 //We've made copies, so we clear right away to make room for a new cycle:
-                this.discardChanges();
-                // this.createdDataObjects.clear();
-                // this.changedDataObjects.clear();
-                // this.deletedDataObjects.clear();
-                // this.dataObjectChanges.clear();
-                // this.objectDescriptorsWithChanges.clear();
+                this._resetDefaultTransaction();
 
                 return this._saveChangesForTransaction(transaction);
             },
