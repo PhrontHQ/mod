@@ -187,6 +187,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     _objectsToParentsWhoseChangesAreTrackedWhileBeingMapped = new CountedMap();
 
+    _objectsToSyncNestingLevel = new Map();
+
     _logObjectsToTrackChangesWhileBeingMapped() {
         let values = this._objectsToTrackChangesWhileBeingMapped.values(),
             value, message;
@@ -194,6 +196,43 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
  
     startTrackingChangesForObjectBeingMapped(aDataObject, value) {
+        if (this.isSyncingObject(aDataObject)) {
+            this._objectsToSyncNestingLevel.set(aDataObject, 1);
+        } else if (this._objectsToSyncNestingLevel.has(aDataObject) && !this._objectsToSyncNestingLevel.has(value) && value) {
+            let nestingLevel = this._objectsToSyncNestingLevel.get(aDataObject);
+            this._objectsToSyncNestingLevel.set(value, nestingLevel + 1);
+        }
+        if (!this._syncedObjectsWithChanges) {
+            //noop
+        } else if (this._syncedObjectsWithChanges.has(aDataObject) && !this._syncedObjectsWithChanges.has(value)) {
+            this._syncedObjectWithUnsyncedValue = this._syncedObjectWithUnsyncedValue || (this._syncedObjectWithUnsyncedValue = []);
+            let id = [
+                aDataObject.objectDescriptor.name + "/" + aDataObject.dataIdentifier.primaryKey, 
+                value.objectDescriptor.name + "/" + value.dataIdentifier.primaryKey
+            ].join(" --> ");
+            if (!this._syncedObjectWithUnsyncedValue.includes(id)) {
+                this._syncedObjectWithUnsyncedValue.push(id);
+            }
+        } else if (this._syncedObjectsWithChanges.has(value) && !this._syncedObjectsWithChanges.has(aDataObject)) {
+            this._objectWhoseValueIsSynced = this._objectWhoseValueIsSynced || (this._objectWhoseValueIsSynced = []);
+            let id = [
+                aDataObject.objectDescriptor.name + "/" + aDataObject.dataIdentifier.primaryKey, 
+                value.objectDescriptor.name + "/" + value.dataIdentifier.primaryKey
+            ].join(" <-- ");
+            if (!this._objectWhoseValueIsSynced.includes(id)) {
+                this._objectWhoseValueIsSynced.push(id);
+            }
+        } else if (this._syncedObjectsWithChanges.has(aDataObject) && this._syncedObjectsWithChanges.has(value)) {
+            this._objectAndValueSynced = this._objectAndValueSynced || (this._objectAndValueSynced = []);
+            let id = [
+                aDataObject.objectDescriptor.name + "/" + aDataObject.dataIdentifier.primaryKey, 
+                value.objectDescriptor.name + "/" + value.dataIdentifier.primaryKey
+            ].join(" --> ");
+            if (!this._objectAndValueSynced.includes(id)) {
+                this._objectAndValueSynced.push(id);
+            }
+        }
+
         this._objectsToTrackChangesWhileBeingMapped.set(aDataObject, value);
         this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, aDataObject);
     }
@@ -201,7 +240,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     stopTrackingChangesForObjectBeingMapped (aDataObject) {
         let parents;
         this._objectsToTrackChangesWhileBeingMapped.delete(aDataObject);
-        if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(aDataObject)) {
+        if (this._objectsToTrackChangesWhileBeingMapped.has(aDataObject)) {
             parents = this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(aDataObject);
             this._logTypeEvent(aDataObject.objectDescriptor, `Stop tracking parents of object ${aDataObject.objectDescriptor.name}`, parents);
         }
@@ -271,10 +310,22 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }   
     }
 
+    get _transactionsByObject() {
+        return this.__transactionsByObject || (this.__transactionsByObject = new Map());
+    }
+
+    getTransactionForObject(object) {
+        
+    }
+
     handleChange(changeEvent) {
         let dataObject = changeEvent.target,    
             value = changeEvent.keyValue,
             propertyDescriptor;
+
+        if (!global.syncDataService) {
+            global.syncDataService = this;
+        }
 
 
         /********
@@ -299,6 +350,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
          * 
          */
 
+
             // CountedMap 
             // Value gets added
             // Key is root object
@@ -306,8 +358,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
         if (this.isSyncingObject(dataObject)) {
+            global._syncedObjectsWithChanges = global._syncedObjectsWithChanges || (global._syncedObjectsWithChanges = []);
+            if (!global._syncedObjectsWithChanges.includes(dataObject)) {
+                global._syncedObjectsWithChanges.push(dataObject);
+            }
             //Make sure we register the change
             if(!this.mainService.isObjectCreated(dataObject)) {
+
                 // propertyDescriptor = dataObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
@@ -384,18 +441,18 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(nestedObject.objectDescriptor, `${nestedObject.dataIdentifier.dataService.name} Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
                 }
-                this.startTrackingChangesForObjectBeingMapped(nestedObject);
-                this._objectsToTrackChangesWhileBeingMapped.set(rootObject, nestedObject);
-                this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(nestedObject, rootObject);
+                this.startTrackingChangesForObjectBeingMapped(rootObject, nestedObject);
+                // this._objectsToTrackChangesWhileBeingMapped.set(rootObject, nestedObject);
+                // this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(nestedObject, rootObject);
             });
         } else {
             // if (this.shouldTrackChangesForObjectBeingMapped(changeEvent.keyValue)) {
             if (propertyDescriptor._valueDescriptorReference) {
                 this._logTypeEvent(rootObject.objectDescriptor, `${rootObject.dataIdentifier.dataService.name} Register ${changeEvent.keyValue?.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
             }
-            this.startTrackingChangesForObjectBeingMapped(rootObject);
-            this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
-            this._objectsToTrackChangesWhileBeingMapped.set(rootObject, changeEvent.keyValue);
+            this.startTrackingChangesForObjectBeingMapped(rootObject, changeEvent.keyValue);
+            // this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
+            // this._objectsToTrackChangesWhileBeingMapped.set(rootObject, changeEvent.keyValue);
             // } else {
             //     this._logTypeEvent(rootObject.objectDescriptor, `DO NOT Register ${changeEvent.keyValue.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key}`)
             // }

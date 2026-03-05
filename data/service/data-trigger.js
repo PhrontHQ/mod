@@ -505,8 +505,11 @@ exports.DataTrigger.prototype = Object.create(
                                         // and dispatch added/removed change in the array's change handler.
                                         if (!changeEvent.target.dispatchEvent) {
                                             console.warn(`Change Event target ${changeEvent.target.objectDescriptor.name} does not specialize Target so cannot dispatch event`)
+
                                             self._service.rootService.handleChange(changeEvent);
                                         } else {
+                                            // debugger;
+                                            changeEvent.target.objectDescriptor;
                                             changeEvent.target.dispatchEvent(changeEvent);
                                         }
                                     }

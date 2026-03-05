@@ -1,6 +1,7 @@
 var Montage = require("../../core/core").Montage,
     uuid = require("../../core/uuid"),
     DataService = require("../service/data-service").DataService,
+    CountedSet = require("core/counted-set").CountedSet,
     Transaction;
 
 /**
@@ -34,7 +35,9 @@ var Montage = require("../../core/core").Montage,
     },
 
     objectDescriptorsWithChanges: {
-        value: undefined
+        get: function () {
+            return this._objectDescriptorsWithChanges || (this._objectDescriptorsWithChanges = new CountedSet())
+        }
     },
 
     _completionPromiseFunctionsByParticipant: {
@@ -186,7 +189,9 @@ var Montage = require("../../core/core").Montage,
      * @type {Map}
      */
     createdDataObjects: {
-        value: undefined
+        get: function () {
+            return this._createdDataObjects || (this._createdDataObjects = new Map())
+        }
     },
 
     /**
@@ -195,7 +200,9 @@ var Montage = require("../../core/core").Montage,
      * @type {Map}
      */
     updatedDataObjects: {
-        value: undefined
+        get: function () {
+            return this._updatedDataObjects || (this._updatedDataObjects = new Map())
+        }
     },
 
     /**
@@ -215,7 +222,9 @@ var Montage = require("../../core/core").Montage,
      * @type {Map}
      */
      dataObjectChanges: {
-        value: undefined
+        get: function () {
+            return this._dataObjectChanges || (this._dataObjectChanges = new Map())
+        }
     },
 
     /**
@@ -224,7 +233,9 @@ var Montage = require("../../core/core").Montage,
      * @type {Map}
      */
     deletedDataObjects: {
-        value: undefined
+        get: function () {
+            return this._deletedDataObjects || (this._deletedDataObjects = new Map())
+        }
     },
 
     /**
@@ -310,5 +321,32 @@ var Montage = require("../../core/core").Montage,
     },
 
 
+    // /***************
+    //  * Change Management
+    //  */
+    // registerChangedDataObject: {
+    //     value: function (object) {
+    //         //Can I assume object.objectDescriptor is set here? 
+    //         let objectDescriptor = object.objectDescriptor,
+    //             changedDataObjects, value;
+
+    //         //Is it possible to check other transactions?
+    //         if (this.createdDataObjects.has(object)) {
+    //                 console.warn(
+    //                     `Transaction can't register a new object (${objectDescriptor.name}) in changedDataObjects`
+    //                 );
+    //                 return;
+    //         }
+
+    //         changedDataObjects = this.changedDataObjects;
+    //         value = changedDataObjects.get(objectDescriptor);
+
+    //         if (!value) {
+    //             changedDataObjects.set(objectDescriptor, (value = new Set()));
+    //         }
+    //         value.add(dataObject);
+    //         this.objectDescriptorsWithChanges.add(objectDescriptor);
+    //     }
+    // }
 
 });
