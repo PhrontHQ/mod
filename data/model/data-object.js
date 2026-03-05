@@ -16,6 +16,7 @@ const Target = require("core/target").Target;
  * We could then later build a UI to do the same visually.
  */
 exports.DataObject = class DataObject extends Target {
+
     static {
         Montage.defineProperties(this.prototype, {
             /**
