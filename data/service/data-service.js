@@ -3305,17 +3305,12 @@ DataService.addClassProperties(
         },
         objectDescriptorsWithChanges: {
             get: function () {
-                // return this._objectDescriptorsWithChanges || (this._objectDescriptorsWithChanges = new CountedSet());
                 return this._defaultTransaction.objectDescriptorsWithChanges;
             },
         },
         createdDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    // if (!this._createdDataObjects) {
-                    //     this._createdDataObjects = new Map();
-                    // }
-                    // return this._createdDataObjects;
                     return this._defaultTransaction.createdDataObjects;
                 } else {
                     return this.rootService.createdDataObjects;
@@ -3893,10 +3888,6 @@ DataService.addClassProperties(
         changedDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    // if (!this._changedDataObjects) {
-                    //     this._changedDataObjects = new Map();
-                    // }
-                    // return this._changedDataObjects;
                     return this._defaultTransaction.updatedDataObjects;
                 } else {
                     return this.rootService.changedDataObjects;
@@ -4820,8 +4811,6 @@ DataService.addClassProperties(
         deletedDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    // this._deletedDataObjects = this._deletedDataObjects || new Map();
-                    // return this._deletedDataObjects;
                     return this._defaultTransaction.deletedDataObjects;
                 } else {
                     return this.rootService.deletedDataObjects;
@@ -5291,21 +5280,6 @@ DataService.addClassProperties(
             },
         },
 
-        /*
-         * When it gets time to add/handle timeouts:
-         *
-         * https://advancedweb.hu/how-to-add-timeout-to-a-promise-in-javascript/
-         */
-        discardChanges: {
-            value: function () {
-                // this.createdDataObjects.clear();
-                // this.changedDataObjects.clear();
-                // this.deletedDataObjects.clear();
-                // this.dataObjectChanges.clear();
-                // this.objectDescriptorsWithChanges.clear();
-            },
-        },
-
         _resetDefaultTransaction: {
             value: function () {
                 this._defaultTransaction = this._createEmptyTransaction();
@@ -5374,20 +5348,10 @@ DataService.addClassProperties(
                 var transaction = this._defaultTransaction,
                     //Ideally, this should be saved in IndexedDB/PGLite so if something happen
                     //we can at least try to recover.
-                    // createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
-                    // changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
-                    // deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
-                    // dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)); //Map
-                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
-                    //     this.objectDescriptorsWithChanges
-                    // ));
                     createdDataObjects = this.createdDataObjects, //Map
                     changedDataObjects =  this.changedDataObjects, //Map
                     deletedDataObjects = this.deletedDataObjects, //Map
                     dataObjectChanges = this.dataObjectChanges; //Map
-                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
-                    //     this.objectDescriptorsWithChanges
-                    // ));
 
                 //console.log("saveChanges: transaction-"+this.identifier, transaction);
                 console.log(
