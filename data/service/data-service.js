@@ -3915,7 +3915,7 @@ DataService.addClassProperties(
             value: function (dataObject) {
                 var objectDescriptor = this.objectDescriptorForObject(dataObject),
                     changedDataObjects,
-                    value;
+                    value, transaction;
 
                 if (this.isObjectCreated(dataObject)) {
                     console.warn(
@@ -3933,6 +3933,13 @@ DataService.addClassProperties(
                 value.add(dataObject);
                 this.objectDescriptorsWithChanges.add(objectDescriptor);
             },
+        },
+
+        _getTransactionForObject: {
+            value: function (object) {
+                //TODO Logic to determine if object should be added to a transaction other than the default
+                return this._defaultTransaction;
+            }
         },
 
         isObjectChanged: {
@@ -5315,11 +5322,11 @@ DataService.addClassProperties(
         _createEmptyTransaction: {
             value: function () {
                 let transaction = new Transaction();
-                transaction.createdDataObjects = new Map();
-                transaction.updatedDataObjects = new Map();
-                transaction.deletedDataObjects = new Map();
-                transaction.objectDescriptorsWithChanges = new CountedSet();
-                transaction.dataObjectChanges = new Map();
+                // transaction.createdDataObjects = new Map();
+                // transaction.updatedDataObjects = new Map();
+                // transaction.deletedDataObjects = new Map();
+                // transaction.objectDescriptorsWithChanges = new CountedSet();
+                // transaction.dataObjectChanges = new Map();
                 return transaction;
             }
         },
