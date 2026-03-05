@@ -56,7 +56,7 @@
 
     "projection": {
         "prototype": "core/meta/property-descriptor",
-        "properties": {
+        "values": {
             "name": "projection",
             "cardinality": 1,
             "valueType": "object",
