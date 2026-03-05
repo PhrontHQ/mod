@@ -183,9 +183,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
      }
 
  
-    _objectsToTrackChangesWhileBeingMapped = new CountedMap();
+    _objectsToTrackChangesWhileBeingMapped = new Map();
 
-    _objectsToParentsWhoseChangesAreTrackedWhileBeingMapped = new CountedMap();
+    _objectsToParentsWhoseChangesAreTrackedWhileBeingMapped = new Map();
 
     _objectsToSyncNestingLevel = new Map();
 
@@ -202,7 +202,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             let nestingLevel = this._objectsToSyncNestingLevel.get(aDataObject);
             this._objectsToSyncNestingLevel.set(value, nestingLevel + 1);
         }
-        if (!this._syncedObjectsWithChanges) {
+        if (!this._syncedObjectsWithChanges || !value) {
             //noop
         } else if (this._syncedObjectsWithChanges.has(aDataObject) && !this._syncedObjectsWithChanges.has(value)) {
             this._syncedObjectWithUnsyncedValue = this._syncedObjectWithUnsyncedValue || (this._syncedObjectWithUnsyncedValue = []);
@@ -233,15 +233,40 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             }
         }
 
-        this._objectsToTrackChangesWhileBeingMapped.set(aDataObject, value);
-        this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, aDataObject);
+        
+
+        if (!this._objectsToTrackChangesWhileBeingMapped.has(aDataObject)) {
+            this._objectsToTrackChangesWhileBeingMapped.set(aDataObject, new Set());
+        }
+        if (!value) {
+            return;
+        }
+        this._objectsToTrackChangesWhileBeingMapped.get(aDataObject).add(value);
+        if (!this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(value)) {
+            this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, new Set());
+        }
+        this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(value).add(aDataObject);
     }
  
     stopTrackingChangesForObjectBeingMapped (aDataObject) {
-        let parents;
-        this._objectsToTrackChangesWhileBeingMapped.delete(aDataObject);
+        let parents, children;
         if (this._objectsToTrackChangesWhileBeingMapped.has(aDataObject)) {
+            children = this._objectsToTrackChangesWhileBeingMapped.get(aDataObject);
+            children.forEach((child) => {
+                if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(child)) {
+                    this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(child).delete(aDataObject);
+                }
+            });
+            this._objectsToTrackChangesWhileBeingMapped.delete(aDataObject);
+        }
+        
+        if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(aDataObject)) {
             parents = this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(aDataObject);
+            parents.forEach((parent) => {
+                if (this._objectsToTrackChangesWhileBeingMapped.has(parent)) {
+                    this._objectsToTrackChangesWhileBeingMapped.get(parent).delete(aDataObject);
+                }
+            });
             this._logTypeEvent(aDataObject.objectDescriptor, `Stop tracking parents of object ${aDataObject.objectDescriptor.name}`, parents);
         }
     }
@@ -358,9 +383,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
 
         if (this.isSyncingObject(dataObject)) {
-            global._syncedObjectsWithChanges = global._syncedObjectsWithChanges || (global._syncedObjectsWithChanges = []);
-            if (!global._syncedObjectsWithChanges.includes(dataObject)) {
-                global._syncedObjectsWithChanges.push(dataObject);
+            this._syncedObjectsWithChanges = this._syncedObjectsWithChanges || (this._syncedObjectsWithChanges = []);
+            if (!this._syncedObjectsWithChanges.includes(dataObject)) {
+                this._syncedObjectsWithChanges.push(dataObject);
             }
             //Make sure we register the change
             if(!this.mainService.isObjectCreated(dataObject)) {
@@ -435,7 +460,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if (!this._canTrackPropertyForChangeEvent(rootObject, changeEvent)) {
             return;
         }
-        this.startTrackingChangesForObjectBeingMapped(rootObject);
         if (propertyDescriptor.cardinality === Infinity) {
             changeEvent.addedValues.forEach((nestedObject) => {
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
@@ -469,8 +493,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if (this.isSyncingObject(rootObject) || this.shouldTrackChangesForObjectBeingMapped(rootObject)) {
             this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} (${object.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})via ${rootObject.objectDescriptor.name} (${rootObject.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})`);
             this.startTrackingChangesForObjectBeingMapped(rootObject, object);
-            this._objectsToTrackChangesWhileBeingMapped.set(rootObject, object);
-            this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(object, rootObject);
         }
     }
 
@@ -855,7 +877,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
         this._logTypeEvent(dataObject.objectDescriptor, `Track changes for object being mapped ${dataObject.objectDescriptor.name} (${dataObject.dataIdentifier.dataService.name}/${dataObject.dataIdentifier.primaryKey})`);
-        this.startTrackingChangesForObjectBeingMapped(dataObject);
+        // this.startTrackingChangesForObjectBeingMapped(dataObject);
 
 
         return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
