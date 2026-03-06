@@ -47,7 +47,7 @@ exports.OrderingDirection = OrderDirection;
  * @class
  * @extends external:Montage
  */
-exports.OrderingRule = Montage.specialize(/** @lends OrderingRule.prototype */ {
+exports.OrderRule = Montage.specialize(/** @lends OrderRule.prototype */ {
 
     /**
      * An expression to be applied to objects in a set to yield a value
@@ -69,10 +69,10 @@ exports.OrderingRule = Montage.specialize(/** @lends OrderingRule.prototype */ {
      */
     orderingDirection: {
         get: function() {
-            return this.orderingDirection;
+            return this.order;
         },
         set: function(value) {
-            this.orderingDirection = value;
+            this.order = value;
         }
     },
     order: {
