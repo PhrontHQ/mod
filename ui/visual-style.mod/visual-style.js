@@ -48,9 +48,21 @@ var PROPERTIES = [
     {name: "controlSelectionFill", variable: "--visual-style-control-selection-fill", defaultValue: "hsl(211, 100%, 50%)"},
     {name: "controlSelectionBackgroundFill", variable: "--visual-style-control-selection-background-fill", backup: "controlBackgroundFill"},
 
+    /* hover, active, focus states */
     {name: "controlHoverFill", variable: "--visual-style-control-hover-fill", backup: "controlFill"},
+    {name: "controlHoverSecondaryFill", variable: "--visual-style-control-hover-secondary-fill", backup: "controlHoverFill"},
+    {name: "controlHoverTertiaryFill", variable: "--visual-style-control-hover-tertiary-fill", backup: "controlHoverFill"},
+    {name: "controlHoverQuaternaryFill", variable: "--visual-style-control-hover-quaternary-fill", backup: "controlHoverFill"},
+
     {name: "controlActiveFill", variable: "--visual-style-control-active-fill", backup: "controlSelectionFill"},
+    {name: "controlActiveSecondaryFill", variable: "--visual-style-control-active-secondary-fill", backup: "controlActiveFill"},
+    {name: "controlActiveTertiaryFill", variable: "--visual-style-control-active-tertiary-fill", backup: "controlActiveFill"},
+    {name: "controlActiveQuaternaryFill", variable: "--visual-style-control-active-quaternary-fill", backup: "controlActiveFill"},
+
     {name: "controlFocusFill", variable: "--visual-style-control-focus-fill", backup: "controlActiveFill"},
+    {name: "controlFocusSecondaryFill", variable: "--visual-style-control-focus-secondary-fill", backup: "controlFocusFill"},
+    {name: "controlFocusTertiaryFill", variable: "--visual-style-control-focus-tertiary-fill", backup: "controlFocusFill"},
+    {name: "controlFocusQuaternaryFill", variable: "--visual-style-control-focus-quaternary-fill", backup: "controlFocusFill"},
 
     {name: "controlHeight", variable: "--visual-style-control-height", defaultValue: "36px"},
 
