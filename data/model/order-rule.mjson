@@ -1,0 +1,40 @@
+{
+    "expressionDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "expression",
+            "valueType": "string"
+        }
+    },
+    "orderDescriptor": {
+        "prototype": "../../core/meta/property-descriptor",
+        "values": {
+            "name": "order",
+            "valueType": "object"
+        }
+    },
+    "OrderRule": {
+        "object": "./order-rule"
+    },
+    "root": {
+        "prototype": "../../core/meta/module-object-descriptor",
+        "values": {
+            "name": "OrderRule",
+            "propertyDescriptors": [
+                { "@": "expressionDescriptor" },
+                { "@": "orderDescriptor" }
+            ],
+            "propertyDescriptorGroups": {
+                "all": [
+                    { "@": "expressionDescriptor" },
+                    { "@": "orderDescriptor" }
+                ]
+            },
+            "propertyvalidationRules": [],
+            "objectDescriptorModule": { "%": "./order-rule.mjson" },
+            "exportName": "OrderRule",
+            "module": { "%": "./order-rule" },
+            "object":{ "@": "OrderRule" }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 
 //Backward compatibility:
-var OrderingRule = require("./ordering-rule").OrderingRule;
+var OrderingRule = require("./order-rule").OrderingRule;
 
 exports.DataOrdering = OrderingRule;
 exports.OrderType = OrderingRule.OrderingDirection;
