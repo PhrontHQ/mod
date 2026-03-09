@@ -544,7 +544,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let recordKeys = Object.keys(record),
             mappingPromises = [];
 
-        this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, record, object, context, null, mappingScope);
+        this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, record, object, context, null);
 
 
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {

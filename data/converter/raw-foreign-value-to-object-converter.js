@@ -121,7 +121,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
     _fetchConvertedDataForObjectDescriptorCriteria: {
-        value: function(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged) {
+        value: function(typeToFetch, criteria, currentRule, rootObjectBeingMapped) {
             var self = this;
 
             return this.service ? this.service.then(function (service) {
@@ -207,8 +207,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                         query.hints = {rawDataService: service};
 
-                        if(registerMappedPropertiesAsChanged){
-                            query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
+                        if(rootObjectBeingMapped){
+                            query.hints.rootObjectBeingMapped = rootObjectBeingMapped;
                         }
 
                         if(sourceObjectSnapshot?.originDataSnapshot) {
@@ -438,7 +438,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     },
 
     combinesFetchData: {
-        value: true
+        value: false
     },
     _isCombineFetchDataMicrotaskQueued: {
         value: false
@@ -698,6 +698,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     //We put it in a local variable so we have the right value in the closure
                     currentRule = this.currentRule,
                     registerMappedPropertiesAsChanged = this.registerMappedPropertiesAsChanged,
+                    rootObjectBeingMapped = scope.parent && scope.parent.rootObjectBeingMapped,
                     criteria,
                     query;
 
@@ -731,7 +732,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             aCriteria;
                         while (anObjectDescriptor = mapIterator.next().value) {
                             aCriteria = this.convertCriteriaForValue(groupMap.get(anObjectDescriptor));
-                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged));
+                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, rootObjectBeingMapped));
 
                         }
 
@@ -758,7 +759,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             foreignKeyValue = v[rawDataProperty],
                             aCriteria = this.convertCriteriaForValue(foreignKeyValue);
 
-                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged);
+                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, rootObjectBeingMapped);
 
                         } else {
                             return Promise.resolve(null);
@@ -772,7 +773,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                     return this._descriptorToFetch.then(function (typeToFetch) {
 
-                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
+                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, rootObjectBeingMapped);
 
                         // if (self.serviceIdentifier) {
                         //     criteria.parameters.serviceIdentifier = self.serviceIdentifier;

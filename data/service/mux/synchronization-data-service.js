@@ -423,7 +423,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, propertyDescriptor, changeEvent);
                 }
-                this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
+                // this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
                 /*
                     We're trying to avoid an object being fetched fromn the destinationDataService
                     to be flagged as being changed, where we do want that for anything else
@@ -443,6 +443,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
                 }
                 this.startTrackingNestedObjectsForChangeEvent(dataObject, changeEvent);
+                // this.startTrackingObjectBecauseValueIsTracked(dataObject, changeEvent);
                 /*
                     We're trying to avoid an object being fetched fromn the destinationDataService
                     to be flagged as being changed, where we do want that for anything else
@@ -515,14 +516,59 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
     }
 
-    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, dataOperation, readExpressions, scope) {
-        let rootObject = scope && scope.rootObjectBeingMapped;
+    // startTrackingObjectBecauseChangeEventValueIsTracked(rootObject, value) {
+    //     if (!this._canTrackPropertyForChangeEvent(rootObject, changeEvent)) {
+    //         return;
+    //     }
 
-        if (!rootObject) {
+    //     //Root object is syncing. We expect value to already be tracked, but checking to be sure. 
+    //     if (this.isSyncingObject(rootObject)) {
+            
+    //         //If relationship from rootObject to value is already tracked in the graph, do nothing.
+    //         if (this._objectsToTrackChangesWhileBeingMapped.has(rootObject) && 
+    //             this._objectsToTrackChangesWhileBeingMapped.get(rootObject).has(value)) {
+    //                 return;
+    //             }
+
+    //         if (!this._objectsToTrackChangesWhileBeingMapped.has(rootObject)) {
+    //             this._objectsToTrackChangesWhileBeingMapped.set(rootObject, new Set());
+    //         }
+    //         this._objectsToTrackChangesWhileBeingMapped.get(aDataObject).add(value);
+    //         if (!this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(value)) {
+    //             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, new Set());
+    //         }
+    //         this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(value).add(rootObject);
+
+    //         //Value is syncing. Add it to objects to track and add it's parent to reverse lookup.
+    //     } else if (this.isSyncingObject(value)) {
+
+    //         if (!this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(rootObject)) {
+    //             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(rootObject, new Set());
+    //         }
+    //         this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(rootObject).add(value);
+
+    //      //Is the value's parent or parent's parent or so on being synced?
+    //     } else if (this._isAncestorOfSyncingObject(value)) {
+    //         if (!this._objectsToTrackChangesWhileBeingMapped.has(value)) {
+    //             this._objectsToTrackChangesWhileBeingMapped.set(value, new Set());
+    //         }
+    //         this._objectsToTrackChangesWhileBeingMapped.get(value).add(rootObject);
+    //     }
+
+    // }
+
+    _isAncestorOfSyncingObject(object) {
+        return this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(object);
+    }
+
+    rawDataServiceMappingWillMapRawDataToObject(service, mapping, rawData, object, context, readExpressions, scope) {
+        let rootObject = context.parent?.rootObjectBeingMapped;
+
+        if (!rootObject || rootObject === object) {
             return;
         }
 
-        if (this.isSyncingObject(rootObject) || this.shouldTrackChangesForObjectBeingMapped(rootObject)) {
+        if (this.isSyncingObject(rootObject) || this._isAncestorOfSyncingObject(rootObject)) {
             this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} (${object.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})via ${rootObject.objectDescriptor.name} (${rootObject.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})`);
             this.startTrackingChangesForObjectBeingMapped(rootObject, object, "rawDataServiceMappingWillMapRawDataToObject");
         }
@@ -835,6 +881,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         */
         rawDataService.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
 
+
+        this._assignObjectToTransaction(dataObject);
+
         /*
             Finally we register it in the main service with a destination service data identifier
         */
@@ -1134,7 +1183,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForObject(object));
         }
 
-    
     }
 
 
