@@ -239,7 +239,7 @@
         "values": {
             "name": "modificationDate",
             "valueDescriptor": {"@": "DateDescriptor"},
-             "mandatory": true
+            "mandatory": true
        }
     },
 

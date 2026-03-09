@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "JobRole"
+                "JobRoleCollaboration"
             ]);
         }
         return this.__trackedTypes;
@@ -195,7 +195,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         console.log(this._objectsToTrackChangesWhileBeingMapped);
     }
  
-    startTrackingChangesForObjectBeingMapped(aDataObject, value) {
+    startTrackingChangesForObjectBeingMapped(aDataObject, value, origin) {
         if (this.isSyncingObject(aDataObject)) {
             this._objectsToSyncNestingLevel.set(aDataObject, 1);
         } else if (this._objectsToSyncNestingLevel.has(aDataObject) && !this._objectsToSyncNestingLevel.has(value) && value) {
@@ -237,11 +237,31 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         if (!this._objectsToTrackChangesWhileBeingMapped.has(aDataObject)) {
             this._objectsToTrackChangesWhileBeingMapped.set(aDataObject, new Set());
+            this._objectsToTrackChangesWhileBeingMappedOrigin = this._objectsToTrackChangesWhileBeingMappedOrigin || new Map();
+            if (!this._objectsToTrackChangesWhileBeingMappedOrigin.has(aDataObject)) {
+                this._objectsToTrackChangesWhileBeingMappedOrigin.set(aDataObject, []);
+            }
+        } 
+
+        global.trackedObjectLifecycles = global.trackedObjectLifecycles || new Map();
+        global.trackedJobEvents = global.trackedJobEvents || [];
+
+        global.trackedJobEvents.push(aDataObject.objectDescriptor.name + "/" + aDataObject.dataIdentifier.primaryKey + " " + origin);
+
+        if (!global.trackedObjectLifecycles.has(aDataObject.objectDescriptor.name)) {
+            global.trackedObjectLifecycles.set(aDataObject.objectDescriptor.name, new Map());
         }
+        if (!global.trackedObjectLifecycles.get(aDataObject.objectDescriptor.name).has(aDataObject)) {
+            global.trackedObjectLifecycles.get(aDataObject.objectDescriptor.name).set(aDataObject, []);
+        }
+        global.trackedObjectLifecycles.get(aDataObject.objectDescriptor.name).get(aDataObject).push(origin);
+
+        this._objectsToTrackChangesWhileBeingMapped.get(aDataObject).add(value || null);
+        this._objectsToTrackChangesWhileBeingMappedOrigin.get(aDataObject).push(origin + "/" + (value && value.objectDescriptor.name));
         if (!value) {
             return;
         }
-        this._objectsToTrackChangesWhileBeingMapped.get(aDataObject).add(value);
+        
         if (!this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(value)) {
             this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(value, new Set());
         }
@@ -255,9 +275,17 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             children.forEach((child) => {
                 if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(child)) {
                     this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(child).delete(aDataObject);
+                    if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.get(child).size === 0) {
+                        this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.delete(child);
+                    }
                 }
             });
+
             this._objectsToTrackChangesWhileBeingMapped.delete(aDataObject);
+            global.trackedObjectLifecycles.get(aDataObject.objectDescriptor.name).get(aDataObject).push("remove");
+            global.trackedJobEvents.push(aDataObject.objectDescriptor.name + "/" + aDataObject.dataIdentifier.primaryKey + " remove");
+            this._objectsToTrackChangesWhileBeingMappedOrigin.delete(aDataObject);
+            this._logTypeEvent(aDataObject.objectDescriptor, `[Tracking] Stop tracking object being mapped ${aDataObject.objectDescriptor.name}`, parents);
         }
         
         if (this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.has(aDataObject)) {
@@ -267,8 +295,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     this._objectsToTrackChangesWhileBeingMapped.get(parent).delete(aDataObject);
                 }
             });
-            this._logTypeEvent(aDataObject.objectDescriptor, `Stop tracking parents of object ${aDataObject.objectDescriptor.name}`, parents);
+            this._logTypeEvent(aDataObject.objectDescriptor, `[Tracking] Stop tracking parents of object ${aDataObject.objectDescriptor.name}`, parents);
         }
+        
     }
  
     shouldTrackChangesForObjectBeingMapped(aDataObject) {
@@ -405,7 +434,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                     this.mainService.registerDataObjectChangesFromEvent(changeEvent, true);
                 }
 
-            } 
+            } else {
+                this._objectIsCreatedSoNotSyncing = this._objectIsCreatedSoNotSyncing || new Set();
+                this._objectIsCreatedSoNotSyncing.add(dataObject);
+            }
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
@@ -465,7 +497,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(nestedObject.objectDescriptor, `${nestedObject.dataIdentifier.dataService.name} Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
                 }
-                this.startTrackingChangesForObjectBeingMapped(rootObject, nestedObject);
+                this.startTrackingChangesForObjectBeingMapped(rootObject, nestedObject, "startTrackingNestedObjectsForChangeEvent array");
                 // this._objectsToTrackChangesWhileBeingMapped.set(rootObject, nestedObject);
                 // this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(nestedObject, rootObject);
             });
@@ -474,7 +506,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             if (propertyDescriptor._valueDescriptorReference) {
                 this._logTypeEvent(rootObject.objectDescriptor, `${rootObject.dataIdentifier.dataService.name} Register ${changeEvent.keyValue?.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
             }
-            this.startTrackingChangesForObjectBeingMapped(rootObject, changeEvent.keyValue);
+            this.startTrackingChangesForObjectBeingMapped(rootObject, changeEvent.keyValue, "startTrackingNestedObjectsForChangeEvent value");
             // this._objectsToParentsWhoseChangesAreTrackedWhileBeingMapped.set(changeEvent.keyValue, rootObject);
             // this._objectsToTrackChangesWhileBeingMapped.set(rootObject, changeEvent.keyValue);
             // } else {
@@ -492,7 +524,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         if (this.isSyncingObject(rootObject) || this.shouldTrackChangesForObjectBeingMapped(rootObject)) {
             this._logTypeEvent(object.objectDescriptor, `Start tracking resolved object ${object.objectDescriptor.name} (${object.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})via ${rootObject.objectDescriptor.name} (${rootObject.dataIdentifier.primaryKey}/${object.dataIdentifier.dataService.name})`);
-            this.startTrackingChangesForObjectBeingMapped(rootObject, object);
+            this.startTrackingChangesForObjectBeingMapped(rootObject, object, "rawDataServiceMappingWillMapRawDataToObject");
         }
     }
 
@@ -876,8 +908,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     //         }
     //    }
     //    this.addEventListener(DataOperation.Type.ReadOperation, mappingReadOperationListener, true);
-        this._logTypeEvent(dataObject.objectDescriptor, `Track changes for object being mapped ${dataObject.objectDescriptor.name} (${dataObject.dataIdentifier.dataService.name}/${dataObject.dataIdentifier.primaryKey})`);
-        // this.startTrackingChangesForObjectBeingMapped(dataObject);
+        this._logTypeEvent(dataObject.objectDescriptor, `[Tracking] Track changes for object being mapped ${dataObject.objectDescriptor.name} (${dataObject.dataIdentifier.dataService.name}/${dataObject.dataIdentifier.primaryKey})`);
 
 
         return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
@@ -1028,6 +1059,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             throw error;
         })
         .finally(() => {
+
             //cleanup:
             this._syncingObjectsCountedSet.delete(dataObject);
             this.stopTrackingChangesForObjectBeingMapped(dataObject);
@@ -1098,7 +1130,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if (rawDataService !== this.destinationDataService) {
             this._rawDataServiceObjects = this._rawDataServiceObjects || new Set();
             this._rawDataServiceObjects.add(object);
-            this.startTrackingChangesForObjectBeingMapped(object);
+            this.startTrackingChangesForObjectBeingMapped(object, undefined, "rawDataServiceDidCreateObject");
             this.mainService.recordObjectForDataIdentifier(object, this.destinationDataService.dataIdentifierForObject(object));
         }
 

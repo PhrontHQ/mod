@@ -1581,6 +1581,26 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     //     }
     // },
 
+    mapRawDataToObjectPropertyTracked: {
+        value: function (data, object, propertyName, context, scope, registerMappedPropertiesAsChanged) {
+            let timeoutId = setTimeout(function () {
+                console.log("JobRoleCollaboration failed to map property", propertyName, object[propertyName]);
+            }, 3000);
+
+            let result = this.mapRawDataToObjectProperty(data, object, propertyName, context, scope, registerMappedPropertiesAsChanged);
+            
+            if (this._isAsync(result)) {
+                return result.then(function (result) {
+                    clearTimeout(timeoutId);
+                    return result;
+                });
+            } else {
+                clearTimeout(timeoutId);
+                return result;
+            }
+        }
+    },
+
     /**
      * Maps the value of a single raw data property onto the model object
      *

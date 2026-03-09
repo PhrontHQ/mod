@@ -9,6 +9,50 @@ const RawDataService = require("../raw-data-service").RawDataService,
 
     const assign = require("../../../core/frb/assign");
 
+let allowedOrganizationIdentifiers = new Set(
+   [
+    "019a745d-8231-7c9e-8526-fbe2fe28dac6",
+    "019a4e83-203a-76de-bf6f-7f26739d65fd",
+    "019a4e83-203a-7ceb-bbd3-09081713f51e",
+    "019a4e83-203a-7ec0-833e-77836a3f216f"
+   ]
+);
+let allowedJobRoleIdentifiers = new Set(
+   [
+    "019a4e83-203a-7c5b-b75f-2dc245f08138",
+    "019a4e83-203a-7106-b2aa-746a15e80213"
+   ]
+)
+let allowedJobRoleCollaborationIdentifiers = new Set(
+   [
+    "019b2b93-c946-7003-a8bd-6017469483b9",
+    "019b2b93-c946-7004-b627-c289f71396e6",
+    "019b2b93-c946-7005-b5e3-d9676f32314e",
+    "019b2b93-c946-7006-83f9-e1de061507a4",
+    "019b2b93-c946-7007-bdd4-ee5191e57f98",
+    "019b2b93-c946-7008-b86c-6ea6dd2256aa",
+    "019b2b93-c946-7009-b18e-1003e031ccf5"
+   ]
+)
+let allowedDeliverableIdentifiers = new Set(
+   [
+    "019b2b93-c946-7000-b767-c6a8509c766d",
+    "019b2b93-c946-7005-b5e3-d9676f32314e",
+    "019b2b93-c946-7006-83f9-e1de061507a4",
+    "019b2b93-c946-7007-bdd4-ee5191e57f98",
+    "019b2b93-c946-7008-b86c-6ea6dd2256aa",
+    "019b2b93-c946-7009-b18e-1003e031ccf5"
+   ]
+)
+let allowedProcessIdentifiers = new Set(
+   [
+    "019b2b93-c946-7001-8ec3-65dcc2e05857",
+    "019b2b93-c946-7002-bbe4-0cb872fa74b0",
+    "019b2b93-c946-700a-990a-057bf69dcc34",
+    "019b2b93-c946-700b-801f-1c448b079217"
+   ]
+)
+
 /**
  * @class SerializedDataService
  * @extends RawDataService
@@ -104,7 +148,21 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 this._dataInstancesPromiseByObjectDescriptor.set(objectDescriptor, dataInstancesPromiseForObjectDescriptor);
                 
         }
-        return dataInstancesPromiseForObjectDescriptor;
+        // return dataInstancesPromiseForObjectDescriptor;
+        return dataInstancesPromiseForObjectDescriptor.then(function (instances) {
+            let filterSet = objectDescriptor.name === "Organization" ? allowedOrganizationIdentifiers :
+            objectDescriptor.name === "JobRole" ? allowedJobRoleIdentifiers :
+            objectDescriptor.name === "JobRoleCollaboration" ? allowedJobRoleCollaborationIdentifiers :
+            objectDescriptor.name === "Process" ? allowedProcessIdentifiers :
+            objectDescriptor.name === "Deliverable" ? allowedDeliverableIdentifiers : null;
+
+            if (filterSet) {
+                return instances.filter((instance) => {
+                    return filterSet.has(instance.identifier);
+                }); 
+            }
+            return instances;
+        });
     }
 
     _dataInstancesPromiseForObjectDescriptor(objectDescriptor) {
@@ -186,24 +244,58 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
 
-    fetchRawObjectProperty(object, propertyName) {
-        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+    _og_fetchRawObjectProperty(object, propertyName) {
+        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.dataIdentifier.primaryKey),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
 
 
-        if (!object._originDataSnapshot && propertyName == "originDataSnapshot") {
-            object.originDataSnapshot = {};
+        if (propertyName == "originDataSnapshot") {
+            object.originDataSnapshot = object.originDataSnapshot || {};
             object.originDataSnapshot[this.identifier] = iRawData;
             return this.nullPromise;
         }
 
         //Find deserialized counterpart of object in memory. 
         //Assign object[propertyName] = deserializedObject[propertyName];
-        // console.warn("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName, iRawData);
+        console.warn("SerializedDataService.fetchRawObjectProperty is not implemented", object, propertyName, iRawData);
         return this.nullPromise;
     }
 
+    fetchRawObjectProperty(object, propertyName) {
+        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.dataIdentifier.primaryKey),
+            snapshot = this.snapshotForDataIdentifier(iDataInstanceIdentifier)
+
+
+        if (propertyName == "originDataSnapshot") {
+            object.originDataSnapshot = object.originDataSnapshot || {};
+            object.originDataSnapshot[this.identifier] = snapshot;
+            return this.nullPromise;
+        }
+
+        let promises = [];
+
+        this._mapRawDataPropertyToObject(snapshot, propertyName, object, promises, this.rootService);
+        return Promise.all(promises).then(function () {
+            console.log("SerializeDataService.fetchRawObjectProperty", object.objectDescriptor.name, propertyName, object[propertyName]);
+            return object[propertyName];
+        });
+    }
+
+    rawCriteriaForObject(object, _objectDescriptor) {
+        var objectDescriptor = _objectDescriptor || this.objectDescriptorForObject(object),
+            mapping = this.mappingForType(objectDescriptor);
+
+        return object.identifier;
+
+    }
+
+    fetchOriginDataSnapshotProperty(object) {
+        object.originDataSnapshot = object.originDataSnapshot || {};
+        object.originDataSnapshot[this.identifier] = iRawData;
+        return this.nullPromise;
+    }
+ 
     _mapObjectPropertyToRawData(object, objectKey, propertyDescriptor, rawData) {
                     
         // debugger;
@@ -389,6 +481,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
 
+
     __mapRawDataPropertyToObject (record, property, valueDescriptor, object, mainService) {
         let objectDescriptor = object.objectDescriptor,
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
@@ -451,6 +544,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let recordKeys = Object.keys(record),
             mappingPromises = [];
 
+        this.callDelegateMethod("rawDataServiceMappingWillMapRawDataToObject", this, mapping, record, object, context, null, mappingScope);
+
 
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {
             this._mapRawDataPropertyToObject(record, recordKeys[i], object, mappingPromises, mainService);
@@ -484,13 +579,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             */
             if(!readOperation.defaultPrevented) {
 
-                let random = Math.random();
                 let criteria;
 
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
                         criteria = readOperation.criteria;
                             let predicateFunction = criteria?.predicateFunction;
+
 
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
                             let parameters = criteria.parameters;
