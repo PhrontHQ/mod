@@ -1,3 +1,5 @@
+const { last } = require("../../core/frb/operators");
+
 var DataService = require("./data-service").DataService,
     assign = require("../../../core/frb/assign"),
     compile = require("../../core/frb/compile-evaluator"),
@@ -1890,10 +1892,12 @@ RawDataService.addClassProperties({
     pendingSnapshotForDataIdentifier: {
         value: function (dataIdentifier) {
             let pendingSnapshot = this._pendingSnapshot.get(dataIdentifier);
+            let tmpPendingSnapshot;
             if(!pendingSnapshot) {
                 let snapshot = this.snapshotForDataIdentifier(dataIdentifier);
 
                 if(snapshot) {
+                    tmpPendingSnapshot = Object.assign({}, snapshot);
                     pendingSnapshot = Object.create(snapshot);
                     this._pendingSnapshot.set(dataIdentifier, pendingSnapshot);
                 }
