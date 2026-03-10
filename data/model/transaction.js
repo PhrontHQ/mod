@@ -227,6 +227,20 @@ var Montage = require("../../core/core").Montage,
         }
     },
 
+    _buildChangesForDataObject: {
+        value: function (dataObject) {
+            let changesForDataObject = new Map();
+            this.dataObjectChanges.set(dataObject, changesForDataObject);
+            return changesForDataObject;
+        },
+    },
+
+    changesForDataObject: {
+        value: function (dataObject) {
+                return this.dataObjectChanges.get(dataObject) || this._buildChangesForDataObject(dataObject);
+            },
+    },
+
     /**
      * A Map where keys are ObjectDescriptors and values are matching dataObject instances that are deleted in that transaction
      *

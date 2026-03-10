@@ -3332,9 +3332,9 @@ DataService.addClassProperties(
         },
 
         registerCreatedDataObject: {
-            value: function (dataObject) {
+            value: function (dataObject, transaction) {
                 var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    createdDataObjects = this.createdDataObjects,
+                    createdDataObjects = transaction?.createdDataObjects || this.createdDataObjects,
                     value = createdDataObjects.get(objectDescriptor);
                 if (!value) {
                     createdDataObjects.set(objectDescriptor, (value = new Set()));
@@ -3823,6 +3823,15 @@ DataService.addClassProperties(
                     }
                 }
 
+                if (!isObjectCreated) {
+                    let transactionsIterator = this._stagedTransactions.entries(),
+                        transaction;
+
+                    while ((transaction = transactionsIterator.next().value) && !isObjectCreated) {
+                        isObjectChanged = transaction.changedDataObjects.has(dataObject);
+                    }
+                }
+
                 if (!isObjectCreated && this.isMainService) {
                     var pendingTransactions = this._pendingTransactions;
 
@@ -3912,10 +3921,12 @@ DataService.addClassProperties(
             },
         },
         registerChangedDataObject: {
-            value: function (dataObject) {
+            value: function (dataObject, transaction) {
                 var objectDescriptor = this.objectDescriptorForObject(dataObject),
                     changedDataObjects,
-                    value, transaction;
+                    value;
+
+                transaction = transaction || this._defaultTransaction;
 
                 if (this.isObjectCreated(dataObject)) {
                     console.warn(
@@ -3924,14 +3935,14 @@ DataService.addClassProperties(
                     return;
                 }
 
-                changedDataObjects = this.changedDataObjects;
+                changedDataObjects = transaction.updatedDataObjects;
                 value = changedDataObjects.get(objectDescriptor);
 
                 if (!value) {
                     changedDataObjects.set(objectDescriptor, (value = new Set()));
                 }
                 value.add(dataObject);
-                this.objectDescriptorsWithChanges.add(objectDescriptor);
+                transaction.objectDescriptorsWithChanges.add(objectDescriptor);
             },
         },
 
@@ -3942,11 +3953,27 @@ DataService.addClassProperties(
             }
         },
 
+        // isObjectChanged: {
+        //     value: function (dataObject) {
+        //         return this.changedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+        //     },
+        // },
+
         isObjectChanged: {
             value: function (dataObject) {
-                return this.changedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+                let isObjectChanged = this.changedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+                if (!isObjectChanged) {
+                    let transactionsIterator = this._stagedTransactions.entries(),
+                        transaction;
+
+                    while ((transaction = transactionsIterator.next().value) && !isObjectChanged) {
+                        isObjectChanged = transaction.changedDataObjects.has(dataObject);
+                    }
+                }
+                return isObjectChanged;
             },
         },
+
 
         unregisterChangedDataObject: {
             value: function (dataObject) {
@@ -4014,8 +4041,9 @@ DataService.addClassProperties(
             },
         },
         changesForDataObject: {
-            value: function (dataObject) {
-                return this.dataObjectChanges.get(dataObject) || this._buildChangesForDataObject(dataObject);
+            value: function (dataObject, transaction) {
+                transaction = transaction || this._defaultTransaction;
+                return transaction.changesForDataObject(dataObject);
             },
         },
 
@@ -4473,7 +4501,7 @@ DataService.addClassProperties(
         },
 
         registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
+            value: function (changeEvent, shouldTrackChangesWhileBeingMapped, transaction) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
                     objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4527,7 +4555,8 @@ DataService.addClassProperties(
                                     changeEvent,
                                     propertyDescriptor,
                                     _inversePropertyDescriptor,
-                                    shouldTrackChangesWhileBeingMapped
+                                    shouldTrackChangesWhileBeingMapped,
+                                    transaction
                                 );
                             }
                         });
@@ -4536,7 +4565,8 @@ DataService.addClassProperties(
                             changeEvent,
                             propertyDescriptor,
                             inversePropertyDescriptor,
-                            shouldTrackChangesWhileBeingMapped
+                            shouldTrackChangesWhileBeingMapped,
+                                    transaction
                         );
                     }
                 } else {
@@ -4544,7 +4574,8 @@ DataService.addClassProperties(
                         changeEvent,
                         propertyDescriptor,
                         inversePropertyDescriptor,
-                        shouldTrackChangesWhileBeingMapped
+                        shouldTrackChangesWhileBeingMapped,
+                        transaction
                     );
                 }
             },
@@ -4555,7 +4586,8 @@ DataService.addClassProperties(
                 changeEvent,
                 propertyDescriptor,
                 inversePropertyDescriptor,
-                shouldTrackChangesWhileBeingMapped
+                shouldTrackChangesWhileBeingMapped,
+                transaction
             ) {
                 var dataObject = changeEvent.target,
                     isCreatedObject = this.isObjectCreated(dataObject),
@@ -4564,7 +4596,7 @@ DataService.addClassProperties(
                     addedValues = changeEvent.addedValues,
                     removedValues = changeEvent.removedValues,
                     isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject),
-                    changesForDataObject = this.changesForDataObject(dataObject),
+                    changesForDataObject = this.changesForDataObject(dataObject, transaction),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
                     self = this;
@@ -4833,9 +4865,24 @@ DataService.addClassProperties(
             },
         },
 
+        // isObjectDeleted: {
+        //     value: function (dataObject) {
+        //         return this.deletedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+        //     },
+        // },
+
         isObjectDeleted: {
             value: function (dataObject) {
-                return this.deletedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+                let isObjectDeleted = this.deletedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+                if (!isObjectDeleted) {
+                    let transactionsIterator = this._stagedTransactions.entries(),
+                        transaction;
+
+                    while ((transaction = transactionsIterator.next().value) && !isObjectDeleted) {
+                        isObjectDeleted = transaction.deletedDataObjects.has(dataObject);
+                    }
+                }
+                return isObjectDeleted;
             },
         },
 
@@ -5019,6 +5066,9 @@ DataService.addClassProperties(
         },
         addPendingTransaction: {
             value: function (aCreateTransactionOperation) {
+                if (this._stagedTransactions.has(aCreateTransactionOperation)) {
+                    this._stagedTransactions.get(aCreateTransactionOperation);
+                }
                 (this._pendingTransactions || (this._pendingTransactions = [])).push(aCreateTransactionOperation);
             },
         },
@@ -5319,15 +5369,21 @@ DataService.addClassProperties(
             }
         },
 
+        _stagedTransactions: {
+            get: function () {
+                return this.__stagedTransactions || (this.__stagedTransactions = new Set());
+            }
+        },
+
         _createEmptyTransaction: {
             value: function () {
-                let transaction = new Transaction();
-                // transaction.createdDataObjects = new Map();
-                // transaction.updatedDataObjects = new Map();
-                // transaction.deletedDataObjects = new Map();
-                // transaction.objectDescriptorsWithChanges = new CountedSet();
-                // transaction.dataObjectChanges = new Map();
-                return transaction;
+                if (this.isRootService) {
+                    let transaction = new Transaction();
+                    this._stagedTransactions.add(transaction);
+                    return transaction;
+                } else {
+                    return this.rootService._createEmptyTransaction();
+                }
             }
         },
 
@@ -5390,7 +5446,7 @@ DataService.addClassProperties(
                 //We've made copies, so we clear right away to make room for a new cycle:
                 this._resetDefaultTransaction();
 
-                return this._saveChangesForTransaction(transaction);
+                return this.saveChangesForTransaction(transaction);
             },
         },
 
@@ -5441,7 +5497,8 @@ DataService.addClassProperties(
             }
         },
 
-        _saveChangesForTransaction: {
+
+        saveChangesForTransaction: {
             value: function(transaction) {
                 let self = this;
                 
