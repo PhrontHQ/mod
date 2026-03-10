@@ -3305,6 +3305,7 @@ DataService.addClassProperties(
         },
         objectDescriptorsWithChanges: {
             get: function () {
+                //TODO Remove Leaving here in case RawDataServices access it
                 // return this._objectDescriptorsWithChanges || (this._objectDescriptorsWithChanges = new CountedSet());
                 return this._defaultTransaction.objectDescriptorsWithChanges;
             },
@@ -3312,10 +3313,7 @@ DataService.addClassProperties(
         createdDataObjects: {
             get: function () {
                 if (this.isRootService) {
-                    // if (!this._createdDataObjects) {
-                    //     this._createdDataObjects = new Map();
-                    // }
-                    // return this._createdDataObjects;
+                    //TODO Remove Leaving here in case RawDataServices access it
                     return this._defaultTransaction.createdDataObjects;
                 } else {
                     return this.rootService.createdDataObjects;
@@ -3323,23 +3321,26 @@ DataService.addClassProperties(
             },
         },
 
+        _transactionsByObject: {
+            get: function () {
+                return this.__transactionsByObject || (this.__transactionsByObject = new Map());
+            }
+        },
+
+        registerTransactionForObject: {
+            value: function (object, transaction) {
+                if (this._transactionsByObject.has(object) && this._transactionsByObject.get(object) !== transaction) {
+                    console.warn(`[DataService] Transaction is already registered for object ${object.objectDescriptor.name}/${object.dataIdentifier.primaryKey}`);
+                    return;
+                }
+                this._transactionsByObject.set(object, transaction);
+            }
+        },
+
         registerCreatedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    createdDataObjects = this.createdDataObjects,
-                    value = createdDataObjects.get(objectDescriptor);
-                if (!value) {
-                    createdDataObjects.set(objectDescriptor, (value = new Set()));
-                }
-
-                /*
-                This makes sure that properties' data triggers' valueStatus are set to null
-                ensuring there's no reference to it in a storage
-            */
-                //////////this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
-
-                value.add(dataObject);
-                this.objectDescriptorsWithChanges.add(objectDescriptor);
+                let transaction = this._transactionForObject(dataObject);
+                transaction.registerCreatedDataObject(dataObject);
 
                 this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
             },
@@ -3347,12 +3348,8 @@ DataService.addClassProperties(
 
         unregisterCreatedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    value = this.createdDataObjects.get(objectDescriptor);
-                if (value) {
-                    value.delete(dataObject);
-                    this.objectDescriptorsWithChanges.delete(objectDescriptor);
-                }
+                let transaction = this._transactionForObject(dataObject);
+                transaction.unregisterCreatedDataObject(dataObject);
             },
         },
 
@@ -3556,12 +3553,13 @@ DataService.addClassProperties(
             value: function (dataObject, delegate, delegateObjectToMerge, _promises, _isRoot, _mergingDataObjects) {
                 if (!delegateObjectToMerge || (delegateObjectToMerge && dataObject === delegateObjectToMerge)) {
                     let objectDescriptor = this.objectDescriptorForObject(dataObject),
-                        createdDataObjects = this.createdDataObjects,
+                        transaction = this._transactionForObject(dataObject),
+                        createdDataObjects = transaction.createdDataObjects,
                         value = createdDataObjects.get(objectDescriptor);
 
                     if (!value) {
                         createdDataObjects.set(objectDescriptor, (value = new Set()));
-                        this.objectDescriptorsWithChanges.add(objectDescriptor);
+                        transaction.objectDescriptorsWithChanges.add(objectDescriptor);
                     }
 
                     if (!value.has(dataObject)) {
@@ -3799,7 +3797,8 @@ DataService.addClassProperties(
         isObjectCreated: {
             value: function (object) {
                 var objectDescriptor = this.objectDescriptorForObject(object),
-                    createdDataObjects = this.createdDataObjects.get(objectDescriptor),
+                    transaction = this._transactionForObject(object),
+                    createdDataObjects = transaction.createdDataObjects.get(objectDescriptor),
                     isObjectCreated = createdDataObjects && createdDataObjects.has(object);
 
                 if (!isObjectCreated) {
@@ -3905,43 +3904,22 @@ DataService.addClassProperties(
         },
         registerChangedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    changedDataObjects,
-                    value;
-
-                if (this.isObjectCreated(dataObject)) {
-                    console.warn(
-                        `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
-                    );
-                    return;
-                }
-
-                changedDataObjects = this.changedDataObjects;
-                value = changedDataObjects.get(objectDescriptor);
-
-                if (!value) {
-                    changedDataObjects.set(objectDescriptor, (value = new Set()));
-                }
-                value.add(dataObject);
-                this.objectDescriptorsWithChanges.add(objectDescriptor);
+                let transaction = this._transactionForObject(dataObject);
+                transaction.registerChangedDataObject(dataObject);
             },
         },
 
         isObjectChanged: {
             value: function (dataObject) {
-                return this.changedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
+                let transaction = this._transactionForObject(dataObject);
+                return transaction.changedDataObjects.get(dataObject.objectDescriptor)?.has(dataObject);
             },
         },
 
         unregisterChangedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    value = this.changedDataObjects.get(objectDescriptor);
-
-                if (value) {
-                    value.delete(dataObject);
-                    this.objectDescriptorsWithChanges.delete(objectDescriptor);
-                }
+                let transaction = this._transactionForObject(dataObject);
+                transaction.unregisterChangedDataObject(dataObject);
             },
         },
 
@@ -4457,7 +4435,94 @@ DataService.addClassProperties(
             value: queueMicrotask.debounceWithDelay(500),
         },
 
+        _transactionForObject: {
+            value: function (dataObject) {
+                return this._transactionsByObject.has(dataObject) ? this._transactionsByObject.get(dataObject) : this._defaultTransaction;
+            }
+        },
+
         registerDataObjectChangesFromEvent: {
+            value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
+                let dataObject = changeEvent.target,
+                    transaction = this._transactionForObject(dataObject),
+                    objectDescriptor = this.objectDescriptorForObject(dataObject),
+                    propertyDescriptor = objectDescriptor.propertyDescriptorForName(changeEvent.key),
+                    isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject);
+
+
+                transaction.registerDataObjectChangesFromEvent(changeEvent, shouldTrackChangesWhileBeingMapped);
+
+                if (propertyDescriptor.definition) {
+                    return;
+                }
+
+                if (!isDataObjectBeingMapped && this.autosaves && transaction === this._defaultTransaction) {
+                    //this.isAutosaveScheduled = true;
+                    this.debouncedQueueMicrotaskWithDelay(() => {
+                        this.isAutosaveScheduled = false;
+                        this.saveChanges();
+                    });
+                }
+
+                // if (!isDataObjectBeingMapped && this.autosaves && !this.isAutosaveScheduled) {
+                //     this.isAutosaveScheduled = true;
+                //     queueMicrotask(() => {
+                //         this.isAutosaveScheduled = false;
+                //         this.saveChanges();
+                //     });
+                // }
+
+                var inversePropertyName = propertyDescriptor.inversePropertyName,
+                    inversePropertyDescriptor;
+
+                if (inversePropertyName) {
+                    inversePropertyDescriptor = propertyDescriptor._inversePropertyDescriptor /* Sync */;
+                    if (!inversePropertyDescriptor) {
+                        var self = this;
+                        return propertyDescriptor.inversePropertyDescriptor.then(function (_inversePropertyDescriptor) {
+                            if (!_inversePropertyDescriptor) {
+                                console.error(
+                                    "objectDescriptor " +
+                                        objectDescriptor.name +
+                                        "'s propertyDescriptor " +
+                                        propertyDescriptor.name +
+                                        " declares an inverse property named " +
+                                        inversePropertyName +
+                                        " on objectDescriptor " +
+                                        propertyDescriptor._valueDescriptorReference.name +
+                                        ", no matching propertyDescriptor could be found on " +
+                                        propertyDescriptor._valueDescriptorReference.name
+                                );
+                            } else {
+                                self._registerDataObjectChangesFromEvent(
+                                    changeEvent,
+                                    propertyDescriptor,
+                                    _inversePropertyDescriptor,
+                                    shouldTrackChangesWhileBeingMapped
+                                );
+                            }
+                        });
+                    } else {
+                        this._registerDataObjectChangesFromEvent(
+                            changeEvent,
+                            propertyDescriptor,
+                            inversePropertyDescriptor,
+                            shouldTrackChangesWhileBeingMapped
+                        );
+                    }
+                } else {
+                    this._registerDataObjectChangesFromEvent(
+                        changeEvent,
+                        propertyDescriptor,
+                        inversePropertyDescriptor,
+                        shouldTrackChangesWhileBeingMapped
+                    );
+                }
+
+            }
+        },
+
+        _og_registerDataObjectChangesFromEvent: {
             value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
@@ -4613,9 +4678,9 @@ DataService.addClassProperties(
                     key !== "length" &&
                     /* new for blocking re-entrant */ changesForDataObject.get(key) !== keyValue
                 ) {
-                    if (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped) {
-                        changesForDataObject.set(key, keyValue);
-                    }
+                    // if (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped) {
+                    //     changesForDataObject.set(key, keyValue);
+                    // }
 
                     //Now set the inverse if any
                     if (inversePropertyDescriptor) {
@@ -4835,14 +4900,8 @@ DataService.addClassProperties(
 
         registerDeletedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    deletedDataObjects = this.deletedDataObjects,
-                    value = deletedDataObjects.get(objectDescriptor);
-                if (!value) {
-                    deletedDataObjects.set(objectDescriptor, (value = new Set()));
-                }
-                value.add(dataObject);
-                this.objectDescriptorsWithChanges.add(objectDescriptor);
+                var transaction = this._transactionForObject(dataObject);
+                transaction.registerDeletedDataObject(dataObject);
             },
         },
 
@@ -4854,12 +4913,8 @@ DataService.addClassProperties(
 
         unregisterDeletedDataObject: {
             value: function (dataObject) {
-                var objectDescriptor = this.objectDescriptorForObject(dataObject),
-                    value = this.deletedDataObjects.get(objectDescriptor);
-                if (value) {
-                    value.delete(dataObject);
-                    this.objectDescriptorsWithChanges.delete(objectDescriptor);
-                }
+                var transaction = this._transactionForObject(dataObject);
+                transaction.unregisterDeletedDataObject(dataObject);
             },
         },
 
@@ -5334,13 +5389,7 @@ DataService.addClassProperties(
 
         _createEmptyTransaction: {
             value: function () {
-                let transaction = new Transaction();
-                transaction.createdDataObjects = new Map();
-                transaction.updatedDataObjects = new Map();
-                transaction.deletedDataObjects = new Map();
-                transaction.objectDescriptorsWithChanges = new CountedSet();
-                transaction.dataObjectChanges = new Map();
-                return transaction;
+                return (new Transaction()).init(this);
             }
         },
 
@@ -5348,9 +5397,9 @@ DataService.addClassProperties(
             value: function () {
                 //If nothing to do, we bail out as early as possible.
                 if (
-                    this.createdDataObjects.size === 0 &&
-                    this.changedDataObjects.size === 0 &&
-                    this.deletedDataObjects.size === 0
+                    this._defaultTransaction.createdDataObjects.size === 0 &&
+                    this._defaultTransaction.changedDataObjects.size === 0 &&
+                    this._defaultTransaction.deletedDataObjects.size === 0
                 ) {
                     /*
                     If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separation of changes,
@@ -5381,10 +5430,10 @@ DataService.addClassProperties(
                     // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
                     //     this.objectDescriptorsWithChanges
                     // ));
-                    createdDataObjects = this.createdDataObjects, //Map
-                    changedDataObjects =  this.changedDataObjects, //Map
-                    deletedDataObjects = this.deletedDataObjects, //Map
-                    dataObjectChanges = this.dataObjectChanges; //Map
+                    createdDataObjects = transaction.createdDataObjects, //Map
+                    changedDataObjects =  transaction.changedDataObjects, //Map
+                    deletedDataObjects = transaction.deletedDataObjects, //Map
+                    dataObjectChanges = transaction.dataObjectChanges; //Map
                     // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
                     //     this.objectDescriptorsWithChanges
                     // ));
@@ -5535,6 +5584,10 @@ DataService.addClassProperties(
 
                                             for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
                                                 let iPendingTransaction = pendingTransactions[i];
+
+                                                if (iPendingTransaction === transaction) {
+                                                    continue;
+                                                }
 
                                                 if (iPendingTransaction.createdDataObjects.has(iObjectDescriptor)) {
                                                     let createdDataObjects = iPendingTransaction.createdDataObjects.get(iObjectDescriptor);
