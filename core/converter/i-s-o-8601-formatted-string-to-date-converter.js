@@ -51,7 +51,7 @@ var ISO8601FormattedStringToDateConverter = exports.ISO8601FormattedStringToDate
             if (typeof s === "string") {
 
                 //This is initially implemented from a Date Range stand point, where infinity means there's no end to the range, it's open
-                if (s.caseInsensitiveEquals("infinity")) {
+                if (s.caseInsensitiveEquals("infinity") || s.caseInsensitiveEquals("-infinity")) {
                     return null;
                 } else {
                     return new Date(s);
