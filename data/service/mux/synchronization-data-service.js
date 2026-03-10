@@ -1351,9 +1351,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                          * the snapshot) for the fetched objects are complete. 
                          * 
                          ********/
-                        return mainService.pendingTransactionPromiseForObjects(fetchedObjects).then(function () {
-                            return fetchedObjects;
-                        });
+                        // return mainService.pendingTransactionPromiseForObjects(fetchedObjects).then(function () {
+                        //     return fetchedObjects;
+                        // });
+                        return fetchedObjects;
                     })
                 });
         })
