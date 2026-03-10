@@ -237,8 +237,8 @@ var Montage = require("../../core/core").Montage,
 
     changesForDataObject: {
         value: function (dataObject) {
-                return this.dataObjectChanges.get(dataObject) || this._buildChangesForDataObject(dataObject);
-            },
+            return this.dataObjectChanges.get(dataObject) || this._buildChangesForDataObject(dataObject);
+        },
     },
 
     /**

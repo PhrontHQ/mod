@@ -3828,7 +3828,7 @@ DataService.addClassProperties(
                         transaction;
 
                     while ((transaction = transactionsIterator.next().value) && !isObjectCreated) {
-                        isObjectChanged = transaction.changedDataObjects.has(dataObject);
+                        isObjectChanged = transaction.createdDataObjects.has(dataObject);
                     }
                 }
 
@@ -4615,7 +4615,7 @@ DataService.addClassProperties(
 
                 if (!isCreatedObject && (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped)) {
                     //this.changedDataObjects.add(dataObject);
-                    this.registerChangedDataObject(dataObject);
+                    this.registerChangedDataObject(dataObject, transaction);
                 }
 
                 //Now handled in changesForDataObject
