@@ -7,7 +7,8 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
     { DataObject } = require("../../model/data-object"),
-    DataOperation = require("../data-operation").DataOperation;
+    DataOperation = require("../data-operation").DataOperation,
+    Transaction = require("../../model/transaction").Transaction;
 
 
 /**
@@ -369,8 +370,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     getTransactionForObject(object) {
-        
+        if (!this._transactionsByObject.has(object)) {
+            this._transactionsByObject.set(object, this._createEmptyTransaction());
+        }
+        return this._transactionsByObject.get(object);
     }
+
 
     handleChange(changeEvent) {
         let dataObject = changeEvent.target,    
@@ -823,6 +828,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         let dataObject = rawDataService.getDataObject(typeForRawData, rawData, dataIdentifier, readCompletedOperation);
 
         this._syncingObjectsCountedSet.add(dataObject);
+
         //let dataObject = this.mainService.createDataObject(objectDescriptor);
         /*
             Because we trigger the creation and we forward dataIdentifier creation to our destinationDataService,
