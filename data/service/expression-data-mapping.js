@@ -1670,11 +1670,18 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     data = result;
                 }
 
-                return hasInverse 
-                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
-                        return data;
-                    }) 
-                    : data;
+                //Let mainService's handleChange take care of the graph from now on as it needs to be done wether proprties are populated from fetch or from custom / business logic 
+                return data;
+
+                /* 
+                    Shutting down the work bellow being done in _assignInversePropertyValue() should be identical (and redundant...)
+                    to what DataService's handleChange() does but, keeping it around until we don't see any issue
+                */
+                // return hasInverse 
+                //     ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
+                //         return data;
+                //     }) 
+                //     : data;
             }
 
             function ruleEvaluationError(error) {
