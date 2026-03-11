@@ -675,6 +675,7 @@ exports.DataTrigger.prototype = Object.create(
          * @param {} _initialValue      typically used during initialization, by ExpressionDataMapping's _assignObjectValueOrDefault() 
          *                              to pass the same  value as value and _initialValue, help understanding the context
          * @param {} _currentValue      uniquely used by _ensureCollectionValue() calling _setValue() with the same value for parameter "value" and parameter "_currentValue"
+         *                              _currentValue instruct this setter that it is the value currently assigned to the property handled by that trigger on that object
          * 
          * Notes A: Should we allow user-land code to pass undefined as value? Probably not. 
          *        Internal callers, might make sense in case of a reset, if we're told there's been a change of value by someone else,
