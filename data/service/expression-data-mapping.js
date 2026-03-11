@@ -2915,9 +2915,6 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         : (object[propertyName] = value);
                 return value;
             }
-
-            throw "shouldn't have reached here";
-            return value;
         }
     },
 
