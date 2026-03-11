@@ -1232,8 +1232,7 @@ Object.defineProperties(
                         }
 
                         if (!descriptor.readonly) {
-                            propertyDescriptor.set = function (value) {
-                                trigger._setValue(this, value);
+                                    ? trigger._setValue(this, value)
                                 // (trigger||(trigger = DataTrigger._createTrigger(service, objectDescriptor, prototype, name,descriptor)))._setValue(this, value);
                             };
                         }
