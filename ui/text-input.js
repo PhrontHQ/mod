@@ -153,7 +153,18 @@ TextInput.addClassProperties({
         value: function (firstTime) {
             if (firstTime) {
                 if (this._value === this.constructor.prototype._value) {
-                    this.value = this.originalElement ? this.originalElement.textContent : this._element.textContent;
+                    let domValue = this.originalElement ? this.originalElement.textContent : this._element.textContent;
+                    if(domValue === "") {
+                        //This will NOT push "" to the eventually bound data model instance property
+                        this._value = domValue;
+                    } else {
+                        /*
+                            This WILL push domValue to the eventually bound data model instance property/
+                            @marchant: I'm not that's right to have this happen, to have static value in thee Markup/DOM end up in data.
+                        */
+                        console.warn("A textual value coming from the HTML markup of "+this.identifier+" is about to potentially be pushed to the eventually bound data model instance proprty. Should it?");
+                        this.value = domValue;
+                    }
                 }
 
                 if (this.hasStandardElement || this.element.contentEditable === "true") {
