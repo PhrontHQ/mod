@@ -1598,7 +1598,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             var rule = this.objectMappingRuleForPropertyName(propertyName),
                 propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName);
 
-            return (propertyDescriptor.valueDescriptor || Promise.resolveNull)
+            return (propertyDescriptor?.valueDescriptor || Promise.resolveNull)
             .then(propertyDescriptorValueDescriptor => {
 
                 let isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptorValueDescriptor,
