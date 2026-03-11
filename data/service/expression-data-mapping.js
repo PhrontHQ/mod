@@ -1596,8 +1596,12 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     mapRawDataToObjectProperty: {
         value: function (data, object, propertyName, context, scope = this._scope.nest(data), registerMappedPropertiesAsChanged) {
             var rule = this.objectMappingRuleForPropertyName(propertyName),
-                propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName),
-                isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptor.valueDescriptor,
+                propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName);
+
+            return (propertyDescriptor.valueDescriptor || Promise.resolveNull)
+            .then(propertyDescriptorValueDescriptor => {
+
+                let isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptorValueDescriptor,
                 isDerived = propertyDescriptor && !!propertyDescriptor.definition,
                 propertyScope,
                 locales,
@@ -1633,6 +1637,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             return  isRelationship ?                                this._resolveRelationship(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
                     propertyDescriptor && !isDerived ?              this._resolveProperty(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
                                                                     null;
+            });
+
         }
     },
     _resolveRelationship: {
