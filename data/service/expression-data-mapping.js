@@ -2798,38 +2798,40 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
 
-    _assignRawDataDefaultValueIfNeededForPropertyDescriptor: {
-        value: function(rawData, propertyDescriptor) {
+    // 3/8/2026 not called anywhere...
 
-            const value = rawData[propertyDescriptor.name];
-            const hasValue = typeof value !== "undefined" && value !== null;
+    // _assignRawDataDefaultValueIfNeededForPropertyDescriptor: {
+    //     value: function(rawData, propertyDescriptor) {
+
+    //         const value = rawData[propertyDescriptor.name];
+    //         const hasValue = typeof value !== "undefined" && value !== null;
     
-            if (!hasValue) { 
+    //         if (!hasValue) { 
 
-                const defaultValue = propertyDescriptor.defaultValue;
-                const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
-                const isToMany = propertyDescriptor.cardinality !== 1;
+    //             const defaultValue = propertyDescriptor.defaultValue;
+    //             const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+    //             const isToMany = propertyDescriptor.cardinality !== 1;
 
-                /*
-                    When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
-                    it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the rawData being mapped.
+    //             /*
+    //                 When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
+    //                 it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the rawData being mapped.
 
-                    But if there is a known default value, then we use it
-                */
-                if(hasDefaultValue) {
-                    if (isToMany) {
-                        //console.warn('Default value for to-many relationship is not supported yet');
-                        //This should move the values into the mutable collection on the rawData.
-                        return rawData[propertyName] = defaultValue;
-                    } else {
-                        return rawData[propertyName] = defaultValue;
-                    }
-                }
-            } else {
-                rawData[propertyName] = value;
-            }
-        }
-    },
+    //                 But if there is a known default value, then we use it
+    //             */
+    //             if(hasDefaultValue) {
+    //                 if (isToMany) {
+    //                     //console.warn('Default value for to-many relationship is not supported yet');
+    //                     //This should move the values into the mutable collection on the rawData.
+    //                     return rawData[propertyName] = defaultValue;
+    //                 } else {
+    //                     return rawData[propertyName] = defaultValue;
+    //                 }
+    //             }
+    //         } else {
+    //             rawData[propertyName] = value;
+    //         }
+    //     }
+    // },
 
 
     /**
