@@ -2841,9 +2841,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
     _assignObjectValueOrDefault: {
-        value: function(object, propertyName, value, propertyDescriptor) {
+        value: function _assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor) {
             const hasValue = typeof value !== "undefined" && value !== null;
-    
+            let propertySetter = Object.getPropertyDescriptor(object, propertyName).set;
+
             if (!hasValue) { 
 
                 const defaultValue = propertyDescriptor.defaultValue;
@@ -2857,13 +2858,20 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     But if there is a known default value, then we use it
                 */
                 if(hasDefaultValue) {
-                    if (isToMany) {
+                    //3/8/26 the if (isToMany) {} block does the same as the else {} one...
+                    // if (isToMany) {
                         //console.warn('Default value for to-many relationship is not supported yet');
                         //This should move the values into the mutable collection on the object.
-                        return (object[propertyName] = defaultValue);
-                    } else {
-                        return (object[propertyName] = defaultValue);
-                    }
+
+                        //3/8/26 shifting to more deliberate use of internal setter to pass more context 
+                        //return (object[propertyName] = defaultValue);
+                        propertySetter
+                            ? propertySetter.call(object, /*value*/defaultValue, /*_dispatchChange*/ true, /*_initialValue*/ defaultValue, /*_currentValue*/undefined)
+                            : (object[propertyName] = defaultValue);
+                        return defaultValue;
+                    // } else {
+                    //     return (object[propertyName] = defaultValue);
+                    // }
                 } else if(value === null && !isToMany) {
                    /*
                         We used an empty array for relationships, so we don't want to trash it with null
@@ -2872,12 +2880,36 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         null means we know it's not there in storage/rawData. Undefined is we don't know
                         So we need to make sure that null is properly set on the object
                     */
-                    return (object[propertyName] = value);
+                    //3/8/26 shifting to more deliberate use of internal sette to pass more context 
+                    //return (object[propertyName] = value);
+                    /*
+                        3/8/26 - with propertyName === "accountConfirmationCode", there's no propertySetter.
+                        could be because it's set as             "isSerializable": false, in the object descriptor?
+
+                    */
+                    propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+
+                    return value;
+                } else {
+                    /* We end up here if value === null and isToMany is true */
+                    propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+
+                    return value;
                 }
             } else {
-                return (object[propertyName] = value);
+                //3/8/26 shifting to more deliberate use of internal setter to pass more context 
+                //return (object[propertyName] = value);
+                propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+                return value;
             }
 
+            throw "shouldn't have reached here";
             return value;
         }
     },
