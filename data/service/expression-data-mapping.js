@@ -2746,10 +2746,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 */
                 //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
                 let getter = Object.getPropertyDescriptor(object,propertyName).get;
-                // if (!descriptor) {
-                //     debugger;
-                // }
-                var objectPropertyValue = getter && getter.call(object, /*shouldFetch*/false) || object[propertyName];
+
+                var objectPropertyValue = getter ? getter.call(object, /*shouldFetch*/false) : object[propertyName];
                 if(isToMany && value) {
                     /*
                         When we arrive here coming from _assignInversePropertyValue()
