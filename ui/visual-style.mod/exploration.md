@@ -115,22 +115,22 @@ Fill might be a better term than background: it's shorter, works for both shapes
       - [https://adactio.medium.com/accent-all-areas-d6c0208da53f](https://adactio.medium.com/accent-all-areas-d6c0208da53f)
       - [https://www.bram.us/2021/08/23/tint-user-interface-controls-with-css-accent-color/](https://www.bram.us/2021/08/23/tint-user-interface-controls-with-css-accent-color/)
   
-- **`controlColor`** or **`controlFill`**:
+-  **`controlFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_: Color for interactive elements
   - _Example_: Buttons, form fields
-- **`controlSecondaryColor`** or **`controlSecondaryFill`**:
+- **`controlSecondaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a second interactive element or a control, like the second knob in a multi slider
   - _Example_: Sliders
-- **`controlTertiaryColor`**:
+- **`controlTertiaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a third interactive element or a control, like the third knob in a multi slider
   - _Example_: Sliders
-- **`controlQuaternaryColor`**:
+- **`controlQuaternaryFill`**:
 
   - _Default (light)_: `rgba(243 244 246, 1)`
   - _Usage_:  color for a fourth interactive element or a control, like the fourth knob in a multi slider
@@ -140,27 +140,27 @@ There's a limit to how much interactive parts a control should have where it wou
 
   In light of the fact that these are actually defining background, as stated in Usage right below, shouldn't we name those controlSelectionFill, controlSecondarSelectionFill, etc...?
 
-- **`controlSelectionColor`** or  **`controlSelectionFill`** or  **`controlSelectionBackground`** ?:
+- **`controlSelectionFill`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Use when you want to show that a selection is or has been made, as for the selected item in a list. 
   - _Example_: Selected dropdown options, active tabs
-- **`controlSelectionBackgroundColor`**:
+- **`controlSelectionBackgroundFill`**:
 
   - _Default (light)_: `rgba(252 252 252, 1)`
   - _Usage_: Use when a selection is or has bee made, such as if you want to change the background color of an entire list to indicate a selection has been made. 
   - _Example_: value selected with a slider, selected items in a list
-- **`controlHoverColor`**:
+- **`controlHoverFill`**:
 
   - _Default (light)_: `rgba(239, 240, 243, 1)`
   - _Usage_: Background color when hovering over interactive elements
   - _Example_: Button hover state, card hover effect, menu item hover
-- **`controlActiveColor`**:
+- **`controlActiveFill`**:
 
   - _Default (light)_: `rgba(230, 233, 237, 1)`
   - _Usage_: color of the control when the use actively interacts with it. Defaults to controlSelectionColor
   - _Example_: Button pressed state, active dropdown item
-- **`controlFocusColor`**: (highlight)
+- **`controlFocusFill`**: (highlight)
 
   - _Default (light)_: `rgba(248, 249, 251, 1)`
   - _Usage_: Background color for focused interactive elements
