@@ -275,8 +275,14 @@ exports.DataTrigger.prototype = Object.create(
 
         /**
          * @method
-         * @argument {Object} object
-         * @returns {Object}
+         * @param {Object} object           The object for which the trigger would get the value for 
+         * @param {Boolean} shouldFetch     If false is passed, it will prevents a fetch it would otherwise have done. It's used as such by:
+         *                                      - ExpressionDataMapping's _setObjectValueForPropertyDescriptor() 
+         *                                      - DataTrigger's _setValue() that passes on shouldFetch and _initialValue it itself get from the caller, 
+         *                                        which is ExpressionDataMapping's _assignObjectValueOrDefault() as of now.
+         * @param {Object} _initialValue    The value to use as the initial value when the object's value for the property is still undefined, 
+         *                                  which typically happens when objects are fetched and raw data is mapped to object's properties' values
+         * @returns {Object}                The value for object for the property handled by the receiving DataTrigger
          *
          * #Performance #ToDo: Looks like the same walk-up logic
          * is going to be done many times for individual instances,
@@ -285,7 +291,7 @@ exports.DataTrigger.prototype = Object.create(
         _getValue: {
             configurable: true,
             writable: true,
-            value: function (object, shouldFetch) {
+            value: function (object, shouldFetch, _initialValue) {
                 // if(shouldFetch === undefined && this._service.rootService._objectsBeingMapped.has(object) && !object.snapshot) {
                 //     shouldFetch = false;
                 // }
@@ -321,7 +327,7 @@ exports.DataTrigger.prototype = Object.create(
                 //}
 
                 // Ensure to-Many properties are initialized to their collection type.
-                this._ensureCollectionValue(object);
+                this._ensureCollectionValue(object, _initialValue);
 
                 // Return the property's current value.
                 return this._valueGetter ? this._valueGetter.call(object) : object[this._privatePropertyName];
@@ -333,7 +339,7 @@ exports.DataTrigger.prototype = Object.create(
          * @argument {Object} object
          */
         _ensureCollectionValue: {
-            value: function (object) {
+            value: function _ensureCollectionValue(object, _initialValue) {
                 // When the property does not expect a collection value, nothing to do
                 if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
                     return;
@@ -376,8 +382,24 @@ exports.DataTrigger.prototype = Object.create(
                             break;
                     }
 
-                    const initValue = new valueClass();
-                    this._setValue(object, initValue, false, undefined, initValue);
+                    let initValue;
+
+                    if(_initialValue) {
+                        if(_initialValue instanceof valueClass) {
+                            initValue = _initialValue;
+                        } else {
+                            try {
+                                //Try to morph it into the expected class
+                                initValue = new valueClass(_initialValue);
+                            } catch(error) {
+                                throw "Could not create initial value of class "+valueClass.toString() + "from incompatible initial value: ", _initialValue;
+                                // initValue = new valueClass();
+                            }
+                        }
+                    } else {
+                        initValue = new valueClass();
+                    }
+                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/false, /*_initialValue*/undefined, /*_currentValue*/initValue);
                 }
             },
         },
@@ -635,6 +657,30 @@ exports.DataTrigger.prototype = Object.create(
                 }
             },
         },
+        
+        
+        /**
+         * Note that if a trigger's property value is set after that values is
+         * requested but before it is obtained from the trigger's service the
+         * property's value will only temporarily be set to the specified value:
+         * When the service finishes obtaining the value the property's value will
+         * be reset to that obtained value.
+         *
+         * 12/5/2024 — Except for collections where we merge values
+         *
+         * @method
+         * @param {Object} object       The object on which value should be set on the property handled by the receiving's trigger
+         * @param {} value              the value to be set on "object" for the property handled by the receiving's trigger
+         * @param {} _dispatchChange    allows caller to influence wether a change should dispatch a change event, defaults to true 
+         * @param {} _initialValue      typically used during initialization, by ExpressionDataMapping's _assignObjectValueOrDefault() 
+         *                              to pass the same  value as value and _initialValue, help understanding the context
+         * @param {} _currentValue      uniquely used by _ensureCollectionValue() calling _setValue() with the same value for parameter "value" and parameter "_currentValue"
+         *                              _currentValue instruct this setter that it is the value currently assigned to the property handled by that trigger on that object
+         * 
+         * Notes A: Should we allow user-land code to pass undefined as value? Probably not. 
+         *        Internal callers, might make sense in case of a reset, if we're told there's been a change of value by someone else,
+         *        but the value of that object's property isn't used/displayed anywhere to the user. Then if it were agaib, it would be refethed because then undefined
+         */
 
         _setValue: {
             configurable: true,
@@ -649,13 +695,14 @@ exports.DataTrigger.prototype = Object.create(
                     setter = this._valueSetter,
                     writable,
                     currentValue,
-                    isToMany,
                     isInitialValueArray,
                     isMap,
                     initialValue,
                     dispatchChange = arguments.length >= 3 ? _dispatchChange : true,
                     //shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
-                    shouldFetch = undefined;
+                    //shouldFetch = undefined;
+                    //If _initialValue is only going to be provided by mapping logic caller, that should work out 
+                    shouldFetch = arguments.length >= 4 && _initialValue === undefined;
 
                 // Get the value's current status and update that status to indicate
                 // the value has been obtained. This way if the setter called below
@@ -663,7 +710,14 @@ exports.DataTrigger.prototype = Object.create(
                 // had before it was set, and it will get that value immediately.
                 status = this._getValueStatus(object);
 
-                initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch);
+                //If _initialValue is null from mapping, but this.isToMany is true, then we want  this._getValue(() to call this._ensureCollectionValue() and have the proper collection set there.
+                //If _initialValue is not null from mapping and this.isToMany is true, then we want  this._getValue(() to call this._ensureCollectionValue() and have the proper collection set there.
+
+                if(this.isToMany && _initialValue !== undefined) {
+                    initialValue = this._getValue(object, shouldFetch, _initialValue);
+                } else {
+                    initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch, _initialValue);
+                }
 
                 // initialValue = arguments.length >= 4
                 //     ? _initialValue
@@ -671,7 +725,6 @@ exports.DataTrigger.prototype = Object.create(
                 //         ? undefined
                 //         : this._getValue(object, shouldFetch);
                 // If Array / to-Many
-                isToMany = this.isToMany;
                 isInitialValueArray = Array.isArray(initialValue);
                 isMap = !isInitialValueArray && initialValue instanceof Map;
 
@@ -695,7 +748,7 @@ exports.DataTrigger.prototype = Object.create(
                      */
                     //this._setValueStatus(object, status);
 
-                    if (isToMany) {
+                    if (this.isToMany) {
                         if (isInitialValueArray) {
                             /**
                              * this._getValue() sets object[this._privatePropertyName] to [] via calling this
@@ -740,7 +793,8 @@ exports.DataTrigger.prototype = Object.create(
                     }
                 }
 
-                currentValue = arguments.length >= 5 ? _currentValue : this._getValue(object, shouldFetch);
+                //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
+                currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
                 // currentValue = arguments.length >= 5
                 //     ? _currentValue
                 //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
@@ -1232,8 +1286,12 @@ Object.defineProperties(
                         }
 
                         if (!descriptor.readonly) {
-                            propertyDescriptor.set = function (value) {
-                                trigger._setValue(this, value);
+                            propertyDescriptor.set = function (value, _dispatchChange, _initialValue, _currentValue) {
+                                arguments.length === 1
+                                    //Called via regular setter
+                                    ? trigger._setValue(this, value)
+                                    //Called from inside the framework with extra arguments
+                                    : trigger._setValue(this, value, _dispatchChange, _initialValue, _currentValue);
                                 // (trigger||(trigger = DataTrigger._createTrigger(service, objectDescriptor, prototype, name,descriptor)))._setValue(this, value);
                             };
                         }
@@ -1248,8 +1306,12 @@ Object.defineProperties(
                                 return trigger._getValue(this, shouldFetch);
                                 // return (trigger||(trigger = DataTrigger._createTrigger(service, objectDescriptor, prototype, name,descriptor)))._getValue(this);
                             },
-                            set: function (value) {
-                                trigger._setValue(this, value);
+                            set: function (value, _dispatchChange, _initialValue, _currentValue) {
+                                arguments.length === 1
+                                    //Called via regular setter
+                                    ? trigger._setValue(this, value)
+                                    //Called from inside the framework with extra arguments
+                                    : trigger._setValue(this, value, _dispatchChange, _initialValue, _currentValue);
                                 // (trigger||(trigger = DataTrigger._createTrigger(service, objectDescriptor, prototype, name,descriptor)))._setValue(this, value);
                             },
                         });

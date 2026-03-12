@@ -1596,8 +1596,12 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     mapRawDataToObjectProperty: {
         value: function (data, object, propertyName, context, scope = this._scope.nest(data), registerMappedPropertiesAsChanged) {
             var rule = this.objectMappingRuleForPropertyName(propertyName),
-                propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName),
-                isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptor.valueDescriptor,
+                propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName);
+
+            return (propertyDescriptor?.valueDescriptor || Promise.resolveNull)
+            .then(propertyDescriptorValueDescriptor => {
+
+                let isRelationship = propertyDescriptor && !propertyDescriptor.definition && propertyDescriptorValueDescriptor,
                 isDerived = propertyDescriptor && !!propertyDescriptor.definition,
                 propertyScope,
                 locales,
@@ -1633,6 +1637,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             return  isRelationship ?                                this._resolveRelationship(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
                     propertyDescriptor && !isDerived ?              this._resolveProperty(object, propertyDescriptor, rule, scope, registerMappedPropertiesAsChanged) :
                                                                     null;
+            });
+
         }
     },
     _resolveRelationship: {
@@ -1664,11 +1670,18 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     data = result;
                 }
 
-                return hasInverse 
-                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
-                        return data;
-                    }) 
-                    : data;
+                //Let mainService's handleChange take care of the graph from now on as it needs to be done wether proprties are populated from fetch or from custom / business logic 
+                return data;
+
+                /* 
+                    Shutting down the work bellow being done in _assignInversePropertyValue() should be identical (and redundant...)
+                    to what DataService's handleChange() does but, keeping it around until we don't see any issue
+                */
+                // return hasInverse 
+                //     ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
+                //         return data;
+                //     }) 
+                //     : data;
             }
 
             function ruleEvaluationError(error) {
@@ -2740,10 +2753,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 */
                 //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
                 let getter = Object.getPropertyDescriptor(object,propertyName).get;
-                // if (!descriptor) {
-                //     debugger;
-                // }
-                var objectPropertyValue = getter && getter.call(object, /*shouldFetch*/false) || object[propertyName];
+
+                var objectPropertyValue = getter ? getter.call(object, /*shouldFetch*/false) : object[propertyName];
                 if(isToMany && value) {
                     /*
                         When we arrive here coming from _assignInversePropertyValue()
@@ -2794,38 +2805,40 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
 
-    _assignRawDataDefaultValueIfNeededForPropertyDescriptor: {
-        value: function(rawData, propertyDescriptor) {
+    // 3/8/2026 not called anywhere...
 
-            const value = rawData[propertyDescriptor.name];
-            const hasValue = typeof value !== "undefined" && value !== null;
+    // _assignRawDataDefaultValueIfNeededForPropertyDescriptor: {
+    //     value: function(rawData, propertyDescriptor) {
+
+    //         const value = rawData[propertyDescriptor.name];
+    //         const hasValue = typeof value !== "undefined" && value !== null;
     
-            if (!hasValue) { 
+    //         if (!hasValue) { 
 
-                const defaultValue = propertyDescriptor.defaultValue;
-                const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
-                const isToMany = propertyDescriptor.cardinality !== 1;
+    //             const defaultValue = propertyDescriptor.defaultValue;
+    //             const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+    //             const isToMany = propertyDescriptor.cardinality !== 1;
 
-                /*
-                    When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
-                    it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the rawData being mapped.
+    //             /*
+    //                 When we're getting a null value from a Relational DB for eample, it means the abscence of a value.
+    //                 it means a raw with an uninitialized value for that column/property. Which means there's no point to set that to the rawData being mapped.
 
-                    But if there is a known default value, then we use it
-                */
-                if(hasDefaultValue) {
-                    if (isToMany) {
-                        //console.warn('Default value for to-many relationship is not supported yet');
-                        //This should move the values into the mutable collection on the rawData.
-                        return rawData[propertyName] = defaultValue;
-                    } else {
-                        return rawData[propertyName] = defaultValue;
-                    }
-                }
-            } else {
-                rawData[propertyName] = value;
-            }
-        }
-    },
+    //                 But if there is a known default value, then we use it
+    //             */
+    //             if(hasDefaultValue) {
+    //                 if (isToMany) {
+    //                     //console.warn('Default value for to-many relationship is not supported yet');
+    //                     //This should move the values into the mutable collection on the rawData.
+    //                     return rawData[propertyName] = defaultValue;
+    //                 } else {
+    //                     return rawData[propertyName] = defaultValue;
+    //                 }
+    //             }
+    //         } else {
+    //             rawData[propertyName] = value;
+    //         }
+    //     }
+    // },
 
 
     /**
@@ -2835,9 +2848,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
     _assignObjectValueOrDefault: {
-        value: function(object, propertyName, value, propertyDescriptor) {
+        value: function _assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor) {
             const hasValue = typeof value !== "undefined" && value !== null;
-    
+            let propertySetter = Object.getPropertyDescriptor(object, propertyName).set;
+
             if (!hasValue) { 
 
                 const defaultValue = propertyDescriptor.defaultValue;
@@ -2851,13 +2865,20 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     But if there is a known default value, then we use it
                 */
                 if(hasDefaultValue) {
-                    if (isToMany) {
+                    //3/8/26 the if (isToMany) {} block does the same as the else {} one...
+                    // if (isToMany) {
                         //console.warn('Default value for to-many relationship is not supported yet');
                         //This should move the values into the mutable collection on the object.
-                        return (object[propertyName] = defaultValue);
-                    } else {
-                        return (object[propertyName] = defaultValue);
-                    }
+
+                        //3/8/26 shifting to more deliberate use of internal setter to pass more context 
+                        //return (object[propertyName] = defaultValue);
+                        propertySetter
+                            ? propertySetter.call(object, /*value*/defaultValue, /*_dispatchChange*/ true, /*_initialValue*/ defaultValue, /*_currentValue*/undefined)
+                            : (object[propertyName] = defaultValue);
+                        return defaultValue;
+                    // } else {
+                    //     return (object[propertyName] = defaultValue);
+                    // }
                 } else if(value === null && !isToMany) {
                    /*
                         We used an empty array for relationships, so we don't want to trash it with null
@@ -2866,13 +2887,34 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         null means we know it's not there in storage/rawData. Undefined is we don't know
                         So we need to make sure that null is properly set on the object
                     */
-                    return (object[propertyName] = value);
+                    //3/8/26 shifting to more deliberate use of internal sette to pass more context 
+                    //return (object[propertyName] = value);
+                    /*
+                        3/8/26 - with propertyName === "accountConfirmationCode", there's no propertySetter.
+                        could be because it's set as             "isSerializable": false, in the object descriptor?
+
+                    */
+                    propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+
+                    return value;
+                } else {
+                    /* We end up here if value === null and isToMany is true */
+                    propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+
+                    return value;
                 }
             } else {
-                return (object[propertyName] = value);
+                //3/8/26 shifting to more deliberate use of internal setter to pass more context 
+                //return (object[propertyName] = value);
+                propertySetter
+                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                        : (object[propertyName] = value);
+                return value;
             }
-
-            return value;
         }
     },
 
