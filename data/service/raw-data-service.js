@@ -2184,14 +2184,16 @@ RawDataService.addClassProperties({
      * the raw mapped data to data objects:
      *
      * @method
-     * @argument {Object} mapping - A DataMapping object handing the mapping.
-     * @argument {Object} rawData - An object whose properties' values hold
-     *                             the raw data.
-     * @argument {Object} dataObject - An object whose properties must be set or
-     *                             modified to represent the raw data.
-     * @argument {?} context     - The value that was passed in to the
-     *                             [addRawData()]{@link RawDataService#addRawData}
-     *                             call that invoked this method.
+     * @argument {Object} mapping       - A DataMapping object handing the mapping.
+     * @argument {Object} rawData       - An object whose properties' values hold
+     *                                  the raw data.
+     * @argument {Object} dataObject    - An object whose properties must be set or
+     *                                  modified to represent the raw data.
+     * @argument {?} context            - The value that was passed in to the
+     *                                  [addRawData()]{@link RawDataService#addRawData}
+     *                                   call that invoked this method. A Read[]DataOperation
+     * @argument {?} readExpressions    - The expressions expected to be on dataObject after mapping.
+     * @argument {?} mappingScope       - The scope and its parents containing the value to be mapped
      */
     mappingWillMapRawDataToObject: {
         value: function (mapping, rawData, dataObject, context, readExpressions, mappingScope) {
