@@ -649,7 +649,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 //     return this[methodName]?.(readOperation)
                 // } else {
                 //     rawDataArray = null;
-                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
+                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, /*isNotLast*/false,/*responseOperationTarget*/responseOperationTarget  );
                     responseOperationTarget.dispatchEvent(responseOperation);             
                 // }
             }  
