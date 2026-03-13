@@ -710,10 +710,10 @@ exports.DataTrigger.prototype = Object.create(
                 // had before it was set, and it will get that value immediately.
                 status = this._getValueStatus(object);
 
-                //If _initialValue is null from mapping, but this.isToMany is true, then we want  this._getValue(() to call this._ensureCollectionValue() and have the proper collection set there.
-                //If _initialValue is not null from mapping and this.isToMany is true, then we want  this._getValue(() to call this._ensureCollectionValue() and have the proper collection set there.
-
-                if(this.isToMany && _initialValue !== undefined) {
+                //FIXME - this is way more complicated than it should...
+                //If _initialValue is null from mapping, but this.isToMany is true or if's a range, then we want  this._getValue() to call this._ensureCollectionValue() and have the proper collection set there, and observed by _getValue() calling .setValue().
+                //If _initialValue is not null from mapping and this.isToMany is true or if's a range, then we want  this._getValue() to call this._ensureCollectionValue() and have the proper collection set there, and observed by _getValue() calling .setValue().
+                if((this.isToMany || this.propertyDescriptor.collectionValueType === "range") && _initialValue !== undefined) {
                     initialValue = this._getValue(object, shouldFetch, _initialValue);
                 } else {
                     initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch, _initialValue);
