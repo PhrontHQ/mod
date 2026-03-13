@@ -1154,6 +1154,29 @@ Component.addClassProperties({
         },
     },
 
+    _closestAncestorNodeToParentComponentElement: {
+        value: function () {
+
+            if(this.element.parentNode === this.parentComponent?.element) {
+                return this.element;
+            } else {
+                var anElement = this.element,
+                    parentComponentElement = this.parentComponent?.element || null,
+                    aParentNode,
+                    eventManager = this.eventManager;
+                if (anElement) {
+                    while ((aParentNode = anElement.parentNode) && aParentNode !== parentComponentElement) {
+                        anElement = aParentNode;
+                    }
+                    return anElement;
+                } else {
+                    return null;
+                }
+            }
+        },
+    },
+
+
     querySelectorComponent: {
         value: function (selector) {
             if (typeof selector !== "string") {
@@ -3824,7 +3847,7 @@ Component.addClassProperties({
             if (this._currentBuildAnimation) {
                 this._currentBuildAnimation.cancel();
             }
-            if (this._element && this._element.parentNode && this._element.parentNode.component) {
+            if (this._element && this._element.parentNode/* && this._element.parentNode.component*/) {
                 if (this._isElementAttachedToParent) {
                     this._currentBuildAnimation = this.buildInSwitchAnimation;
                 } else {
@@ -3857,19 +3880,33 @@ Component.addClassProperties({
                 this._updateActiveBuildAnimations();
                 this._currentBuildAnimation = this.buildOutInitialAnimation;
             }
-            if (this._element && this._element.parentNode && this._element.parentNode.component) {
+            /* 
+                change to fix a bug in substitution when its content are wrapped in an element that has the data-arg 
+                When that's the case, the component receives _buildOut(), but the parentNode of that component's element
+                is not that component.element.parentNode.
+
+                so thatComponent._closestAncestorNodeToParentComponentElement() returns the element that needs to be removed as domContent
+    
+            */
+            if (this._element && this._element.parentNode/* && this._element.parentNode.component*/) {
                 if (this._currentBuildAnimation) {
                     this._currentBuildAnimation.play();
                     this._currentBuildAnimation.finished.then(
                         function () {
                             var parent = self.parentComponent;
+                            let closestAncestorNodeToParentComponentElement = self._closestAncestorNodeToParentComponentElement();
                             self._currentBuildAnimation.cancel();
                             self._currentBuildAnimation = null;
                             self.detachFromParentComponent();
                             self.buildInAnimationOverride = null;
                             self.buildOutAnimationOverride = null;
-                            if (self._element.parentNode.component) {
-                                self._element.parentNode.removeChild(self._element);
+                            /* change to fix a bug in substitution when its content are wrapped in an element that has the data-arg */
+                            // if (self._element.parentNode.component) {
+                            //      self._element.parentNode.removeChild(self._element);
+                            // }
+                            /* change to fix a bug in substitution when its content are wrapped in an element that has the data-arg */
+                            if (closestAncestorNodeToParentComponentElement.parentNode/* && this._element.parentNode.component*/) {
+                                closestAncestorNodeToParentComponentElement.parentNode.removeChild(closestAncestorNodeToParentComponentElement);
                             }
                             self._isElementAttachedToParent = false;
                             parent.dispatchEventNamed("buildOutEnd", true, true);
@@ -3877,12 +3914,25 @@ Component.addClassProperties({
                         function () {},
                     );
                 } else {
+                    let closestAncestorNodeToParentComponentElement = this._closestAncestorNodeToParentComponentElement();
+
                     this.detachFromParentComponent();
                     this.buildInAnimationOverride = null;
                     this.buildOutAnimationOverride = null;
-                    if (this._isElementAttachedToParent) {
-                        if (this._element.parentNode && this._element.parentNode.component) {
-                            this._element.parentNode.removeChild(this._element);
+                    /*
+                        change to fix a bug in substitution when its content are wrapped in an element that has the data-arg
+                        
+                        A component in a parent node that host the args in a substitution can end up here while
+                        this._isElementAttachedToParent is false, this.inDocument is false
+                        and yet, closestAncestorNodeToParentComponentElement is very much still in the DOM
+
+                        So there's a logical error somewhere.
+
+                        In the meantime Let's trust the DOM structure until we find it
+                    */
+                    if (this._isElementAttachedToParent || closestAncestorNodeToParentComponentElement.parentNode) {
+                        if (closestAncestorNodeToParentComponentElement.parentNode/* && this._element.parentNode.component*/) {
+                            closestAncestorNodeToParentComponentElement.parentNode.removeChild(closestAncestorNodeToParentComponentElement);
                         }
                         this._isElementAttachedToParent = false;
                     }
@@ -3903,7 +3953,7 @@ Component.addClassProperties({
             this.dispatchEvent(event);
             this.inDocument = true;
             if (this.parentComponent) {
-                this.parentComponent._childWillEnterDocument();
+                this.parentComponent._childWillEnterDocument(this);
             }
             if (this.__shouldBuildIn) {
                 this._buildIn();
@@ -3922,8 +3972,8 @@ Component.addClassProperties({
     },
 
     _childWillEnterDocument: {
-        value: function () {
-            if (this._componentsPendingBuildOut) {
+        value: function (child) {
+            if (this._componentsPendingBuildOut && this._componentsPendingBuildOut.size > 0) {
                 this._componentsPendingBuildOut.forEach(this._componentsPendingBuildOutForEachFunction);
                 this._componentsPendingBuildOut.clear();
             }
