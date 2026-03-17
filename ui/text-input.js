@@ -128,6 +128,16 @@ TextInput.addClassProperties({
     },
 
     /**
+        iOS Webview automatically scrolls the content inside <html> in order to move the input 
+        above the virtual keyboard. This flag is set in on blur to indicate that the scrollTop
+        needs to be reset in the next draw loop.
+        @default false
+    */
+    _needsToResetScrollForVirtualKeyboard: {
+        value: false
+    },
+
+    /**
     When this property and the converter's <code>allowPartialConversion</code> are both true, as the user enters text in the input element each new character is added to the component's <code>value</code> property, which triggers the conversion. Depending on the type of input element being used, this behavior may not be desirable. For instance, you likely would not want to convert a date string as a user is entering it, only when they've completed their input.
     Specifies whether
     @type {boolean}
@@ -214,6 +224,11 @@ TextInput.addClassProperties({
                 el.classList.remove("mod--invalidText");
                 el.classList.remove("mod--invalid");
                 el.title = "";
+            }
+
+            if (this._needsToResetScrollForVirtualKeyboard) {
+                this._needsToResetScrollForVirtualKeyboard = false;
+                document.documentElement.scrollTop = 0;
             }
         },
     },
@@ -314,6 +329,8 @@ TextInput.addClassProperties({
             this.super(event);
             this.takeValueFromElement();
             this.dispatchActionEvent();
+            this._needsToResetScrollForVirtualKeyboard = true;
+            this.needsDraw = true;
         },
     },
 
