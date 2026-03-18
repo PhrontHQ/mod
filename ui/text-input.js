@@ -131,6 +131,21 @@ TextInput.addClassProperties({
         iOS Webview automatically scrolls the content inside <html> in order to move the input 
         above the virtual keyboard. This flag is set in on blur to indicate that the scrollTop
         needs to be reset in the next draw loop.
+
+        3/18 iOS 26.3.1 
+        In ideal world we would fix this with pure CSS that prevents the 
+        browser from shrinking the viewport, but as of this writing, that's been
+        unsuccessful.
+        Fixes attempted
+        - https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/meta/name/viewport#interactive-widget (Unsupported by ios safari)
+        - https://developer.mozilla.org/en-US/docs/Web/API/VirtualKeyboard_API (Unsupported by ios safari)
+        - position: fixed on <html>
+        - position: absolute on <html>
+        - position: absolute on <html> and <body>
+        - overflow: hidden on <html> and <body>
+
+        In each case, the keyboard pushes all content up and the <html> scrollTop is set by the amount it was pushed up
+
         @default false
     */
     _needsToResetScrollForVirtualKeyboard: {
