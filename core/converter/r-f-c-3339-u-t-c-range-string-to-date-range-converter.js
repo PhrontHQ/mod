@@ -1,30 +1,36 @@
 /**
- * @module data/main.mod/converter/i-s-o-8601-duration-range-string-to-duration-range-converter
- * @requires mod/core/converter/converter
+ * @module data/converter/r-f-c-3339-u-t-c-range-string-to-date-range-converter
+ * @requires montage/core/converter/converter
  */
-var Converter = require("./converter").Converter,
-    Range = require("../range").Range,
-    ISO8601DurationStringToDurationConverter = require("./i-s-o-8601-duration-string-to-duration-converter").ISO8601DurationStringToDurationConverter,
+var Converter = require("core/converter/converter").Converter,
+    Range = require("core/range").Range,
+    // ISO8601DateStringToDateComponentValuesCallbackConverter = require("core/converter/i-s-o-8601-date-string-to-date-component-values-callback-converter").ISO8601DateStringToDateComponentValuesCallbackConverter,
+    ISO8601FormattedStringToDateConverter = require("core/converter/i-s-o-8601-formatted-string-to-date-converter").ISO8601FormattedStringToDateConverter,
     singleton;
 
     //ISO 8601
 
     //for Date.parseRFC3339
-    require("../extras/date");
+    require("core/extras/date");
 
 /**
- * @class ISO8601DurationRangeStringToDurationRangeConverter
+ * @class RFC3339UTCRangeStringToDateRangeConverter
  * @classdesc Converts an RFC3339 UTC string to a date and reverts it.
  */
-var ISO8601DurationRangeStringToDurationRangeConverter = exports.ISO8601DurationRangeStringToDurationRangeConverter = Converter.specialize({
+var RFC3339UTCRangeStringToDateRangeConverter = exports.RFC3339UTCRangeStringToDateRangeConverter = Converter.specialize({
 
     constructor: {
         value: function () {
-            if (this.constructor === ISO8601DurationRangeStringToDurationRangeConverter) {
+            if (this.constructor === RFC3339UTCRangeStringToDateRangeConverter) {
                 if (!singleton) {
                     singleton = this;
-                    this._stringConverter = new ISO8601DurationStringToDurationConverter();
 
+                    // this._stringConverter = new ISO8601DateStringToDateComponentValuesCallbackConverter();
+                    // this._stringConverter.callback = function dateConverter(year, month, day, hours, minutes, seconds, milliseconds) {
+                    //     return new Date(Date.UTC(year, --month, day, hours, minutes, seconds, milliseconds));
+                    // };
+
+                    this._stringConverter = new ISO8601FormattedStringToDateConverter();
                     this._rangeParser = this._stringConverter.convert.bind(this._stringConverter);
                 }
 
@@ -70,14 +76,20 @@ var ISO8601DurationRangeStringToDurationRangeConverter = exports.ISO8601Duration
             return v.bounds[0] +
                 (
                     v.begin
-                        ? this._stringConverter.revert(v.begin)
+                        ? ((typeof v.begin.toJSDate === "function")
+                            ? v.begin.toJSDate().toISOString()
+                            : v.begin.toISOString())
                         : "-infinity"
                 ) + "," +
                 (
                     v.end
-                        ? this._stringConverter.revert(v.end)
+                        ? ((typeof v.end.toJSDate === "function")
+                            ? v.end.toJSDate().toISOString()
+                            : v.end.toISOString())
                         : "infinity"
                 ) + v.bounds[1];
+
+            return v.toISOString();
         }
     }
 
@@ -86,7 +98,7 @@ var ISO8601DurationRangeStringToDurationRangeConverter = exports.ISO8601Duration
 Object.defineProperty(exports, 'singleton', {
     get: function () {
         if (!singleton) {
-            singleton = new ISO8601DurationRangeStringToDurationRangeConverter();
+            singleton = new RFC3339UTCRangeStringToDateRangeConverter();
         }
 
         return singleton;

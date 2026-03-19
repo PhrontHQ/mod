@@ -54,6 +54,7 @@ var ISO8601FormattedStringToDateConverter = exports.ISO8601FormattedStringToDate
                 if (s.caseInsensitiveEquals("infinity") || s.caseInsensitiveEquals("-infinity")) {
                     return null;
                 } else {
+                    s = s.replace(/\"/g, '');
                     return new Date(s);
                 }
             } else {

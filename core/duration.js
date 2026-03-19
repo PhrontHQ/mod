@@ -275,9 +275,9 @@ exports.Duration = Montage.specialize( /** @lends Duration */ {
                 values = [],
                 i = 0, countI = units.length, unit;
             for (; (unit = units[i]); i++) {
-                if (match.groups[unit]) {
+                if (match.groups[unit.unit]) {
                     empty = false;
-                    values.push(parseNum(match.groups[unit]));
+                    values.push(parseNum(match.groups[unit.unit]));
                 } else {
                     values.push(undefined);
                 }

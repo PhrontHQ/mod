@@ -7,6 +7,7 @@ module.exports = require("mod/testing/run")
         // Internal
         "spec/bitfield-spec",
         "spec/converter-spec",
+        "spec/converter/range-converter-spec",
         "spec/paths-spec",
         //{name: "spec/node/node-spec", browser: false},
         "spec/enum-spec",
