@@ -487,7 +487,7 @@ exports.DataTrigger.prototype = Object.create(
             writable: true,
             value: function (object, initialValue, currentValue) {
                 let isInitialValueArray = Array.isArray(initialValue);
-                let isMap = !isInitialValueArray && initialValue instanceof Map;
+                let isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
 
                 /**
                  * A range is a collection containing infinite values but it may not properly have a cardinality properly
@@ -499,7 +499,7 @@ exports.DataTrigger.prototype = Object.create(
                         if (listener) {
                             if (isInitialValueArray) {
                                 initialValue.removeRangeChangeListener(listener);
-                            } else if (isMap) {
+                            } else if (isInitialValueMap) {
                                 initialValue.removeMapChangeListener(listener);
                             }
 
@@ -707,7 +707,7 @@ exports.DataTrigger.prototype = Object.create(
                     writable,
                     currentValue,
                     isInitialValueArray,
-                    isMap,
+                    isInitialValueMap,
                     initialValue,
                     dispatchChange = arguments.length >= 3 ? _dispatchChange : true,
                     //shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
@@ -720,6 +720,10 @@ exports.DataTrigger.prototype = Object.create(
                 // requests the property's value it will get the value the property
                 // had before it was set, and it will get that value immediately.
                 status = this._getValueStatus(object);
+
+                //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
+                currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
+
 
                 //FIXME - this is way more complicated than it should...
                 //If _initialValue is null from mapping, but this.isToMany is true or if's a range, then we want  this._getValue() to call this._ensureCollectionValue() and have the proper collection set there, and observed by _getValue() calling .setValue().
@@ -736,8 +740,7 @@ exports.DataTrigger.prototype = Object.create(
                 //         ? undefined
                 //         : this._getValue(object, shouldFetch);
                 // If Array / to-Many
-                isInitialValueArray = Array.isArray(initialValue);
-                isMap = !isInitialValueArray && initialValue instanceof Map;
+
 
                 // Set this trigger's property to the desired value, but only if
                 // that property is writable.
@@ -760,6 +763,8 @@ exports.DataTrigger.prototype = Object.create(
                     //this._setValueStatus(object, status);
 
                     if (this.isToMany) {
+                        isInitialValueArray = Array.isArray(initialValue);
+                        isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
                         if (isInitialValueArray) {
                             /**
                              * this._getValue() sets object[this._privatePropertyName] to [] via calling this
@@ -773,7 +778,7 @@ exports.DataTrigger.prototype = Object.create(
                                     ...value
                                 );
                             }
-                        } else if (isMap && value) {
+                        } else if (isInitialValueMap && value) {
                             // We want to maintain the same map,
                             var map = object[this._privatePropertyName],
                                 //iterator are "lives" until used, so we make a copy
@@ -804,8 +809,6 @@ exports.DataTrigger.prototype = Object.create(
                     }
                 }
 
-                //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
-                currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
                 // currentValue = arguments.length >= 5
                 //     ? _currentValue
                 //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
@@ -820,6 +823,7 @@ exports.DataTrigger.prototype = Object.create(
 
                 // If we're not in the middle of a mapping...:
                 if (
+                    // currentValue !== value &&
                     currentValue !== initialValue &&
                     dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/
                 ) {
