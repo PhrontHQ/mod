@@ -288,6 +288,17 @@ exports.DataTrigger.prototype = Object.create(
          * is going to be done many times for individual instances,
          * we should improve that.
          */
+
+        /*
+            FIX ME: a new object on which a property getter is invoked right now wouldn't return the default value if one is specified in the data model,
+            the way ExpressionDataMapping _assignObjectValueOrDefault() does by using:
+
+                const defaultValue = propertyDescriptor.defaultValue;
+                const hasDefaultValue = propertyDescriptor.hasOwnProperty("defaultValue") && typeof defaultValue !== "undefined" && defaultValue !== null;
+
+                BUT if we "burn-in" those values on instances, and they get saved, then it becomes value, even though it was never deliberately entered by a user
+                and if default is changed later, that instance would still holds the value that was the previous value.
+        */
         _getValue: {
             configurable: true,
             writable: true,
