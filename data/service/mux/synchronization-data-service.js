@@ -380,7 +380,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
         this.startTrackingChangesForObjectBeingMapped(rootObject);
         if (propertyDescriptor.cardinality === Infinity) {
-            changeEvent.addedValues.forEach((nestedObject) => {
+            let changedValues = changeEvent.addedValues ? changeEvent.addedValues : changeEvent.keyValue;
+
+            //We would ideally not use a forEach for frugality's sake
+            changedValues.forEach((nestedObject) => {
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(nestedObject.objectDescriptor, `${nestedObject.dataIdentifier.dataService.name} Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
                 }
