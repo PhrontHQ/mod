@@ -1677,11 +1677,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     Shutting down the work bellow being done in _assignInversePropertyValue() should be identical (and redundant...)
                     to what DataService's handleChange() does but, keeping it around until we don't see any issue
                 */
-                // return hasInverse 
-                //     ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
-                //         return data;
-                //     }) 
-                //     : data;
+                return hasInverse 
+                    ? self._assignInversePropertyValue(data, object, propertyDescriptor, rule, registerMappedPropertiesAsChanged).then(function() {
+                        return data;
+                    }) 
+                    : data;
             }
 
             function ruleEvaluationError(error) {
@@ -2871,11 +2871,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         //This should move the values into the mutable collection on the object.
 
                         //3/8/26 shifting to more deliberate use of internal setter to pass more context 
-                        //return (object[propertyName] = defaultValue);
-                        propertySetter
-                            ? propertySetter.call(object, /*value*/defaultValue, /*_dispatchChange*/ true, /*_initialValue*/ defaultValue, /*_currentValue*/undefined)
-                            : (object[propertyName] = defaultValue);
-                        return defaultValue;
+                        return (object[propertyName] = defaultValue);
+                        // propertySetter
+                        //     ? propertySetter.call(object, /*value*/defaultValue, /*_dispatchChange*/ true, /*_initialValue*/ defaultValue, /*_currentValue*/undefined)
+                        //     : (object[propertyName] = defaultValue);
+                        // return defaultValue;
                     // } else {
                     //     return (object[propertyName] = defaultValue);
                     // }
@@ -2888,17 +2888,17 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         So we need to make sure that null is properly set on the object
                     */
                     //3/8/26 shifting to more deliberate use of internal sette to pass more context 
-                    //return (object[propertyName] = value);
+                    return (object[propertyName] = value);
                     /*
                         3/8/26 - with propertyName === "accountConfirmationCode", there's no propertySetter.
                         could be because it's set as             "isSerializable": false, in the object descriptor?
 
                     */
-                    propertySetter
-                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
-                        : (object[propertyName] = value);
+                    // propertySetter
+                    //     ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                    //     : (object[propertyName] = value);
 
-                    return value;
+                    // return value;
                 } else {
                     /* We end up here if value === null and isToMany is true */
                     propertySetter
@@ -2909,11 +2909,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
             } else {
                 //3/8/26 shifting to more deliberate use of internal setter to pass more context 
-                //return (object[propertyName] = value);
-                propertySetter
-                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
-                        : (object[propertyName] = value);
-                return value;
+                return (object[propertyName] = value);
+                // propertySetter
+                //         ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                //         : (object[propertyName] = value);
+                // return value;
             }
         }
     },

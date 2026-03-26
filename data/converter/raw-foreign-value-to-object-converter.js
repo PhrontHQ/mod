@@ -3,6 +3,7 @@ var RawValueToObjectConverter = require("./raw-value-to-object-converter").RawVa
     DataQuery = require("../model/data-query").DataQuery,
     Map = require("../../core/collections/map").Map,
     syntaxProperties = require("../../core/frb/syntax-properties"),
+    Uuid = require("core/uuid").Uuid,
     Promise = require("../../core/promise").Promise;
 /**
  * @class RawForeignValueToObjectConverter
@@ -690,6 +691,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
 
+    uuidNoValue: {
+        value: Uuid.noValue
+    },
+
    _convert: {
         value: function (scope, service) {
             var v = scope.value;
@@ -765,6 +770,12 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         }
                     }
 
+                } else if(v === this.uuidNoValue) {
+                    /*
+                        the uuid noValue - '00000000-0000-0000-0000-000000000000'
+                        means there's nothing to be found, we can resolve this right now!
+                    */
+                    return Promise.resolveNull;
                 } else {
                     criteria = this.convertCriteriaForValue(v);
 
@@ -847,7 +858,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                 //     });
                 // } else {
-                    return Promise.resolve(null);
+                    return Promise.resolveNull;
                 //}
 
             }

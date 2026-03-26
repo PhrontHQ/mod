@@ -286,6 +286,9 @@ var Uuid = exports.Uuid = Object.create(Object.prototype, /** @lends Uuid# */ {
     isUUID: {
         enumerable: false,
         value: exports.isUUID
+    },
+    noValue: {
+        value: '00000000-0000-0000-0000-000000000000'
     }
 });
 
