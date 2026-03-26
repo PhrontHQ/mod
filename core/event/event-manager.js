@@ -3305,8 +3305,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             }
 
             mutableEventTarget = mutableEvent.target;
-            eventPath = this.eventPathForTarget(mutableEventTarget);
-            mutableEvent._composedPath = eventPath;
+            // eventPath = this.eventPathForTarget(mutableEventTarget);
+            // mutableEvent._composedPath = eventPath;
+            eventPath = mutableEvent.composedPath();
 
 
             // Let the delegate handle the event first
@@ -3681,136 +3682,136 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
-    _eventPathForTargetMap : {
-        value: undefined
-    },
+    // _eventPathForTargetMap : {
+    //     value: undefined
+    // },
 
-    eventPathForTarget: {
-        enumerable: false,
-        value: function (target) {
+    // eventPathForTarget: {
+    //     enumerable: false,
+    //     value: function (target) {
 
-            if (this.isBrowser && (this.isElement(target) || target instanceof Document || target === window)) {
-                return this._eventPathForDomTarget(target);
-            } else {
-                return this._eventPathForTarget(target);
-            }
-        }
-    },
+    //         if (this.isBrowser && (this.isElement(target) || target instanceof Document || target === window)) {
+    //             return this._eventPathForDomTarget(target);
+    //         } else {
+    //             return this._eventPathForTarget(target);
+    //         }
+    //     }
+    // },
 
-    /**
-     * Build the event target chain for the the specified Target
-     * @private
-     */
-    _eventPathForTarget: {
-        enumerable: false,
-        value: function (target) {
+    // /**
+    //  * Build the event target chain for the the specified Target
+    //  * @private
+    //  */
+    // _eventPathForTarget: {
+    //     enumerable: false,
+    //     value: function (target) {
 
-            if (!target) {
-                return this._emptyComposedPath;
-            } else if(target.composedPath) {
-                /*
-                    If target has a commposedPath, it's likely cached.
-                    So in case it's mutated by a listner, we're making a copy
-                    to  guard against that.
-                */
-                return Array.from(target.composedPath);
-            } else {
+    //         if (!target) {
+    //             return this._emptyComposedPath;
+    //         } else if(target.composedPath()) {
+    //             /*
+    //                 If target has a commposedPath, it's likely cached.
+    //                 So in case it's mutated by a listner, we're making a copy
+    //                 to  guard against that.
+    //             */
+    //             return Array.from(target.composedPath());
+    //         } else {
 
-                var targetCandidate = target,
-                    application = this.application,
-                    eventPath = [],
-                    discoveredTargets = this._eventPathForTargetMap;
+    //             var targetCandidate = target,
+    //                 application = this.application,
+    //                 eventPath = [],
+    //                 discoveredTargets = this._eventPathForTargetMap;
 
-                discoveredTargets.clear();
+    //             discoveredTargets.clear();
 
-                // Consider the target "discovered" for less specialized detection of cycles
-                // discoveredTargets.set(target,true);
+    //             // Consider the target "discovered" for less specialized detection of cycles
+    //             // discoveredTargets.set(target,true);
 
-                do {
-                    if (!discoveredTargets.has(targetCandidate)) {
-                        eventPath.push(targetCandidate);
-                        discoveredTargets.set(targetCandidate,true);
-                    }
+    //             do {
+    //                 if (!discoveredTargets.has(targetCandidate)) {
+    //                     eventPath.push(targetCandidate);
+    //                     discoveredTargets.set(targetCandidate,true);
+    //                 }
 
-                    targetCandidate = targetCandidate.nextTarget;
+    //                 targetCandidate = targetCandidate.nextTarget;
 
-                    if (!targetCandidate || discoveredTargets.has(targetCandidate)) {
-                        targetCandidate = application;
-                    }
+    //                 if (!targetCandidate || discoveredTargets.has(targetCandidate)) {
+    //                     targetCandidate = application;
+    //                 }
 
-                    if (targetCandidate && discoveredTargets.has(targetCandidate)) {
-                        targetCandidate = null;
-                    }
-                }
-                while (targetCandidate);
+    //                 if (targetCandidate && discoveredTargets.has(targetCandidate)) {
+    //                     targetCandidate = null;
+    //                 }
+    //             }
+    //             while (targetCandidate);
 
-                return eventPath;
-            }
+    //             return eventPath;
+    //         }
 
-        }
-    },
+    //     }
+    // },
 
-    _emptyComposedPath: {
-        value: Object.freeze([])
-    },
-    /**
-     * Build the event target chain for the the specified DOM target
-     * @private
-     */
-    _eventPathForDomTarget: {
-        enumerable: false,
-        value: function (target) {
+    // _emptyComposedPath: {
+    //     value: Object.freeze([])
+    // },
+    // /**
+    //  * Build the event target chain for the the specified DOM target
+    //  * @private
+    //  */
+    // _eventPathForDomTarget: {
+    //     enumerable: false,
+    //     value: function (target) {
 
-            if (!target) {
-                return this._emptyComposedPath;
-            }
+    //         if (!target) {
+    //             return this._emptyComposedPath;
+    //         }
 
-            var targetCandidate = target,
-                targetView = targetCandidate && targetCandidate.defaultView ? targetCandidate.defaultView : window,
-                targetDocument = targetView.document ? targetView.document : document,
-                targetApplication = this.application,
-                previousBubblingTarget,
-                eventPath = [];
+    //         var targetCandidate = target,
+    //             targetView = targetCandidate && targetCandidate.defaultView ? targetCandidate.defaultView : window,
+    //             targetDocument = targetView.document ? targetView.document : document,
+    //             targetApplication = this.application,
+    //             previousBubblingTarget,
+    //             eventPath = [];
 
-            do {
-                // Include the target itself as the root of the event's compsoedPath
-                    eventPath.push(targetCandidate);
+    //         do {
+    //             // Include the target itself as the root of the event's compsoedPath
+    //                 eventPath.push(targetCandidate);
 
-                previousBubblingTarget = targetCandidate;
-                // use the structural DOM hierarchy until we run out of that and need
-                // to give listeners on document, window, and application a chance to respond
-                switch (targetCandidate) {
-                    case targetApplication:
-                        targetCandidate = targetCandidate.parentApplication;
-                        if (targetCandidate) {
-                            targetApplication = targetCandidate;
-                        }
-                        break;
-                    case targetView:
-                        targetCandidate = targetApplication;
-                        break;
-                    case targetDocument:
-                        targetCandidate = targetView;
-                        break;
-                    case targetDocument.documentElement:
-                        targetCandidate = targetDocument;
-                        break;
-                    default:
-                        targetCandidate = targetCandidate.parentNode;
+    //             previousBubblingTarget = targetCandidate;
+    //             // use the structural DOM hierarchy until we run out of that and need
+    //             // to give listeners on document, window, and application a chance to respond
+    //             switch (targetCandidate) {
+    //                 case targetApplication:
+    //                     targetCandidate = targetCandidate.parentApplication;
+    //                     if (targetCandidate) {
+    //                         targetApplication = targetCandidate;
+    //                     }
+    //                     break;
+    //                 case targetView:
+    //                     targetCandidate = targetApplication;
+    //                     break;
+    //                 case targetDocument:
+    //                     targetCandidate = targetView;
+    //                     break;
+    //                 case targetDocument.documentElement:
+    //                     targetCandidate = targetDocument;
+    //                     break;
+    //                 default:
+    //                     targetCandidate = targetCandidate.parentNode;
 
-                        // Run out of hierarchy candidates? go up to the application
-                        if (!targetCandidate) {
-                            targetCandidate = targetApplication;
-                        }
+    //                     // Run out of hierarchy candidates? go up to the application
+    //                     if (!targetCandidate) {
+    //                         targetCandidate = targetApplication;
+    //                     }
 
-                        break;
-                }
-            }
-            while (targetCandidate && previousBubblingTarget !== targetCandidate);
+    //                     break;
+    //             }
+    //         }
+    //         while (targetCandidate && previousBubblingTarget !== targetCandidate);
 
-            return eventPath;
-        }
-    },
+    //         return eventPath;
+    //     }
+    // },
 
     /**
      * @private
