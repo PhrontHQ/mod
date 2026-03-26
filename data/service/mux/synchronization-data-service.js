@@ -511,7 +511,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 We're going to create a new operation and adapt the criteria to look into the originDataSnapshot instead
             */
-            readOperation.composedPath().delete(this.destinationDataService);
+            //readOperation.composedPath().delete(this.destinationDataService);
+            readOperation.setComposedPath([].concat(readOperation.composedPath()).delete(this.destinationDataService));
 
 
             return new Promise((resolve, reject) => {

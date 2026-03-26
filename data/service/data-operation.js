@@ -262,6 +262,213 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
         value: false
     },
 
+
+/**
+ * Topologically sorts nodes and all their ancestors,
+ * guaranteeing each node appears before its nextTarget.
+ *
+ * @param {object[]} startingNodes - The leaf/starting nodes
+ * @returns {object[]} Sorted array: dependents before their nextTarget
+ */
+    topologicallySortMergedComposedPaths: {
+        value: function (startingNodes, nextTargetsMap, inDegree = new Map()) {
+
+            // 1. Collect every node reachable via nextTarget
+
+            let visited;
+            if(startingNodes instanceof Set) {
+                visited = startingNodes;
+            } else {
+                visited = new Set();
+                const allNodes = [];
+
+                for (const node of startingNodes) {
+                    let current = node;
+                    while (current && !visited.has(current)) {
+                    visited.add(current);
+                    allNodes.push(current);
+                    current = current.nextTarget;
+                    }
+                }
+            }
+
+            // 2. Kahn's algorithm — build in-degree map based on nextTarget edges
+            // unless we're provided one
+            // const inDegree = new Map();
+            // if(inDegree.size === 0) {
+            //     for (const node of allNodes) {
+            //         let nodeNextTargets = nextTargetsMap.get(node);
+
+            //         if (!inDegree.has(node)) inDegree.set(node, 0);
+            //         //nodeNextTargets is a Set
+            //         for (const nodeNextTarget of nodeNextTargets.values()) {
+            //             console.log(value); // Output: apple, banana, cherry
+            //         }
+
+            //         if (nodeNextTarget && inDegree.has(nodeNextTarget)) {
+            //         inDegree.set(nodeNextTarget, inDegree.get(nodeNextTarget) + 1);
+            //         }
+            //     }
+            // }
+
+            // 3. Queue all nodes with no incoming edges (nothing points TO them)
+            const queue = [];
+            //degree is expected to be a Set
+            for (const [node, degree] of inDegree) {
+                if (degree.size === 0) queue.push(node);
+            }
+
+            // 4. Process queue
+            const sorted = [];
+            while (queue.length > 0) {
+                const node = queue.shift();
+                sorted.push(node);
+
+                const nodeNextTargets = nextTargetsMap.get(node);
+                //nodeNextTargets is a Set
+                for (const nodeNextTarget of nodeNextTargets.values()) {
+                    if (nodeNextTarget && inDegree.has(nodeNextTarget)) {
+                        const nodeNextTargetInDegree = inDegree.get(nodeNextTarget);
+                        nodeNextTargetInDegree.delete(node);
+                        if (nodeNextTargetInDegree.size === 0) queue.push(nodeNextTarget);
+                    }
+                }
+            }
+
+            return sorted;
+        }
+    },
+
+    /**
+     * Overrides MutableEvent to provide a specialized version taking into account a ReadOperation's readExpressions
+     * When readExpressions end with a different type then the target of the read operation, 
+     * like when fetching a type's relationships to other types, or traversing multiple relationships,
+     * the type of object to be returned is going to be of the type at the end of those read expressions.
+     * 
+     * So in a scenario where multiple RawDataServices are involved, with some Mux-Services doing orchestration,
+     * a RawDataService handling one of the type at the end of an expression but not the read operation's targer
+     * isn't in MutableEvent's composedPath path and would never get to handle the readOperation's read expression it
+     * is supposed to.
+     * 
+     * A solution is to make sure those RawDataServices are included in the composedPath by looping on readExpressions
+     * The following prepares aspects (indegree) needed for Kahn's Topological sorting algorithm
+     
+     * @type {Property}
+     * @return {Array<Target>}
+     */
+    _includeReadExpressionEndpointsIncomposedPath: {
+        value: false
+    },
+    composedPath: {
+        value: function () {
+            //This the default behavior, based on the target property
+            let composedPathForTarget = this.super();
+
+
+
+            if(this._includeReadExpressionEndpointsIncomposedPath && this.type === DataOperation.Type.ReadOperation && this.data?.readExpressions) {
+
+                let mergedComposedPaths = new Set(),
+                    readExpressions = this.data?.readExpressions,
+                    target = this.target;
+
+                //There could be readExpressions leading back to target, so we add it to the set.
+                //mergedComposedPaths.add(target);
+
+                // For Kahn's algorithm — build in-degree map from the target-based composedPath
+                const   inDegree = new Map(),
+                        nextTargetsMap = new Map();
+                for(let i=0, countI = composedPathForTarget.length; (i<countI); i++) {
+                    let inDegreeSet = new Set(),
+                        iNextTargetSet = nextTargetsMap.get(composedPathForTarget[i]);
+
+                    inDegree.set(composedPathForTarget[i], inDegreeSet);
+                    if(i>0) {
+                        inDegreeSet.add(composedPathForTarget[i-1])
+                    }
+
+                    if(!iNextTargetSet) {
+                        iNextTargetSet = new Set();
+                        nextTargetsMap.set(composedPathForTarget[i], iNextTargetSet);
+                    }
+                    iNextTargetSet.add(composedPathForTarget[i+1]);
+
+                    //Add to mergedComposedPaths
+                    mergedComposedPaths.add(composedPathForTarget[i]);
+                }
+                
+
+                //Now loop on all readExpressions
+                for(let i=0, countI = readExpressions.length; (i<countI); i++) {
+                    let iDescriptor = target.descriptorTraversingExpression(readExpressions[i]);
+                    /*
+                        We're going to merge iDescriptor.composedPath components into mergedComposedPaths
+                        which will be our input to the topological sorting logic.
+
+                        However iDescriptor.composedPath does contain data services towards the top, and the way
+                        we navigate the parent/child relationshipo is different between object descriptors and dsta services.
+
+                        The logic in ObjectDescriptor's composedPath is
+
+                        dataServices = this.eventManager.application.mainService.descendantServicesForType(this);
+                        
+                        //Put the object descriptor's parents in composedPath
+
+                        //Then Add all Services handling this object:
+                        composedPath.push.apply(composedPath, dataServices);
+                        composedPath.push(this.eventManager.application.mainService);
+                        composedPath.push(this.eventManager.application);
+                    */
+                    let iDescriptorComposedPath = iDescriptor.composedPath;
+                    for(let ii = 0, countII = iDescriptorComposedPath.length; (ii<countII); ii++) {
+
+                        let node = iDescriptorComposedPath[ii],
+                            nodeNextTarget = iDescriptorComposedPath[ii+1],
+                            iiNextTargetSet = nextTargetsMap.get(node);
+                            inDegreeSet = inDegree.get(node);
+
+                        if (!inDegreeSet) {
+                            inDegreeSet = new Set();
+                            if(ii > 0) {
+                                inDegreeSet.add(iDescriptorComposedPath[ii-1])
+                            }
+                            inDegree.set(node, inDegreeSet);
+                            
+                        } else if(ii > 0) {
+                            inDegreeSet.add(iDescriptorComposedPath[ii-1])
+                        }
+
+                        if(!iiNextTargetSet) {
+                            iiNextTargetSet = new Set();
+                            nextTargetsMap.set(node, iiNextTargetSet);
+                        }
+                        iiNextTargetSet.add(nodeNextTarget);
+
+                        //descriptorsTraversingReadExpressions is a Set, so we let it do the uniquing
+                        mergedComposedPaths.add(node);
+                    }
+                }
+
+                //Now descriptorsTraversingReadExpressions should contain all the targets we need to consider for this operation. Now we just have to sort them...
+                //descriptorTraversingExpression
+                let topologicallySortedComposedPathForTarget = this.topologicallySortMergedComposedPaths(mergedComposedPaths, nextTargetsMap, inDegree);
+                console.log("topologicallySortedComposedPathForTarget: ", topologicallySortedComposedPathForTarget);
+                composedPathForTarget = topologicallySortedComposedPathForTarget;
+            }
+
+            return composedPathForTarget;
+        }
+    },
+
+    setComposedPath: {
+        value: function(value) {
+            if(value !== this._composedPath) {
+                this._composedPath = value;
+            }
+        }
+    },
+
+
     serializeSelf: {
         value:function (serializer) {
             serializer.setProperty("id", this.id);

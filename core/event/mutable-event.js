@@ -5,6 +5,10 @@
  const Montage = require("../core").Montage,
     uuid = require("../../core/uuid"),
     Promise = require("../promise").Promise,
+    currentEnvironment = require("../environment").currentEnvironment,
+    Element = require("../extras/element").Element,
+    Document = global.Document,
+    window = global.window,
     console = require('../extras/console').console;
 
 var wrapPropertyGetter = function (key, storageKey) {
@@ -389,16 +393,163 @@ var wrapPropertyGetter = function (key, storageKey) {
                 this._detail = value;
             }
         },
+
+        isBrowser: {
+            value: currentEnvironment.isBrowser
+        },
+        _emptyComposedPath: {
+            value: Object.freeze([])
+        },
         _composedPath: {
             value: void 0
         },
+
+        /**
+         * Build the event target chain for the the specified DOM target
+         * @private
+         */
+        _composedPathForDomTarget: {
+            enumerable: false,
+            value: function (target) {
+
+                if (!target) {
+                    return this._emptyComposedPath;
+                }
+
+                var targetCandidate = target,
+                    targetView = targetCandidate && targetCandidate.defaultView ? targetCandidate.defaultView : window,
+                    targetDocument = targetView.document ? targetView.document : document,
+                    targetApplication = this.application,
+                    previousBubblingTarget,
+                    eventPath = [];
+
+                do {
+                    // Include the target itself as the root of the event's compsoedPath
+                        eventPath.push(targetCandidate);
+
+                    previousBubblingTarget = targetCandidate;
+                    // use the structural DOM hierarchy until we run out of that and need
+                    // to give listeners on document, window, and application a chance to respond
+                    switch (targetCandidate) {
+                        case targetApplication:
+                            targetCandidate = targetCandidate.parentApplication;
+                            if (targetCandidate) {
+                                targetApplication = targetCandidate;
+                            }
+                            break;
+                        case targetView:
+                            targetCandidate = targetApplication;
+                            break;
+                        case targetDocument:
+                            targetCandidate = targetView;
+                            break;
+                        case targetDocument.documentElement:
+                            targetCandidate = targetDocument;
+                            break;
+                        default:
+                            targetCandidate = targetCandidate.parentNode;
+
+                            // Run out of hierarchy candidates? go up to the application
+                            if (!targetCandidate) {
+                                targetCandidate = targetApplication;
+                            }
+
+                            break;
+                    }
+                }
+                while (targetCandidate && previousBubblingTarget !== targetCandidate);
+
+                return eventPath;
+            }
+        },
+        /**
+         * Build the event target chain for the the specified Target
+         * @private
+         */
+        _composedPathForTarget: {
+            enumerable: false,
+            value: function (target) {
+
+                if (!target) {
+                    return this._emptyComposedPath;
+                } else if(target.composedPath) {
+                    /*
+                        If target has a commposedPath, it's likely cached.
+                        So in case it's mutated by a listner, we're making a copy
+                        to  guard against that.
+                    */
+                    return Array.from(target.composedPath);
+                } else {
+
+                    var targetCandidate = target,
+                        application = this.application,
+                        eventPath = [],
+                        discoveredTargets = this._composedPathForTargetMap;
+
+                    discoveredTargets.clear();
+
+                    // Consider the target "discovered" for less specialized detection of cycles
+                    // discoveredTargets.set(target,true);
+
+                    do {
+                        if (!discoveredTargets.has(targetCandidate)) {
+                            eventPath.push(targetCandidate);
+                            discoveredTargets.set(targetCandidate,true);
+                        }
+
+                        targetCandidate = targetCandidate.nextTarget;
+
+                        if (!targetCandidate || discoveredTargets.has(targetCandidate)) {
+                            targetCandidate = application;
+                        }
+
+                        if (targetCandidate && discoveredTargets.has(targetCandidate)) {
+                            targetCandidate = null;
+                        }
+                    }
+                    while (targetCandidate);
+
+                    return eventPath;
+                }
+
+            }
+        },
+
+        isElement: {
+            value: currentEnvironment.isBrowser ? Element.isElement : (value) => false
+        },
+
+        /**
+         * @private
+         * @type {Property}
+         * @default {Map} singleton shared on prototype
+         * 
+         * Cache for events whose target-based composed path doesn't change over time
+         */
+
+        _composedPathForTargetMap : {
+            value: new Map()
+        },
+
+        composedPathForTarget: {
+            enumerable: false,
+            value: function (target) {
+
+                if (this.isBrowser && (this.isElement(target) || target instanceof Document || target === window)) {
+                    return this._composedPathForDomTarget(target);
+                } else {
+                    return this._composedPathForTarget(target);
+                }
+            }
+        },
+
         /**
          * @type {Property}
-         * @default {Element} null
+         * @return {Array<Target>}
          */
         composedPath: {
             value: function () {
-                return this._composedPath;
+                return this._composedPath || (this._composedPath = this.composedPathForTarget(this.target));
             }
         }
 
