@@ -52,13 +52,50 @@ var ChangeEvent = exports.ChangeEvent = Montage.specialize({
     },
 
     /**
+     * The property whose value may have changed. Property feels like a better name than "key"
+     *
+     * @type {String}
+     * @default null
+     */
+    property: {
+        value: undefined
+    },
+    /**
      * The key/property whose value may have changed
      *
      * @type {String}
      * @default null
      */
     key: {
+        get: function () {
+            return this.property;
+        },
+        set: function (value) {
+            this.property = value;
+        }
+    },
+
+    /**
+     * The property for target's property
+     *
+     * @type {PropertyDescriptor}
+     * @default null
+     */
+    _propertyDescriptor: {
         value: undefined
+    },
+    propertyDescriptor: {
+        get: function () {
+            if(!this._propertyDescriptor) {
+                this._propertyDescriptor = this.target.objectDescriptor.propertyDescriptorNamed(this.property);
+            }
+            return this._propertyDescriptor;
+        },
+        set: function (value) {
+            if(value !== this._propertyDescriptor) {
+                this._propertyDescriptor = value;
+            }
+        }
     },
 
     /**
@@ -67,8 +104,16 @@ var ChangeEvent = exports.ChangeEvent = Montage.specialize({
      * @type {Object}
      * @default null
      */
-    previousKeyValue: {
+    previousPropertyValue: {
         value: undefined
+    },
+    previousKeyValue: {
+        get: function () {
+            return this.previousPropertyValue;
+        },
+        set: function (value) {
+            this.previousPropertyValue = value;
+        }
     },
 
     /**
@@ -77,9 +122,18 @@ var ChangeEvent = exports.ChangeEvent = Montage.specialize({
      * @type {Object}
      * @default null
      */
-    keyValue: {
+    propertyValue: {
         value: undefined
     },
+    keyValue: {
+        get: function () {
+            return this.propertyValue;
+        },
+        set: function (value) {
+            this.propertyValue = value;
+        }
+    },
+
 
     /**
      * Alternative: group all range changes under 1 typed RangeChange object that
