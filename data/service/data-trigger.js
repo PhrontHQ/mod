@@ -421,7 +421,7 @@ exports.DataTrigger.prototype = Object.create(
                         With this as is, it does, but data is missing (directReports of person logged-in), and on further reload
                         when we read form the FB right away, sonething wonky happens.
                     */
-                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue !== undefined) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
+                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
                 }
             },
         },
@@ -862,6 +862,7 @@ exports.DataTrigger.prototype = Object.create(
                     changeEvent.key = this._propertyName;
                     changeEvent.previousKeyValue = initialValue;
                     changeEvent.keyValue = currentValue;
+                    changeEvent.propertyDescriptor = this.propertyDescriptor;
 
                     // To deal with changes happening to an array value of that property,
                     // we'll need to add/cancel observing on the array itself
