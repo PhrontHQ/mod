@@ -421,6 +421,7 @@ exports.DataTrigger.prototype = Object.create(
                         With this as is, it does, but data is missing (directReports of person logged-in), and on further reload
                         when we read form the FB right away, sonething wonky happens.
                     */
+//_initialValue is the value passed into _setValue. 
                     this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
                 }
             },
@@ -493,12 +494,12 @@ exports.DataTrigger.prototype = Object.create(
          * @argument {Object} object
          * @argument {} value
          */
-        _setAndObserveValue: {
+        _observeCollectionValue: {
             configurable: true,
             writable: true,
             value: function (object, initialValue, currentValue) {
                 let isInitialValueArray = Array.isArray(initialValue);
-                let isMap = !isInitialValueArray && initialValue instanceof Map;
+                let isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
 
                 /**
                  * A range is a collection containing infinite values but it may not properly have a cardinality properly
@@ -510,7 +511,7 @@ exports.DataTrigger.prototype = Object.create(
                         if (listener) {
                             if (isInitialValueArray) {
                                 initialValue.removeRangeChangeListener(listener);
-                            } else if (isMap) {
+                            } else if (isInitialValueMap) {
                                 initialValue.removeMapChangeListener(listener);
                             }
 
@@ -721,14 +722,10 @@ exports.DataTrigger.prototype = Object.create(
                 if (objectPropertyValue === value && !(arguments.length >= 5)) return;
 
                 var status,
-                    prototype,
-                    descriptor,
-                    getter,
                     setter = this._valueSetter,
-                    writable,
                     currentValue,
                     isInitialValueArray,
-                    isMap,
+                    isInitialValueMap,
                     initialValue,
                     dispatchChange = arguments.length >= 3 ? _dispatchChange : true,
                     //shouldFetch = !this._service.rootService._objectsBeingMapped.has(object);
@@ -761,7 +758,7 @@ exports.DataTrigger.prototype = Object.create(
                 //         : this._getValue(object, shouldFetch);
                 // If Array / to-Many
                 isInitialValueArray = Array.isArray(initialValue);
-                isMap = !isInitialValueArray && initialValue instanceof Map;
+                isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
 
                 // Set this trigger's property to the desired value, but only if
                 // that property is writable.
@@ -803,7 +800,7 @@ exports.DataTrigger.prototype = Object.create(
                                 }
 
                             }
-                        } else if (isMap && value) {
+                        } else if (isInitialValueMap && value) {
                             // We want to maintain the same map,
                             var map = object[this._privatePropertyName],
                                 //iterator are "lives" until used, so we make a copy
@@ -843,7 +840,7 @@ exports.DataTrigger.prototype = Object.create(
                 //         : this._getValue(object, shouldFetch);
 
                 if (currentValue !== initialValue) {
-                    this._setAndObserveValue(object, initialValue, currentValue);
+                    this._observeCollectionValue(object, initialValue, currentValue);
                 }
 
                 // addRangeChangeListener
@@ -853,6 +850,7 @@ exports.DataTrigger.prototype = Object.create(
                 //but we stick to our mutable collection once we have one, in which case
                 //  currentValue should be the same as initialValue
                 if (
+                    // currentValue !== objectPropertyValue &&
                     currentValue !== initialValue &&
                     dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/
                 ) {
@@ -860,6 +858,8 @@ exports.DataTrigger.prototype = Object.create(
                     var changeEvent = new ChangeEvent();
                     changeEvent.target = object;
                     changeEvent.key = this._propertyName;
+                    // changeEvent.previousKeyValue = objectPropertyValue;
+                    // changeEvent.keyValue = value;
                     changeEvent.previousKeyValue = initialValue;
                     changeEvent.keyValue = currentValue;
                     changeEvent.propertyDescriptor = this.propertyDescriptor;

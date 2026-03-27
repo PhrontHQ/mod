@@ -2918,6 +2918,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     // return value;
                 } else {
                     /* We end up here if value === null and isToMany is true */
+                    //TJ - propertySetter is the setter added by the trigger so is it even possible not to have one? 
                     propertySetter
                         ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
                         : (object[propertyName] = value);
