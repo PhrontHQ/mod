@@ -345,12 +345,17 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     _isValueForChangeEventBeingTracked(changeEvent) {
-        if (changeEvent.keyValue) {
+        if (changeEvent.propertyDescriptor.cardinality === 1) {
             return this._isSyncingOrBeingTrackedWhileMapping(changeEvent.keyValue);
-        } else if (changeEvent.addedValues) {
-            let isTracking = false, i, n;
-            for (i = 0, n = changeEvent.addedValues.length; i < n && !isTracking; i++) {
-                isTracking = this._isSyncingOrBeingTrackedWhileMapping(changeEvent.addedValues[i]);
+        } else {
+            /*
+                TODO: Support for more than Array, DataTrigger also handles collections that are Map, Set, Range
+                which need to be handled as well 
+            */
+            let changeValues = changeEvent.addedValues ? changeEvent.addedValues : changeEvent.keyValue,
+                isTracking = false, i, n;
+            for (i = 0, n = changeValues?.length; i < n && !isTracking; i++) {
+                isTracking = this._isSyncingOrBeingTrackedWhileMapping(changeValues[i]);
             }
             return isTracking;
         }
@@ -374,12 +379,12 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     startTrackingNestedObjectsForChangeEvent(rootObject, changeEvent) {
-        let propertyDescriptor = rootObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
+        let propertyDescriptor = changeEvent.propertyDescriptor;
         if (!this._canTrackPropertyForChangeEvent(rootObject, changeEvent)) {
             return;
         }
         this.startTrackingChangesForObjectBeingMapped(rootObject);
-        if (propertyDescriptor.cardinality === Infinity) {
+        if (propertyDescriptor.cardinality > 1) {
             let changedValues = changeEvent.addedValues ? changeEvent.addedValues : changeEvent.keyValue;
 
             //We would ideally not use a forEach for frugality's sake
