@@ -4775,9 +4775,9 @@ DataService.addClassProperties(
                                     if (!isDataObjectBeingMapped) {
                                         shouldAdd = !addedValues[i] || !registeredAddedValues.has(addedValues[i]);
                                         registeredAddedValues.add(addedValues[i]);
-                                        manyChanges.addedValues.push(addedValues[i]);
                                     }
                                     if (shouldAdd) {
+                                        manyChanges.addedValues.push(addedValues[i])
                                         self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                             dataObject,
                                             propertyDescriptor,
