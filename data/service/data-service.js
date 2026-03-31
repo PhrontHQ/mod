@@ -4659,9 +4659,20 @@ DataService.addClassProperties(
                         i,
                         countI;
 
+                    //TODO The logic for tracking array changes uses the index at which the change occured a la handleRangeChange(plus, minus, index). 
+                    // The problem is that it assumes there was a single action taken at a single index within a save cycle. 
+                    //Example: foo.bar = [A, B, C, D, E, F, G];
+                    //
+                    // foo.bar.splice(2, 2); Removes 2 items at index 2 so change event has index 2
+                    // foo.bar.push(H); Adds item to end of array so change event has index 5 
+                    // foo.bar.unshift(Z); Adds item to beginning of array so change event has index 0
+                    // saveChanges();
+                    // 
+                    // The index captured in dataObjectChanges is the one from the first change event, so 2. 
+                    // The indices at which to make the 2nd and 3rd changes are lost. 
+
                     if (!manyChanges) {
-                        manyChanges = {};
-                        manyChanges.index = changeEvent.index;
+                        manyChanges = {index: changeEvent.index};
                         changesForDataObject.set(key, manyChanges);
                     }
 
@@ -4707,6 +4718,7 @@ DataService.addClassProperties(
                                 for (i = 0, countI = removedValues.length; i < countI; i++) {
                                     if (!isDataObjectBeingMapped) {
                                         registeredRemovedValues.add(removedValues[i]);
+                                        manyChanges.removedValues.push(removedValues[i]);
                                     }
                                     self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                         dataObject,
