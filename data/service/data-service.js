@@ -4773,11 +4773,17 @@ DataService.addClassProperties(
                                 let shouldAdd = true;
                                 for (i = 0, countI = addedValues.length; i < countI; i++) {
                                     if (!isDataObjectBeingMapped) {
-                                        shouldAdd = !addedValues[i] || !registeredAddedValues.has(addedValues[i]);
-                                        registeredAddedValues.add(addedValues[i]);
+                                        if (!registeredAddedValues.has(addedValues[i])) {
+                                            registeredAddedValues.add(addedValues[i]);
+                                            manyChanges.addedValues.push(addedValues[i]);
+                                            shouldAdd = true;
+                                        } else if (!addedValues[i]) {
+                                            shouldAdd = true;
+                                        } else {
+                                            shouldAdd = false;
+                                        }
                                     }
                                     if (shouldAdd) {
-                                        manyChanges.addedValues.push(addedValues[i])
                                         self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                             dataObject,
                                             propertyDescriptor,

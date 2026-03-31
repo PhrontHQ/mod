@@ -1700,71 +1700,39 @@ RawDataService.addClassProperties({
                         canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
 
-                        if (iHasAddedValues) {
-                            iDiffValues = iUpdatedRawDataValue.addedValues;
 
-                            if (iCurrentRawDataValue) {
-                                if (Array.isArray(iCurrentRawDataValue)) {
-                                    for (j = 0, countJ = iDiffValues.length; (j < countJ); j++) {
-                                        jDiffValue = iDiffValues[j];
-                                        /*
-                                            We shouldn't have to worry about the value already being in iCurrentRawDataValue, but we're going to safe and check
-                                        */
-                                        if (iCurrentRawDataValue.indexOf(jDiffValue) === -1) {
-                                            iCurrentRawDataValue.push(jDiffValue);
-                                            canRemoveRawDataKey = false;
-                                        }
-                                    }
+                        /**
+                         * When iUpdatedRawDataValue includes an index, we can assume the change was a result of a single action on the array 
+                         * assignment, push, splice, etc. If that is the case, we can avoid special logic and use splice to add the new 
+                         * values and remove the old. 
+                         * 
+                         * NOTE: We will eventually update DataService.handleChange to manage multiple actions on an array between saves. This 
+                         * logic will need to be updated accordingly. 
+                         */
+                        // if (iUpdatedRawDataValue.index !== undefined && iCurrentRawDataValue) {
+                        if (iCurrentRawDataValue) {
+                            if (Array.isArray(iCurrentRawDataValue)) {
+                                let removeCount = iHasRemovedValues ? iUpdatedRawDataValue.removedValues.length : 0;
+                                if (iHasAddedValues) {
+                                    iCurrentRawDataValue.splice(iUpdatedRawDataValue.index, removeCount, ...iUpdatedRawDataValue.addedValues);
                                 } else {
-                                    console.warn("recordSnapshot when one exists: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues is:", iDiffValues);
-                                    /* there's a current value that is not an array.. Which is weird... */
-                                    snapshot[rawDataKeys[i]] = iDiffValues;
-                                    canRemoveRawDataKey = false;
+                                    iCurrentRawDataValue.splice(iUpdatedRawDataValue.index, removeCount);
                                 }
-                            } else {
-                                //console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but addedValues:", iDiffValues);
-                                /*
-                                    We could reconstruct from the object value, but we should really not be here.
-                                */
-                                snapshot[rawDataKeys[i]] = iDiffValues;
                                 canRemoveRawDataKey = false;
-                            }
-                        }
-
-                        if (iHasRemovedValues) {
-                            iDiffValues = iUpdatedRawDataValue.removedValues;
-
-                            /* 
-                                WARNING
-                                iCurrentRawDataValue was cached early in the loop and there's a use-case where 
-                                iCurrentRawDataValue would not be equal to rawData[rawDataKeys[i]] because
-                                it might have changed in the block above, which is when there was no value at all.
-
-                                So the only use case where not refreshing it would be if somehow the data service
-                                received a value in .addedValues array that is also in the .removedValues, which would 
-                                be strange
+                            /*
+                            * TODO: 3-31-26 We need to support these, but did 
+                            * not have a valid use case at the time of this writing 
                             */
-
-                            if (iCurrentRawDataValue) {
-                                if (Array.isArray(iCurrentRawDataValue)) {
-                                    for (j = 0, countJ = iDiffValues.length; (j < countJ); j++) {
-                                        jDiffValue = iDiffValues[j];
-                                        /*
-                                            We shouldn't have to worry about the value alredy being in iCurrentRawDataValue, but we're going to safe and check
-                                        */
-                                        if ((jDiffValueIndex = iCurrentRawDataValue.indexOf(jDiffValue)) !== -1) {
-                                            iCurrentRawDataValue.splice(jDiffValueIndex, 1);
-                                            canRemoveRawDataKey = false;
-                                        }
-                                    }
-                                } else {
-                                    console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but removedValues:", iDiffValues);
-                                    console.error("removedValues but no entry in snapshot for ")
-                                    //snapshot[rawDataKeys[i]] = iDiffValues;
-                                }
+                            } else if (iCurrentRawDataValue instanceof Map) {
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} of type Map`;
+                            } else if (iCurrentRawDataValue instanceof Set) {
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} of type Set`;
                             } else {
-                                console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but removedValues:", iDiffValues);
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} without a type`;
                             }
+                        } else {
+                            snapshot[rawDataKeys[i]] = iDiffValues;
+                            canRemoveRawDataKey = false;
                         }
 
                         if(canRemoveRawDataKey) {
