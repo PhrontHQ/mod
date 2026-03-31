@@ -1685,9 +1685,8 @@ RawDataService.addClassProperties({
                 return rawData
             } else {
                 var rawDataKeys = Object.keys(rawData),
-                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues, iRemovedValues,
+                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues,
                     iHasAddedValues, iHasRemovedValues,
-                    j, countJ, jDiffValue, jDiffValueIndex,
                     canRemoveRawDataKey;
 
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
