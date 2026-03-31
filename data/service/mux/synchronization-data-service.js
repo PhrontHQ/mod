@@ -324,6 +324,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 }
 
             } 
+
+        /*
+         FIXME: this._isValueForChangeEventBeingTracked(changeEvent) is evaluating to true for objects after they are synced which means those objects
+         are not being cleaned up correctly. 
+
+         Example: The change event for Person.preferredNextRoles. 
+         By the time a user is selecting a preferredNextRole, the value on the event (a JobRole)  
+         should already be synced. 
+        */
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
