@@ -421,8 +421,15 @@ exports.DataTrigger.prototype = Object.create(
                         With this as is, it does, but data is missing (directReports of person logged-in), and on further reload
                         when we read form the FB right away, sonething wonky happens.
                     */
-//_initialValue is the value passed into _setValue. 
-                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
+
+                    //_initialValue is the value passed into _setValue. 
+                    this._setValue(object, 
+                        /*value*/initValue, 
+
+                        // Only dispatch change if initialValue was provided and has length > 0.
+                        /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, 
+                        /*_initialValue*/undefined, 
+                        /*_currentValue*/undefined);
                 }
             },
         },
@@ -705,10 +712,16 @@ exports.DataTrigger.prototype = Object.create(
          *        but the value of that object's property isn't used/displayed anywhere to the user. Then if it were agaib, it would be refethed because then undefined
          */
 
+        //Is _currentValue ever anything but undefined? 
+        //Called from _ensureCollectionValue and DataTrigger added setter which is only called from ExpressionDataMapping. In both cases, it's called with _currentValue = undefined
+
         _setValue: {
             configurable: true,
             writable: true,
             value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
+                if (_currentValue !== undefined) {
+                    debugger;
+                }
                 //let objectPropertyValue = this._getValue(object, /*shouldFetch*/false, /*_initialValue*/value);
                 let objectPropertyValue = (arguments.length >= 5) ? _currentValue : this._getValue(object,  /*shouldFetch*/false, /*_initialValue*/value);
                 //if (object[this._privatePropertyName] === value) return;
@@ -781,51 +794,7 @@ exports.DataTrigger.prototype = Object.create(
                     //this._setValueStatus(object, status);
 
                     if (this.isToMany) {
-                        if (isInitialValueArray) {
-                            /**
-                             * this._getValue() sets object[this._privatePropertyName] to [] via calling this
-                             */
-                            if (value?.length) {
-
-                                //If the setter is called with a different array but identical to our instance variable, there's no point making noise
-                                if(!value.equals(object[this._privatePropertyName])) {
-
-                                    // object[this._privatePropertyName].splice.apply(initialValue, [0, initialValue.length].concat(value));
-                                    object[this._privatePropertyName].splice.call(
-                                        initialValue,
-                                        0,
-                                        initialValue.length,
-                                        ...value
-                                    );
-                                }
-
-                            }
-                        } else if (isInitialValueMap && value) {
-                            // We want to maintain the same map,
-                            var map = object[this._privatePropertyName],
-                                //iterator are "lives" until used, so we make a copy
-                                mapIterator = new Set(map.keys()).values(),
-                                valueIterator = value.keys(),
-                                iKey;
-
-                            // Add what we don't have, and set if value different for same key
-                            while ((iKey = valueIterator.next().value)) {
-                                if (!map.has(iKey)) {
-                                    map.set(iKey, value.get(iKey));
-                                } else if (map.get(iKey) !== value.get(iKey)) {
-                                    map.set(iKey, value.get(iKey));
-                                }
-                            }
-
-                            // Remove what we had that's not in value
-                            while ((iKey = mapIterator.next().value)) {
-                                if (!value.has(iKey)) {
-                                    map.delete(iKey);
-                                }
-                            }
-                        } else {
-                            object[this._privatePropertyName] = value;
-                        }
+                        this._assignToManyPropertyValueToObject(object, value, initialValue);
                     } else {
                         object[this._privatePropertyName] = value;
                     }
@@ -833,11 +802,6 @@ exports.DataTrigger.prototype = Object.create(
 
                 //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
                 currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
-                // currentValue = arguments.length >= 5
-                //     ? _currentValue
-                //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
-                //         ? undefined
-                //         : this._getValue(object, shouldFetch);
 
                 if (currentValue !== initialValue) {
                     this._observeCollectionValue(object, initialValue, currentValue);
@@ -854,14 +818,28 @@ exports.DataTrigger.prototype = Object.create(
                     currentValue !== initialValue &&
                     dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/
                 ) {
-                    //Dispatch update event
+                    this._dispatchChangeEvent(object, initialValue, currentValue);
+                }
+
+                // Resolve any pending promise for this trigger's property value.
+                if (status) {
+                    status.resolve(currentValue);
+                }
+                this._setValueStatus(object, null);
+
+            },
+        },
+
+        _dispatchChangeEvent: {
+            value: function (object, previousValue, newValue) {
+                                    //Dispatch update event
                     var changeEvent = new ChangeEvent();
                     changeEvent.target = object;
                     changeEvent.key = this._propertyName;
                     // changeEvent.previousKeyValue = objectPropertyValue;
                     // changeEvent.keyValue = value;
-                    changeEvent.previousKeyValue = initialValue;
-                    changeEvent.keyValue = currentValue;
+                    changeEvent.previousKeyValue = previousValue;
+                    changeEvent.keyValue = newValue;
                     changeEvent.propertyDescriptor = this.propertyDescriptor;
 
                     // To deal with changes happening to an array value of that property,
@@ -876,17 +854,59 @@ exports.DataTrigger.prototype = Object.create(
                     } else {
                         changeEvent.target.dispatchEvent(changeEvent);
                     }
-                    
-                }
+            }
+        },
 
-                // Resolve any pending promise for this trigger's property value.
-                if (status) {
-                    // this._setValueStatus(object, null);
-                    status.resolve(currentValue);
-                }
-                this._setValueStatus(object, null);
+        _assignToManyPropertyValueToObject: {
+            value: function (object, value, initialValue) {
+                let isInitialValueArray = Array.isArray(initialValue),
+                    isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
+                if (isInitialValueArray) {
+                    /**
+                     * this._getValue() sets object[this._privatePropertyName] to [] via calling this
+                     */
+                    if (value?.length) {
 
-            },
+                        //If the setter is called with a different array but identical to our instance variable, there's no point making noise
+                        if(!value.equals(object[this._privatePropertyName])) {
+
+                            // object[this._privatePropertyName].splice.apply(initialValue, [0, initialValue.length].concat(value));
+                            object[this._privatePropertyName].splice.call(
+                                initialValue,
+                                0,
+                                initialValue.length,
+                                ...value
+                            );
+                        }
+
+                    }
+                } else if (isInitialValueMap && value) {
+                    // We want to maintain the same map,
+                    var map = object[this._privatePropertyName],
+                        //iterator are "lives" until used, so we make a copy
+                        mapIterator = new Set(map.keys()).values(),
+                        valueIterator = value.keys(),
+                        iKey;
+
+                    // Add what we don't have, and set if value different for same key
+                    while ((iKey = valueIterator.next().value)) {
+                        if (!map.has(iKey)) {
+                            map.set(iKey, value.get(iKey));
+                        } else if (map.get(iKey) !== value.get(iKey)) {
+                            map.set(iKey, value.get(iKey));
+                        }
+                    }
+
+                    // Remove what we had that's not in value
+                    while ((iKey = mapIterator.next().value)) {
+                        if (!value.has(iKey)) {
+                            map.delete(iKey);
+                        }
+                    }
+                } else {
+                    object[this._privatePropertyName] = value;
+                }
+            }
         },
 
         __collectionListener: {
