@@ -1517,6 +1517,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     
                 readCompletedOperation.referrer.stopImmediatePropagation();
 
+                //Cleanup
+                this.unregisterReadOperation(readCompletedOperation.referrer);    
+
             }
             
         } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
