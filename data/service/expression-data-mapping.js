@@ -2022,83 +2022,38 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     //     }
     // },
     _mapObjectPropertyToRawDataProperty: {
-        value: function(object, propertyName, data,  rawPropertyName, added, removed, _rule, lastReadSnapshot, rawDataSnapshot) {
+        value: function(object, propertyName, data,  rawPropertyName, changes, _rule, lastReadSnapshot, rawDataSnapshot) {
 
-            if((added && added.length > 0) || (removed && removed.length > 0 )) {
+            if((changes && changes.length > 0)) {
                 var tmpExtendObject,
                     //We derived object so we can pretend the value of the property is alternatively added, then removed, to get the mapping done.
                     //tmpExtendObject = Object.create(object),
-                    diffData = Object.create(null),
-                    mappedKeys,
-                    i, countI, iKey,
+                    
+                    //__mapObjectToRawDataProperty is run in parallel for added and removed so we need
+                    //to use a separate diffData for each to ensure one does not overwrite the other
+                    i, countI,
                     aPropertyChanges = {},
-                    addedResult, addedResultIsPromise,
-                    removedResult, removedResultIsPromise,
-                    requirements,
-                    result;
+                    rawChanges = [],
+                    rawChange,
+                    results, result;
 
                 data[rawPropertyName] = aPropertyChanges;
+                aPropertyChanges.changes = rawChanges;
 
-                if(added && added.length > 0) {
-                    /*
-                        Here we have a situation where in the most common case object[propertyName] is not equal to the content of added, like if there were pre-exising values.
 
-                        Since we want to only send the diff if possible (we might need to add a flag on RawDataService to know if it can handle diffs or if needs the whole thing.). If there were a notion of order in the propertyDescriptor, that might also be a reason to not send a diff.
-
-                        First we tried to use an extension of the object, but that still modifies it. So we're going to build just a payload object with the values for _rule.requirements.
-                    */
-                    requirements = _rule.requirements;
-                    tmpExtendObject = {};
-                    for(i=0, countI = requirements.length; ( i<countI); i++ ) {
-                        //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
-                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? added : object[requirements[i]];
-                    }
-
-                    //tmpExtendObject[propertyName] = Array.from(added);
-                    addedResult = this.__mapObjectToRawDataProperty(tmpExtendObject, diffData, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
-
-                    if (this._isAsync(addedResult)) {
-                        addedResultIsPromise = true;
-                        addedResult = addedResult.then(() => {
-                            this._assignMappedDiffDataToPropertyChangesObjectKey(diffData, aPropertyChanges,"addedValues");
-                        });
-                    } else {
-                        this._assignMappedDiffDataToPropertyChangesObjectKey(diffData, aPropertyChanges,"addedValues");
-                    }
+            for(i=0, countI = changes.length; ( i<countI); i++ ) {
+                rawChange = {};
+                rawChanges.push(rawChange);
+                result = this._mapObjectChangeToRawChange(object, propertyName, rawChange,  rawPropertyName, changes[i], _rule, lastReadSnapshot, rawDataSnapshot);
+                if (this._isAsync(result)) {
+                    results = results || [];
+                    results.push(result);
                 }
+            }
 
-                if(removed && removed.length > 0 ) {
-
-                    requirements = (requirements || _rule.requirements);
-                    // tmpExtendObject[propertyName] = Array.from(result);
-                    tmpExtendObject = (tmpExtendObject || {});
-
-                    for(i=0, countI = requirements.length; ( i<countI); i++ ) {
-                        //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
-                        tmpExtendObject[requirements[i]] = (requirements[i] === propertyName) ? removed : object[requirements[i]];
-                    }
-
-                    removedResult = this.__mapObjectToRawDataProperty(tmpExtendObject, diffData, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
-
-                    if (this._isAsync(removedResult)) {
-                        removedResultIsPromise = true;
-                        removedResult = removedResult.then(() => {
-                            this._assignMappedDiffDataToPropertyChangesObjectKey(diffData, aPropertyChanges,"removedValues");
-                        });
-                    } else {
-                        this._assignMappedDiffDataToPropertyChangesObjectKey(diffData, aPropertyChanges,"removedValues");
-                    }
-                }
-
-                if(addedResultIsPromise && removedResultIsPromise) {
-                    return Promise.all([addedResult, removedResult]);
-                } else if(addedResultIsPromise) {
-                    return addedResult;
-                } else if(removedResultIsPromise) {
-                    return removedResult;
-                }
-
-                return;
+            if (results) {
+                return Promise.all(results);
+            }
 
             } else {
                 return this.__mapObjectToRawDataProperty(object, data, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
@@ -2106,16 +2061,78 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
-    _assignMappedDiffDataToPropertyChangesObjectKey: {
-        value: function(diffData, aPropertyChanges, key /* addedValues/removedValues*/) {
-            var mappedKeys = Object.keys(diffData),
-                i, countI;
+    _mapObjectChangeToRawChange: {
+        value: function (object, propertyName, data,  rawPropertyName, change, _rule, lastReadSnapshot, rawDataSnapshot) {
+            var tmpExtendObject,
+                    //We derived object so we can pretend the value of the property is alternatively added, then removed, to get the mapping done.
+                    //tmpExtendObject = Object.create(object),
+                    
+                    i, countI,
+                    addedResult,
+                    removedResult,
+                    requirements,
+                    //__mapObjectToRawDataProperty is run in parallel for added and removed so we need
+                    //to use a separate diffData for each to ensure one does not overwrite the other
+                    diffDataAdded,
+                    diffDataRemoved;
 
-            for(i=0, countI = mappedKeys.length; (i <countI); i++) {
-                aPropertyChanges[key] = diffData[mappedKeys[i]];
-            }
+                if (change.addedValues && change.addedValues.length) {
+                    tmpExtendObject = {};
+
+                
+                    requirements = (requirements || _rule.requirements);
+
+                    for(i=0, countI = requirements.length; ( i<countI); i++ ) {
+                        //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
+                        tmpExtendObject[requirements[i]] = requirements[i] === propertyName ? change.addedValues : object[requirements[i]];
+                    }
+                    diffDataAdded = {};
+                    addedResult = this.__mapObjectToRawDataProperty(tmpExtendObject, diffDataAdded, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
+
+                    if (this._isAsync(addedResult)) {
+                        addedResult = addedResult.then(function () {
+                            data.addedValues = diffDataAdded[rawPropertyName];
+                            data.index = change.index;
+                        });
+                    } else {
+                        data.addedValues = diffDataAdded[rawPropertyName];
+                        data.index = change.index;
+                    }
+                } 
+
+                if (change.removedValues && change.removedValues.length) {
+                    tmpExtendObject = {};
+
+                
+                    requirements = (requirements || _rule.requirements);
+
+                    for(i=0, countI = requirements.length; ( i<countI); i++ ) {
+                        //added is a set, regular properties are array, not ideal but we need to convert to be able to map.
+                        tmpExtendObject[requirements[i]] = requirements[i] === propertyName ? change.removedValues : object[requirements[i]];
+                    }
+                    diffDataRemoved = {};
+                    removedResult = this.__mapObjectToRawDataProperty(tmpExtendObject, diffDataRemoved, rawPropertyName, _rule, lastReadSnapshot, rawDataSnapshot);
+
+                    if (this._isAsync(removedResult)) {
+                        removedResult = removedResult.then(function () {
+                            data.removedValues = diffDataRemoved[rawPropertyName];
+                            data.index = change.index;
+                        });
+                    } else {
+                        data.removedValues = diffDataRemoved[rawPropertyName];
+                        data.index = change.index;
+                    }
+                }
+
+
+                return Promise.all([addedResult, removedResult]).then(function (result) {
+                    data, propertyName, rawPropertyName, object;
+                    return result;
+                })
+
         }
     },
+
 
     __mapObjectToRawDataProperty: {
         value: function(object, data, propertyName, _rule, lastReadSnapshot, rawDataSnapshot) {
@@ -2170,7 +2187,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
 
     _mapObjectPropertyToRawDataWithRule: {
-        value: function(object, propertyName, data, added, removed, rule, lastReadSnapshot, rawDataSnapshot) {
+        value: function(object, propertyName, data, changes, rule, lastReadSnapshot, rawDataSnapshot) {
 
             /*
                 If the objectRule.sourcePath isn't part of our own primary key
@@ -2189,10 +2206,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if (this._isAsync(result)) {
                 result = result.then(function (value) {
                     //console.log("_mapObjectPropertyToRawDataProperty "+object.constructor.name+" - "+propertyName);
-                    return self._mapObjectPropertyToRawDataProperty(object, propertyName, data, rawDataProperty, added, removed, rule, lastReadSnapshot, rawDataSnapshot);
+                    return self._mapObjectPropertyToRawDataProperty(object, propertyName, data, rawDataProperty, changes, rule, lastReadSnapshot, rawDataSnapshot);
                 });
             } else {
-                result = this._mapObjectPropertyToRawDataProperty(object, propertyName, data, rawDataProperty, added, removed, rule, lastReadSnapshot, rawDataSnapshot);
+                result = this._mapObjectPropertyToRawDataProperty(object, propertyName, data, rawDataProperty, changes, rule, lastReadSnapshot, rawDataSnapshot);
             }
 
             //using delegation to allow dataService customization
@@ -2210,7 +2227,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
 
     mapObjectPropertyToRawData: {
-        value: function(object, propertyName, data, context, added, removed, lastReadSnapshot, rawDataSnapshot) {
+        value: function(object, propertyName, data, context, changes, lastReadSnapshot, rawDataSnapshot) {
             var objectRule = this.objectMappingRuleForPropertyName(propertyName),
             rawDataMappingRules,
             rawDataProperty;
@@ -2236,7 +2253,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                             iPreviousPromise = result;
                         }
 
-                        result = this._mapObjectPropertyToRawDataWithRule(object, propertyName, data, added, removed, rule, lastReadSnapshot, rawDataSnapshot);
+                        result = this._mapObjectPropertyToRawDataWithRule(object, propertyName, data, changes, rule, lastReadSnapshot, rawDataSnapshot);
 
                         if (this._isAsync(result)) {
                             if(iPreviousPromise) {
