@@ -1685,16 +1685,15 @@ RawDataService.addClassProperties({
                 return rawData
             } else {
                 var rawDataKeys = Object.keys(rawData),
-                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues,
-                    iHasAddedValues, iHasRemovedValues,
+                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue,
+                    iHasCollectionChanges, changes,
                     canRemoveRawDataKey;
 
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
 
                     iUpdatedRawDataValue = rawData[rawDataKeys[i]];
-                    iHasAddedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("addedValues");
-                    iHasRemovedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("removedValues");
-                    if (isFromUpdate && (iHasAddedValues || iHasRemovedValues)) {
+                    iHasCollectionChanges = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("changes");
+                    if (isFromUpdate && iHasCollectionChanges) {
                         
                         canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
@@ -1708,16 +1707,19 @@ RawDataService.addClassProperties({
                          * NOTE: We will eventually update DataService.handleChange to manage multiple actions on an array between saves. This 
                          * logic will need to be updated accordingly. 
                          */
-                        // if (iUpdatedRawDataValue.index !== undefined && iCurrentRawDataValue) {
+                        changes = iUpdatedRawDataValue.changes;
                         if (iCurrentRawDataValue) {
+                            
                             if (Array.isArray(iCurrentRawDataValue)) {
-                                let removeCount = iHasRemovedValues ? iUpdatedRawDataValue.removedValues.length : 0;
-                                if (iHasAddedValues) {
-                                    iCurrentRawDataValue.splice(iUpdatedRawDataValue.index, removeCount, ...iUpdatedRawDataValue.addedValues);
-                                } else {
-                                    iCurrentRawDataValue.splice(iUpdatedRawDataValue.index, removeCount);
-                                }
-                                canRemoveRawDataKey = false;
+                                let removedCount;
+                                changes.forEach(function (change) {
+                                    removedCount = change.removedValues ? change.removedValues.length : 0;
+                                    if (change.addedValues) {
+                                        iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount, ...change.addedValues]);
+                                    } else {
+                                        iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount]);
+                                    }
+                                });
                             /*
                             * TODO: 3-31-26 We need to support these, but did 
                             * not have a valid use case at the time of this writing 
@@ -1730,7 +1732,15 @@ RawDataService.addClassProperties({
                                 throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} without a type`;
                             }
                         } else {
-                            snapshot[rawDataKeys[i]] = iDiffValues;
+                            snapshot[rawDataKeys[i]] = iCurrentRawDataValue = [];
+                            changes.forEach(function (change) {
+                                removedCount = change.removedValues ? change.removedValues.length : 0;
+                                if (change.addedValues) {
+                                    iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount, ...change.addedValues]);
+                                } else {
+                                    iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount]);
+                                }
+                            });
                             canRemoveRawDataKey = false;
                         }
 
@@ -2584,24 +2594,24 @@ RawDataService.addClassProperties({
  * @method
  */
     _mapObjectPropertyToRawData: {
-        value: function (object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot) {
+        value: function (object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot) {
             var mapping = this.mappingForObject(object),
                 result;
 
             if (mapping) {
-                result = mapping.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                result = mapping.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
             }
 
             if (record) {
                 if (result) {
-                    var otherResult = this.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                    var otherResult = this.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
                     if (this._isAsync(result) && this._isAsync(otherResult)) {
                         result = Promise.all([result, otherResult]);
                     } else if (this._isAsync(otherResult)) {
                         result = otherResult;
                     }
                 } else {
-                    result = this.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                    result = this.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
                 }
             }
 
@@ -4370,7 +4380,7 @@ RawDataService.addClassProperties({
     },
 
 
-    __processObjectChangesForProperty: {
+    _processObjectChangesForProperty: {
         value: function (object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, lastReadSnapshot, rawDataSnapshot, rawDataPrimaryKeys, mapping) {
 
             /*
@@ -4389,7 +4399,7 @@ RawDataService.addClassProperties({
 
                 The recent addition of a DataObject property that can be a Map, we may have to re-visit that. It would be better to handle incremental changes to a map than sending all keys and all values are we doing for now
             */
-            if (aPropertyChanges && (aPropertyChanges.hasOwnProperty("addedValues") || aPropertyChanges.hasOwnProperty("removedValues"))) {
+            if (aPropertyChanges && aPropertyChanges.hasAddedOrRemovedValues) {
                 if (!(aPropertyDescriptor.cardinality > 1)) {
                     throw new Error("added/removed values for property without a to-many cardinality");
                 }
@@ -4442,26 +4452,28 @@ RawDataService.addClassProperties({
                 //     operationData[aRawProperty] = aPropertyChanges;
 
 
-                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.changes, lastReadSnapshot, rawDataSnapshot);
                 if (this._isAsync(result)) {
                     return result.then((output) => {
                         let mapping = this.mappingForObject(object),
                             rawRules = mapping.rawDataMappingRulesForObjectPropertyName(aProperty),
                             rawDataProperty;
                         
-                        if(rawRules) {
-                            var iterator = rawRules.values();
+                        // if(rawRules) {
+                        //     var iterator = rawRules.values();
 
-                            while((rule = iterator.next().value)) {
-                                rawDataProperty = rule.targetPath;
-                                if (operationData[rawDataProperty]) {
-                                    operationData[rawDataProperty].index = aPropertyChanges.index;
-                                }
-                                if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
-                                    operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
-                                }
-                            }
-                        }
+                        //     while((rule = iterator.next().value)) {
+                        //         rawDataProperty = rule.targetPath;
+                        //         if (operationData[rawDataProperty]) {
+                        //             operationData[rawDataProperty].index = aPropertyChanges.index;
+                        //         }
+                        //         if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
+                        //             operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
+                        //         }
+                        //     }
+                        // }
+
+                        operationData;
 
                         return output;
                     })
@@ -4569,11 +4581,11 @@ RawDataService.addClassProperties({
                     If it's a new object and somehow multiple changes led to have addedValues or removedValues, we reset that
                     so it will be processed as an new object
                 */
-                if(isNewObject && (aPropertyChanges?.hasOwnProperty("addedValues") || aPropertyChanges?.hasOwnProperty("removedValues"))) {
+                if(isNewObject && (aPropertyChanges?.hasAddedOrRemovedValues)) {
                     aPropertyChanges = null;
                 }
 
-                result = this.__processObjectChangesForProperty(object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, snapshot, dataSnapshot, rawDataPrimaryKeys, mapping);
+                result = this._processObjectChangesForProperty(object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, snapshot, dataSnapshot, rawDataPrimaryKeys, mapping);
 
                 if (result && this._isAsync(result)) {
                     (mappingPromises || (mappingPromises = [])).push(result);
