@@ -836,7 +836,9 @@ exports.DataTrigger.prototype = Object.create(
                 }
 
                 //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
-                currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
+                //_currentValue is only there, (arguments.length >= 5) when we're called by _getValue() -> _ensureCollectionValue(), as the first time a collection is accessed, the _currentValue would be undefined
+                //And in this case, we already assigned it to the private variable line 830, so it's value now
+                currentValue = (arguments.length >= 5) ? value : this._getValue(object, shouldFetch);
                 // currentValue = arguments.length >= 5
                 //     ? _currentValue
                 //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
