@@ -2867,7 +2867,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     _assignObjectValueOrDefault: {
         value: function _assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor) {
             const hasValue = typeof value !== "undefined" && value !== null;
-            let propertySetter = Object.getPropertyDescriptor(object, propertyName).set;
+            // let propertySetter = Object.getPropertyDescriptor(object, propertyName).set;
 
             if (!hasValue) { 
 
@@ -2918,11 +2918,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     // return value;
                 } else {
                     /* We end up here if value === null and isToMany is true */
-                    propertySetter
-                        ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
-                        : (object[propertyName] = value);
+                    // propertySetter
+                    //     ? propertySetter.call(object, /*value*/value, /*_dispatchChange*/ true, /*_initialValue*/ value, /*_currentValue*/undefined)
+                    //     : (object[propertyName] = value);
 
-                    return value;
+                    return (object[propertyName] = value);
                 }
             } else {
                 //3/8/26 shifting to more deliberate use of internal setter to pass more context 
