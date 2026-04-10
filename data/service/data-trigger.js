@@ -338,8 +338,9 @@ exports.DataTrigger.prototype = Object.create(
                 //}
 
                 // Ensure to-Many properties are initialized to their collection type.
-                this._ensureCollectionValue(object, _initialValue);
-
+                if ((this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
+                    this._ensureCollectionValue(object, _initialValue);
+                }
                 // Return the property's current value.
                 return this._valueGetter ? this._valueGetter.call(object) : object[this._privatePropertyName];
             },
@@ -352,9 +353,9 @@ exports.DataTrigger.prototype = Object.create(
         _ensureCollectionValue: {
             value: function _ensureCollectionValue(object, _initialValue) {
                 // When the property does not expect a collection value, nothing to do
-                if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
-                    return;
-                }
+                // if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
+                //     return;
+                // }
 
                 // Initialize to-Many to their collection type.
                 if (
