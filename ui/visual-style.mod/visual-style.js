@@ -25,7 +25,12 @@ var PROPERTIES = [
         {name: "elevatedSurfaceFocusFill", variable: "--visual-style-elevated-surface-focus-fill", backup: "baseSurfaceFill"},
 
     */
-
+    {name: "darkGradientTop", variable: "--visual-style-dark-gradient-top", defaultValue: "#00142E"},
+    {name: "darkGradientBottom", variable: "--visual-style-dark-gradient-bottom", defaultValue: "#234879"},
+    {name: "darkTextPrimary", variable: "--visual-style-dark-text-primary", defaultValue: "#FFFFFF"},
+    {name: "darkAccentBlue", variable: "--visual-style-dark-accent-blue", defaultValue: "#1895ED"},
+    {name: "darkFooter", variable: "--visual-style-dark-footer", defaultValue: "#1C1C1C"},
+    {name: "darkUnselected", variable: "--visual-style-dark-unselected", defaultValue: "#7E7E7E"},
 
     {name: "controlBackgroundFill", variable: "--visual-style-control-background-fill", defaultValue: "hsl(0, 0%, 86%)"},
     {name: "controlSecondaryBackgroundFill", variable: "--visual-style-control-secondary-background-fill", backup: "controlBackgroundFill"},
@@ -201,6 +206,12 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "textErrorFill");
         this._deserializeProperty(deserializer, "textSize");
         this._deserializeProperty(deserializer, "linkTextFill");
+        this._deserializeProperty(deserializer, "darkGradientTop");
+        this._deserializeProperty(deserializer, "darkGradientBottom");
+        this._deserializeProperty(deserializer, "darkTextPrimary");
+        this._deserializeProperty(deserializer, "darkAccentBlue");
+        this._deserializeProperty(deserializer, "darkFooter");
+        this._deserializeProperty(deserializer, "darkUnselected");
     }
 
     _deserializeProperty(deserializer, property) {
