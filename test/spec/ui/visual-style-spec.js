@@ -45,8 +45,8 @@ describe("test/ui/visual-style-spec", function () {
 
             expect(visualStyle.textFill.fallback).toBe(undefined);
             expect(visualStyle.textSecondaryFill.fallback).toBe(visualStyle.textFill);
-            expect(visualStyle.textTertiaryFill.fallback).toBe(visualStyle.textSecondaryFill);
-            expect(visualStyle.textQuaternaryFill.fallback).toBe(visualStyle.textTertiaryFill);
+            expect(visualStyle.tertiaryTextFill.fallback).toBe(visualStyle.textSecondaryFill);
+            expect(visualStyle.quaternaryTextFill.fallback).toBe(visualStyle.tertiaryTextFill);
 
             expect(visualStyle.linkTextFill.fallback).toBe(visualStyle.textFill);
         });
@@ -91,9 +91,9 @@ describe("test/ui/visual-style-spec", function () {
              --visual-style-control-height: 36px;
             --visual-style-text-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-secondary-fill: hsla(0, 0%, 0%, .7);
-            --visual-style-text-tertiary-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-tertiary-text-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-quaternary-fill: hsla(0, 0%, 0%, .7);
-            --visual-style-text-error-fill: hsla(0, 0%, 0%, .7);
+            --visual-style-error-text-fill: hsla(0, 0%, 0%, .7);
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: hsla(0, 0%, 0%, .7);
             }
@@ -131,9 +131,9 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-control-height: 36px;
             --visual-style-text-fill: #484;
             --visual-style-text-secondary-fill: #666;
-            --visual-style-text-tertiary-fill: #777;
+            --visual-style-tertiary-text-fill: #777;
             --visual-style-text-quaternary-fill: #777;
-            --visual-style-text-error-fill: #484;
+            --visual-style-error-text-fill: #484;
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: #484;
             }
@@ -149,8 +149,8 @@ describe("test/ui/visual-style-spec", function () {
             visualStyle.controlActiveFill.value = "#0FF";
             visualStyle.textFill.value = "#484";
             visualStyle.textSecondaryFill.value = "#666";
-            visualStyle.textTertiaryFill.value = "#777";
-            visualStyle.textQuaternaryFill.value = "#777";
+            visualStyle.tertiaryTextFill.value = "#777";
+            visualStyle.quaternaryTextFill.value = "#777";
 
             expect(visualStyle.generateCSS(true)).toEqual(expectedOutput);
         })
@@ -183,9 +183,9 @@ describe("test/ui/visual-style-spec", function () {
             --visual-style-control-height: 36px;
             --visual-style-text-fill: #222;
             --visual-style-text-secondary-fill: #222;
-            --visual-style-text-tertiary-fill: #222;
+            --visual-style-tertiary-text-fill: #222;
             --visual-style-text-quaternary-fill: #222;
-            --visual-style-text-error-fill: #222;
+            --visual-style-error-text-fill: #222;
             --visual-style-text-size: 12px;
             --visual-style-link-text-fill: #222;
         }

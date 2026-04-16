@@ -20,7 +20,7 @@
 }
 
 .ModPropertyField-error {
-    color: var(--visual-style-text-error-fill);
+    color: var(--visual-style-error-text-fill);
 }
 
 .ModPropertyField-helpButton {

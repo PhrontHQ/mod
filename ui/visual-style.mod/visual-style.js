@@ -67,11 +67,11 @@ var PROPERTIES = [
     {name: "controlHeight", variable: "--visual-style-control-height", defaultValue: "36px"},
 
     {name: "textFill", variable: "--visual-style-text-fill", defaultValue: "hsla(0, 0%, 0%, .7)"},
-    {name: "textSecondaryFill", variable: "--visual-style-text-secondary-fill", backup: "textFill"},
-    {name: "textTertiaryFill", variable: "--visual-style-text-tertiary-fill", backup: "textSecondaryFill"},
-    {name: "textQuaternaryFill", variable: "--visual-style-text-quaternary-fill", backup: "textTertiaryFill"},
+    {name: "secondaryTextFill", variable: "--visual-style-secondary-text-fill", backup: "textFill"},
+    {name: "tertiaryTextFill", variable: "--visual-style-tertiary-text-fill", backup: "textSecondaryFill"},
+    {name: "quaternaryTextFill", variable: "--visual-style-text-quaternary-fill", backup: "tertiaryTextFill"},
 
-    {name: "textErrorFill", variable: "--visual-style-text-error-fill", backup: "textFill"},
+    {name: "errorTextFill", variable: "--visual-style-error-text-fill", backup: "textFill"},
 
     {name: "textSize", variable: "--visual-style-text-size", defaultValue: "12px"},
 
@@ -196,9 +196,9 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlHeight");
         this._deserializeProperty(deserializer, "textFill");
         this._deserializeProperty(deserializer, "textSecondaryFill");
-        this._deserializeProperty(deserializer, "textTertiaryFill");
-        this._deserializeProperty(deserializer, "textQuaternaryFill");
-        this._deserializeProperty(deserializer, "textErrorFill");
+        this._deserializeProperty(deserializer, "tertiaryTextFill");
+        this._deserializeProperty(deserializer, "quaternaryTextFill");
+        this._deserializeProperty(deserializer, "errorTextFill");
         this._deserializeProperty(deserializer, "textSize");
         this._deserializeProperty(deserializer, "linkTextFill");
     }
