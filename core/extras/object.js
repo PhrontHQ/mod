@@ -121,3 +121,22 @@ if (Object.prototype.hasOwnProperty('isEmpty') === false) {
         enumerable: false
     });
 }
+
+/**
+ * Returns all keys of an object, owned and inherited ones
+ * @param {Object} object The object to return all keys for.
+ * @returns {Array<String>} An array containing all keys
+ */
+if (Object.prototype.hasOwnProperty('allKeys') === false) {
+    Object.defineProperty(Object, "allKeys", {
+        value: function (object) {
+            const allKeys = [];
+            for (var key in object) allKeys.push(key);
+            return allKeys;
+        },
+        configurable: true,
+        writable: true,
+        enumerable: false
+
+    });
+}
