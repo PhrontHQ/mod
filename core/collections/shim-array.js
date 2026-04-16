@@ -545,6 +545,27 @@ define("includesAll", function (values) {
     return true;
 });
 
+/**
+ * Returns true if an array has a length of zero or it only contains undefined values
+ *
+ * @property
+ * @return {Boolean} 
+ */
+Object.defineProperty(Array.prototype, "isEmpty", {
+    get: function () {
+        if(this.length === 0 )return true;
+
+        for(let i=0, iCount = this.length; (i<iCount); i++) {
+            if(this[i] !== undefined) {
+                return false;
+            }
+        }
+        return true;
+    },
+    configurable: true,
+    enumerable: false
+});
+
 define("isContentEqual", function (otherArray) {
 
     if(this.length !== otherArray?.length){
