@@ -1337,8 +1337,15 @@ DataService.addClassProperties(
         },
 
         /**
-         * Get all child services that handle dataOperationtype of the specified type argument,
-         * or `null` if no such child service exists.
+         * Get all child services that handle a dataOperation, which can mean:
+         *  - handling the type of operation — dataOperation.type
+         *  - handling the object descriptor involved - dataOperation.target
+         *  - but also handling the readExpressions involved — dataOperation.data.readExpresssions
+         *    
+         * Just because a RawDataService can read objects of a certain type, doesn't necessarily means 
+         * it can resolves a property/relationship on the source object descriptor (dataOperation.target) to that type
+         *
+         * TODO: ADD CACHING
          *
          * @method
          * @argument {DataOperationType} dataOperationtype
