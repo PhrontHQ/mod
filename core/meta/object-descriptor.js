@@ -9,6 +9,8 @@ var Montage = require("../core").Montage,
     Promise = require("../promise").Promise,
     PropertyDescriptor = require("./property-descriptor").PropertyDescriptor,
     Set = require("../collections/set"),
+    parse = require("../frb/parse"),
+    SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     deprecate = require("../deprecate");
 
 var Defaults = {
@@ -679,6 +681,65 @@ ObjectDescriptor.addClassProperties(
 
                 return this._composedPath;
             },
+        },
+
+        _descriptorTraversingExpression: {
+            value: function(anExpression, _returnTraversedDescriptors = false) {
+                let syntax = parse(anExpression),
+                syntaxIterator = new SyntaxInOrderIterator(syntax),
+                currentIteration,
+                currentSyntax,
+                traversedDescriptors = _returnTraversedDescriptors ? [] : null,
+                descriptor = this;
+
+                while (
+                    (currentIteration = syntaxIterator.next(undefined, currentSyntax)) &&
+                    currentIteration.done !== true
+                ) {
+
+                    //A filter{} is just a reduction in content, it doesn't change the type to continue
+                    //A map{} however will change the type to consider going forward.
+                    //We're going to need a spec to get this right
+
+                    currentSyntax = currentIteration.value;
+                    if(currentSyntax.type === "property") {
+                        /*
+                            currentSyntax: {"type":"property","args":[{"type":"value"},{"type":"literal","value":"userIdentities"}]}
+                        */
+                        let propertyName = currentSyntax.args[1].value,
+                            propertyDescriptor = descriptor.propertyDescriptorNamed(propertyName);
+
+                        //WARNING: propertyDescriptor.valueDescriptor is a promise, which means descriptorTraversingExpression should return a promise
+                        //And every method calling this would have to deal with it, hint: composedPath
+                        if(propertyDescriptor._valueDescriptorReference) {
+                            descriptor = propertyDescriptor._valueDescriptorReference;
+
+                            //We only have an array in traversedDescriptors if _returnTraversedDescriptors === true
+                            traversedDescriptors?.push(descriptor)
+                        }
+
+                    } else if(currentSyntax.type === "map") {
+
+                    } else {
+                        //I think we want to skip to the next property
+                    }
+
+                }
+
+                return traversedDescriptors ? traversedDescriptors : descriptor;
+            }
+        },
+
+        descriptorTerminatingExpression: {
+            value: function(anExpression) {
+                return this._descriptorTraversingExpression(anExpression, false);
+            }
+        },
+
+        descriptorsTraversingExpression: {
+            value: function(anExpression) {
+                return this._descriptorTraversingExpression(anExpression, true);
+            }
         },
 
         /**
