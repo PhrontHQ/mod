@@ -1593,7 +1593,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             The type at the end of an expression for relationships, complex expressions or derived properties
         */
         return this.handlesType(anObjectDescriptor)
-                ? this.readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptor).length === this.childServicesHandlingDataOperationTypeForType(aReadOperation.type, anObjectDescriptor).length
+                ? this.readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptor)?.length === this.childServicesHandlingDataOperationTypeForType(aReadOperation.type, anObjectDescriptor)?.length
                 : true;
     }
 
