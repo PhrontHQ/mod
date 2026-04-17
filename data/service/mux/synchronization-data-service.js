@@ -1399,10 +1399,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 if there was only one data service that handled the read operation and was our destination service, then there's no point trying anything else
             */
-           if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+           //if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+           if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.referrer.target)) {
 
                 /* if this readCompletedOperation doesn't come from our destinationDataService: */
-                if(((this.readCompletionOperationReadOperationAndObjectDescriptorTarget(readCompletedOperation.referrer, readCompletedOperation.target).length === 1) && (readCompletedOperation.rawDataService === this.destinationDataService))) {
+                if(((this.readCompletionOperationReadOperationAndObjectDescriptorTarget(readCompletedOperation.referrer, readCompletedOperation.referrer.target).length === 1) && (readCompletedOperation.rawDataService === this.destinationDataService))) {
                     /* Origin Services need to have a shot, so we stop propagatiom of that readCompletedOperation from our destinationService, in order to have the readOperation continue to our oriin data services: */
                     readCompletedOperation.stopPropagation();
 
@@ -1612,11 +1613,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     registerChildDataServiceReadCompletionOperation(aReadCompletionOperation) {
 
-        if(aReadCompletionOperation.rawDataService.handlesDataOperationTypeForType(aReadCompletionOperation.type, aReadCompletionOperation.target)) {
+        if(aReadCompletionOperation.rawDataService.handlesDataOperationTypeForType(aReadCompletionOperation.referrer.type, aReadCompletionOperation.referrer.target)) {
             let readCompletionOperationByChildDataService = this.readCompletionOperationByTargetForReadOperation(aReadCompletionOperation.referrer),
-                readCompletionOperations = readCompletionOperationByChildDataService.get(aReadCompletionOperation.target);
+                readCompletionOperations = readCompletionOperationByChildDataService.get(aReadCompletionOperation.referrer.target);
             if(!readCompletionOperations) {
-                readCompletionOperationByChildDataService.set(aReadCompletionOperation.target, (readCompletionOperations = []));    
+                readCompletionOperationByChildDataService.set(aReadCompletionOperation.referrer.target, (readCompletionOperations = []));    
             }
             readCompletionOperations.push(aReadCompletionOperation);    
         } else {
