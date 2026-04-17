@@ -31,4 +31,14 @@ exports.MuxDataService = class MuxDataService extends RawDataService {/** @lends
         
     }
 
+    /**
+     * Mux RawDataServices orchestrate the work of other concrete RawDataServices, they won't have a connection of their own
+     *
+     * @property
+     *
+     */
+    get connection() {
+        return null;
+    }
+
 }
