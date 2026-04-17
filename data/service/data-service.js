@@ -2406,7 +2406,7 @@ DataService.addClassProperties(
          * in object.
          */
         fetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated, readExpressions) {
+            value: function (object, propertyName, isObjectCreated, isUpdate) {
                 var childServices = this.childServicesForType(object.objectDescriptor),
                     isHandler =
                         /*(this.parentService && this.parentService._getChildServiceForObject(object) === this)*/ this.handlesType(
@@ -2447,17 +2447,17 @@ DataService.addClassProperties(
                       )
                     : childServices?.length > 0
                     ? childServices.length === 1
-                        ? childServices[0].fetchObjectProperty(object, propertyName, isObjectCreated)
-                        : this.childServicesFetchObjectProperty(object, propertyName, isObjectCreated)
+                        ? childServices[0].fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate)
+                        : this.childServicesFetchObjectProperty(object, propertyName, isObjectCreated, isUpdate)
                     : this.nullPromise;
             },
         },
 
         childServicesFetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated) {
+            value: function (object, propertyName, isObjectCreated, isUpdate) {
                 //Workaround for now:
                 if (object.dataIdentifier.dataService) {
-                    return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated);
+                    return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate);
                 }
 
                 throw "Data Services with multiple child services per ObjectDescriptor have to implement this method";

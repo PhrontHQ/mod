@@ -883,6 +883,36 @@ WebSocketDataOperationService.addClassProperties({
                 //Overrides operation's needsDataMapping to get started
                 operation.needsDataMapping = true;
 
+
+                //TODO: Move to RawDataService
+                //Add check for Types that are stored with subtypes, to make sure that if there are readExpressions, it contains the property needed to tell them apart:
+                if (this.mappingForType(operation.target).needsRawDataTypeIdentificationCriteria) {
+                    let criteria = this.rawDataTypeIdentificationCriteriaForType(operation.target),
+                        properties = criteria.qualifiedProperties;
+
+                    if(properties.length > 0) {
+                        let operationReadExpressions = operation.data.readExpressions;
+
+                        /*
+                            if there are no readExpressions in the operation, all properties are expected to be returned,
+                            which has to include the one(s) needed to tell subtypes from each others.
+
+                            So only if there are readExpressions in the operation. we make sure it includes those needed properties
+                        */
+                        if(operationReadExpressions) {
+                            for(let i=0, countI = properties.length; (i<countI); i++) {
+                                if(!properties.includes(properties[i])) {
+                                    properties.push(properties[i]);
+                                }
+                            }
+                        }
+
+                    } else {
+                        console.warn(`Mapping Inconsistency: ${operation.target.name} needs RawData Type Identification Criteria but criteria's qualifiedProperties is empty`);
+                    }
+
+                }
+
                 if (this._readOperationQueue.length === 1) {
                     queueMicrotask(() => {
                     //this._processOperationQueueTimeout = setTimeout(() => {

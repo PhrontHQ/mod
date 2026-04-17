@@ -979,7 +979,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         updateObjectProperty: {
-            value: function (object) {
+            value: function (object, isUpdate = false) {
                 var self = this,
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
@@ -988,7 +988,7 @@ exports.DataTrigger.prototype = Object.create(
                         status.resolve = resolve;
                         status.reject = reject;
                     });
-                    self._fetchObjectProperty(object);
+                    self._fetchObjectProperty(object, isUpdate);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
@@ -1002,11 +1002,11 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         _fetchObjectProperty: {
-            value: function (object) {
+            value: function (object, isUpdate) {
                 var self = this;
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
                 this._service
-                    .fetchObjectProperty(object, this._propertyName)
+                    .fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate)
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 

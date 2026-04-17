@@ -338,7 +338,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     },
     rawDataTypeIdentificationCriteria: {
         get: function() {
-            return this._rawDataTypeIdentificationCriteria || this.service.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(this.objectDescriptor);
+            return this._rawDataTypeIdentificationCriteria || this.service.rawDataTypeIdentificationCriteriaForType(this.objectDescriptor);
         },
         set: function(value) {
             if(this._rawDataTypeIdentificationCriteria !== value) {
@@ -497,7 +497,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         get: function() {
             if(!this._objectPropertyNames) {
 
-                this._objectPropertyNames = Object.keys(this.objectMappingRules);
+                //We want to capture all keys, owned + inherited
+                this._objectPropertyNames = Object.allKeys(this.objectMappingRules);
                 // let objectMappingRules = this.objectMappingRules,
                 // i, countI,
                 // _objectPropertyNames = [];
@@ -1204,8 +1205,52 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    /**
+     * For every raw property involved in the rule, we assess the value between data and snapshot
+     *
+     * @method
+     * @argument {Object} data - fetched raw data
+     * @argument {MappingRule} aRule - A rule considered
+     * @argument {Object} object - the object being mapped - if we need to assess wether it has changes or not. Or should we do that later in the process?
+     * @argument {Object} snapshot - the snapshot of the object being mapped
+     * @argument {Boolean} refreshesRefetchedInstances - refreshesRefetchedInstances
+     *                                      
+     * @returns {Boolean} 
+     *
+     */
+    _shouldMapRawDataWithRuleToObjectWithSnapshot: {
+        value: function(data, aRule, object, snapshot, refreshesRefetchedInstances) {
+            let aRuleRequirements = aRule.requirements,
+                equals = Object.equals;
+
+            for(let i=0, countI = aRuleRequirements.length; (i<countI); i++) {
+                let iRuleRequirement = aRuleRequirements[i],
+                    // evaluatedDataValue = aRule.evaluate(data),
+                    // evaluatedSnapshotValue = aRule.evaluate(data),
+                    // lookedUpDataValue = data[aRule.sourcePath],
+                    // lookedUpSnapshotValue = snapshot[aRule.sourcePath];
+                    dataValue = data[iRuleRequirement],
+                    snapshotValue = snapshot[iRuleRequirement];
+
+                /*
+                    We've fetched a value that is the same as we did before. so there shouldn't be anything to do?
+                    IF there are unsaved changes, then we also avoid to override it by re-mapping the value and re-set it on object.
+
+                    But if the DataQuery that initiated this has refreshesRefetchedInstances === true,
+                    then we should go ahead and proceed
+                */
+                if(equals(dataValue,snapshotValue) && !refreshesRefetchedInstances) {
+                    return false;
+                }
+
+            }
+            return true;
+        }
+    },
+
     _mapRawDataPropertiesToObject: {
-        value: function(data, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged) {
+        value: function(data, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged, snapshot) {
+                      
             var rawDataProperties = data ? Object.keys(data) : null,
                 result,
                 rawDataPropertyIteration = 0, rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
@@ -1221,7 +1266,12 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 dataHasRuleRequirements,
                 isObjectCreated = service.isObjectCreated(object),
                 changesForDataObject,
-                mainService;
+                mainService,
+                //We have some serious discrepancies here to sortout... most of that in mappingScope, which is much more legible
+                readCompletedOperation = context instanceof DataOperation
+                    ? context
+                    : mappingScope.root.child.value, 
+                refreshesRefetchedInstances = !!readCompletedOperation.referrer.dataStream?.query.refreshesRefetchedInstances;
 
             /*
                 If data is null and we have readExpressions, which are object-level, we go on and set those.
@@ -1332,6 +1382,16 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         }
 
                         /*
+                            If there's a snapshot, we're going to avoid doing anything if the value of the snapshot
+                            match the current raw data, and the object doesn't have the property named as aRule.targetPath set. 
+                            But there shouldn't be a fetch if the property could have been mapped from the existing snapshot, 
+                            unless it was explicity requested a refresh with mainService.updateObjectProperties()
+                        */
+                        if(snapshot && !this._shouldMapRawDataWithRuleToObjectWithSnapshot(data, aRule, object, snapshot, refreshesRefetchedInstances)) {
+                            continue;
+                        }
+
+                        /*
                             Tell our service: mappingWillMapRawDataToObjectProperty
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
@@ -1419,7 +1479,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     // 4. 
 
     mapRawDataToObject: {
-        value: function (rawData, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged) {
+        value: function (rawData, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged, snapshot) {
             var promises,
                 requisitePropertyNames = this.requisitePropertyNames,
                 unmappedRequisitePropertyNames = new Set(requisitePropertyNames),
@@ -1429,8 +1489,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if(context instanceof DataOperation) {
                 mappingScope = this._scope.nest(context);
                 mappingScope = mappingScope.nest(rawData);
-            } else {
+            } else if (!(context instanceof Scope)) {
                 mappingScope = this._scope.nest(rawData);
+            } else {
+                mappingScope = context;
+                mappingScope = mappingScope.nest(rawData);
             }
 
             mappingScope.rootObjectBeingMapped = object;
@@ -1441,7 +1504,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             */
             _rawData = this.service.mappingWillMapRawDataToObject(this, rawData, object, context, readExpressions, mappingScope)
 
-            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged);
+            promises = this._mapRawDataPropertiesToObject(_rawData, object, context, readExpressions, mappingScope, unmappedRequisitePropertyNames, promises, mappedProperties, registerMappedPropertiesAsChanged, snapshot);
             
             /*
                 This is causing problems: as partial aspects of the object are filled-in, the attempts to run mapping rules for object properties on raw data that doesn't contain
@@ -3305,15 +3368,37 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
     _mapObjectMappingRuleForPropertyName: {
         value: function (rawRule, propertyName, objectMappingRules, rawDataMappingRules) {
-            if(!rawRule) {
-                if(this.rawDataPrimaryKeys.indexOf(propertyName) !== -1) {
-                    objectMappingRules[propertyName] = null;
-                } else if(objectMappingRules[propertyName] === undefined) {
-                    //console.warn("ExpressionDataMapping _mapObjectMappingRuleForPropertyName(): no rule found for propertyName '"+propertyName+"'");
-                    objectMappingRules[propertyName] = null;
-                }
-            } else {
-                var rule;
+
+            /*
+                Keeping former implementation around for buffering possible regression.
+                The reason this is causing bugs is that it's being called with rawRule being falsy, because that mapping doesn't have such property,
+                which happens when the mapping of subclasses go up the chain looking for a rule, that might be missing.
+                The commented out implementation has the side effect of adding propertyName to objectMappingRules - this._objectMappingRules, and later
+                when we grab all keys to treat them as read expressions, then we end up with things that don't exist and polute, with side-effects.
+            */
+            // if(!rawRule) {
+            //     if(this.rawDataPrimaryKeys.indexOf(propertyName) !== -1) {
+            //         objectMappingRules[propertyName] = null;
+            //     } else if(objectMappingRules[propertyName] === undefined) {
+            //         //console.warn("ExpressionDataMapping _mapObjectMappingRuleForPropertyName(): no rule found for propertyName '"+propertyName+"'");
+            //         objectMappingRules[propertyName] = null;
+            //     }
+            // } else {
+            //     var rule;
+
+            //     if (this._shouldMapRule(rawRule, true)) {
+            //         rule = this.makeRuleFromRawRule(rawRule, propertyName, true, true);
+            //         objectMappingRules[rule.targetPath] = rule;
+            //     }
+
+            //     if (this._shouldMapRule(rawRule, false)) {
+            //         rule = this.makeRuleFromRawRule(rawRule, propertyName, false, true);
+            //         rawDataMappingRules[rule.targetPath] = rule;
+            //     }
+            // }
+
+            if(rawRule) {
+                let rule;
 
                 if (this._shouldMapRule(rawRule, true)) {
                     rule = this.makeRuleFromRawRule(rawRule, propertyName, true, true);
@@ -3325,6 +3410,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     rawDataMappingRules[rule.targetPath] = rule;
                 }
             }
+
         }
     },
 

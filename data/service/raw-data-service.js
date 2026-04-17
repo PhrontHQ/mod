@@ -1184,7 +1184,7 @@ RawDataService.addClassProperties({
                 We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
                 We'll need to find a way to optimize down to a single lookup if we can
             */
-           if (this.needsRawDataTypeIdentificationCriteria) {
+           if (this.needsRawDataTypeIdentificationCriteriaForType(type)) {
                 type = this.objectTypeForRawData(type, rawData);
            }
 
@@ -1422,8 +1422,10 @@ RawDataService.addClassProperties({
         }
     },
 
-    needsRawDataTypeIdentificationCriteria: {
-        value: false
+    needsRawDataTypeIdentificationCriteriaForType: {
+        value: function(type) {
+            return this.mappingForType(type)?.needsRawDataTypeIdentificationCriteria || false
+        }
     },
 
     objectTypeForRawData: {
@@ -2357,7 +2359,10 @@ RawDataService.addClassProperties({
 
                 this._objectsBeingMapped.add(object);
 
-                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged);
+                /*
+                    We only want to pass the snapshot if it's pre-existing record. If they are equal, it means the record was recorded as the snapshot before we got here
+                */
+                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged, snapshot === record ? null : snapshot);
 
                 //Recording snapshot even if we already had an object
                 //Record snapshot before we may create an object
@@ -2488,9 +2493,9 @@ RawDataService.addClassProperties({
                 return mapping.mapObjectTypeToRawData(object, rawData, context);
             }
 
-            if(this.needsRawDataTypeIdentificationCriteria) {
+            if(this.needsRawDataTypeIdentificationCriteriaForType(object.objectDescriptor)) {
                 // debugger;
-                let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
+                let criteria = this.rawDataTypeIdentificationCriteriaForType(object.objectDescriptor);
                 
                 assign(rawData, criteria.expression, true, criteria.parameters);
             }
