@@ -576,7 +576,7 @@ exports.Select = class Select extends Control {
 
 //http://www.w3.org/TR/html5/the-button-element.html#the-select-element
 
-Select.addAttributes(
+exports.Select.addAttributes(
     /** @lends module:"mod/ui/native/select.mod".Select */ {
         /**
     Specifies whether the element should be focused as soon as the page is loaded.
