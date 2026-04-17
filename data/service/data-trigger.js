@@ -527,7 +527,16 @@ exports.DataTrigger.prototype = Object.create(
 
                             if (!listener) {
                                 listener = function _triggerArrayCollectionListener(plus, minus, index) {
-                                    if (plus?.length > 0 || minus?.length > 0) {
+                                    /*
+                                        replacing with using the new .isEmpty to eliminate arrays
+                                        that may be sparse or specifically contain undefined values.
+
+                                        Some bindings can cause some arrays in those unusual states
+
+                                        isEmpty true if an array has a length of zero or it only contains undefined values
+                                    */
+                                    //if (plus?.length > 0 || minus?.length > 0) {
+                                    if (!plus?.isEmpty || !minus?.isEmpty) {
                                         // If we're not in the middle of a mapping...:
                                         // if(!self._service._objectsBeingMapped.has(object)) {
                                         // Dispatch update event
