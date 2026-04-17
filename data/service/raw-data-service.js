@@ -1,4 +1,5 @@
-var DataService = require("./data-service").DataService,
+var Montage = require("core/core").Montage,
+    DataService = require("./data-service").DataService,
     assign = require("../../../core/frb/assign"),
     compile = require("../../core/frb/compile-evaluator"),
     Criteria = require("../../core/criteria").Criteria,
@@ -8,7 +9,6 @@ var DataService = require("./data-service").DataService,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
-    //Montage = (require) ("../../core/core").Montage,
     parse = require("../../core/frb/parse"),
     Scope = require("../../core/frb/scope"),
     deprecate = require("../../core/deprecate"),
@@ -54,6 +54,28 @@ require("../../core/collections/shim-object");
  * @extends DataService
  */
 const RawDataService = exports.RawDataService = class RawDataService extends DataService {/** @lends RawDataService */
+
+    static {
+
+        Montage.defineProperties(this.prototype, {
+            /**
+             * A criteria to be used if an instance of identity needs to be fetched.
+             *
+             * @property {Criteria} value
+             * @default null
+             */
+            identityCriteria: { value: null},
+
+            /**
+             * A DataQuery instance to be used if an instance of identity needs to be fetched.
+             *
+             * @property {DataQuery} value
+             * @default null
+             */
+            _identityQuery: { value: null}
+        });
+    }
+
 
     constructor() {
         super();
@@ -119,7 +141,175 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
      */
 
     handleReadOperation(readOperation) {
-        
+
+        /*
+            This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
+            When that promise resolves, then we check if readOperation.defaultPrevented, if yes, the we don't handle it, otherwise we proceed.
+
+            Wonky, WIP: needs to work without a delegate actually implementing it.
+            And a RawDataService shouldn't know about all that boilerplate
+
+            Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
+            it might be simpler, but probably a bit less efficient
+
+        */
+        let readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
+        if (readOperationCompletionPromise) {
+            readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
+                if (!readOperation.defaultPrevented) {
+                    let resultPromise = this._handleReadOperation(readOperation);
+                    if (this.promisesReadCompletionOperation) {
+                        return resultPromise
+                    }
+                }
+            });
+        } else {
+            let resultPromise = this._handleReadOperation(readOperation);
+            if (this.promisesReadCompletionOperation) {
+                readOperationCompletionPromise = resultPromise;
+            }
+        }
+
+        //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
+        //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
+        if (this.promisesReadCompletionOperation) {
+            return readOperationCompletionPromise;
+        }
+
+    }
+
+
+    /**
+     * A RawDataService needs an identity to get some kind of access credentials to present to an endpoint.
+     * A data operation can carries a user's, client's or agent's identity, but RawDataService, execuded in the backend may have an identity assigned to it
+     * 
+     * @method
+     * @argument {DataOperation} dataOperation - an instance of DataOperation
+     * @returns {Promise<Identity>} - a Promise for the identity to be used to handle the instance of DataOperation argument
+     */
+    identityForDataOperation(dataOperation) {
+        let identityPromise;
+
+        /*
+            Wether one was assigned straight or already obtained via fetchIdentity()
+        */
+        if (this.identity || this.identityQuery) {
+            return this.identityPromise;
+        } else if (dataOperation.identity) {
+            return Promise.resolve(dataOperation.identity);
+        } else if (this.application.identity) {
+            return Promise.resolve(this.application.identity);
+        } else {
+            /*
+                Workareound: readOperation.identity is undefine right now, so we're defaulting to application.identity
+                BUT #TODO: a user-mod / end-mod can evenually have multiple user identities from different identity providers
+                So we'll need to redesign for that. A RawDataService will need to figure out, which one of those user identities
+                the one it should use.
+
+                Knowing about a RawDataService's organization behind it should help match it 
+                to one of the existing identities's provider / oranization, if it's the same, but some API can accept
+                identities from multiple providers, so we need to add to RawDataService the knowledge of 
+                what kind of identities it can accept / work with:
+
+                - a criteria or a list of criteria to evaluate on identities, such that if the evaluation returns true
+                the identity can be used by the raw data service
+
+            */
+            let userIdentityQuery = DataQuery.withTypeAndCriteria(UserIdentity);
+
+
+            identityPromise = this.mainService.fetchData(userIdentityQuery);
+
+        }
+
+        return identityPromise;
+    }
+
+    _handleReadOperation(readOperation) {
+        let readOperationCompletionPromiseResolvers, readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject;
+
+        if (this.promisesReadCompletionOperation) {
+            readOperationCompletionPromiseResolvers = Promise.withResolvers();
+            readOperationCompletionPromise = readOperationCompletionPromiseResolvers.promise;
+            readOperationCompletionPromiseResolve = readOperationCompletionPromiseResolvers.resolve;
+            readOperationCompletionPromiseReject = readOperationCompletionPromiseResolvers.reject;
+        } else {
+            readOperationCompletionPromise = readOperationCompletionPromiseResolve = readOperationCompletionPromiseReject = undefined;
+        }
+
+        /*
+            Here goes the core business:
+
+            1. Authenticating the RawReadOperation:
+                HTTPService uses authenticationPolicy, and logic to get an identity for that readOperation. a Promise to Authenticate / get what we need to send a RawDataOperation/RawReadOperation (an HTTP Requet, a SQL statement to a DB, etc...)
+                    So a identityForReadOperation() method would help factor that out.
+                But PG Service uses 
+        */
+
+        let identityPromise = this.identityForDataOperation(readOperation)
+
+
+        /*
+            2. Authorizing the RawReadOperation
+                HTTPService calls this.accessTokenForIdentity(resolvedIdentity), a RawDataServiceMethod that returns a cached AccessToken. The code to get it is in HttpService _handleReadOperation(), it should move out 
+                HTTPService builds a DataQuery to fetch an instance of this.accessTokenDescriptor with that identity. The property accessTokenDescriptor gives a subclass the ability to control / specialize it.
+
+                PGService uses a Secret, not an access token. In local we provide the secret direclty, otherwise we configure the secretName and PGService builds a DataQuery to fetch a Secret with that name.
+                So in the end, both of these services have to fetch a data instance of a certain type matching a criteria that will allow them to connect to the RawService endpoint, and to authenticate to it.
+
+                Promise<AccessCredential> accessCredentialsForIdentity()
+                // Promise<AccessCredential> accessCredentialsPromiseForIdentity()
+
+            3. Connecting: where + auth
+                HTTPService uses properties like :
+                    "baseURL": "https://api.endpoint.vendor.com",
+                    "issuerURI": "https://api.endpoint.vendor.com/adfs/oauth2/token",
+
+                    In the end, the token is attached to the Request, built from the connection info like baseURL, then sent
+
+                PGService uses those connection info configured per environment                   
+                
+                    "environment": "local",
+                    "database": "projectName",
+                    "owner": "postgres",
+                    "schema": "projectName_v1"
+
+                and adds the URL to the host AND auth info (username, passwords, certificates) read from the stored secret
+                to establish a connection before sending the "raw request" aka query aka SQL statement
+
+            4. All of this is true for any one or many rawReadOperation(s) derived from readOperation
+
+        */
+
+
+        return readOperationCompletionPromise;
+    }
+
+    /**
+     * Gives the opportunity to turn one dataOperation into multiple Raw Data Operations if needed by a service's practical constraints. 
+     * an HTTP service may need multiple HTTP Requests, a SQL Service multiple SQL statements, to fulfill the read data operation
+     * 
+     * TODO:
+     *      - PG Service has mapReadOperationToRawReadOperation(readOperation, rawDataOperation) and returns a rawReadOperations array, so it needs to adapt to this signature
+     *      - HttpSevice has mapDataOperationToRawDataOperations(dataOperation, rawDataOperations), right structure, needs iteration on naming
+     * 
+     * There are 2 reasona why a readOperation could become multiple rawReadOperations:
+     *  1. The criteria of the read operation can't be executed in one raw Read Operation: like involving multiple queries to obtain the result
+     *  2. read operation's read expressions require multiple read operations to fullfill what's requested. Some of this can be mechanically related to the capabilities the RawDataService's endpoint, 
+     *     BUT it can also be related to the fact that a complex expression may involve other data services as well.
+     * 
+     * For which we need a way to answer the question: "Can I raw-read this expression from that type?""
+     * 
+     * ALSO - Some endpoints provide the ability to group read operations in one "group" reques
+     *   
+     * If a result is cached, rawDataOperations can receive Read[Completed|Failed]Operations as well
+     *
+     * @param {DataOperation} readOperation - The dataOperation to map
+     * @param {Array<Abstract RawReadOperation>} rawReadOperations - An array to collect the resulting raw data operations
+     * @returns {Promise<rawDataOperations>} A promise that resolves with the rawDataOperations passed in, as a convenience
+     */
+    mapReadOperationToRawReadOperations(readOperation, rawReadOperations) {
+
     }
  
 }
@@ -5273,7 +5463,10 @@ RawDataService.addClassProperties({
 
     identityQuery: {
         get: function () {
-            return this.connection.identityQuery;
+            if(!this._identityQuery) {
+                this._identityQuery = this.connection?.identityQuery
+            }
+            return this._identityQuery;
         }
     },
 
