@@ -2698,8 +2698,8 @@ DataService.addClassProperties(
                     promise = !trigger
                         ? this.nullPromise
                         : isUpdate
-                        ? trigger.updateObjectProperty(object)
-                        : trigger.getObjectProperty(object);
+                            ? trigger.updateObjectProperty(object)
+                            : trigger.getObjectProperty(object);
                     if (promise !== this.nullPromise) {
                         if (!promises) {
                             promises = { array: [promise] };
