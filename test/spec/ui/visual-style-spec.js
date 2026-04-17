@@ -44,8 +44,8 @@ describe("test/ui/visual-style-spec", function () {
             expect(visualStyle.controlFocusFill.fallback).toBe(visualStyle.controlActiveFill);
 
             expect(visualStyle.textFill.fallback).toBe(undefined);
-            expect(visualStyle.textSecondaryFill.fallback).toBe(visualStyle.textFill);
-            expect(visualStyle.tertiaryTextFill.fallback).toBe(visualStyle.textSecondaryFill);
+            expect(visualStyle.secondaryTextFill.fallback).toBe(visualStyle.textFill);
+            expect(visualStyle.tertiaryTextFill.fallback).toBe(visualStyle.secondaryTextFill);
             expect(visualStyle.quaternaryTextFill.fallback).toBe(visualStyle.tertiaryTextFill);
 
             expect(visualStyle.linkTextFill.fallback).toBe(visualStyle.textFill);
@@ -148,7 +148,7 @@ describe("test/ui/visual-style-spec", function () {
             visualStyle.controlSelectionBackgroundFill.value = "#0D0";
             visualStyle.controlActiveFill.value = "#0FF";
             visualStyle.textFill.value = "#484";
-            visualStyle.textSecondaryFill.value = "#666";
+            visualStyle.secondaryTextFill.value = "#666";
             visualStyle.tertiaryTextFill.value = "#777";
             visualStyle.quaternaryTextFill.value = "#777";
 
