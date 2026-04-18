@@ -173,6 +173,13 @@ var observableArrayProperties = {
                 /*
                     There could be the same values at the same slot in plus
                     as in this. In which case they shouldn't be considered as minus
+
+                    #WARNING EXCEPTION WHEN this, plus are arrays of boolean, used by makeReplacingMapBlockObserver() and makeReplacingFilterBlockObserver()
+                    I, this case this implementation that replaces the OG:
+                        minus = array_slice.call(this, start, start + length);
+                    create a bug in filter-map-spec.js.
+
+                    So added a test to return to the OG behavior if values are boolean
                 */
                 let i, countI, newPlus = plus.slice(), newStart = start, myLength = this.length, iterationLength = (length > myLength ? myLength : length), newLength = iterationLength;
                 for(i = 0, countI = iterationLength; (i<countI); i++ ) {
@@ -180,7 +187,7 @@ var observableArrayProperties = {
                         (plusLength > 0) is to make the difference between this[i+start] actually containing the value undefined
                         vs plus being empty in which case plus[i] also returns undefined...
                     */
-                    if(plusLength > 0 && this[i+start] === plus[i] && !minus) {
+                    if(plusLength > 0 && ((this[i+start] === plus[i]) && (typeof plus[i] !== "boolean")) && !minus) {
                         newPlus.shift();
                         newStart++;
                         newLength--;

@@ -327,7 +327,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
 
         if(this.needsRawDataTypeIdentificationCriteria) {
-            let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
+            let criteria = this.rawDataTypeIdentificationCriteriaForType(object.objectDescriptor);
             assign(rawData, criteria.expression, true, criteria.parameters);
         }
     }
@@ -471,7 +471,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
         // data operations, verify here whether this service should handle the operation.
 
-        if (!this.handlesType(readOperation.target)) return;
+        if (!this.handlesType(readOperation.target)) {
+            return;
+        }
 
         //TJ If there is no delegate, callDelegateMethod returns null which throws an error. Do we need a null check or should we ALWAYS have a delegate?
         let delegatePromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation) || Promise.resolve(readOperation);

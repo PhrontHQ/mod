@@ -325,11 +325,22 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
      * It is used for example to carry an object's originDataSnapshot if present, 
      * or to pass an object's snapshot to provide context needed to a stateless, serverless
      * Mod worker processing DataOperations 
-     * @type {Object}
+     * @property {Object}
      */
 
     hints: {
         value: undefined
+    },
+
+    /**
+     * Returns true if existing instances are overwritten with fetched values when they’ve been updated or changed. 
+     * Returns false if existing instances aren’t touched when their data is refetched (the feched data is simply discarded). 
+     * The default is false. Note that this setting does not affect relationships.
+     * 
+     * @property {Boolean}
+     */
+    refreshesRefetchedInstances: {
+        value: false
     },
 
 

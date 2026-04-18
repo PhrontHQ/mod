@@ -1337,8 +1337,15 @@ DataService.addClassProperties(
         },
 
         /**
-         * Get all child services that handle dataOperationtype of the specified type argument,
-         * or `null` if no such child service exists.
+         * Get all child services that handle a dataOperation, which can mean:
+         *  - handling the type of operation — dataOperation.type
+         *  - handling the object descriptor involved - dataOperation.target
+         *  - but also handling the readExpressions involved — dataOperation.data.readExpresssions
+         *    
+         * Just because a RawDataService can read objects of a certain type, doesn't necessarily means 
+         * it can resolves a property/relationship on the source object descriptor (dataOperation.target) to that type
+         *
+         * TODO: ADD CACHING
          *
          * @method
          * @argument {DataOperationType} dataOperationtype
@@ -2399,7 +2406,7 @@ DataService.addClassProperties(
          * in object.
          */
         fetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated, readExpressions) {
+            value: function (object, propertyName, isObjectCreated, isUpdate) {
                 var childServices = this.childServicesForType(object.objectDescriptor),
                     isHandler =
                         /*(this.parentService && this.parentService._getChildServiceForObject(object) === this)*/ this.handlesType(
@@ -2440,17 +2447,17 @@ DataService.addClassProperties(
                       )
                     : childServices?.length > 0
                     ? childServices.length === 1
-                        ? childServices[0].fetchObjectProperty(object, propertyName, isObjectCreated)
-                        : this.childServicesFetchObjectProperty(object, propertyName, isObjectCreated)
+                        ? childServices[0].fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate)
+                        : this.childServicesFetchObjectProperty(object, propertyName, isObjectCreated, isUpdate)
                     : this.nullPromise;
             },
         },
 
         childServicesFetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated) {
+            value: function (object, propertyName, isObjectCreated, isUpdate) {
                 //Workaround for now:
                 if (object.dataIdentifier.dataService) {
-                    return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated);
+                    return object.dataIdentifier.dataService.fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate);
                 }
 
                 throw "Data Services with multiple child services per ObjectDescriptor have to implement this method";
@@ -2698,8 +2705,8 @@ DataService.addClassProperties(
                     promise = !trigger
                         ? this.nullPromise
                         : isUpdate
-                        ? trigger.updateObjectProperty(object)
-                        : trigger.getObjectProperty(object);
+                            ? trigger.updateObjectProperty(object)
+                            : trigger.getObjectProperty(object);
                     if (promise !== this.nullPromise) {
                         if (!promises) {
                             promises = { array: [promise] };
@@ -4647,7 +4654,7 @@ DataService.addClassProperties(
                     */
 
                     //If both array contain the same values, there's nothing to do from a relationship/graph management stand point 
-                    if(addedValues.isContentEqual(removedValues)) {
+                    if (addedValues.isContentEqual(removedValues)) {
                         return;
                     }
 
@@ -4656,32 +4663,30 @@ DataService.addClassProperties(
                     //that itself has two keys: addedValues and removedValues
                     //which value will be a set;
                     var manyChanges = changesForDataObject.get(key),
+                        isManyChangesArray = manyChanges && Array.isArray(manyChanges),
                         i,
                         countI;
 
+                    //TODO The logic for tracking array changes uses the index at which the change occured a la handleRangeChange(plus, minus, index). 
+                    // The problem is that it assumes there was a single action taken at a single index within a save cycle. 
+                    //Example: foo.bar = [A, B, C, D, E, F, G];
+                    //
+                    // foo.bar.splice(2, 2); Removes 2 items at index 2 so change event has index 2
+                    // foo.bar.push(H); Adds item to end of array so change event has index 5 
+                    // foo.bar.unshift(Z); Adds item to beginning of array so change event has index 0
+                    // saveChanges();
+                    // 
+                    // The index captured in dataObjectChanges is the one from the first change event, so 2. 
+                    // The indices at which to make the 2nd and 3rd changes are lost. 
+
                     if (!manyChanges) {
-                        manyChanges = {};
-                        manyChanges.index = changeEvent.index;
+                        manyChanges = new CollectionChanges();
                         changesForDataObject.set(key, manyChanges);
-                    }
+                    } 
+                    
 
-                    //Not sure if we should consider evaluating added values regarded
-                    //removed ones, one could be added and later removed.
-                    //We later need to convert these into dataIdentifers, we could avoid a loop later
-                    //doing so right here.
-
-                    /*
-                        Benoit 1/8/26 - Got a use-case of a swap: same values in addedValues and removedValues.
-                        But with processing removedValues being the last, it would empty the array...
-
-                        So removedValues needs to be handles first, and then addedValues second
-                    */
-                    if (removedValues) {
-                        /*
-                        In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
-                        If the change is triggered by resolving properties by the framewok itself, then isDataObjectBeingMapped is true, and we don't want to register any of it as a change
-                    */
-                        if (Array.isArray(manyChanges) && (isCreatedObject || isDataObjectBeingMapped)) {
+                    if (isManyChangesArray && (isCreatedObject || isDataObjectBeingMapped)) {
+                        if (removedValues) {
                             self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
                                 dataObject,
                                 propertyDescriptor,
@@ -4689,56 +4694,8 @@ DataService.addClassProperties(
                                 inversePropertyDescriptor,
                                 isDataObjectBeingMapped
                             );
-                        } else {
-                            var registeredRemovedValues = manyChanges.removedValuesSet;
-                            if (!registeredRemovedValues) {
-                                if (!isDataObjectBeingMapped) {
-                                    manyChanges.removedValues = removedValues;
-                                    manyChanges.removedValuesSet = registeredRemovedValues = new Set(removedValues);
-                                }
-                                self._removeDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
-                                    dataObject,
-                                    propertyDescriptor,
-                                    removedValues,
-                                    inversePropertyDescriptor,
-                                    isDataObjectBeingMapped
-                                );
-                            } else {
-                                for (i = 0, countI = removedValues.length; i < countI; i++) {
-                                    if (!isDataObjectBeingMapped) {
-                                        registeredRemovedValues.add(removedValues[i]);
-                                    }
-                                    self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
-                                        dataObject,
-                                        propertyDescriptor,
-                                        removedValues[i],
-                                        inversePropertyDescriptor,
-                                        isDataObjectBeingMapped
-                                    );
-                                }
-                            }
                         }
-                        /*
-                        Work on local graph integrity. When objects are disassociated, it could mean some deletions may happen bases on delete rules.
-                        App side goal is to maintain the App graph, server's side is to maintain database integrity. Both needs to act on delete rules:
-                        - get object's descriptor
-                        - get PropertyDescriptor from key
-                        - get PropertyDescriptor's .deleteRule
-                            deleteRule can be:
-                                - DeleteRule.NULLIFY
-                                - DeleteRule.CASCADE
-                                - DeleteRule.DENY
-                                - DeleteRule.IGNORE
-                    */
-
-                        //,,,,,TODO
-                    }
-
-                    if (addedValues) {
-                        /*
-                        In this case, the array already contains the added value and we'll save it all anyway. So we just propagate.
-                    */
-                        if (Array.isArray(manyChanges) && (isCreatedObject || isDataObjectBeingMapped)) {
+                        if (addedValues) {
                             self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
                                 dataObject,
                                 propertyDescriptor,
@@ -4746,51 +4703,72 @@ DataService.addClassProperties(
                                 inversePropertyDescriptor,
                                 isDataObjectBeingMapped
                             );
-                        } else {
-                            var registeredAddedValues = manyChanges.addedValuesSet;
-                            if (!registeredAddedValues) {
-                                /*
-                                FIXME: we ended up here with manyChanges being an array, containing the same value as addedValues. And we end up setting addedValues property on that array. So let's correct it. We might not want to track toMany as set at all, and just stick to added /remove. This might happens on remove as well, we need to check further.
-                            */
-                                if (Array.isArray(manyChanges) && manyChanges.equals(addedValues)) {
-                                    manyChanges = {};
-                                    manyChanges.index = changeEvent.index;
-                                    changesForDataObject.set(key, manyChanges);
-                                }
+                        }
+                    } else {
 
+                        if (addedValues && isManyChangesArray && manyChanges.equals(addedValues)) {
+                            manyChanges = new CollectionChanges();
+                            changesForDataObject.set(key, manyChanges);
+                        }
+                        manyChanges.trackChangeEvent(changeEvent);
+
+                        if (removedValues) {
+                            registeredRemovedValues = manyChanges.removedValues;
+
+                            if (isDataObjectBeingMapped) {
+                                let targetName = changeEvent.target instanceof ObjectDescriptor ? changeEvent.target.name : changeEvent.target.dataIdentifier?.typeName;
+                                
+                                console.warn(`[DataService] RemovedValue during mapping? ${targetName}.${changeEvent.key}`);
+                            }
+                        
+
+                            for (i = 0, countI = removedValues.length; i < countI; i++) {
                                 if (!isDataObjectBeingMapped) {
-                                    manyChanges.addedValues = addedValues;
-                                    manyChanges.addedValuesSet = registeredAddedValues = new Set(addedValues);
+                                    registeredRemovedValues.add(removedValues[i]);
                                 }
-                                self._addDataObjectPropertyDescriptorValuesForInversePropertyDescriptor(
+                                self._removeDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
                                     dataObject,
                                     propertyDescriptor,
-                                    addedValues,
+                                    removedValues[i],
                                     inversePropertyDescriptor,
                                     isDataObjectBeingMapped
                                 );
-                            } else {
-                                let shouldAdd = true;
-                                for (i = 0, countI = addedValues.length; i < countI; i++) {
-                                    if (!isDataObjectBeingMapped) {
-                                        shouldAdd = !addedValues[i] || !registeredAddedValues.has(addedValues[i]);
-                                        registeredAddedValues.add(addedValues[i]);
-                                    }
-                                    if (shouldAdd) {
-                                        manyChanges.addedValues.push(addedValues[i])
-                                        self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
-                                            dataObject,
-                                            propertyDescriptor,
-                                            addedValues[i],
-                                            inversePropertyDescriptor,
-                                            isDataObjectBeingMapped
-                                        );
-                                    }
+                            }
+                        }
 
+                        if (addedValues) {
+                            registeredAddedValues = manyChanges.addedValues;
+
+                            if (isDataObjectBeingMapped) {
+                                let targetName = changeEvent.target instanceof ObjectDescriptor ? changeEvent.target.name : changeEvent.target.dataIdentifier?.typeName;
+                                console.warn(`[DataService] Add value during mapping? ${targetName}.${changeEvent.key}`);
+                            }
+                            let shouldAdd = true;
+                            for (i = 0, countI = addedValues.length; i < countI; i++) {
+                                if (!isDataObjectBeingMapped) {
+                                    if (!registeredAddedValues.has(addedValues[i])) {
+                                        registeredAddedValues.add(addedValues[i]);
+                                        shouldAdd = true;
+                                    } else if (!addedValues[i]) {
+                                        shouldAdd = true;
+                                    } else {
+                                        shouldAdd = false;
+                                    }
+                                }
+                                if (shouldAdd) {
+                                    self._addDataObjectPropertyDescriptorValueForInversePropertyDescriptor(
+                                        dataObject,
+                                        propertyDescriptor,
+                                        addedValues[i],
+                                        inversePropertyDescriptor,
+                                        isDataObjectBeingMapped
+                                    );
                                 }
                             }
                         }
                     }
+
+                    return;
 
                 }
             },
@@ -9070,3 +9048,114 @@ DataService.defineBinding("mainService", { "<-": "application.mainService", sour
 
 //WARNING Shouldn't be a problem, but avoiding a potential require-cycle for now:
 DataStream.DataService = exports.DataService;
+
+
+/******
+ * Tracks the changes to a collection between saves
+ */
+
+function CollectionChanges() {}
+Object.defineProperties(CollectionChanges.prototype, {
+
+
+    /***
+     *  The ids of the Change Events recorded in this object
+     *   @property {Set}
+    ***/
+    _trackedEventIds: {
+        get: function () {
+            return this.__trackedEventIds || (this.__trackedEventIds = new Set());
+        }
+    },
+
+    /***
+     *  The ordered changes for the tracked collection. The structure of each item in this array will change
+     *  based on the type of collection being tracked. 
+     * 
+     * Array: 
+     *  {
+     *    index: integer
+     *    addedValues: Array
+     *    removedValues: Array
+     *  }
+     * 
+     * Set: (no current use case)
+     *  {
+     *    addedValues: Set
+     *    removedValues: Set
+     *  }
+     * 
+     *  Map: (no current use case)
+     *  {
+     *    addedValues: Array -- [{key: key, value: value}]
+     *    removedValues: Array
+     *  }
+     *   @property {Array}
+    ***/
+    changes: {
+        get: function () {
+            return this._changes || (this._changes = []);
+        }
+    },
+
+    hasChanges: {
+        get: function () {
+
+            //FIXME: Use/test this._changes?.length > 0
+            return this._changes && this._changes.length > 0;
+        }
+    },
+
+    /***
+     *  All values added to the collection
+     *   @property {Set}
+    ***/
+    addedValues: {
+        get: function () {
+            return this._addedValues || (this._addedValues = new Set());
+        }
+    },
+
+    /***
+     *  Returns whether any values have been added or removed
+     *   @property {Set}
+    ***/
+    hasAddedOrRemovedValues: {
+        get: function () {
+            //FIXME: Use/test this._changes?.length > 0
+            return (this._addedValues && this._addedValues.size > 0) || (this._removedValues && this._removedValues.size > 0);
+        }
+    },
+
+    /***
+     *  All values removed from the collection
+     *   @property {Set}
+    ***/
+    removedValues: {
+        get: function () {
+            return this._removedValues || (this._removedValues = new Set());
+        }
+    },
+
+    /***
+     *  Add an entry to the changes array for a given change event
+     * 
+     * This could be updated to:
+     * - Add values to addedValues
+     * - Add values to removedValues
+     * - Check the type of the property to add an object with the correct structure to changes
+    ***/
+    trackChangeEvent: {
+        value: function (changeEvent) {
+            if (!this._trackedEventIds.has(changeEvent.id)) {
+                this._trackedEventIds.add(changeEvent.id);
+                this.changes.push({
+                    index: changeEvent.index,
+                    addedValues: changeEvent.addedValues,
+                    removedValues: changeEvent.removedValues
+                })
+            }
+        }
+    }
+
+})

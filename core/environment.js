@@ -54,7 +54,9 @@ var Environment = exports.Environment = Montage.specialize({
     },
 
     /**
-     * The name of the stage the code is running.
+     * The name of the stage the code is running. This is not standardized yet. 
+     * What I used before was verb-based: "mod" —for local development, "test" —for testing, and "live" for the "real", "production", environment.
+     * "live" for going live, where things happen for everyone, a reminder that Mods are live by design. 
      *
      * this.application.url.searchParams.get("stage");
      *

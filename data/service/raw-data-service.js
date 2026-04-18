@@ -1,4 +1,5 @@
-var DataService = require("./data-service").DataService,
+var Montage = require("core/core").Montage,
+    DataService = require("./data-service").DataService,
     assign = require("../../../core/frb/assign"),
     compile = require("../../core/frb/compile-evaluator"),
     Criteria = require("../../core/criteria").Criteria,
@@ -8,7 +9,6 @@ var DataService = require("./data-service").DataService,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
     Map = require("../../core/collections/map"),
-    //Montage = (require) ("../../core/core").Montage,
     parse = require("../../core/frb/parse"),
     Scope = require("../../core/frb/scope"),
     deprecate = require("../../core/deprecate"),
@@ -54,6 +54,28 @@ require("../../core/collections/shim-object");
  * @extends DataService
  */
 const RawDataService = exports.RawDataService = class RawDataService extends DataService {/** @lends RawDataService */
+
+    static {
+
+        Montage.defineProperties(this.prototype, {
+            /**
+             * A criteria to be used if an instance of identity needs to be fetched.
+             *
+             * @property {Criteria} value
+             * @default null
+             */
+            identityCriteria: { value: null},
+
+            /**
+             * A DataQuery instance to be used if an instance of identity needs to be fetched.
+             *
+             * @property {DataQuery} value
+             * @default null
+             */
+            _identityQuery: { value: null}
+        });
+    }
+
 
     constructor() {
         super();
@@ -119,7 +141,175 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
      */
 
     handleReadOperation(readOperation) {
-        
+
+        /*
+            This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
+            When that promise resolves, then we check if readOperation.defaultPrevented, if yes, the we don't handle it, otherwise we proceed.
+
+            Wonky, WIP: needs to work without a delegate actually implementing it.
+            And a RawDataService shouldn't know about all that boilerplate
+
+            Note: If there was a default delegate shared that would implement rawDataServiceWillHandleReadOperation by returning Promise.resolve(readOperation)
+            it might be simpler, but probably a bit less efficient
+
+        */
+        let readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
+        if (readOperationCompletionPromise) {
+            readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {
+                if (!readOperation.defaultPrevented) {
+                    let resultPromise = this._handleReadOperation(readOperation);
+                    if (this.promisesReadCompletionOperation) {
+                        return resultPromise
+                    }
+                }
+            });
+        } else {
+            let resultPromise = this._handleReadOperation(readOperation);
+            if (this.promisesReadCompletionOperation) {
+                readOperationCompletionPromise = resultPromise;
+            }
+        }
+
+        //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
+        //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
+        if (this.promisesReadCompletionOperation) {
+            return readOperationCompletionPromise;
+        }
+
+    }
+
+
+    /**
+     * A RawDataService needs an identity to get some kind of access credentials to present to an endpoint.
+     * A data operation can carries a user's, client's or agent's identity, but RawDataService, execuded in the backend may have an identity assigned to it
+     * 
+     * @method
+     * @argument {DataOperation} dataOperation - an instance of DataOperation
+     * @returns {Promise<Identity>} - a Promise for the identity to be used to handle the instance of DataOperation argument
+     */
+    identityForDataOperation(dataOperation) {
+        let identityPromise;
+
+        /*
+            Wether one was assigned straight or already obtained via fetchIdentity()
+        */
+        if (this.identity || this.identityQuery) {
+            return this.identityPromise;
+        } else if (dataOperation.identity) {
+            return Promise.resolve(dataOperation.identity);
+        } else if (this.application.identity) {
+            return Promise.resolve(this.application.identity);
+        } else {
+            /*
+                Workareound: readOperation.identity is undefine right now, so we're defaulting to application.identity
+                BUT #TODO: a user-mod / end-mod can evenually have multiple user identities from different identity providers
+                So we'll need to redesign for that. A RawDataService will need to figure out, which one of those user identities
+                the one it should use.
+
+                Knowing about a RawDataService's organization behind it should help match it 
+                to one of the existing identities's provider / oranization, if it's the same, but some API can accept
+                identities from multiple providers, so we need to add to RawDataService the knowledge of 
+                what kind of identities it can accept / work with:
+
+                - a criteria or a list of criteria to evaluate on identities, such that if the evaluation returns true
+                the identity can be used by the raw data service
+
+            */
+            let userIdentityQuery = DataQuery.withTypeAndCriteria(UserIdentity);
+
+
+            identityPromise = this.mainService.fetchData(userIdentityQuery);
+
+        }
+
+        return identityPromise;
+    }
+
+    _handleReadOperation(readOperation) {
+        let readOperationCompletionPromiseResolvers, readOperationCompletionPromise, readOperationCompletionPromiseResolve, readOperationCompletionPromiseReject;
+
+        if (this.promisesReadCompletionOperation) {
+            readOperationCompletionPromiseResolvers = Promise.withResolvers();
+            readOperationCompletionPromise = readOperationCompletionPromiseResolvers.promise;
+            readOperationCompletionPromiseResolve = readOperationCompletionPromiseResolvers.resolve;
+            readOperationCompletionPromiseReject = readOperationCompletionPromiseResolvers.reject;
+        } else {
+            readOperationCompletionPromise = readOperationCompletionPromiseResolve = readOperationCompletionPromiseReject = undefined;
+        }
+
+        /*
+            Here goes the core business:
+
+            1. Authenticating the RawReadOperation:
+                HTTPService uses authenticationPolicy, and logic to get an identity for that readOperation. a Promise to Authenticate / get what we need to send a RawDataOperation/RawReadOperation (an HTTP Requet, a SQL statement to a DB, etc...)
+                    So a identityForReadOperation() method would help factor that out.
+                But PG Service uses 
+        */
+
+        let identityPromise = this.identityForDataOperation(readOperation)
+
+
+        /*
+            2. Authorizing the RawReadOperation
+                HTTPService calls this.accessTokenForIdentity(resolvedIdentity), a RawDataServiceMethod that returns a cached AccessToken. The code to get it is in HttpService _handleReadOperation(), it should move out 
+                HTTPService builds a DataQuery to fetch an instance of this.accessTokenDescriptor with that identity. The property accessTokenDescriptor gives a subclass the ability to control / specialize it.
+
+                PGService uses a Secret, not an access token. In local we provide the secret direclty, otherwise we configure the secretName and PGService builds a DataQuery to fetch a Secret with that name.
+                So in the end, both of these services have to fetch a data instance of a certain type matching a criteria that will allow them to connect to the RawService endpoint, and to authenticate to it.
+
+                Promise<AccessCredential> accessCredentialsForIdentity()
+                // Promise<AccessCredential> accessCredentialsPromiseForIdentity()
+
+            3. Connecting: where + auth
+                HTTPService uses properties like :
+                    "baseURL": "https://api.endpoint.vendor.com",
+                    "issuerURI": "https://api.endpoint.vendor.com/adfs/oauth2/token",
+
+                    In the end, the token is attached to the Request, built from the connection info like baseURL, then sent
+
+                PGService uses those connection info configured per environment                   
+                
+                    "environment": "local",
+                    "database": "projectName",
+                    "owner": "postgres",
+                    "schema": "projectName_v1"
+
+                and adds the URL to the host AND auth info (username, passwords, certificates) read from the stored secret
+                to establish a connection before sending the "raw request" aka query aka SQL statement
+
+            4. All of this is true for any one or many rawReadOperation(s) derived from readOperation
+
+        */
+
+
+        return readOperationCompletionPromise;
+    }
+
+    /**
+     * Gives the opportunity to turn one dataOperation into multiple Raw Data Operations if needed by a service's practical constraints. 
+     * an HTTP service may need multiple HTTP Requests, a SQL Service multiple SQL statements, to fulfill the read data operation
+     * 
+     * TODO:
+     *      - PG Service has mapReadOperationToRawReadOperation(readOperation, rawDataOperation) and returns a rawReadOperations array, so it needs to adapt to this signature
+     *      - HttpSevice has mapDataOperationToRawDataOperations(dataOperation, rawDataOperations), right structure, needs iteration on naming
+     * 
+     * There are 2 reasona why a readOperation could become multiple rawReadOperations:
+     *  1. The criteria of the read operation can't be executed in one raw Read Operation: like involving multiple queries to obtain the result
+     *  2. read operation's read expressions require multiple read operations to fullfill what's requested. Some of this can be mechanically related to the capabilities the RawDataService's endpoint, 
+     *     BUT it can also be related to the fact that a complex expression may involve other data services as well.
+     * 
+     * For which we need a way to answer the question: "Can I raw-read this expression from that type?""
+     * 
+     * ALSO - Some endpoints provide the ability to group read operations in one "group" reques
+     *   
+     * If a result is cached, rawDataOperations can receive Read[Completed|Failed]Operations as well
+     *
+     * @param {DataOperation} readOperation - The dataOperation to map
+     * @param {Array<Abstract RawReadOperation>} rawReadOperations - An array to collect the resulting raw data operations
+     * @returns {Promise<rawDataOperations>} A promise that resolves with the rawDataOperations passed in, as a convenience
+     */
+    mapReadOperationToRawReadOperations(readOperation, rawReadOperations) {
+
     }
  
 }
@@ -637,7 +827,7 @@ RawDataService.addClassProperties({
                             If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
                             So we can save time and return right away
                         */
-                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax.type === "has") {
+                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
                             return Promise.resolve(null);
                         }
                         hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
@@ -1184,7 +1374,7 @@ RawDataService.addClassProperties({
                 We need to find which rawDataTypeIdentificationCriteria evaluation returns true for rawData
                 We'll need to find a way to optimize down to a single lookup if we can
             */
-           if (this.needsRawDataTypeIdentificationCriteria) {
+           if (this.needsRawDataTypeIdentificationCriteriaForType(type)) {
                 type = this.objectTypeForRawData(type, rawData);
            }
 
@@ -1422,8 +1612,10 @@ RawDataService.addClassProperties({
         }
     },
 
-    needsRawDataTypeIdentificationCriteria: {
-        value: false
+    needsRawDataTypeIdentificationCriteriaForType: {
+        value: function(type) {
+            return this.mappingForType(type)?.needsRawDataTypeIdentificationCriteria || false
+        }
     },
 
     objectTypeForRawData: {
@@ -1685,86 +1877,63 @@ RawDataService.addClassProperties({
                 return rawData
             } else {
                 var rawDataKeys = Object.keys(rawData),
-                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue, iDiffValues, iRemovedValues,
-                    iHasAddedValues, iHasRemovedValues,
-                    j, countJ, jDiffValue, jDiffValueIndex,
+                    i, countI, iUpdatedRawDataValue, iCurrentRawDataValue,
+                    iHasCollectionChanges, changes,
                     canRemoveRawDataKey;
 
                 for (i = 0, countI = rawDataKeys.length; (i < countI); i++) {
 
                     iUpdatedRawDataValue = rawData[rawDataKeys[i]];
-                    iHasAddedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("addedValues");
-                    iHasRemovedValues = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("removedValues");
-                    if (isFromUpdate && (iHasAddedValues || iHasRemovedValues)) {
+                    iHasCollectionChanges = iUpdatedRawDataValue && iUpdatedRawDataValue.hasOwnProperty("changes");
+                    if (isFromUpdate && iHasCollectionChanges) {
                         
                         canRemoveRawDataKey = true;
                         iCurrentRawDataValue = snapshot[rawDataKeys[i]];
 
-                        if (iHasAddedValues) {
-                            iDiffValues = iUpdatedRawDataValue.addedValues;
 
-                            if (iCurrentRawDataValue) {
-                                if (Array.isArray(iCurrentRawDataValue)) {
-                                    for (j = 0, countJ = iDiffValues.length; (j < countJ); j++) {
-                                        jDiffValue = iDiffValues[j];
-                                        /*
-                                            We shouldn't have to worry about the value already being in iCurrentRawDataValue, but we're going to safe and check
-                                        */
-                                        if (iCurrentRawDataValue.indexOf(jDiffValue) === -1) {
-                                            iCurrentRawDataValue.push(jDiffValue);
-                                            canRemoveRawDataKey = false;
-                                        }
+                        /**
+                         * When iUpdatedRawDataValue includes an index, we can assume the change was a result of a single action on the array 
+                         * assignment, push, splice, etc. If that is the case, we can avoid special logic and use splice to add the new 
+                         * values and remove the old. 
+                         * 
+                         * NOTE: We will eventually update DataService.handleChange to manage multiple actions on an array between saves. This 
+                         * logic will need to be updated accordingly. 
+                         */
+                        changes = iUpdatedRawDataValue.changes;
+                        if (iCurrentRawDataValue) {
+                            
+                            if (Array.isArray(iCurrentRawDataValue)) {
+                                let removedCount;
+                                changes.forEach(function (change) {
+                                    removedCount = change.removedValues ? change.removedValues.length : 0;
+                                    if (change.addedValues) {
+                                        iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount, ...change.addedValues]);
+                                    } else {
+                                        iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount]);
                                     }
-                                } else {
-                                    console.warn("recordSnapshot when one exists: snapshot for '" + rawDataKeys[i] + "' is not an Array but addedValues is:", iDiffValues);
-                                    /* there's a current value that is not an array.. Which is weird... */
-                                    snapshot[rawDataKeys[i]] = iDiffValues;
-                                    canRemoveRawDataKey = false;
-                                }
-                            } else {
-                                //console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but addedValues:", iDiffValues);
-                                /*
-                                    We could reconstruct from the object value, but we should really not be here.
-                                */
-                                snapshot[rawDataKeys[i]] = iDiffValues;
-                                canRemoveRawDataKey = false;
-                            }
-                        }
-
-                        if (iHasRemovedValues) {
-                            iDiffValues = iUpdatedRawDataValue.removedValues;
-
-                            /* 
-                                WARNING
-                                iCurrentRawDataValue was cached early in the loop and there's a use-case where 
-                                iCurrentRawDataValue would not be equal to rawData[rawDataKeys[i]] because
-                                it might have changed in the block above, which is when there was no value at all.
-
-                                So the only use case where not refreshing it would be if somehow the data service
-                                received a value in .addedValues array that is also in the .removedValues, which would 
-                                be strange
+                                });
+                            /*
+                            * TODO: 3-31-26 We need to support these, but did 
+                            * not have a valid use case at the time of this writing 
                             */
-
-                            if (iCurrentRawDataValue) {
-                                if (Array.isArray(iCurrentRawDataValue)) {
-                                    for (j = 0, countJ = iDiffValues.length; (j < countJ); j++) {
-                                        jDiffValue = iDiffValues[j];
-                                        /*
-                                            We shouldn't have to worry about the value alredy being in iCurrentRawDataValue, but we're going to safe and check
-                                        */
-                                        if ((jDiffValueIndex = iCurrentRawDataValue.indexOf(jDiffValue)) !== -1) {
-                                            iCurrentRawDataValue.splice(jDiffValueIndex, 1);
-                                            canRemoveRawDataKey = false;
-                                        }
-                                    }
-                                } else {
-                                    console.warn("recordSnapshot from Update: snapshot for '" + rawDataKeys[i] + "' is not an Array but removedValues:", iDiffValues);
-                                    console.error("removedValues but no entry in snapshot for ")
-                                    //snapshot[rawDataKeys[i]] = iDiffValues;
-                                }
+                            } else if (iCurrentRawDataValue instanceof Map) {
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} of type Map`;
+                            } else if (iCurrentRawDataValue instanceof Set) {
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} of type Set`;
                             } else {
-                                console.warn("recordSnapshot from Update: No entry in snapshot for '" + rawDataKeys[i] + "' but removedValues:", iDiffValues);
+                                throw `[RawDataService] Cannot update snapshot property ${rawDataKeys[i]} without a type`;
                             }
+                        } else {
+                            snapshot[rawDataKeys[i]] = iCurrentRawDataValue = [];
+                            changes.forEach(function (change) {
+                                removedCount = change.removedValues ? change.removedValues.length : 0;
+                                if (change.addedValues) {
+                                    iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount, ...change.addedValues]);
+                                } else {
+                                    iCurrentRawDataValue.splice.apply(iCurrentRawDataValue, [change.index, removedCount]);
+                                }
+                            });
+                            canRemoveRawDataKey = false;
                         }
 
                         if(canRemoveRawDataKey) {
@@ -2380,7 +2549,10 @@ RawDataService.addClassProperties({
 
                 this._objectsBeingMapped.add(object);
 
-                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged);
+                /*
+                    We only want to pass the snapshot if it's pre-existing record. If they are equal, it means the record was recorded as the snapshot before we got here
+                */
+                result = mapping.mapRawDataToObject(record, object, context, readExpressions, mappedProperties, registerMappedPropertiesAsChanged, snapshot === record ? null : snapshot);
 
                 //Recording snapshot even if we already had an object
                 //Record snapshot before we may create an object
@@ -2511,9 +2683,9 @@ RawDataService.addClassProperties({
                 return mapping.mapObjectTypeToRawData(object, rawData, context);
             }
 
-            if(this.needsRawDataTypeIdentificationCriteria) {
+            if(this.needsRawDataTypeIdentificationCriteriaForType(object.objectDescriptor)) {
                 // debugger;
-                let criteria = this.defaultOwnRawDataTypeIdentificationCriteriaForObjectDescriptor(object.objectDescriptor);
+                let criteria = this.rawDataTypeIdentificationCriteriaForType(object.objectDescriptor);
                 
                 assign(rawData, criteria.expression, true, criteria.parameters);
             }
@@ -2617,24 +2789,24 @@ RawDataService.addClassProperties({
  * @method
  */
     _mapObjectPropertyToRawData: {
-        value: function (object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot) {
+        value: function (object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot) {
             var mapping = this.mappingForObject(object),
                 result;
 
             if (mapping) {
-                result = mapping.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                result = mapping.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
             }
 
             if (record) {
                 if (result) {
-                    var otherResult = this.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                    var otherResult = this.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
                     if (this._isAsync(result) && this._isAsync(otherResult)) {
                         result = Promise.all([result, otherResult]);
                     } else if (this._isAsync(otherResult)) {
                         result = otherResult;
                     }
                 } else {
-                    result = this.mapObjectPropertyToRawData(object, propertyName, record, context, added, removed, lastReadSnapshot, rawDataSnapshot);
+                    result = this.mapObjectPropertyToRawData(object, propertyName, record, context, changes, lastReadSnapshot, rawDataSnapshot);
                 }
             }
 
@@ -4403,7 +4575,7 @@ RawDataService.addClassProperties({
     },
 
 
-    __processObjectChangesForProperty: {
+    _processObjectChangesForProperty: {
         value: function (object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, lastReadSnapshot, rawDataSnapshot, rawDataPrimaryKeys, mapping) {
 
             /*
@@ -4422,7 +4594,7 @@ RawDataService.addClassProperties({
 
                 The recent addition of a DataObject property that can be a Map, we may have to re-visit that. It would be better to handle incremental changes to a map than sending all keys and all values are we doing for now
             */
-            if (aPropertyChanges && (aPropertyChanges.hasOwnProperty("addedValues") || aPropertyChanges.hasOwnProperty("removedValues"))) {
+            if (aPropertyChanges && aPropertyChanges.hasAddedOrRemovedValues) {
                 if (!(aPropertyDescriptor.cardinality > 1)) {
                     throw new Error("added/removed values for property without a to-many cardinality");
                 }
@@ -4475,26 +4647,28 @@ RawDataService.addClassProperties({
                 //     operationData[aRawProperty] = aPropertyChanges;
 
 
-                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.addedValues, aPropertyChanges.removedValues, lastReadSnapshot, rawDataSnapshot);
+                let result = this._mapObjectPropertyToRawData(object, aProperty, operationData, undefined/*context*/, aPropertyChanges.changes, lastReadSnapshot, rawDataSnapshot);
                 if (this._isAsync(result)) {
                     return result.then((output) => {
                         let mapping = this.mappingForObject(object),
                             rawRules = mapping.rawDataMappingRulesForObjectPropertyName(aProperty),
                             rawDataProperty;
                         
-                        if(rawRules) {
-                            var iterator = rawRules.values();
+                        // if(rawRules) {
+                        //     var iterator = rawRules.values();
 
-                            while((rule = iterator.next().value)) {
-                                rawDataProperty = rule.targetPath;
-                                if (operationData[rawDataProperty]) {
-                                    operationData[rawDataProperty].index = aPropertyChanges.index;
-                                }
-                                if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
-                                    operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
-                                }
-                            }
-                        }
+                        //     while((rule = iterator.next().value)) {
+                        //         rawDataProperty = rule.targetPath;
+                        //         if (operationData[rawDataProperty]) {
+                        //             operationData[rawDataProperty].index = aPropertyChanges.index;
+                        //         }
+                        //         if (operationData[rawDataProperty] && operationData[rawDataProperty].removedValues) {
+                        //             operationData[rawDataProperty].removedValues.index = aPropertyChanges.index;
+                        //         }
+                        //     }
+                        // }
+
+                        operationData;
 
                         return output;
                     })
@@ -4602,11 +4776,11 @@ RawDataService.addClassProperties({
                     If it's a new object and somehow multiple changes led to have addedValues or removedValues, we reset that
                     so it will be processed as an new object
                 */
-                if(isNewObject && (aPropertyChanges?.hasOwnProperty("addedValues") || aPropertyChanges?.hasOwnProperty("removedValues"))) {
+                if(isNewObject && (aPropertyChanges?.hasAddedOrRemovedValues)) {
                     aPropertyChanges = null;
                 }
 
-                result = this.__processObjectChangesForProperty(object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, snapshot, dataSnapshot, rawDataPrimaryKeys, mapping);
+                result = this._processObjectChangesForProperty(object, aProperty, aPropertyDescriptor, aPropertyChanges, operationData, snapshot, dataSnapshot, rawDataPrimaryKeys, mapping);
 
                 if (result && this._isAsync(result)) {
                     (mappingPromises || (mappingPromises = [])).push(result);
@@ -5289,7 +5463,10 @@ RawDataService.addClassProperties({
 
     identityQuery: {
         get: function () {
-            return this.connection.identityQuery;
+            if(!this._identityQuery) {
+                this._identityQuery = this.connection?.identityQuery
+            }
+            return this._identityQuery;
         }
     },
 

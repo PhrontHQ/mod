@@ -431,9 +431,11 @@ Control.addClassProperties(
     takeValueFromElement: {
         value: function(isFromInput) {
             //console.log(this.identifier+".takeValueFromElement - this.elementValue is "+this.elementValue);
-            isFromInput
-                ? Object.getPropertyDescriptor(this, "value").set.call(this, this.elementValue, true)
-                : this.value = this.elementValue;
+            if(this.elementValue !== "") {
+                isFromInput
+                    ? Object.getPropertyDescriptor(this, "value").set.call(this, this.elementValue, true)
+                    : this.value = this.elementValue;
+            }
         }
     },
     /**

@@ -338,8 +338,9 @@ exports.DataTrigger.prototype = Object.create(
                 //}
 
                 // Ensure to-Many properties are initialized to their collection type.
-                this._ensureCollectionValue(object, _initialValue);
-
+                if ((this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
+                    this._ensureCollectionValue(object, _initialValue);
+                }
                 // Return the property's current value.
                 return this._valueGetter ? this._valueGetter.call(object) : object[this._privatePropertyName];
             },
@@ -352,9 +353,9 @@ exports.DataTrigger.prototype = Object.create(
         _ensureCollectionValue: {
             value: function _ensureCollectionValue(object, _initialValue) {
                 // When the property does not expect a collection value, nothing to do
-                if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
-                    return;
-                }
+                // if (!(this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
+                //     return;
+                // }
 
                 // Initialize to-Many to their collection type.
                 if (
@@ -410,7 +411,18 @@ exports.DataTrigger.prototype = Object.create(
                     } else {
                         initValue = new valueClass();
                     }
-                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/false, /*_initialValue*/undefined, /*_currentValue*/initValue);
+
+                    /*
+                        if we have an _initialValue because the setter is called with a value and the getter was never called, then we use the value passed.
+                        However after that in the setter's logic resumes, then the value passed and the value returned by this getter
+                        will now be the same, and the logic in the setter will return early.
+
+                        So in order to the system to know about the object getting an a collection value on the property, we need can have it dispatched when we put it on:
+                        if false is sent all the time, the app doesn't fully load
+                        With this as is, it does, but data is missing (directReports of person logged-in), and on further reload
+                        when we read form the FB right away, sonething wonky happens.
+                    */
+                    this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
                 }
             },
         },
@@ -515,7 +527,16 @@ exports.DataTrigger.prototype = Object.create(
 
                             if (!listener) {
                                 listener = function _triggerArrayCollectionListener(plus, minus, index) {
-                                    if (plus?.length > 0 || minus?.length > 0) {
+                                    /*
+                                        replacing with using the new .isEmpty to eliminate arrays
+                                        that may be sparse or specifically contain undefined values.
+
+                                        Some bindings can cause some arrays in those unusual states
+
+                                        isEmpty true if an array has a length of zero or it only contains undefined values
+                                    */
+                                    //if (plus?.length > 0 || minus?.length > 0) {
+                                    if (!plus?.isEmpty || !minus?.isEmpty) {
                                         // If we're not in the middle of a mapping...:
                                         // if(!self._service._objectsBeingMapped.has(object)) {
                                         // Dispatch update event
@@ -697,7 +718,17 @@ exports.DataTrigger.prototype = Object.create(
             configurable: true,
             writable: true,
             value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
-                if (object[this._privatePropertyName] === value) return;
+                //let objectPropertyValue = this._getValue(object, /*shouldFetch*/false, /*_initialValue*/value);
+                let objectPropertyValue = (arguments.length >= 5) ? _currentValue : this._getValue(object,  /*shouldFetch*/false, /*_initialValue*/value);
+                //if (object[this._privatePropertyName] === value) return;
+
+                //If objectPropertyValue - the value of the property we handle on object as we enter _setValue is the same as the one passed, then nothing to do
+                //UNLESS, UNLESS, the _currentValue arument is passed, which is what _getValue() passes when it needs to set the mutable collection 
+                //BUT when we come back from  _getValue() -> ensureValue() and this setter was the first time the property was interacted with, 
+                // ie the getter was never invoked before, then for efficiency's sake, we store the value passed in
+                // and avoid to create a new array. BUT that means that in that use case:
+                // (objectPropertyValue === value && !(arguments.length >= 5)) is true and we bail too early
+                if (objectPropertyValue === value && !(arguments.length >= 5)) return;
 
                 var status,
                     prototype,
@@ -724,11 +755,14 @@ exports.DataTrigger.prototype = Object.create(
                 //FIXME - this is way more complicated than it should...
                 //If _initialValue is null from mapping, but this.isToMany is true or if's a range, then we want  this._getValue() to call this._ensureCollectionValue() and have the proper collection set there, and observed by _getValue() calling .setValue().
                 //If _initialValue is not null from mapping and this.isToMany is true or if's a range, then we want  this._getValue() to call this._ensureCollectionValue() and have the proper collection set there, and observed by _getValue() calling .setValue().
-                if((this.isToMany || this.propertyDescriptor.collectionValueType === "range") && _initialValue !== undefined) {
-                    initialValue = this._getValue(object, shouldFetch, _initialValue);
-                } else {
-                    initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch, _initialValue);
-                }
+                // if((this.isToMany || this.propertyDescriptor.collectionValueType === "range") && _initialValue !== undefined) {
+                //     initialValue = this._getValue(object, shouldFetch, _initialValue);
+                // } else {
+                //     //initialValue = arguments.length >= 4 ? _initialValue : this._getValue(object, shouldFetch, _initialValue);
+                //     //initialValue = arguments.length >= 4 ? _initialValue : objectPropertyValue;
+                //     initialValue = objectPropertyValue;
+                // }
+                    initialValue = objectPropertyValue;
 
                 // initialValue = arguments.length >= 4
                 //     ? _initialValue
@@ -765,13 +799,19 @@ exports.DataTrigger.prototype = Object.create(
                              * this._getValue() sets object[this._privatePropertyName] to [] via calling this
                              */
                             if (value?.length) {
-                                // object[this._privatePropertyName].splice.apply(initialValue, [0, initialValue.length].concat(value));
-                                object[this._privatePropertyName].splice.call(
-                                    initialValue,
-                                    0,
-                                    initialValue.length,
-                                    ...value
-                                );
+
+                                //If the setter is called with a different array but identical to our instance variable, there's no point making noise
+                                if(!value.equals(object[this._privatePropertyName])) {
+
+                                    // object[this._privatePropertyName].splice.apply(initialValue, [0, initialValue.length].concat(value));
+                                    object[this._privatePropertyName].splice.call(
+                                        initialValue,
+                                        0,
+                                        initialValue.length,
+                                        ...value
+                                    );
+                                }
+
                             }
                         } else if (isMap && value) {
                             // We want to maintain the same map,
@@ -805,7 +845,9 @@ exports.DataTrigger.prototype = Object.create(
                 }
 
                 //undefined should never be set from the inside as part of the mapping as undefined is the state we expect before mapping / fetching of the value of a property
-                currentValue = (arguments.length >= 5 && _currentValue !== undefined) ? _currentValue : this._getValue(object, shouldFetch);
+                //_currentValue is only there, (arguments.length >= 5) when we're called by _getValue() -> _ensureCollectionValue(), as the first time a collection is accessed, the _currentValue would be undefined
+                //And in this case, we already assigned it to the private variable line 830, so it's value now
+                currentValue = (arguments.length >= 5) ? value : this._getValue(object, shouldFetch);
                 // currentValue = arguments.length >= 5
                 //     ? _currentValue
                 //     : (!object.snapshot && this._service.rootService._objectsBeingMapped.has(object))
@@ -819,6 +861,9 @@ exports.DataTrigger.prototype = Object.create(
                 // addRangeChangeListener
 
                 // If we're not in the middle of a mapping...:
+                //If this.isToMany, value could be a different instance passed in
+                //but we stick to our mutable collection once we have one, in which case
+                //  currentValue should be the same as initialValue
                 if (
                     currentValue !== initialValue &&
                     dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/
@@ -829,6 +874,7 @@ exports.DataTrigger.prototype = Object.create(
                     changeEvent.key = this._propertyName;
                     changeEvent.previousKeyValue = initialValue;
                     changeEvent.keyValue = currentValue;
+                    changeEvent.propertyDescriptor = this.propertyDescriptor;
 
                     // To deal with changes happening to an array value of that property,
                     // we'll need to add/cancel observing on the array itself
@@ -942,7 +988,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         updateObjectProperty: {
-            value: function (object) {
+            value: function (object, isUpdate = false) {
                 var self = this,
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
@@ -951,7 +997,7 @@ exports.DataTrigger.prototype = Object.create(
                         status.resolve = resolve;
                         status.reject = reject;
                     });
-                    self._fetchObjectProperty(object);
+                    self._fetchObjectProperty(object, isUpdate);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
@@ -965,11 +1011,11 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         _fetchObjectProperty: {
-            value: function (object) {
+            value: function (object, isUpdate) {
                 var self = this;
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
                 this._service
-                    .fetchObjectProperty(object, this._propertyName)
+                    .fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate)
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 

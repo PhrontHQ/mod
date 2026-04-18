@@ -1,5 +1,7 @@
 
 if (typeof Element !== "undefined" && !Element.isElement) {
+    exports.Element = Element;
+    
     Object.defineProperty(Element, "isElement", {
         value: function (obj) {
             return !!(obj && 1 === obj.nodeType);

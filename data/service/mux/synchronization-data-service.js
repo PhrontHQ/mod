@@ -324,6 +324,15 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 }
 
             } 
+
+        /*
+         FIXME: this._isValueForChangeEventBeingTracked(changeEvent) is evaluating to true for objects after they are synced which means those objects
+         are not being cleaned up correctly. 
+
+         Example: The change event for Person.preferredNextRoles. 
+         By the time a user is selecting a preferredNextRole, the value on the event (a JobRole)  
+         should already be synced. 
+        */
         } else if (this._isValueForChangeEventBeingTracked(changeEvent)) {
                 if (propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(dataObject.objectDescriptor, `registerChangedObject ADD SYNC ${changeEvent.keyValue ? 'Object' : 'Array'}`, dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
@@ -345,12 +354,17 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     _isValueForChangeEventBeingTracked(changeEvent) {
-        if (changeEvent.keyValue) {
+        if (changeEvent.propertyDescriptor.cardinality === 1) {
             return this._isSyncingOrBeingTrackedWhileMapping(changeEvent.keyValue);
-        } else if (changeEvent.addedValues) {
-            let isTracking = false, i, n;
-            for (i = 0, n = changeEvent.addedValues.length; i < n && !isTracking; i++) {
-                isTracking = this._isSyncingOrBeingTrackedWhileMapping(changeEvent.addedValues[i]);
+        } else {
+            /*
+                TODO: Support for more than Array, DataTrigger also handles collections that are Map, Set, Range
+                which need to be handled as well 
+            */
+            let changeValues = changeEvent.addedValues ? changeEvent.addedValues : changeEvent.keyValue,
+                isTracking = false, i, n;
+            for (i = 0, n = changeValues?.length; i < n && !isTracking; i++) {
+                isTracking = this._isSyncingOrBeingTrackedWhileMapping(changeValues[i]);
             }
             return isTracking;
         }
@@ -374,13 +388,16 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     }
 
     startTrackingNestedObjectsForChangeEvent(rootObject, changeEvent) {
-        let propertyDescriptor = rootObject.objectDescriptor.propertyDescriptorsByName.get(changeEvent.key);
+        let propertyDescriptor = changeEvent.propertyDescriptor;
         if (!this._canTrackPropertyForChangeEvent(rootObject, changeEvent)) {
             return;
         }
         this.startTrackingChangesForObjectBeingMapped(rootObject);
-        if (propertyDescriptor.cardinality === Infinity) {
-            changeEvent.addedValues.forEach((nestedObject) => {
+        if (propertyDescriptor.cardinality > 1) {
+            let changedValues = changeEvent.addedValues ? changeEvent.addedValues : changeEvent.keyValue;
+
+            //We would ideally not use a forEach for frugality's sake
+            changedValues.forEach((nestedObject) => {
                 if (nestedObject && propertyDescriptor._valueDescriptorReference) {
                     this._logTypeEvent(nestedObject.objectDescriptor, `${nestedObject.dataIdentifier.dataService.name} Register ${nestedObject.objectDescriptor.name} as a nested object via ${rootObject.objectDescriptor.name}.${changeEvent.key} - ${rootObject.dataIdentifier ? rootObject.dataIdentifier.primaryKey : "no primary key"}`)
                 }
@@ -1382,10 +1399,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
                 if there was only one data service that handled the read operation and was our destination service, then there's no point trying anything else
             */
-           if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+           //if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.target)) {
+           if(!this.didAllChildServicesCompletedReadOperationForTarget(readCompletedOperation.referrer, readCompletedOperation.referrer.target)) {
 
                 /* if this readCompletedOperation doesn't come from our destinationDataService: */
-                if(((this.readCompletionOperationReadOperationAndObjectDescriptorTarget(readCompletedOperation.referrer, readCompletedOperation.target).length === 1) && (readCompletedOperation.rawDataService === this.destinationDataService))) {
+                if(((this.readCompletionOperationReadOperationAndObjectDescriptorTarget(readCompletedOperation.referrer, readCompletedOperation.referrer.target).length === 1) && (readCompletedOperation.rawDataService === this.destinationDataService))) {
                     /* Origin Services need to have a shot, so we stop propagatiom of that readCompletedOperation from our destinationService, in order to have the readOperation continue to our oriin data services: */
                     readCompletedOperation.stopPropagation();
 
@@ -1500,6 +1518,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     
                 readCompletedOperation.referrer.stopImmediatePropagation();
 
+                //Cleanup
+                this.unregisterReadOperation(readCompletedOperation.referrer);    
+
             }
             
         } else if(readCompletedOperation.rawDataService === this.destinationDataService) {
@@ -1573,7 +1594,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             The type at the end of an expression for relationships, complex expressions or derived properties
         */
         return this.handlesType(anObjectDescriptor)
-                ? this.readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptor).length === this.childServicesHandlingDataOperationTypeForType(aReadOperation.type, anObjectDescriptor).length
+                ? this.readCompletionOperationReadOperationAndObjectDescriptorTarget(aReadOperation, anObjectDescriptor)?.length === this.childServicesHandlingDataOperationTypeForType(aReadOperation.type, anObjectDescriptor)?.length
                 : true;
     }
 
@@ -1592,11 +1613,11 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     registerChildDataServiceReadCompletionOperation(aReadCompletionOperation) {
 
-        if(aReadCompletionOperation.rawDataService.handlesDataOperationTypeForType(aReadCompletionOperation.type, aReadCompletionOperation.target)) {
+        if(aReadCompletionOperation.rawDataService.handlesDataOperationTypeForType(aReadCompletionOperation.referrer.type, aReadCompletionOperation.referrer.target)) {
             let readCompletionOperationByChildDataService = this.readCompletionOperationByTargetForReadOperation(aReadCompletionOperation.referrer),
-                readCompletionOperations = readCompletionOperationByChildDataService.get(aReadCompletionOperation.target);
+                readCompletionOperations = readCompletionOperationByChildDataService.get(aReadCompletionOperation.referrer.target);
             if(!readCompletionOperations) {
-                readCompletionOperationByChildDataService.set(aReadCompletionOperation.target, (readCompletionOperations = []));    
+                readCompletionOperationByChildDataService.set(aReadCompletionOperation.referrer.target, (readCompletionOperations = []));    
             }
             readCompletionOperations.push(aReadCompletionOperation);    
         } else {
