@@ -117,6 +117,7 @@ Fill might be a better term than background: it's shorter, works for both shapes
 
   -  Material Design Color roles
       - [https://m3.material.io/styles/color/roles] https://m3.material.io/styles/color/roles
+        - Interesting note, icon and text on the same "surface" share the same color here
 
 -  **`controlFill`**:
 
