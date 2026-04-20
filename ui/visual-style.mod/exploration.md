@@ -105,6 +105,10 @@ Fill might be a better term than background: it's shorter, works for both shapes
 
   #### Accent
 
+  A helpful practice is to design your UI hierarchy in grayscale first. If the layout and messaging aren’t clear without color, adding color won’t fix the problem.
+
+  This could be automated to assess things from a pure information hierarchy stand point
+
   - [Apple Human Interface Guidelines for Color](https://developer.apple.com/design/human-interface-guidelines/color#Platform-considerations) defines it as:
       Control accent: The accent color people select in System Settings. controlAccentColor
   
@@ -118,6 +122,16 @@ Fill might be a better term than background: it's shorter, works for both shapes
   -  Material Design Color roles
       - [https://m3.material.io/styles/color/roles] https://m3.material.io/styles/color/roles
         - Interesting note, icon and text on the same "surface" share the same color here
+
+  - Designing semantic colors for your system
+      - [https://imperavi.com/blog/designing-semantic-colors-for-your-system/](https://imperavi.com/blog/designing-semantic-colors-for-your-system/)
+      This has some ineteresting approaches:
+        - like foreground vs backround, which is a little bit more clear than Material design on ...//
+
+
+  - Acorn, the design system for Firefox.
+      - [Color](https://acorn.firefox.com/latest/desktop/styles/color/semantic-color-14S4X1uo)
+        - Semantic colors, for icons: Success, Information, Critical, Warning
 
 -  **`controlFill`**:
 
