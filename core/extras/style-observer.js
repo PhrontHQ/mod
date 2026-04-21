@@ -1,4 +1,4 @@
-if (!window.__mod__styleImportantForcerInitialized) {
+if (typeof window !== "undefined" && !window.__mod__styleImportantForcerInitialized) {
     window.__mod__styleImportantForcerInitialized = true;
 
     const styleObserver = new MutationObserver((mutations) => {
