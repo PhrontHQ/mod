@@ -12,8 +12,8 @@
                 "%": "mod/ui/list.reel"
             },
             "collectionNameExpression": "'Persons'",
-            "nameExpression": "lastname + ' ' + firstname",
-            "descriptionExpression": "department"
+            "nameExpression": "name.familyName + ' ' + name.givenName",
+            "descriptionExpression": "description"
         }
     }
 }
