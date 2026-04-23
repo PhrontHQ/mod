@@ -26,6 +26,19 @@ var PROPERTIES = [
 
     */
 
+    /*
+        Do we need dedicated variables for dividers (Material Design word) / Separators (Apple word)' fill and size (those are typically only one dimention, dividing-wise)
+       
+        - https://developer.apple.com/documentation/uikit/uitableviewcell/separatorstyle
+        - https://m3.material.io/components/divider/overview
+            Dividers are thin lines that group content in lists or other containers. Dividers are decorative elements, which have no contrast minimums.
+            - https://m3.material.io/components/divider/guidelines
+            - https://m3.material.io/components/divider/specs
+                - https://m3.material.io/foundations/design-tokens/overview
+            - https://m3.material.io/components/divider/accessibility
+        - https://base.uber.com/6d2425e9f/p/65ac57-divider
+    */
+
 
     {name: "controlBackgroundFill", variable: "--visual-style-control-background-fill", defaultValue: "hsl(0, 0%, 86%)"},
     {name: "controlSecondaryBackgroundFill", variable: "--visual-style-control-secondary-background-fill", backup: "controlBackgroundFill"},
