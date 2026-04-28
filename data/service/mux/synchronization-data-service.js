@@ -720,8 +720,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //We might want to ask the delegate his take on what readExpressions to use 
             readExpressions = (readCompletedOperation.referrer.target === readCompletedOperation.target) ? readCompletedOperation.referrer?.data?.readExpressions : null,
             //readExpressions = readCompletedOperation.,referrer?.data?.readExpressions,
-            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(objectDescriptor,  rawData),
-            typeForRawData = this.objectTypeForRawData(objectDescriptor, rawData);
+            typeForRawData = this.objectTypeForRawData(objectDescriptor, rawData),
+            dataIdentifier = rawDataService.dataIdentifierForTypeRawData(typeForRawData,  rawData);
 
         rawDataService.recordSnapshot(dataIdentifier,  rawData);
 
