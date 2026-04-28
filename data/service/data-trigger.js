@@ -424,7 +424,15 @@ exports.DataTrigger.prototype = Object.create(
                     */
 
                     //_initialValue is the value passed into _setValue. 
-                    this._setValue(object, 
+                    // this._setValue(object, 
+                    //     /*value*/initValue, 
+
+                    //     // Only dispatch change if initialValue was provided and has length > 0.
+                    //     /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, 
+                    //     /*_initialValue*/undefined, 
+                    //     /*_currentValue*/undefined);
+
+                    this._setValueFromEnsureCollectionValue(object, 
                         /*value*/initValue, 
 
                         // Only dispatch change if initialValue was provided and has length > 0.
@@ -845,6 +853,54 @@ exports.DataTrigger.prototype = Object.create(
                 this._setValueStatus(object, null);
 
             },
+        },
+
+
+        _setValueFromEnsureCollectionValue: {
+            value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
+                let objectPropertyValue = _currentValue;
+                var status,
+                    setter = this._valueSetter,
+                    currentValue,
+                    isInitialValueArray,
+                    isInitialValueMap,
+                    initialValue;
+
+                status = this._getValueStatus(object);
+
+                initialValue = objectPropertyValue;
+
+                isInitialValueArray = Array.isArray(initialValue);
+                isInitialValueMap = !isInitialValueArray && initialValue instanceof Map;
+
+                // Set this trigger's property to the desired value, but only if
+                // that property is writable.
+                if (setter) {
+                    setter.call(object, value);
+                    //currentValue = value;
+                } else if (this._isPropertyWritable) {
+
+                    
+                    if (this.isToMany) {
+                        
+                        this._assignToManyPropertyValueToObject(object, value, initialValue);
+                    } else {
+                        object[this._privatePropertyName] = value;
+                    }
+                }
+
+                currentValue = value;
+
+                if (currentValue !== initialValue) {
+                    this._observeCollectionValue(object, initialValue, currentValue);
+                }
+
+                // Resolve any pending promise for this trigger's property value.
+                if (status) {
+                    status.resolve(currentValue);
+                }
+                this._setValueStatus(object, null);
+            }
         },
 
         _dispatchChangeEvent: {
