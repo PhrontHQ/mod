@@ -1,0 +1,20 @@
+.Circle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 92cqi;
+    height: 92cqi;
+    border-radius: 50%;
+    background-color: lightblue;
+    border: 4cqi solid white;
+
+    .inner {
+        width: 35cqi;
+        height: 35cqi;
+        background-color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+}

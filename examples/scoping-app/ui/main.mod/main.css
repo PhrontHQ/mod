@@ -1,0 +1,32 @@
+.Main {
+    color: #eee;
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+    flex: 1;
+
+    .circles {
+        display: flex;
+        gap: 16px;
+        flex: 1;
+
+        .inner {
+            /* SHOULD NOT BE APPLIED CHILDREN CIRCLES */
+            border: 4px solid black;
+        }
+
+        > .CircleCssContainer {
+            width: 150px;
+            height: 150px;
+        }
+
+        .Circle {
+            height: 150px;
+            width: 150px;
+            background-color: white;
+            border-radius: 50%;
+        }
+    }
+}
