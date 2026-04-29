@@ -13,5 +13,9 @@
             font-family: inherit;
         }
 
+        & > textarea.ModPropertyField-control::placeholder {
+            color: var(--visual-style-control-placeholder-fill)
+        }
+
     }
 }
