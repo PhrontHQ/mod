@@ -350,20 +350,90 @@ exports.DocumentResources = class DocumentResources extends Montage {
 
             const extractedCssText = rulesToWrap.join("\n");
 
-            // Create the new wrapped CSS string
-            const wrappedCss = `@layer ${moduleLayerPath} {
-                @scope (.${moduleLayerClassName}) {
-                    :scope, * { all: revert-layer !important; }
-                }
+            /*
+                WIP / TODO: 
+                
+                WARNING The first 2 if() bellow are hard coded to test within a specific private app to diagnose the issue.
+                THEY HAVE TO GO:
+                this is a proof of concept fix for an oversight, the css encapsulation messes with template arguments.
+                The solution is to use a "donut" hole - see https://css-tricks.com/solved-by-css-donuts-scopes/ 
+                and https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@scope, 
+                carve out the scope so the injected content stays in the scope where it was created
+                and where it is likely styles.
+                
+                generalize: we need to have a relaiable way to know where the hole starts / end, but right now, mod doesn't keep the template arguments dom elements.
+                They are replaced by the content itsels.
 
-                @layer style {
-                    * {
-                        all: revert;
+                So we need to change that, keep the DOM elements with the data-param, like the catch all:
+
+                    <div data-param="*"></div>
+
+                or named ones:
+
+                    <span data-param="leftSide"></span>
+
+                 and to make it "transparent" to not cause regressions, which we can now do using 
+
+                    display: contents; 
+
+                —a "magical" new display value that essentially makes the container disappear, making the child elements children of the element the next level up in the DOM.
+
+                See: 
+                    - https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/display#display_contents
+                    - https://css-tricks.com/get-ready-for-display-contents/
+
+            */
+
+            if(moduleLayerPath === "ford-path.ui.common.scroller.mod") {
+                // Create the new wrapped CSS string
+                var wrappedCss = `@layer ${moduleLayerPath} {
+                    @scope (.${moduleLayerClassName}) to (.Scroller-content) {
+                        :scope, * { all: revert-layer !important; background-color: red;}
                     }
 
-                    ${extractedCssText}
-                }
-            }`;
+                    @layer style {
+                        * {
+                            all: revert;
+                        }
+
+                        ${extractedCssText}
+                    }
+                }`;
+
+            } 
+            else if(moduleLayerPath === "ford-path.ui.frames.screen-frame.mod") {
+                // Create the new wrapped CSS string
+                var wrappedCss = `@layer ${moduleLayerPath} {
+                    @scope (.${moduleLayerClassName}) to (.ScreenFrame-subtitleContainer + *) {
+                        :scope, * { all: revert-layer !important; background-color: red;}
+                    }
+
+                    @layer style {
+                        * {
+                            all: revert;
+                        }
+
+                        ${extractedCssText}
+                    }
+                }`;
+
+            } else {
+                // Create the new wrapped CSS string
+                var wrappedCss = `@layer ${moduleLayerPath} {
+                    @scope (.${moduleLayerClassName}) {
+                        :scope, * { all: revert-layer !important; }
+                    }
+
+                    @layer style {
+                        * {
+                            all: revert;
+                        }
+
+                        ${extractedCssText}
+                    }
+                }`;
+
+            }
 
             // Insert the new wrapped CSS into the existing stylesheet
             sheet.insertRule(wrappedCss, insertionIndex);
