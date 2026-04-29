@@ -7,6 +7,9 @@
             text-align: right;
         }
 
+        & > input[type="text"].ModPropertyField-control::placeholder {
+            color: var(--visual-style-control-placeholder-fill)
+        }
     }
 }
 

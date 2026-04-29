@@ -58,6 +58,8 @@ var PROPERTIES = [
     {name: "controlLabelFill", variable: "--visual-style-control-label-fill", backup: "textFill"},
     {name: "controlLabelSize", variable: "--visual-style-control-label-size", backup: "textSize"},
 
+    {name: "controlPlaceholderFill", variable: "--visual-style-control-placeholder-fill", backup: "textFill"},
+
     {name: "controlSelectionFill", variable: "--visual-style-control-selection-fill", defaultValue: "hsl(211, 100%, 50%)"},
     {name: "controlSelectionBackgroundFill", variable: "--visual-style-control-selection-background-fill", backup: "controlBackgroundFill"},
 
@@ -201,6 +203,7 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlBuffer");
         this._deserializeProperty(deserializer, "controlLabelFill");
         this._deserializeProperty(deserializer, "controlLabelSize");
+        this._deserializeProperty(deserializer, "controlPlaceholderFill");
         this._deserializeProperty(deserializer, "controlHoverFill");
         this._deserializeProperty(deserializer, "controlActiveFill");
         this._deserializeProperty(deserializer, "controlFocusFill");
