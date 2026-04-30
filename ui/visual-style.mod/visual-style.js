@@ -78,6 +78,8 @@ var PROPERTIES = [
     {name: "controlFocusSecondaryFill", variable: "--visual-style-control-focus-secondary-fill", backup: "controlFocusFill"},
     {name: "controlFocusTertiaryFill", variable: "--visual-style-control-focus-tertiary-fill", backup: "controlFocusFill"},
     {name: "controlFocusQuaternaryFill", variable: "--visual-style-control-focus-quaternary-fill", backup: "controlFocusFill"},
+    
+    {name: "controlBackgroundFocusFill", variable: "--visual-style-control-background-focus-fill", backup: "controlBackgroundFill"},
 
     {name: "controlHeight", variable: "--visual-style-control-height", defaultValue: "36px"},
 
