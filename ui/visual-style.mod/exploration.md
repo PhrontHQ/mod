@@ -112,7 +112,7 @@ Fill might be a better term than background: it's shorter, works for both shapes
   - [Apple Human Interface Guidelines for Color](https://developer.apple.com/design/human-interface-guidelines/color#Platform-considerations) defines it as:
       Control accent: The accent color people select in System Settings. controlAccentColor
   
-  - CSS now has an accent-color proeprty
+  - CSS now has an accent-color property
         However it's limiting as this can't take a gradient or image, but interesting for reference:
       - [https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color](https://developer.mozilla.org/en-US/docs/Web/CSS/accent-color)
       - [https://css-tricks.com/almanac/properties/a/accent-color/](https://css-tricks.com/almanac/properties/a/accent-color/)
@@ -321,12 +321,3 @@ Borders can be filled with colors, but also with image and therefore gradients:
 - [<text-edge> / text-box-edge](https://developer.mozilla.org/en-US/docs/Web/CSS/text-edge)
 
 
-### States
-- [Disabled vs Read-only](https://dribbble.com/shots/23376116-Disabled-vs-Read-only)
-- [Read only VS Disabled](https://medium.com/@1746515754keig/read-only-vs-disabled-b600a6203026)
-
-### Text Fields
-- [Text fields](https://m3.material.io/components/text-fields/specs)
-- [Text fields](https://m1.material.io/components/text-fields.html#)
-- [Angular Demos > input](https://material.angularjs.org/1.1.0/demo/input)
-- 
