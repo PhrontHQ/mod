@@ -62,6 +62,18 @@ _getValue that triggers _setValue
 
 _getValue
 	_ensureCollectionValue(object, _initialValue)
+            this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
 
 
-this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
+
+
+
+
+
+Cases we need to handle 
+
+
+
+1. Called from standard setter `object[this._propertyName] = value`
+    1. value is []
+        2. 
