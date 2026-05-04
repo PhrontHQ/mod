@@ -1,0 +1,26 @@
+{
+    "root": {
+        "prototype": "mod/core/meta/module-object-descriptor",
+        "properties": {
+            "name": "Actor",
+            "propertyDescriptors": [
+                {"@": "name"}
+            ],
+            "objectDescriptorModule": {
+                "%": "spec/data/logic/model/actor.mjson"
+            },
+            "exportName": "Actor",
+            "module": {
+                "%": "spec/data/logic/model/actor"
+            }
+        }
+    },
+
+    "name": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "properties": {
+            "name": "name",
+            "valueType": "string"
+        }
+    }
+}

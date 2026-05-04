@@ -881,6 +881,8 @@ exports.DataTrigger.prototype = Object.create(
             writable: true,
             value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
 
+                console.log("DataTrigger._setValue");
+
                 if (arguments.length >= 3) {
                     this._setValueWithInternalArguments(object, value, _dispatchChange, _initialValue, _currentValue)
                 } else {

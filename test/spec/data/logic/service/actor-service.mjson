@@ -1,0 +1,16 @@
+{
+    
+    "actor": {
+        "object": "spec/data/logic/model/actor.mjson"
+    },
+
+    "root": {
+        "prototype": "spec/data/logic/service/actor-service",
+        "properties": {
+            "name": "ActorService",
+            "types": [
+                 {"@": "actor"}
+             ]
+        }
+    }
+}

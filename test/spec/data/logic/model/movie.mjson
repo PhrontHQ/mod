@@ -18,6 +18,12 @@
                 },
                 {
                     "@": "title"
+                },
+                {
+                    "@": "cast"
+                },
+                {
+                    "@": "showtimes"
                 }
             ],
             "objectDescriptorModule": {
@@ -150,6 +156,27 @@
         "prototype": "mod/core/criteria",
         "values": {
             "expression": "!releaseDate || releaseDate.getFullYear() < 2042"
+        }
+    },
+    "actor_descriptor": {
+        "object": "spec/data/logic/model/category.mjson"
+    },
+    "cast": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "properties": {
+            "name": "cast",
+            "valueDescriptor": {
+                "@": "actor_descriptor"
+            },
+            "cardinality": -1
+        }
+    },
+    "showtimes": {
+        "prototype": "mod/core/meta/property-descriptor",
+        "properties": {
+            "name": "showtimes",
+            "type": "date",
+            "cardinality": -1
         }
     }
 }

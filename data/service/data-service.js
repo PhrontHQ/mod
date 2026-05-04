@@ -1000,6 +1000,7 @@ DataService.addClassProperties(
                     ),
                     mainService = this.rootService;
 
+
                 Object.defineProperty(prototype, "dataIdentifier", {
                     enumerable: true,
                     get: function () {

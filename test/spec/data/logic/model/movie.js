@@ -40,6 +40,23 @@ exports.Movie = Target.specialize({
      */
     title: {
         value: undefined
+    },
+
+
+    /**
+     * @type {Array<Actor>}
+     */
+    cast: {
+        value: undefined
+    },
+
+    /**
+     * @type {Array<Date>}
+     */
+    showtimes: {
+        get: function () {
+            return this._showtimes || (this._showtimes = [new Date()]);
+        }
     }
 
 });

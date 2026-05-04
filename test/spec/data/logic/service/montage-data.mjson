@@ -5,9 +5,15 @@
             "name": "DataService",
             "childServices": [
                 {"@": "categoryService"},
-                {"@": "movieService"}
+                {"@": "movieService"},
+                {"@": "actorService"}
             ]
         }
+    },
+
+
+    "actorService": {
+        "object": "spec/data/logic/service/actor-service.mjson"
     },
 
 
