@@ -13,7 +13,6 @@
 }
 
 .ModPropertyField-heading {
-    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -35,6 +34,9 @@
 .ModPropertyField-label {
     font-size: var(--visual-style-control-label-size);
     color: var(--visual-style-control-label-fill);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 
@@ -46,14 +48,15 @@
     padding: 0px 6px;
 
     & .ModPropertyField-heading {
-        flex: none;
-        width: auto;
+        flex: 1;
+        overflow: hidden;
         align-self: flex-start;
+        padding-right: 4px;
     }
 
     & .controlWrapper {
 
-        flex: 1;
+        flex: none;
         overflow: hidden;
 
         & > .ModPropertyField-control {

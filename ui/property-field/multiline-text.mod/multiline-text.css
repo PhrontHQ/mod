@@ -2,7 +2,14 @@
     & .ModPropertyField.ModPropertyField--inlineLabel {
         flex-direction: column;
         align-items: stretch;
+
+        & .ModPropertyField-heading {
+            flex: none;
+            max-width: 100%;
+        }
     }
+
+
 
     & .controlWrapper {
 
