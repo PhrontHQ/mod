@@ -1,19 +1,5 @@
 {
 	"root": {
-        "prototype": "core/meta/module-object-descriptor",
-        "values": {
-            "name": "TextInput",
-            "customPrototype": false,
-            "propertyDescriptors": [],
-            "propertyDescriptorGroups": {},
-            "validationRules": [],
-            "objectDescriptorModule": {
-                "%": "ui/text-input.mjson"
-            },
-            "exportName": "TextInput",
-            "module": {
-                "%": "ui/text-input"
-            }
-        }
+        "object": "./text-input.mod/text-input.mjson"
     }
 }
