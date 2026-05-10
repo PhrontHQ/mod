@@ -31,7 +31,8 @@ const Object = global.Object, //Cache for scope traversal performance
     TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     TransactionEvent = require("../model/transaction-event").TransactionEvent,
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
-    ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject;
+    ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject
+    isArray = Array.isArray;
 
 require("core/extras/string");
 require("core/extras/date");
@@ -354,7 +355,7 @@ DataService.addClassProperties(
 
         deserializedFromSerialization: {
             value: function (label) {
-                if (Array.isArray(this._deserializedChildServices) && this._deserializedChildServices.length > 0) {
+                if (isArray(this._deserializedChildServices) && this._deserializedChildServices.length > 0) {
                     //var childServices = this._childServices;
                     // if(!this._childServices) {
                     //     this._childServices = [];
@@ -780,10 +781,10 @@ DataService.addClassProperties(
                 // -- types is set on the child.
                 // any type can be asychronous or synchronous.
                 types =
-                    (types && Array.isArray(types) && types) ||
+                    (types && isArray(types) && types) ||
                     (types && [types]) ||
                     (child.model && child.model.objectDescriptors) ||
-                    (child.types && Array.isArray(child.types) && child.types) ||
+                    (child.types && isArray(child.types) && child.types) ||
                     (child.types && [child.types]) ||
                     [];
 
@@ -2140,7 +2141,7 @@ DataService.addClassProperties(
         decacheObjectProperties: {
             value: function (object, propertyNames) {
                 if (this.isRootService) {
-                    var names = Array.isArray(propertyNames) ? propertyNames : arguments,
+                    var names = isArray(propertyNames) ? propertyNames : arguments,
                         start = names === propertyNames ? 0 : 1,
                         triggers = this._getTriggersForObject(object),
                         trigger,
@@ -2226,7 +2227,7 @@ DataService.addClassProperties(
                     // Get the data, accepting property names as an array or as a list
                     // of string arguments while avoiding the creation of any new array.
                     //var names = Array.isArray(propertyNames) ? propertyNames : Array.prototype.slice.call(arguments, 1),
-                    var names = Array.isArray(propertyNames) ? propertyNames : arguments,
+                    var names = isArray(propertyNames) ? propertyNames : arguments,
                         start = names === propertyNames ? 0 : 1;
                     return this._getOrUpdateObjectProperties(object, names, start, false);
                 } else {
@@ -2259,7 +2260,7 @@ DataService.addClassProperties(
                     let promises = [],
                         i,
                         countI,
-                        names = Array.isArray(propertyNames) ? propertyNames : arguments,
+                        names = isArray(propertyNames) ? propertyNames : arguments,
                         start = names === propertyNames ? 0 : 1;
 
                     for (i = 0, countI = objects.length; i < countI; i++) {
@@ -2276,7 +2277,7 @@ DataService.addClassProperties(
                 if (this.isRootService) {
                     // Get the data, accepting property names as an array or as a list
                     // of string arguments while avoiding the creation of any new array.
-                    var expressions = Array.isArray(propertyValueExpressions) ? propertyValueExpressions : arguments,
+                    var expressions = isArray(propertyValueExpressions) ? propertyValueExpressions : arguments,
                         start = expressions === propertyValueExpressions ? 0 : 1,
                         promises = [],
                         self = this;
@@ -2358,7 +2359,7 @@ DataService.addClassProperties(
                 if (this.isRootService) {
                     // Get the data, accepting property names as an array or as a list
                     // of string arguments while avoiding the creation of any new array.
-                    var names = Array.isArray(propertyNames) ? propertyNames : arguments,
+                    var names = isArray(propertyNames) ? propertyNames : arguments,
                         start = names === propertyNames ? 0 : 1;
                     return this._getOrUpdateObjectProperties(object, names, start, true);
                 } else {
@@ -3512,7 +3513,7 @@ DataService.addClassProperties(
                     }
 
                     //If we have delegateObjectToMerge, we need to make sure that we move the values of dataObject on to delegateObjectToMerge
-                    if (Array.isArray(iValue)) {
+                    if (isArray(iValue)) {
                         for (let i = 0, countI = iValue.length; i < countI; i++) {
                             if (delegate) {
                                 this._invokeDelegateWillMergeDataObjectPropertyValueIntoExistingDataObject(
@@ -4084,7 +4085,7 @@ DataService.addClassProperties(
 
                 if (propertyDescriptor.cardinality === 1) {
                     //value should not be an array
-                    if (Array.isArray(value)) {
+                    if (isArray(value)) {
                         console.warn(
                             "Something's off...., the value of propertyDescriptor:",
                             propertyDescriptor,
@@ -4168,7 +4169,7 @@ DataService.addClassProperties(
                     }
                 } else if (propertyDescriptor.cardinality > 1) {
                     //value should  be an array
-                    if (value && !Array.isArray(value)) {
+                    if (value && !isArray(value)) {
                         console.warn(
                             "Something's off...., the value of propertyDescriptor:",
                             propertyDescriptor,
@@ -4277,7 +4278,7 @@ DataService.addClassProperties(
             ) {
                 if (inversePropertyDescriptor) {
                     //value should  be an array
-                    if ((values && !Array.isArray(values)) || !(propertyDescriptor.cardinality > 0)) {
+                    if ((values && !isArray(values)) || !(propertyDescriptor.cardinality > 0)) {
                         console.warn(
                             "Something's off...., values added to propertyDescriptor:",
                             propertyDescriptor,
@@ -4400,7 +4401,7 @@ DataService.addClassProperties(
             value: function (dataObject, propertyDescriptor, values, inversePropertyDescriptor) {
                 if (inversePropertyDescriptor) {
                     //value should  be an array
-                    if (!Array.isArray(values) || !(propertyDescriptor.cardinality > 0)) {
+                    if (!isArray(values) || !(propertyDescriptor.cardinality > 0)) {
                         console.warn(
                             "Something's off...., values added to propertyDescriptor:",
                             propertyDescriptor,
@@ -4663,7 +4664,7 @@ DataService.addClassProperties(
                     //that itself has two keys: addedValues and removedValues
                     //which value will be a set;
                     var manyChanges = changesForDataObject.get(key),
-                        isManyChangesArray = manyChanges && Array.isArray(manyChanges),
+                        isManyChangesArray = manyChanges && isArray(manyChanges),
                         i,
                         countI;
 
@@ -5351,6 +5352,53 @@ DataService.addClassProperties(
             },
         },
 
+        dispatchSaveEventTypeForTransaction: {
+            value: function(eventType, aTransaction) {
+                let transactionObjectDescriptors = aTransaction.objectDescriptors,
+                    uniquePromise,
+                    promises;
+
+                for (const iObjectDescriptor of transactionObjectDescriptors) {
+                    let iPromise = this.dispatchDataEventTypeForObject(
+                            eventType,
+                            iObjectDescriptor,
+                            {
+                                transaction: aTransaction,
+                                createdDataObjects: aTransaction.createdDataObjects.get(iObjectDescriptor),
+                                updatedDataObjects: aTransaction.updatedDataObjects.get(iObjectDescriptor),
+                                deletedDataObjects: aTransaction.deletedDataObjects.get(iObjectDescriptor)
+                            }
+                        );
+                    
+                    if(iPromise) {
+                        if(!promises) {
+                            if(!uniquePromise) {
+                                uniquePromise = iPromise;
+                            } else {
+                                promises = [uniquePromise, iPromise];
+                                uniquePromise = null; //not really needed
+                            }
+                        } else {
+                            promises.push(iPromise)
+                        }
+                    }
+                }
+
+                return promises
+                    ? Promise.all(promises)
+                    : uniquePromise
+                        ? uniquePromise
+                        : Promise.resolveUndefined;
+
+            }
+        },
+
+        dispatchWillSaveForTransaction: {
+            value: function(aTransaction) {
+                return this.dispatchSaveEventTypeForTransaction(DataEvent.willSave, aTransaction)
+            }
+        },
+
         _saveChangesForTransaction: {
             value: function(transaction) {
                 let self = this;
@@ -5389,277 +5437,293 @@ DataService.addClassProperties(
                             resolve(operation);
                         }
 
-                        /**
-                         * TODO: Refactor validation into operation-specific events.
-                         * A single validation action is inefficient. We should split it by operation
-                         * (e.g., `validateCreate`, `validateUpdate`, `validateDelete`) to run
-                         * optimized, context-specific logic (like checking cascade-deletes only on delete).
-                         */
-                        Promise.all([
-                            // 1. Validate created objects.
-                            self._buildInvalidityStateForObjects(createdDataObjects),
-                            // 2. Validate updated objects.
-                            self._buildInvalidityStateForObjects(changedDataObjects),
-                            // 3. Validate deleted objects (e.g., check for rules that block deletion).
-                            self._buildInvalidityStateForObjects(deletedDataObjects),
-                        ])
-                            .then((validationResults) => {
-                                const aggregatedValidationErrors = new Map();
+                        self.dispatchWillSaveForTransaction(transaction)
+                        //Validate:
+                        .then(() => {
+                            /**
+                             * TODO: Refactor validation into operation-specific events.
+                             * A single validation action is inefficient. We should split it by operation
+                             * (e.g., `validateCreate`, `validateUpdate`, `validateDelete`) to run
+                             * optimized, context-specific logic (like checking cascade-deletes only on delete).
+                             */
+                            return Promise.all([
+                                // 1. Validate created objects.
+                                self._buildInvalidityStateForObjects(createdDataObjects),
+                                // 2. Validate updated objects.
+                                self._buildInvalidityStateForObjects(changedDataObjects),
+                                // 3. Validate deleted objects (e.g., check for rules that block deletion).
+                                self._buildInvalidityStateForObjects(deletedDataObjects),
+                            ]);
+                        })
+                        //Dispatch Invalidity if any:
+                        .then((validationResults) => {
+                            const aggregatedValidationErrors = new Map();
 
-                                // Merge validation results from all operations. (created, changed, deleted)
-                                for (const result of validationResults) {
-                                    if (!result) continue;
+                            // Merge validation results from all operations. (created, changed, deleted)
+                            for (const result of validationResults) {
+                                if (!result) continue;
 
-                                    for (const [dataObject, invalidity] of result) {
-                                        // Only add if there are actual validation errors
-                                        if (invalidity && invalidity.size > 0) {
-                                            aggregatedValidationErrors.set(dataObject, invalidity);
+                                for (const [dataObject, invalidity] of result) {
+                                    // Only add if there are actual validation errors
+                                    if (invalidity && invalidity.size > 0) {
+                                        aggregatedValidationErrors.set(dataObject, invalidity);
 
-                                            // Dispatch invalid data event for each invalid object
-                                            this.dispatchDataEventTypeForObject(
-                                                DataEvent.invalid,
-                                                dataObject,
-                                                invalidity
-                                            );
-                                        }
+                                        // Dispatch invalid data event for each invalid object
+                                        this.dispatchDataEventTypeForObject(
+                                            DataEvent.invalid,
+                                            dataObject,
+                                            invalidity
+                                        );
                                     }
                                 }
+                            }
 
-                                if (aggregatedValidationErrors.size > 0) {
-                                    const validateFailedOperation = new DataOperation();
-                                    validateFailedOperation.type = DataOperation.Type.ValidateFailedOperation;
-                                    validateFailedOperation.target = self.mainService;
+                            if (aggregatedValidationErrors.size > 0) {
+                                const validateFailedOperation = new DataOperation();
+                                validateFailedOperation.type = DataOperation.Type.ValidateFailedOperation;
+                                validateFailedOperation.target = self.mainService;
 
-                                    // Pass the complete set of errors
-                                    validateFailedOperation.data = aggregatedValidationErrors;
+                                // Pass the complete set of errors
+                                validateFailedOperation.data = aggregatedValidationErrors;
 
-                                    // Stop the transaction and resolve with the failure operation
-                                    resolve(validateFailedOperation);
+                                // Stop the transaction and resolve with the failure operation
+                                resolve(validateFailedOperation);
 
-                                    // TODO: @benoit should we not stop/reject the inner promise ?
-                                    return null;
-                                }
+                                // TODO: @benoit should we not stop/reject the inner promise ?
+                                return null;
+                            }
 
-                                return transactionObjectDescriptors;
-                            }, reject)
-                            .then(function (_transactionObjectDescriptors) {
+                            return transactionObjectDescriptors;
+                        }, reject)
+                        //Assess potential dependency to other pending transactions
+                        .then(function (_transactionObjectDescriptors) {
 
-                                //Before we can get to it, we need to verify that "transaction"'s content has no dependency to a pending transaction
-                                //for example an update to an object that's created in a pending transaction that has not completed yet, which can lead to deadlocks.
-                                //We're going to start by handling that use-case only
+                            //Before we can get to it, we need to verify that "transaction"'s content has no dependency to a pending transaction
+                            //for example an update to an object that's created in a pending transaction that has not completed yet, which can lead to deadlocks.
+                            //We're going to start by handling that use-case only
 
 
 
-                                let pendingTransactions = self._pendingTransactions;
+                            let pendingTransactions = self._pendingTransactions;
 
-                                if (pendingTransactions && pendingTransactions.length) {
+                            if (pendingTransactions && pendingTransactions.length) {
 
-                                    let updatedDataObjectsByObjectDescriptor = transaction.updatedDataObjects, //Map
-                                        updatedDataObjectDescriptorsIterator = updatedDataObjectsByObjectDescriptor.keys(),
-                                        firstPendingTransactionsCreatingChangedDataObjectsPromise,
-                                        pendingTransactionsCreatingChangedDataObjectsPromises,
-                                        iObjectDescriptor;
+                                let updatedDataObjectsByObjectDescriptor = transaction.updatedDataObjects, //Map
+                                    updatedDataObjectDescriptorsIterator = updatedDataObjectsByObjectDescriptor.keys(),
+                                    firstPendingTransactionsCreatingChangedDataObjectsPromise,
+                                    pendingTransactionsCreatingChangedDataObjectsPromises,
+                                    iObjectDescriptor;
 
-                                    /* 
-                                        TODO WIP
-                                        Nested loop, really need to be optimized as we build up the transactions, 
-                                        but let's get to work first and then we'll optimize.
+                                /* 
+                                    TODO WIP
+                                    Nested loop, really need to be optimized as we build up the transactions, 
+                                    but let's get to work first and then we'll optimize.
 
-                                        There can only be one pending transaction with the creation of iObject
-                                        so we bail out if we find it
-                                    */
+                                    There can only be one pending transaction with the creation of iObject
+                                    so we bail out if we find it
+                                */
 
-                                    //Loop on ObjectDescriptors with instances being updated
-                                    while ((iObjectDescriptor = updatedDataObjectDescriptorsIterator.next().value)) {
-                                        let updatedDataObjects = updatedDataObjectsByObjectDescriptor.get(iObjectDescriptor),
-                                            updatedDataObjectsIterator = updatedDataObjects.values(),
-                                            iObject;
+                                //Loop on ObjectDescriptors with instances being updated
+                                while ((iObjectDescriptor = updatedDataObjectDescriptorsIterator.next().value)) {
+                                    let updatedDataObjects = updatedDataObjectsByObjectDescriptor.get(iObjectDescriptor),
+                                        updatedDataObjectsIterator = updatedDataObjects.values(),
+                                        iObject;
 
-                                        while ((iObject = updatedDataObjectsIterator.next().value)) {
+                                    while ((iObject = updatedDataObjectsIterator.next().value)) {
 
-                                            for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
-                                                let iPendingTransaction = pendingTransactions[i];
+                                        for (let i = 0, countI = pendingTransactions.length; i < countI; i++) {
+                                            let iPendingTransaction = pendingTransactions[i];
 
-                                                if (iPendingTransaction.createdDataObjects.has(iObjectDescriptor)) {
-                                                    let createdDataObjects = iPendingTransaction.createdDataObjects.get(iObjectDescriptor);
+                                            if (iPendingTransaction.createdDataObjects.has(iObjectDescriptor)) {
+                                                let createdDataObjects = iPendingTransaction.createdDataObjects.get(iObjectDescriptor);
 
-                                                        if(createdDataObjects.has(iObject)) {
+                                                    if(createdDataObjects.has(iObject)) {
 
-                                                            if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
-                                                                firstPendingTransactionsCreatingChangedDataObjectsPromise = self.registeredPromiseForPendingTransaction(iPendingTransaction);
-                                                            } else {
-                                                                if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
-                                                                    pendingTransactionsCreatingChangedDataObjectsPromises = new Set();
-                                                                    pendingTransactionsCreatingChangedDataObjectsPromises.add(firstPendingTransactionsCreatingChangedDataObjectsPromise);
-                                                                }
-                                                                pendingTransactionsCreatingChangedDataObjectsPromises.add(self.registeredPromiseForPendingTransaction(iPendingTransaction));
+                                                        if(!firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                                            firstPendingTransactionsCreatingChangedDataObjectsPromise = self.registeredPromiseForPendingTransaction(iPendingTransaction);
+                                                        } else {
+                                                            if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                                                                pendingTransactionsCreatingChangedDataObjectsPromises = new Set();
+                                                                pendingTransactionsCreatingChangedDataObjectsPromises.add(firstPendingTransactionsCreatingChangedDataObjectsPromise);
                                                             }
-                                                            break;
+                                                            pendingTransactionsCreatingChangedDataObjectsPromises.add(self.registeredPromiseForPendingTransaction(iPendingTransaction));
                                                         }
+                                                        break;
+                                                    }
 
-                                                }
                                             }
                                         }
-
                                     }
 
-                                    if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
-                                        if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
-                                            return firstPendingTransactionsCreatingChangedDataObjectsPromise;
-                                        } else {
-                                            return Promise.resolveUndefined;
-                                        }
+                                }
+
+                                if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                                    if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                                        return firstPendingTransactionsCreatingChangedDataObjectsPromise;
                                     } else {
-                                        return Promise.all(Array.from(pendingTransactionsCreatingChangedDataObjectsPromises))
+                                        return Promise.resolveUndefined;
                                     }
                                 } else {
-                                    return Promise.resolveUndefined
+                                    return Promise.all(Array.from(pendingTransactionsCreatingChangedDataObjectsPromises))
                                 }
-                            })
-                            .then(function () {
-                                var operationCount =
-                                        createdDataObjects.size + changedDataObjects.size + deletedDataObjects.size,
-                                    currentPropagationPromise,
-                                    operationIndex = 0,
-                                    iterator,
-                                    propagationPromises = [];
+                            } else {
+                                return Promise.resolveUndefined
+                            }
+                        })
+                        //Dispatch TransactionEvent.transactionCreate
+                        .then(function () {
+                            var operationCount =
+                                    createdDataObjects.size + changedDataObjects.size + deletedDataObjects.size,
+                                currentPropagationPromise,
+                                operationIndex = 0,
+                                iterator,
+                                propagationPromises = [];
 
-                                /*
-                                    Now that we passed validation, and handling transaction dependencies, we're going to start the transaction
-                                */
+                            /*
+                                Now that we passed validation, and handling transaction dependencies, we're going to start the transaction
+                            */
 
-                                /*
-                                    Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
-                                    for "transactionPrepareStart"
-                                */
-                                //addEventListener(TransactionEvent.transactionCreateStart, self, false);
+                            /*
+                                Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
+                                for "transactionPrepareStart"
+                            */
+                            //addEventListener(TransactionEvent.transactionCreateStart, self, false);
 
-                                //console.log("saveChanges: dispatchEvent transactionCreateEvent transaction-"+this.identifier, transaction);
+                            //console.log("saveChanges: dispatchEvent transactionCreateEvent transaction-"+this.identifier, transaction);
 
-                                transactionCreateEvent = TransactionEvent.checkout();
+                            transactionCreateEvent = TransactionEvent.checkout();
 
-                                transactionCreateEvent.type = TransactionEvent.transactionCreate;
-                                transactionCreateEvent.transaction = transaction;
-                                TransactionDescriptor.dispatchEvent(transactionCreateEvent);
+                            transactionCreateEvent.type = TransactionEvent.transactionCreate;
+                            transactionCreateEvent.transaction = transaction;
+                            TransactionDescriptor.dispatchEvent(transactionCreateEvent);
 
-                                return transactionCreateEvent.propagationPromise || Promise.resolve();
-                            })
-                            .then(function () {
-                                return transaction.completionPromise;
-                            })
-                            .then(function () {
-                                /*
-                            Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
-                            for "transactionPrepareStart"
-                        */
-                                self.addEventListener(TransactionEvent.transactionPrepareStart, self, false);
+                            return transactionCreateEvent.propagationPromise || Promise.resolve();
+                        })
+                        //TransactionEvent.transactionCreate propagation completed
+                        .then(function () {
+                            return transaction.completionPromise;
+                        })
+                        //Dispatch TransactionEvent.transactionPrepare
+                        .then(function () {
+                            /*
+                                Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
+                                for "transactionPrepareStart"
+                            */
+                            self.addEventListener(TransactionEvent.transactionPrepareStart, self, false);
 
-                                /*
-                            Now dispatch transactionPrepare:
+                            /*
+                                Now dispatch transactionPrepare:
 
-                            Listened to by RawDataServices to know if they should be involved in dealing with transaction.
-                        */
-                                transactionPrepareEvent = TransactionEvent.checkout();
+                                Listened to by RawDataServices to know if they should be involved in dealing with transaction.
+                            */
+                            transactionPrepareEvent = TransactionEvent.checkout();
 
-                                transactionPrepareEvent.type = TransactionEvent.transactionPrepare;
-                                transactionPrepareEvent.transaction = transaction;
+                            transactionPrepareEvent.type = TransactionEvent.transactionPrepare;
+                            transactionPrepareEvent.transaction = transaction;
 
-                                //console.log("saveChanges: dispatchEvent transactionPrepareEvent transaction-"+this.identifier, transaction);
+                            //console.log("saveChanges: dispatchEvent transactionPrepareEvent transaction-"+this.identifier, transaction);
 
-                                TransactionDescriptor.dispatchEvent(transactionPrepareEvent);
+                            TransactionDescriptor.dispatchEvent(transactionPrepareEvent);
 
-                                return transactionPrepareEvent.propagationPromise || Promise.resolve();
-                            })
-                            .then(function () {
-                                /*
-                            Return the event to the pool
-                        */
-                                TransactionEvent.checkin(transactionPrepareEvent);
-                                return transaction.completionPromise;
-                            })
-                            .then(function () {
-                                /*
-                            Now all RawDataServices involved created the data operation they needed.
+                            return transactionPrepareEvent.propagationPromise || Promise.resolve();
+                        })
+                        //TransactionEvent.transactionPrepare propagation completed
+                        .then(function () {
+                            /*
+                        Return the event to the pool
+                    */
+                            TransactionEvent.checkin(transactionPrepareEvent);
+                            return transaction.completionPromise;
+                        })
+                        //Dispatch TransactionEvent.transactionCommit
+                        .then(function () {
+                            /*
+                                Now all RawDataServices involved created the data operation they needed.
 
-                            time to dispatch transactionCommit: Once that's done, we wait for completionPromise
+                                time to dispatch transactionCommit: Once that's done, we wait for completionPromise
+                            */
 
-                        */
+                            /*
+                                Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
+                                for "transactionPrepareStart"
+                            */
+                            self.addEventListener(TransactionEvent.transactionCommitStart, self, false);
 
-                                /*
-                            Make sure we listen on ourselve (as events from RawDataServices will bubble to main)
-                            for "transactionPrepareStart"
-                        */
-                                self.addEventListener(TransactionEvent.transactionCommitStart, self, false);
+                            transactionCommitEvent = TransactionEvent.checkout();
 
-                                transactionCommitEvent = TransactionEvent.checkout();
+                            transactionCommitEvent.type = TransactionEvent.transactionCommit;
+                            transactionCommitEvent.transaction = transaction;
 
-                                transactionCommitEvent.type = TransactionEvent.transactionCommit;
-                                transactionCommitEvent.transaction = transaction;
+                            //console.log("saveChanges: dispatchEvent transactionCommitEvent transaction-"+this.identifier, transaction);
 
-                                //console.log("saveChanges: dispatchEvent transactionCommitEvent transaction-"+this.identifier, transaction);
+                            TransactionDescriptor.dispatchEvent(transactionCommitEvent);
 
-                                TransactionDescriptor.dispatchEvent(transactionCommitEvent);
+                            return transactionCommitEvent.propagationPromise
+                                ? transactionCommitEvent.propagationPromise
+                                : Promise.resolve(true);
+                        })
+                        //TransactionEvent.transactionCommit propagation completed
+                        .then(function () {
+                            /*
+                                Now transactionCommit has been dispatched to all listeners.
 
-                                return transactionCommitEvent.propagationPromise
-                                    ? transactionCommitEvent.propagationPromise
-                                    : Promise.resolve(true);
-                            })
-                            .then(function () {
-                                /*
-                            Now transactionCommit has been dispatched to all listeners.
+                                transaction.participantCompletionPromises contains the final list of promises for when listeners will be done preaparing for the transation.
 
-                            transaction.participantCompletionPromises contains the final list of promises for when listeners will be done preaparing for the transation.
+                                We make a Promise.all() of it and wait to proceed or fail
+                            */
 
-                            We make a Promise.all() of it and wait to proceed or fail
-                        */
+                            /*
+                                Return the event to the pool
+                            */
+                            TransactionEvent.checkin(transactionCommitEvent);
 
-                                /*
-                            Return the event to the pool
-                        */
-                                TransactionEvent.checkin(transactionCommitEvent);
+                            return transaction.completionPromise;
+                        })
+                        .then(function () {
+                            /*
+                                If we're here, the transaction succeeded, all listeners successfully completed their work.
+                            */
+                            // dataOperationsByObject = transaction.dataOperationsByObject;
 
-                                return transaction.completionPromise;
-                            })
-                            .then(function () {
-                                /*
-                            If we're here, the transaction succeeded, all listeners successfully completed their work.
-                        */
-                                // dataOperationsByObject = transaction.dataOperationsByObject;
+                            // self.didCreateDataObjects(createdDataObjects, dataOperationsByObject);
+                            // self.didUpdateDataObjects(changedDataObjects, dataOperationsByObject);
+                            // self.didDeleteDataObjects(deletedDataObjects, dataOperationsByObject);
 
-                                // self.didCreateDataObjects(createdDataObjects, dataOperationsByObject);
-                                // self.didUpdateDataObjects(changedDataObjects, dataOperationsByObject);
-                                // self.didDeleteDataObjects(deletedDataObjects, dataOperationsByObject);
+                            /*
+                                We could also add an event to advertise teh result, but the transaction object already has everything.
+                            */
 
-                                /*
-                            We could also add an event to advertise teh result, but the transaction object already has everything.
-                        */
+                            //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
+                            self.removePendingTransaction(transaction);
+                            self.unregisterPendingTransactionPromise(transaction);
 
-                                //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-                                self.removePendingTransaction(transaction);
-                                self.unregisterPendingTransactionPromise(transaction);
+                            self.dispatchDidSaveForTransaction(transaction)
+                            .then(() => {
                                 resolve(transaction);
-                            })
-                            .catch(function (error) {
-                                /*
-                            TODO:...
-                            At least one listener (typically a RawDataService) failed to execute transactionCommit/Commit, we have to return to a stable state.... if possible and finish the process.
-
-                                                    /*
-                            At least one listener (typically a RawDataService) failed to prepare, we have to abort and return to a stable state....
-
-                            There was a problem executing transactionCreate, at least one RawDataService couldn't create a transaction. DB may not be reachable? Operation may have been refused for lack of authorization?
-
-                            We still need to tell everyone it's off.
-
-                        */
-                                //console.log("saveChanges: CANCEL transaction-"+this.identifier, error, transaction);
-
-                                /*
-                            If we're here, the transaction failed
-                        */
-                                return self._cancelTransaction(transaction, error, reject);
                             });
+                        })
+                        .catch(function (error) {
+                            /*
+                        TODO:...
+                        At least one listener (typically a RawDataService) failed to execute transactionCommit/Commit, we have to return to a stable state.... if possible and finish the process.
+
+                                                /*
+                        At least one listener (typically a RawDataService) failed to prepare, we have to abort and return to a stable state....
+
+                        There was a problem executing transactionCreate, at least one RawDataService couldn't create a transaction. DB may not be reachable? Operation may have been refused for lack of authorization?
+
+                        We still need to tell everyone it's off.
+
+                    */
+                            //console.log("saveChanges: CANCEL transaction-"+this.identifier, error, transaction);
+
+                            /*
+                        If we're here, the transaction failed
+                    */
+                            return self._cancelTransaction(transaction, error, reject);
+                        });
                     } catch (error) {
+                        console.error(error)
                         self._cancelTransaction(transaction, error, reject);
                     }
                 });
@@ -5668,6 +5732,12 @@ DataService.addClassProperties(
 
                 return pendingTransactionPromise;
 
+            }
+        },
+
+        dispatchDidSaveForTransaction: {
+            value: function(aTransaction) {
+                return this.dispatchSaveEventTypeForTransaction(DataEvent.didSave, aTransaction)
             }
         },
 
@@ -6196,7 +6266,7 @@ DataService.addClassProperties(
                         : !!value
                         ? value.toString()
                         : null
-                    : Array.isArray(value)
+                    : isArray(value)
                     ? value.map(this._criteriaParametersReplacer)
                     : value;
             },
