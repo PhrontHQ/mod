@@ -20,11 +20,13 @@
                 {"@": "templateInstances"},
                 {"@": "existenceTimeRange"},
                 {"@": "creationDate"},
-                {"@": "creatorIdentity"},
+                {"@": "creationIdentity"},
                 {"@": "modificationDate"},
-                {"@": "modderIdentity"},
+                {"@": "modificationIdentity"},
                 {"@": "publicationDate"},
-                {"@": "publisherIdentity"},
+                {"@": "publicationIdentity"},
+                {"@": "archivalDate"},
+                {"@": "archivalIdentity"},
                 {"@": "isReadOnly"}
             ],
             "objectDescriptorModule": {
@@ -47,7 +49,7 @@
         "values": {
             "name": "fullModuleId",
             "valueType": "string",
-            "description": "The moduleId of the object descriptor for that instance"
+            "description": "The moduleId of the instance descriptor for that instance"
         }
     },
 
@@ -68,7 +70,7 @@
             "valueType": "boolean",
             "defaultValue": false,
             "isSearchable": true,
-            "description": "If true, indicates that an instance is used by others as their type, which is the equivalent of the role of the prototype in JavaScript: an object one derived from"
+            "description": "If true, indicates that an instance is used by others as their type, which is the equivalent of the role of the prototype in JavaScript: an instance one derived from"
         }
     },
 
@@ -154,7 +156,7 @@
         "values": {
             "name": "template",
             "valueDescriptor": {"@": "root"},
-            "description": "The reference to another object of the same class that acts as a template, providing default values"
+            "description": "The reference to another instance of the same class that acts as a template, providing default values"
         }
     },
 
@@ -165,7 +167,7 @@
             "isLocalizable": true,
             "isUnique": true,
             "valueType": "string",
-            "description": "A name to be used when an object is created to be a template for others"
+            "description": "A name to be used when an instance is created to be a template for others"
         }
     },
 
@@ -187,7 +189,7 @@
             "cardinality": -1,
             "inversePropertyName": "template",
             "valueDescriptor": {"@": "root"},
-            "description": "All instances of that class that use this object as their template"
+            "description": "All instances of that class that use this instance as their template"
         }
     },
 
@@ -204,7 +206,7 @@
             "mandatory": true,
             "collectionValueType": "range",
             "valueDescriptor": {"@": "range_descriptor"},
-            "description": "Everything has a beginning and an end. This represnet the lifespan of the real-world object modeled. For a Person it would be that date of birth amd of death. The creationDate is when the digital object representing that person was created. Different"
+            "description": "Everything has a beginning and an end. This represnet the lifespan of the real-world instance modeled. For a Person it would be that date of birth amd of death. The creationDate is when the digital instance representing that person was created. Different"
         }
     },
 
@@ -217,7 +219,7 @@
             "name": "creationDate",
             "valueDescriptor": {"@": "DateDescriptor"},
             "mandatory": true,
-            "description": "The time a data object was created, from a programmatic stand point. We're missing the date the object is deleted / descactivated / decommisioned as we wouldn't delete it physically anymore. Which could also means removing from the main branch and move it to the 'void'/deleted branch"
+            "description": "The time a data instance was created, from a programmatic stand point. We're missing the date the instance is deleted / descactivated / decommisioned as we wouldn't delete it physically anymore. Which could also means removing from the main branch and move it to the 'void'/deleted branch"
         }
     },
 
@@ -225,10 +227,10 @@
         "object": "./app/user-identity.mjson"
     },
 
-    "creatorIdentity": {
+    "creationIdentity": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "creatorIdentity",
+            "name": "creationIdentity",
             "valueDescriptor": {"@": "UserIdentityDescriptor"},
             "description": "The identity of the user or agent who created the object"
         }
@@ -243,10 +245,10 @@
        }
     },
 
-    "modderIdentity": {
+    "modificationIdentity": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "modderIdentity",
+            "name": "modificationIdentity",
             "valueDescriptor": {"@": "UserIdentityDescriptor"},
             "description": "The identity of the last user or agent who modified the object"
         }
@@ -261,14 +263,32 @@
         }
     },
 
-    "publisherIdentity": {
+    "publicationIdentity": {
         "prototype": "core/meta/property-descriptor",
         "values": {
-            "name": "publisherIdentity",
+            "name": "publicationIdentity",
             "valueDescriptor": {"@": "UserIdentityDescriptor"},
             "description": "The identity of the last user or agent who published the object"
         }
     },
+
+   "archivalDate": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "archivalDate",
+            "valueDescriptor": {"@": "DateDescriptor"}
+        }
+    },
+
+    "archivalIdentity": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "archivalIdentity",
+            "valueDescriptor": {"@": "UserIdentityDescriptor"},
+            "description": "The identity of the last user or agent who archived the object"
+        }
+    },
+
 
     "isReadOnly": {
         "prototype": "core/meta/property-descriptor",

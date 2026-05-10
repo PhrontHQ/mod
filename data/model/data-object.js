@@ -119,50 +119,68 @@ exports.DataObject = class DataObject extends Target {
              */
             creationDate: { value: undefined },
 
-            // /**
-            //  * The identity of the user who created a data object.
-            //  * WOULD BE BETTER HANDLED AS PART OD HAVING A LOG THAT RECORDS OVER TIME
-            //  *
-            //  * @property {Identity}
-            //  * @default undefined
-            //  */
-            // creationIdentity: { value: undefined},
+            /**
+             * The identity of the user who created a data object.
+             * The log of values over time is provided by recorded data operations
+             *
+             * @property {Identity}
+             * @default undefined
+             */
+            creationIdentity: { value: undefined},
 
             /**
              * The last time a data object was modified
-             * WOULD BE BETTER HANDLED AS PART OD HAVING A LOG THAT RECORDS OVER TIME
+             * The log of values over time is provided by recorded data operations
              *
              * @property {Date}
              * @default undefined
              */
             modificationDate: { value: undefined },
 
-            // /**
-            //  * The identity of the user who last modified a data object. This would be better as
-            //  * WOULD BE BETTER HANDLED AS PART OF HAVING A LOG THAT RECORDS OVER TIME
-            //  *
-            //  * @property {Identity}
-            //  * @default undefined
-            //  */
-            // modderIdentity: { value: undefined},
+            /**
+             * The identity of the user who last modified a data object. This would be better as
+             * The log of values over time is provided by recorded data operations
+             *
+             * @property {Identity}
+             * @default undefined
+             */
+            modificationIdentity: { value: undefined},
 
             /**
              * The last time a data object was published, as in getting "live"
-             * WOULD BE BETTER HANDLED AS PART OD HAVING A LOG THAT RECORDS OVER TIME
+             * The log of values over time is provided by recorded data operations
              *
              * @property {Date}
              * @default undefined
              */
             publicationDate: { value: undefined },
 
-            // /**
-            //  * The identity of the user who last published a data object, as in getting getting "live"
-            //  * WOULD BE BETTER HANDLED AS PART OD HAVING A LOG THAT RECORDS OVER TIME
-            //  *
-            //  * @property {Date}
-            //  * @default undefined
-            //  */
-            // publisherIdentity: { value: undefined}
+            /**
+             * The identity of the user who last published a data object, as in getting getting "live"
+             * The log of values over time is provided by recorded data operations
+             *
+             * @property {Date}
+             * @default undefined
+             */
+            publicationIdentity: { value: undefined},
+
+            /**
+             * The last time a data object was archived, as in logically deleted but not removed from the persistence
+             * The log of values over time is provided by recorded data operations
+             *
+             * @property {Date}
+             * @default undefined
+             */
+            archivalDate: { value: undefined },
+
+            /**
+             * The identity of the user who last published a data object, as in getting getting "live"
+             * The log of values over time is provided by recorded data operations
+             *
+             * @property {Date}
+             * @default undefined
+             */
+            archivalIdentity: { value: undefined},
 
             /**
              * states wether a data object is allowed to change. This has implication to prevent changes
