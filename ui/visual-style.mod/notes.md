@@ -40,3 +40,79 @@ Option B - Choose a "baseline" control - create `controlButtonHeight` and let th
 - `controlErrorFill`
 
 Shadow, transparancy, opacity
+
+
+## Option to change variable names based on states (hover, selected. etc..)
+
+### 1. Changing Values with Pseudo-classes
+
+The most common way to handle states is using pseudo-classes like :hover, :focus, or :active. You define the variable in the base state and redefine it in the state-specific selector. 
+
+```
+.button {
+  /* 1. Define base variables */
+  --bg-color: #3498db;
+  --text-color: white;
+  --scale: 1;
+
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transform: scale(var(--scale));
+  transition: all 0.3s ease;
+}
+
+.button:hover {
+  /* 2. Simply override the variable values */
+  --bg-color: #2980b9;
+  --scale: 1.1;
+}
+
+.button:active {
+  --bg-color: #1a5276;
+  --scale: 0.95;
+}
+```
+
+
+### 2. Theming and Global States
+
+For larger state changes like "Dark Mode" or a specific "UI Theme," you can redefine variables at a higher level (like :root or a parent class). Because CSS custom properties cascade, all children using those variables will update instantly. 
+
+```
+:root {
+  --main-bg: #ffffff;
+  --main-text: #333333;
+}
+
+/* Change variables based on a body class (set via JavaScript) */
+body.dark-mode {
+  --main-bg: #1a1a1a;
+  --main-text: #f0f0f0;
+}
+
+/* Or based on system preferences */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --main-bg: #1a1a1a;
+    --main-text: #f0f0f0;
+  }
+}
+```
+
+### 3. Advanced: The "Space Toggle" Trick 
+
+You can even create "on/off" switches using custom properties. By setting a variable to either a space ( ) or initial, you can toggle multiple properties at once. 
+
+```
+.card {
+  /* If --is-active is a space, the first fallback is used. 
+     If it's 'initial', it becomes invalid and the second value is used. */
+  --is-active: initial; 
+  
+  background: var(--is-active, #2ecc71) var(--no-active, #e74c3c);
+}
+
+.card.active {
+  --is-active: ; /* setting it to an empty space */
+}
+```
