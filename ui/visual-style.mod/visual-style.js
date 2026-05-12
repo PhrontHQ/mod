@@ -56,7 +56,13 @@ var PROPERTIES = [
     {name: "controlBuffer", variable: "--visual-style-control-buffer", defaultValue: ".625em 1em"},
 
     {name: "controlLabelFill", variable: "--visual-style-control-label-fill", backup: "textFill"},
+    {name: "controlLabelBackgroundFill", variable: "--visual-style-control-label-background-fill", backup: "textBackgroundFill"},
     {name: "controlLabelSize", variable: "--visual-style-control-label-size", backup: "textSize"},
+
+    /* controlVisualFill is the fill of a visual, like an SVG icon, as part of a control. Like a list item shows a visual and a label for the data it renders */
+    {name: "controlVisualFill", variable: "--visual-style-control-visual-fill", backup: "visualFill"},
+    /* controlVisualBackgroundFill is the fill of the background behind a visual, like an SVG icon, as part of a control. Like a list item shows a visual and a label for the data it renders */
+    {name: "controlVisualBackgroundFill", variable: "--visual-style-control-visual-background-fill", backup: "visualBackgroundFill"},
 
     {name: "controlPlaceholderFill", variable: "--visual-style-control-placeholder-fill", backup: "textFill"},
 
@@ -84,9 +90,15 @@ var PROPERTIES = [
     {name: "controlHeight", variable: "--visual-style-control-height", defaultValue: "36px"},
 
     {name: "textFill", variable: "--visual-style-text-fill", defaultValue: "hsla(0, 0%, 0%, .7)"},
+    {name: "textBackgroundFill", variable: "--visual-style-text-background-fill", defaultValue: "hsla(0, 0%, 0%, 0)"},
     {name: "secondaryTextFill", variable: "--visual-style-secondary-text-fill", backup: "textFill"},
     {name: "tertiaryTextFill", variable: "--visual-style-tertiary-text-fill", backup: "secondaryTextFill"},
     {name: "quaternaryTextFill", variable: "--visual-style-text-quaternary-fill", backup: "tertiaryTextFill"},
+
+    /* visualFill is the fill of a visual, like an SVG icon */
+    {name: "visualFill", variable: "--visual-style-visual-fill",  backup: "textFill"},
+    /* visualBackgroundFill is the fill of the background behind a visual,such as an SVG icon */
+    {name: "visualBackgroundFill", variable: "--visual-style-visual-background-fill", backup: "textBackgroundFill"},
 
     {name: "errorTextFill", variable: "--visual-style-error-text-fill", backup: "textFill"},
 
