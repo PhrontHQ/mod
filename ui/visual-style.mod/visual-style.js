@@ -215,8 +215,14 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlBorderRadius");
         this._deserializeProperty(deserializer, "controlBorderWidth");
         this._deserializeProperty(deserializer, "controlBuffer");
+
         this._deserializeProperty(deserializer, "controlLabelFill");
+        this._deserializeProperty(deserializer, "controlLabelBackgroundFill");
         this._deserializeProperty(deserializer, "controlLabelSize");
+
+        this._deserializeProperty(deserializer, "controlVisualFill");
+        this._deserializeProperty(deserializer, "controlVisualBackgroundFill");
+
         this._deserializeProperty(deserializer, "controlPlaceholderFill");
         this._deserializeProperty(deserializer, "controlHoverFill");
         this._deserializeProperty(deserializer, "controlActiveFill");
@@ -224,10 +230,17 @@ exports.VisualStyle = class VisualStyle extends Montage {
         this._deserializeProperty(deserializer, "controlSelectionFill");
         this._deserializeProperty(deserializer, "controlSelectionBackgroundFill");
         this._deserializeProperty(deserializer, "controlHeight");
+
         this._deserializeProperty(deserializer, "textFill");
+        this._deserializeProperty(deserializer, "textBackgroundFill");
         this._deserializeProperty(deserializer, "secondaryTextFill");
         this._deserializeProperty(deserializer, "tertiaryTextFill");
         this._deserializeProperty(deserializer, "quaternaryTextFill");
+
+        this._deserializeProperty(deserializer, "visualFill");
+        this._deserializeProperty(deserializer, "visualBackgroundFill");
+
+
         this._deserializeProperty(deserializer, "errorTextFill");
         this._deserializeProperty(deserializer, "textSize");
         this._deserializeProperty(deserializer, "linkTextFill");
