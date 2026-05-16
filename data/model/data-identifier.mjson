@@ -28,7 +28,7 @@
         "object": "./data-identifier"
     },
     "DataServiceDescriptor": {
-        "object": "core/data/service/data-service.mjson"
+        "object": "data/service/data-service.mjson"
     },
     "dataService": {
         "prototype": "core/meta/property-descriptor",
@@ -48,7 +48,7 @@
             "name": "objectDescriptor",
             "valueType": "object",
             "cardinality": 1,
-            "valueDescriptor": {"@": "queryDescriptor"}
+            "valueDescriptor": {"@": "ObjectDescriptorDescriptor"}
        }
     },
     "primaryKey": {

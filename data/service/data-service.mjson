@@ -23,9 +23,6 @@
     "DataService": {
         "object": "./data-service"
     },
-    "DataServiceDescriptor": {
-        "object": "core/data/service/data-service.mjson"
-    },
     "mainService": {
         "prototype": "core/meta/property-descriptor",
         "values": {
