@@ -1,0 +1,38 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "DataService",
+            "propertyDescriptors": [
+                {"@": "mainService"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./data-service.mjson"
+            },
+            "exportName": "DataService",
+            "module": {
+                "%": "./data-service"
+            },
+            "object":{"@": "DataService"},
+            "parent":{"@": "TargetObjectDescriptor"}
+        }
+    },
+    "TargetObjectDescriptor": {
+        "object": "core/target.mjson"
+    },
+    "DataService": {
+        "object": "./data-service"
+    },
+    "DataServiceDescriptor": {
+        "object": "core/data/service/data-service.mjson"
+    },
+    "mainService": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "mainService",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "root"}
+       }
+    }
+}

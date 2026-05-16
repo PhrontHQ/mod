@@ -1,0 +1,78 @@
+{
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "DataIdentifier",
+            "propertyDescriptors": [
+                {"@": "dataService"},
+                {"@": "objectDescriptor"},
+                {"@": "primaryKey"},
+                {"@": "isPersistent"},
+                {"@": "url"}
+            ],
+            "objectDescriptorModule": {
+                "%": "./data-identifier.mjson"
+            },
+            "exportName": "DataIdentifier",
+            "module": {
+                "%": "./data-identifier"
+            },
+            "object":{"@": "DataIdentifier"},
+            "parent":{"@": "MontageObjectDescriptor"}
+        }
+    },
+    "MontageObjectDescriptor": {
+        "object": "core/montage.mjson"
+    },
+    "DataIdentifier": {
+        "object": "./data-identifier"
+    },
+    "DataServiceDescriptor": {
+        "object": "core/data/service/data-service.mjson"
+    },
+    "dataService": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "dataService",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "DataServiceDescriptor"}
+       }
+    },
+    "ObjectDescriptorDescriptor": {
+        "object": "core/meta/module-object-descriptor.mjson"
+    },
+    "objectDescriptor": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "objectDescriptor",
+            "valueType": "object",
+            "cardinality": 1,
+            "valueDescriptor": {"@": "queryDescriptor"}
+       }
+    },
+    "primaryKey": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "primaryKey",
+            "valueType": "object",
+            "cardinality": 1
+       }
+    },
+    "isPersistent": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "isPersistent",
+            "valueType": "boolean",
+            "cardinality": 1
+       }
+    },
+    "url": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "url",
+            "valueType": "URL",
+            "cardinality": 1
+       }
+    }
+}
