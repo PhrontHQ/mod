@@ -542,7 +542,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                         if(countJ == 0) {
                             if(iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)) {
-                                iFetchPromise.resolve(combinedFetchedValues);
+                                iFetchPromise.resolve(i === 0 ? combinedFetchedValues : combinedFetchedValues.slice());
                             } else {
                                 iFetchPromise.resolve(null);
                             }
