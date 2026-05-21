@@ -51,10 +51,15 @@
         vertical-align: middle;
         box-sizing: border-box;
         border-radius: 1em;
-        background-color: #eee;
+        background-color: var(--visual-style-control-secondary-fill);
         padding: 0px 12px;
         cursor: pointer;
         user-select: none;
+        display: flex;
+    }
+
+    .ModDatePropertyField-visual {
+        margin-right: 4px;
     }
 
     .ModDatePropertyField-chip--noValue::after {

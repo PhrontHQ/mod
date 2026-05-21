@@ -35,9 +35,17 @@
         },
 
         "chip": {
-            "prototype": "ui/text.mod",
+            "prototype": "ui/component",
             "values": {
                 "element": {"#": "chip"},
+                "hasTemplate": false
+            }
+        },
+
+        "chipText": {
+            "prototype": "ui/text.mod",
+            "values": {
+                "element": {"#": "chipText"},
                 "value": {"<-": "@owner.value"},
                 "converter": {"=": "@owner.dateFormatConverter"},
                 "classList.has('ModDatePropertyField-chip--noValue')": {"<-": "!@owner.value.defined()"}
@@ -50,7 +58,10 @@
     <div data-mod-id="owner" class="ModDatePropertyField">
         <div data-mod-id="propertyField">
             <div data-arg="control" class="ModDatePropertyField-control">
-                <div data-mod-id="chip" class="ModDatePropertyField-chip"></div>
+                <div data-mod-id="chip" class="ModDatePropertyField-chip">
+                    <div data-param="visual" class="ModDatePropertyField-visual"></div>
+                    <div data-mod-id="chipText" class="ModDatePropertyField-chipText"></div>
+                </div>
                 <div data-mod-id="input"></div>
             </div>
         </div>
