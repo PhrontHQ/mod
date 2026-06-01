@@ -58,6 +58,10 @@ exports.DataEvent = MutableEvent.specialize({
 
     detail: {
         value: undefined
+    },
+
+    tracksDispatchChain: {
+        value: true
     }
 
 
@@ -100,5 +104,6 @@ exports.DataEvent = MutableEvent.specialize({
     saveChangesProgress: {
         value: "saveChangesProgress"
     }
+
 
 });

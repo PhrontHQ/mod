@@ -1,10 +1,12 @@
 var RawValueToObjectConverter = require("./raw-value-to-object-converter").RawValueToObjectConverter,
     Criteria = require("../../core/criteria").Criteria,
+    DataOperation = require("../service/data-operation").DataOperation,
     DataQuery = require("../model/data-query").DataQuery,
     Map = require("../../core/collections/map").Map,
     syntaxProperties = require("../../core/frb/syntax-properties"),
     Uuid = require("core/uuid").Uuid,
     Promise = require("../../core/promise").Promise;
+
 /**
  * @class RawForeignValueToObjectConverter
  * @classdesc Converts a property value of raw data to the referenced object.
@@ -122,7 +124,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
     _fetchConvertedDataForObjectDescriptorCriteria: {
-        value: function(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged) {
+        value: function(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged, referrerOperation) {
             var self = this;
 
             return this.service ? this.service.then(function (service) {
@@ -207,6 +209,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         var query = DataQuery.withTypeAndCriteria(typeToFetch, criteria);
 
                         query.hints = {rawDataService: service};
+
+                        if (referrerOperation) {
+                            query.hints.referrerOperation = referrerOperation;
+                        }
 
                         if(registerMappedPropertiesAsChanged){
                             query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
@@ -351,12 +357,16 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         if(!queryParts) {
                             queryParts = {
                                 criteria: [],
-                                readExpressions: []/*,
+                                readExpressions: [],
+                                referrerOperations: []/*,
                                 hints: {}*/
                             };
                             self._pendingCriteriaByTypeToCombine.set(typeToFetch, queryParts);
                         }
                         queryParts.criteria.push(criteria);
+                        if (referrerOperation) {
+                            queryParts.referrerOperations.push(referrerOperation);
+                        }
 
                         /*
                             Sounds twisted, but this is to deal with the case where we need to fetch to resolve a property of the object itself.
@@ -493,6 +503,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
             if(registerMappedPropertiesAsChanged) {
                 query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
+            }
+
+            if(queryParts.referrerOperations) {
+                query.hints.referrerOperations = queryParts.referrerOperations;
             }
 
             //console.log("_combineFetchDataMicrotaskFunctionForTypeQueryParts query:",query);
@@ -695,9 +709,23 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         value: Uuid.noValue
     },
 
+    _findScopedDataOperation: {
+        value: function (scope) {
+            let operation;
+            while (scope.parent && !operation) {
+                if (scope.value instanceof DataOperation) {
+                    operation = scope.value;
+                }
+                scope = scope.parent;
+            }
+            return operation;
+        }
+    },
+
    _convert: {
         value: function (scope, service) {
-            var v = scope.value;
+            var v = scope.value,
+                referrerOperation = this._findScopedDataOperation(scope);
             if((v && !(v instanceof Array )) || (v instanceof Array && v.length > 0)) {
                 var self = this,
                     //We put it in a local variable so we have the right value in the closure
@@ -736,7 +764,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             aCriteria;
                         while (anObjectDescriptor = mapIterator.next().value) {
                             aCriteria = this.convertCriteriaForValue(groupMap.get(anObjectDescriptor));
-                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged));
+                            promises.push(this._fetchConvertedDataForObjectDescriptorCriteria(anObjectDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged, referrerOperation));
 
                         }
 
@@ -763,7 +791,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                             foreignKeyValue = v[rawDataProperty],
                             aCriteria = this.convertCriteriaForValue(foreignKeyValue);
 
-                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged);
+                            return this._fetchConvertedDataForObjectDescriptorCriteria(valueDescriptor, aCriteria, currentRule, registerMappedPropertiesAsChanged, referrerOperation);
 
                         } else {
                             return Promise.resolve(null);
@@ -783,7 +811,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                     return this._descriptorToFetch.then(function (typeToFetch) {
 
-                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
+                        return self._fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged, referrerOperation);
 
                         // if (self.serviceIdentifier) {
                         //     criteria.parameters.serviceIdentifier = self.serviceIdentifier;

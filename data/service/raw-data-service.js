@@ -3366,6 +3366,10 @@ RawDataService.addClassProperties({
 
     unregisterPendingDataOperation: {
         value: function (dataOperation) {
+            let registration = this._pendingDataOperationById.get(dataOperation.id);
+            if (registration) {
+                registration.completionPromiseResolve();
+            }
             this._pendingDataOperationById.delete(dataOperation.id);
             //Backup until bug fixed
             //DataService.mainService.unregisterDataStreamForDataOperation(dataOperation);
@@ -3374,7 +3378,12 @@ RawDataService.addClassProperties({
 
     unregisterDataOperationPendingReferrer: {
         value: function (dataOperation) {
+            let registration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            if (registration) {
+                registration.completionPromiseResolve();
+            }
             this._pendingDataOperationById.delete(dataOperation.referrerId);
+            
             //Backup until bug fixed
             //DataService.mainService.unregisterDataStreamForDataOperation(dataOperation);
         }

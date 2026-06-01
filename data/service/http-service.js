@@ -310,6 +310,8 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                             tokenDataQuery.identity = resolvedIdentity;
                             tokenQueryDataStream = this.mainService.fetchData(tokenDataQuery);
 
+                            tokenDataQuery.hints = {referrerOperation: readOperation};
+
                             return tokenQueryDataStream.then((result) => {
                                 if (result && result.length === 1) {
                                     let accessToken = result[0];

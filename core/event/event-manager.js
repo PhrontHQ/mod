@@ -3238,11 +3238,65 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+    _activeEventsByType: {
+        get: function () {
+            return this.__activeEventsByType || (this.__activeEventsByType = new Map());
+        }
+    },
+
+    _eventQueueByType: {
+        get: function () {
+            return this.__eventQueueByType || (this.__eventQueueByType = new Map());
+        }
+    },
+
+    handleEvent: {
+        enumerable: false,
+        value: function (event) {
+
+            if (this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event)) {
+                if (!this._eventQueueByType.has(event.type)) {
+                    this._eventQueueByType.set(event.type, []);
+                }
+                this._eventQueueByType.get(event.type).unshift(event);
+            } else if (!this._activeEventsByType.has(event.type)) {
+                this._activeEventsByType.set(event.type, new Set([event]));
+                this._handleEvent(event);
+            } else {
+                this._activeEventsByType.get(event.type).add(event);
+                this._handleEvent(event);
+            }
+        }
+    },
+
+    _hasActiveReferrer: {
+        value: function (event) {
+            let referrer;
+            if (event.referrer) {
+                return this._isActive(event.referrer);
+            } else if (event.referrers) {
+                let i, n, isActive;
+                for (i = 0, n = event.referrers.length; i < n && !isActive; ++i) {
+                    isActive = this._isActive(event.referrers[i]);
+                }
+                return isActive;
+            }
+            return false;
+        }
+    },
+
+    _isActive: {
+        value: function (event) {
+            let activeByType = this._activeEventsByType.get(event.type);
+            return !!activeByType && activeByType.has(event);
+        }
+    },
+
     /**
      @function
      @param {Event} event The handled event.
      */
-    handleEvent: {
+    _handleEvent: {
         enumerable: false,
         value: function EventManager_handleEvent(event) {
             // if(event.type === "pointerdown" || event.type === "pointerup" || event.type.indexOf("press") !== -1) {
@@ -3263,6 +3317,20 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 BUBBLING_PHASE = Event_BUBBLING_PHASE,
                 targetEntry, targetEntryForEventType,
                 promise;
+
+            if (event.tracksDispatchChain) {
+                if (this._previousEvent && this._previousEvent.dispatchChain && this._previousEvent.dispatchChain.length && event.dispatchChain) {
+                    // console.log(`[EventManager] Mark Event ${event.target.objectDescriptor.name}`);
+                    event.dispatchChain.push.apply(event.dispatchChain, this._previousEvent.dispatchChain);
+                    event.dispatchChain.push(this._previousEvent);
+                } else if (this._previousEvent && event.dispatchChain) {
+                    // console.log(`[EventManager] Push Previous Event ${event.target.objectDescriptor.name}`);
+                    event.dispatchChain.push(this._previousEvent);
+                } else {
+                    // console.log(`[EventManager] Record initial event ${event.target.objectDescriptor.name}`);
+                }
+                this._previousEvent = event;
+            }
 
             if(this.isBrowser) {
                 if(
@@ -3400,6 +3468,30 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 }
             }
 
+            //Handle next event
+            let type = mutableEvent.type,
+                next;
+            if (this._eventQueueByType.has(type) && this._eventQueueByType.get(type).length) {
+                next = this._eventQueueByType.get(type).pop();
+                this._activeEventsByType.get(type).delete(event);
+                this._activeEventsByType.get(type).add(next);
+                    this._handleEvent(next);
+            } else {
+                this._activeEventsByType.delete(type);
+                this._eventQueueByType.delete(type);
+            }
+
+            if (this._previousEvent === event || this._previousEvent === mutableEvent) {
+                this._previousEvent = event.dispatchChain[event.dispatchChain.length - 1];
+                let name = event.target.name || event.target.objectDescriptor.name,
+                    previousName;
+                if (this._previousEvent) {
+                    previousName = this._previousEvent.target.name || this._previousEvent.target.objectDescriptor.name;
+                    console.log(`[EventManager] Reset previous event ${event.identifier} ${name} ${event.type} to  ${this._previousEvent.identifier} ${previousName} ${this._previousEvent.type}`);
+                }  else {
+                    console.log(`[EventManager] Clear previous event ${event.identifier} ${name} ${event.type}`);
+                }
+            } 
 
         }
     },

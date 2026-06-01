@@ -655,6 +655,25 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
         value: undefined
     },
 
+
+
+    /************
+     * Design Discussion 6/9/2026
+     * 
+     * 'referrer' and 'referrers' are needed in distinct use cases. We should make this explicit in
+     * one of two ways. 
+     * 1. A class to encapsulate referrers e.g. OperationReferrer that can encapsulate 1 or 
+     *    more referrers. DataOperation.referrer would be an instance of this class
+     * 
+     * 2. Subclasses of DataOperation that separate the use cases. One subclass would have referrer. 
+     *    The other would have referrers. 
+     * Examples: 
+     *   - InitiatingReadOperation or RootReadOperation - A ReadOperation for a query sent from the app-level. No referrer property needed.
+     *   - MergedReadOperation or NestedReadOperation - A ReadOperation for multiple merged queries.  'referrers' property
+     *   - ReadCompletionOperation - A completion operation can only be associated to a single read. 'referrer' property
+     *   
+     */
+
     /**
      * An operation that preceded and this one is related to. For a ReadUpdated, it would be the Read operation.
      *
@@ -665,32 +684,55 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
     },
     referrer: {
         get: function() {
-            return this._referrer || (
-                this._referrer === null
-                    ? null
-                    : (this._referrer = this?.rawDataService?.referrerForDataOperation(this))
-            );
+            if (this._referrer || this._referrer === null) {
+                return this._referrer;
+            }
+
+            this._referrer = this?.rawDataService?.referrerForDataOperation(this);
+            if (this._referrer) {
+                this._referrer.referredOperations.push(this);
+            }
+            return this._referrer;
         },
         set: function(value) {
             if(value !== this._referrer) {
-                this.referreredOperations.delete(this._referrer);
+                if (this._referrer) {
+                    this._referrer.referredOperations.delete(this);
+                }
                 this._referrer = value;
-                this.referreredOperations.push(this._referrer);
+                if (this._referrer) {
+                    this._referrer.referredOperations.push(this);
+                }
             }
         }
     },
+
+    referrers: {
+        get: function () {
+            return this._referrers;
+        },
+        set: function (value) {
+            this._referrers = value;
+            if (Array.isArray(value)) {
+                value.forEach((referrer) => {
+                    referrer.referredOperations.push(this);
+                });
+            }
+        }
+    },
+    
 
     /**
      * inverse of referrer, an array of operations that has this as their referrer.
      *
      * @type {Array<DataOperation>}
      */
-    _referreredOperations: {
+    _referredOperations: {
         value: undefined
     },
-    referreredOperations: {
+    referredOperations: {
         get: function() {
-            return this._referreredOperations || (this._referreredOperations = []);
+            return this._referredOperations || (this._referredOperations = []);
         }
     },
 
@@ -1093,6 +1135,10 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             }
             return this._objectDescriptors;
         }
+    },
+
+    tracksDispatchChain: {
+        value: true
     }
 
 
