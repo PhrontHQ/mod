@@ -1,7 +1,8 @@
 const DataEvent = require("./data-event").DataEvent,
     Date = require("core/extras/date").Date,
     Montage = require("core/core").Montage,
-    Target = require("core/target").Target;
+    Target = require("core/target").Target,
+    application = require("core/application").application;
 
 /**
  * @class DataObject
@@ -25,6 +26,14 @@ exports.DataObject = class DataObject extends Target {
              * @default null
              */
             fullModuleId: { value: undefined },
+
+            // /**
+            //  * an instance's dataIdentifier
+            //  *
+            //  * @property {DataIdentifier}
+            //  * @default null
+            //  */
+            // dataIdentifier: { value: undefined },
 
             /**
              * Stores the latest known data snapshot from an origin service it was imported from.
@@ -298,6 +307,55 @@ exports.DataObject = class DataObject extends Target {
         }
     }
 
+    //     serializeSelf(serializer) {
+    //     if (super.deserializeSelf) {
+    //         super.deserializeSelf(deserializer);
+    //     }
+
+    //     // Can't use this unless we know that this.objectDescriptor is available to us
+    //     if (this.objectDescriptor) {
+    //         let objectDescriptor = this.objectDescriptor,
+    //             propertyDescriptors = objectDescriptor.propertyDescriptors,
+    //             ownPropertyNames = Object.keys(this);
+
+    //         for (let i=0, iPropertyDescriptor, iCount = ownPropertyNames.length; i < iCount; i++) {
+    //         //for (let iPropertyDescriptor of propertyDescriptors) {
+    //             if (((iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(ownPropertyNames[i])) !== null) && iPropertyDescriptor.isSerializable !== false && this[iPropertyDescriptor.name] !== undefined) {
+    //                 serializer.setProperty(iPropertyName, this[iPropertyName]);
+    //             }
+    //         }
+    //     } else {
+
+    //         if (this.originId) {
+    //             serializer.setProperty("originId", this.originId);
+    //         }
+    //         if (this.originDataSnapshot) {
+    //             serializer.setProperty("originDataSnapshot", this.originDataSnapshot);
+    //         }
+
+    //         if (this.isType !== undefined) {
+    //             serializer.setProperty("isType", this.isType);
+    //         }
+    //         if (this.isTemplate !== undefined) {
+    //             serializer.setProperty("isTemplate", this.isTemplate);
+    //         }
+
+    //         if (this.description) {
+    //             serializer.setProperty("description", this.description);
+    //         }
+    //         if (this.creationDate) {
+    //             serializer.setProperty("creationDate", this.creationDate);
+    //         }
+    //         if (this.modificationDate) {
+    //             serializer.setProperty("modificationDate", this.modificationDate);
+    //         }
+    //         if (this.publicationDate) {
+    //             serializer.setProperty("publicationDate", this.publicationDate);
+    //         }
+    //     }
+    // }
+
+
     clone() {
         return this;
     }
@@ -319,16 +377,53 @@ exports.DataObject = class DataObject extends Target {
      */
 
     static prepareToHandleDataEvents(event) {
-        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create, this, false);
+        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
+        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
     }
 
-    static handleCreate(event) {
-        // if(event.dataObject instanceof this) {
-        event.dataObject.creationDate = event.dataObject.modificationDate = new Date();
-        // }
+    /**
+     * Handles a DataEvent.create event. DataObject Class listens to itself so it's part of the composedPath of every subclass, 
+     * for which it needs to do the following
+     * 
+     * @listens DataEvent.create
+     * @param {DataEvent} event - The DataEvent event carrying a created data object.
+     * @returns {void}
+     */
+    static handleCreate(createEvent) {
+        createEvent.dataObject.creationDate = createEvent.dataObject.modificationDate = new Date();
+        createEvent.dataObject.creationIdentity = createEvent.identity;
     }
 
-    static handleUpdate(event) {
-        event.dataObject.modificationDate = new Date();
+
+    static handleWillSave(event) {
+        const objectDescriptor = event.target,
+            transaction = event.detail,
+            createdDataObjects = transaction.createdDataObjects.get(objectDescriptor),
+            updatedDataObjects = transaction.updatedDataObjects.get(objectDescriptor),
+            deletedDataObjects = transaction.deletedDataObjects.get(objectDescriptor),
+            nowDate = new Date(),
+            identity = transaction.identity;
+
+        if(createdDataObjects) {
+            for(let instance of createdDataObjects) {
+                instance.creationDate = instance.modificationDate = nowDate;
+                instance.creationIdentity = instance.modificationIdentity = identity;
+            }
+        }
+
+        if(updatedDataObjects) {
+            for(let instance of updatedDataObjects) {
+                instance.modificationDate = nowDate;
+                instance.modificationIdentity = identity;
+            }
+        }
+
+        if(deletedDataObjects) {
+            for(let instance of deletedDataObjects) {
+                instance.archivalDate = nowDate;
+                instance.archivalIdentity = identity;
+            }
+        }
+
     }
 };

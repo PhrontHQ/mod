@@ -71,7 +71,7 @@ AuthenticationPolicy.OnFirstFetchAuthenticationPolicy = AuthenticationPolicy.ON_
  * @class
  * @extends external:Montage
  */
-const DataService = (exports.DataService = class DataService extends Target {
+const DataService = exports.DataService = class DataService extends Target {
     /** @lends DataService */
     constructor() {
         super();
@@ -120,7 +120,7 @@ const DataService = (exports.DataService = class DataService extends Target {
             },
         });
     }
-});
+};
 
 // DataService = exports.DataService = Target.specialize(/** @lends DataService.prototype */ {
 
@@ -369,37 +369,12 @@ DataService.addClassProperties(
                             defaultEventManager.application.mainService =
                                 this;
                     }
-                } 
-
-                if (this.parentService === this.mainService) {
-                    ObjectDescriptor.addEventListener("prepareObjectDescriptor", this);
                 }
-                
 
                 if (this.authorizationPolicy === AuthorizationPolicyType.UpfrontAuthorizationPolicy) {
                     exports.DataService.authorizationManager.registerServiceWithUpfrontAuthorizationPolicy(this);
                 }
             },
-        },
-
-        handlePrepareObjectDescriptor: {
-            value: function (event) {
-                let objectDescriptor = event.detail,
-                    childServices, i, n;
-
-                if (this.handlesType(objectDescriptor)) {
-                    childServices = this.descendantServicesForType(objectDescriptor);
-                    if (Array.isArray(childServices)) {
-                        for (i = 0, n = childServices.length; i < n; i++) {
-                            objectDescriptor.registerHandlingService(childServices[i]);
-                        }
-                    } else if (childServices) {
-                        objectDescriptor.registerHandlingService(childServices);
-                    }
-                    
-                    objectDescriptor.registerHandlingService(this);
-                }
-            }
         },
 
         currentEnvironment: {
@@ -943,13 +918,7 @@ DataService.addClassProperties(
                 // });
 
                 if (typesPromises) {
-                    if (this._childServiceRegistrationPromise) {
-                        this._childServiceRegistrationPromise = this._childServiceRegistrationPromise.then(() => {
-                            return Promise.all(typesPromises);
-                        });
-                    } else {
-                        this._childServiceRegistrationPromise = Promise.all(typesPromises);
-                    }
+                    this._childServiceRegistrationPromise = Promise.all(typesPromises);
                 }
             },
         },
@@ -2344,13 +2313,8 @@ DataService.addClassProperties(
                 if (promise) {
                     return promise.then(function () {
                         var result = null;
-                        if (propertiesToRequest.length) {
-                            if(object[propertyName]) {
-                                result = self._getPropertiesOnPath(object[propertyName], propertiesToRequest);
-                            }
-                        } else {
-                            //We're at the end of propertiesToRequest:
-                            result = object[propertyName];
+                        if (propertiesToRequest.length && object[propertyName]) {
+                            result = self._getPropertiesOnPath(object[propertyName], propertiesToRequest);
                         }
                         return result;
                     });
@@ -3139,15 +3103,14 @@ DataService.addClassProperties(
             value: function (type) {
                 if (this.isRootService) {
                     var service = this.childServiceForType(type),
-                        descriptor = this.objectDescriptorForType(type),
                         //Gives a chance to raw data service to provide a primary key for clien-side creation/
                         //Especially useful for systems that use uuid as primary keys.
                         //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
                         object = this._createDataObject(
                             type,
-                            service.dataIdentifierForNewObjectWithObjectDescriptor(descriptor)
+                            service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
-                    
+
                     this.registerCreatedDataObject(object);
 
                     return object;
@@ -3269,9 +3232,6 @@ DataService.addClassProperties(
                 // constructor = this._getPrototypeForType(objectDescriptor).constructor,
                 // object = new constructor;
                 // //object = Reflect.construct(constructor, this._emptyArray);
-
-                ObjectDescriptor.prepareToDispatchDataOperation(objectDescriptor);
-
 
                 if (object) {
                     delegateDataIdentifier =
@@ -3744,13 +3704,6 @@ DataService.addClassProperties(
                 let objectDescriptor = this.objectDescriptorForObject(dataObject);
                 let childServicesForType = this.childServicesForType(objectDescriptor);
 
-                /*
-                    FIXME: When DataWorker attempts to mergeDataObject for the WebSocketSession, it fails here as this.handlesType(objectDescriptor) is false
-                    so !this.handlesType(objectDescriptor) is true and it just bails out in that if.
-
-                    And saveChanges does nothing since merge has not happened....
-
-                */
                 if (
                     !objectDescriptor ||
                     (objectDescriptor &&
@@ -3976,9 +3929,9 @@ DataService.addClassProperties(
                     value;
 
                 if (this.isObjectCreated(dataObject)) {
-                    // console.warn(
-                    //     `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
-                    // );
+                    console.warn(
+                        `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
+                    );
                     return;
                 }
 
@@ -4141,7 +4094,6 @@ DataService.addClassProperties(
                         return;
                     } else {
                         addedValueAsObjectsBeingMapped = true;
-                        //If propertyDescriptor.cardinality > 1, and it's a set the array is the value and we're now checking for that
                         this._objectsBeingMapped.add(value);
                     }
                 }
@@ -4250,8 +4202,7 @@ DataService.addClassProperties(
                         dataObject,
                         propertyDescriptor,
                         value,
-                        inversePropertyDescriptor,
-                        addedValueAsObjectsBeingMapped
+                        inversePropertyDescriptor
                     );
 
                     if (previousValue) {
@@ -4259,8 +4210,7 @@ DataService.addClassProperties(
                             dataObject,
                             propertyDescriptor,
                             previousValue,
-                            inversePropertyDescriptor,
-                            addedValueAsObjectsBeingMapped
+                            inversePropertyDescriptor
                         );
                     }
                     // for(var i=0, countI = value.length, iValue; (i<countI); i++) {
@@ -4538,14 +4488,25 @@ DataService.addClassProperties(
                     propertyDescriptor = objectDescriptor.propertyDescriptorForName(key),
                     isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject);
 
+                // if(key === "jobRoles") {
+                //     console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + " " +this.identifier+" registerDataObjectChangesFromEvent for primary key "+dataObject.dataIdentifier.primaryKey+ ", "+key);
+                // }
+
                 //Property with definitions are read-only shortcuts, we don't want to treat these as changes the raw layers will want to know about
                 if (propertyDescriptor.definition) {
                     return;
                 }
 
                 if (!isDataObjectBeingMapped && this.autosaves /* && !this.isAutosaveScheduled*/) {
+
+                    // if(key === "jobRoles") {
+                    //    console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + " debouncedQueueMicrotaskWithDelay: " +this.identifier+" registerDataObjectChangesFromEvent for primary key "+dataObject.dataIdentifier.primaryKey+ ", "+key);
+                    // }
+
                     //this.isAutosaveScheduled = true;
                     this.debouncedQueueMicrotaskWithDelay(() => {
+                        //console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + " debounced saveChanges: " +this.identifier+" registerDataObjectChangesFromEvent for primary key "+dataObject.dataIdentifier.primaryKey+ ", "+key);
+
                         this.isAutosaveScheduled = false;
                         this.saveChanges();
                     });
@@ -4622,35 +4583,11 @@ DataService.addClassProperties(
                     keyValue = changeEvent.keyValue,
                     addedValues = changeEvent.addedValues,
                     removedValues = changeEvent.removedValues,
-                    /*
-                        We check first if dataObject i being mapped.
-                        But if dataObject is actually the value initially fetched
-                        and this is the system updating the grap, the inverse property
-                        then the value side would be what was flagged as being mapped.
-
-                        In either case, it tells us we're in the context of fetching and those
-                        are not changes that need to be considered for saving
-                    */
-                    isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject) || (
-                        this._objectsBeingMapped.has(keyValue)
-                            ? true
-                            : addedValues?.length
-                                ? this._objectsBeingMapped.has(addedValues[0])
-                                : removedValues?.length
-                                    ? this._objectsBeingMapped.has(removedValues[0])
-                                    : false
-                    ),
+                    isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject),
                     changesForDataObject = transaction ? transaction.changesForDataObject(dataObject): this.changesForDataObject(dataObject),
-                    _shouldTrackChangesWhileBeingMapped = transaction ? true : shouldTrackChangesWhileBeingMapped,
-                    registersDataObjectChanges = (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
                     self = this;
-
-                
-                if(transaction) {
-                    shouldTrackChangesWhileBeingMapped = true;
-                }
 
                 /*
                 Benoit refactoring saveChanges: shouldn't we be able to know that if there are no changesForDataObject, as we create on, it would ve the only time we'd have to call:
@@ -4664,12 +4601,7 @@ DataService.addClassProperties(
                 //     debugger;
                 // }
 
-                if (registersDataObjectChanges) {
-
-                    if(!changesForDataObject) {
-                        changesForDataObject = (transaction ? transaction._buildChangesForDataObject(dataObject) : this._buildChangesForDataObject(dataObject));
-                    }
-
+                if (!isCreatedObject && (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped)) {
                     //this.changedDataObjects.add(dataObject);
                     changeEvent.transaction 
                         ? this.registerChangedDataObject(dataObject, changesForDataObject, transaction.objectDescriptors)
@@ -4718,8 +4650,10 @@ DataService.addClassProperties(
                     key !== "length" &&
                     /* new for blocking re-entrant */ changesForDataObject?.get(key) !== keyValue
                 ) {
-                    //If an object is created, it already has the values on itself, no need to do anything
-                    if (registersDataObjectChanges) {
+                    if (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped) {
+                        if(!changesForDataObject) {
+                            changesForDataObject = (transaction ? transaction._buildChangesForDataObject(dataObject) : this._buildChangesForDataObject(dataObject));
+                        }
                         changesForDataObject.set(key, keyValue);
                     }
 
@@ -5399,7 +5333,6 @@ DataService.addClassProperties(
         isAutosaveScheduled: {
             value: false,
         },
-
         saveChanges: {
             value: function () {
                 return this.saveChangesWithIdentity(this.application.identity);
@@ -5430,7 +5363,7 @@ DataService.addClassProperties(
                         return Promise.resolve(noOpOperation);
                     }
                 } else {
-                    if(this._pendingTransactions?.length > 1) {
+                    if(this._pendingTransactions?.length > 0) {
                         console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + ">>>>>>>>> saveChangesWithIdentity called:  #WARNING WITH _pendingTransactions!  !!!!");
                     }
                 }
@@ -5442,10 +5375,10 @@ DataService.addClassProperties(
                     createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
                     changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
                     deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
-                    dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)); //Map
-                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
-                    //     this.objectDescriptorsWithChanges
-                    // ));
+                    dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)), //Map
+                    objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
+                        this.objectDescriptorsWithChanges
+                    ));
 
                 /*
                     Properly set the transaction's identity property.
@@ -5455,8 +5388,6 @@ DataService.addClassProperties(
                 */
                 transaction.identity = identity;
 
-
-                ObjectDescriptor.prepareToDispatchDataOperation(TransactionDescriptor);
 
                 //console.log("saveChanges: transaction-"+this.identifier, transaction);
                 console.log(
@@ -5471,31 +5402,19 @@ DataService.addClassProperties(
                 // move to _saveChangesForTransaction()
                 //this.addPendingTransaction(transaction);
 
-                //We've made copies, so we clear right away to make room for a new cycle:
+                // //We've made copies, so we clear right away to make room for a new cycle:
                 this.discardChanges();
-                // this.createdDataObjects.clear();
-                // this.changedDataObjects.clear();
-                // this.deletedDataObjects.clear();
-                // this.dataObjectChanges.clear();
-                // this.objectDescriptorsWithChanges.clear();
+                console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + ">>>>>>>>> saveChangesWithIdentity:  #WARNING used to discardChanges() !!!!");
+
 
                 if(this.pendingTransactionPromise) {
-                        console.debug("!!!!!!!!!!!!!! Pending transaction holding transaction "+transaction.identifier);
-                        this.pendingTransactionPromise = this.pendingTransactionPromise.then(() => {
-                        console.debug("+++++++++++++++ Pending transaction holding transaction "+transaction.identifier+ " NO MORE!!!");
-                        
-                        let currentPendingTransactionPromise = this._saveChangesForTransaction(transaction);
-                        return currentPendingTransactionPromise
-                        .finally(() => {
-                            if( this.pendingTransactionPromise === currentPendingTransactionPromise) {
-                                this.pendingTransactionPromise = null;
-                            }
-                        });
+                    return this.pendingTransactionPromise.then(() => {
+                        this.pendingTransactionPromise = this._saveChangesForTransaction(transaction);
+                        return this.pendingTransactionPromise;
                     })
                 } else {
-                    console.debug("NO pending transaction holding transaction "+transaction.identifier);
-                    this.pendingTransactionPromise = this._saveChangesForTransaction(transaction);
-                    return this.pendingTransactionPromise;
+                        this.pendingTransactionPromise = this._saveChangesForTransaction(transaction);
+                        return this.pendingTransactionPromise;
                 }
             },
         },
@@ -5554,11 +5473,12 @@ DataService.addClassProperties(
         _saveChangesForTransaction: {
             value: function(transaction) {
                 let self = this;
-                
+
+                console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + ">>>>>>>>> _saveChangesForTransaction "+ transaction.identifier);
+
+                this.addPendingTransaction(transaction);
 
                 let pendingTransactionPromise = new Promise(function (resolve, reject) {
-                    self.addPendingTransaction(transaction);
-
                     try {
                         var deletedDataObjectsIterator,
                             operation,
@@ -5588,12 +5508,16 @@ DataService.addClassProperties(
                             operation.type = DataOperation.Type.NoOp;
                             // console.log("saveChanges: transaction-"+this.identifier+" <- NoOp", transaction);
                             resolve(operation);
-                            self.removePendingTransaction(transaction);
                         }
 
                         self.dispatchWillSaveForTransaction(transaction)
                         //Validate:
                         .then(() => {
+
+                            // //We've given a last chance to make changes, time to make room for a new cycle:
+                            // console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + ">>>>>>>>> saveChangesWithIdentity:  #WARNING NEW discardChanges() !!!!");
+                            // self.discardChanges();
+
                             /**
                              * TODO: Refactor validation into operation-specific events.
                              * A single validation action is inefficient. We should split it by operation
@@ -5641,9 +5565,7 @@ DataService.addClassProperties(
                                 validateFailedOperation.data = aggregatedValidationErrors;
 
                                 // Stop the transaction and resolve with the failure operation
-                                self.removePendingTransaction(transaction);
                                 resolve(validateFailedOperation);
-                                // self.pendingTransactionPromise = null;
 
                                 // TODO: @benoit should we not stop/reject the inner promise ?
                                 return null;
@@ -5850,14 +5772,12 @@ DataService.addClassProperties(
                             */
 
                             //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-                            // self.removePendingTransaction(transaction);
+                            self.removePendingTransaction(transaction);
                             self.unregisterPendingTransactionPromise(transaction);
 
                             self.dispatchDidSaveForTransaction(transaction)
                             .then(() => {
-                                self.removePendingTransaction(transaction);
                                 resolve(transaction);
-                                // self.pendingTransactionPromise = null;
                             });
                         })
                         .catch(function (error) {
@@ -5972,20 +5892,15 @@ DataService.addClassProperties(
                 transactionRollbackEvent.transaction = transaction;
                 TransactionDescriptor.dispatchEvent(transactionRollbackEvent);
 
-                const self = this;
                 return (transactionRollbackEvent.propagationPromise || Promise.resolve())
                     .then(function () {
                         TransactionEvent.checkin(transactionRollbackEvent);
                         return transaction.completionPromise;
                     })
                     .then(function () {
-                        // self.pendingTransactionPromise = null;
-                        self.removePendingTransaction(transaction);
                         rejectFunction(cancelError);
                     })
                     .catch(function (error) {
-                        // self.pendingTransactionPromise = null;
-                        self.removePendingTransaction(transaction);
                         rejectFunction(error);
                     })
                     .finally(() => {
@@ -6649,13 +6564,6 @@ DataService.addClassProperties(
                 // make sure type is an object descriptor or a data object descriptor.
                 query.type = this.objectDescriptorForType(query.type);
 
-                // if (query.type.name === "EmploymentPosition" || query.type.name === "EmploymentPositionStaffing" || query.type.name === "Organization") {
-                //     let referred = query.hints.referrerOperations ? query.hints.referrerOperations.map(function (operation) {
-                //         return operation.id
-                //     }).join(",") : query.hints.referrerOperation ? query.hints.referrerOperation.id : "";
-                //     console.log("DataService.fetchData", query.type.name, referred);
-                // }
-
                 if (this.supportsDataOperation) {
                     //Check if we already have a DataStream pending for that same query:
                     if ((stream = this.registeredDataStreamMapForDataQuery(query))) {
@@ -6722,10 +6630,6 @@ DataService.addClassProperties(
                             //     stream.dataError(e);
                             // }
 
-                            ObjectDescriptor.prepareToDispatchDataOperation(query.type);
-
-
-
                             try {
                                 var readOperation = new DataOperation();
 
@@ -6764,7 +6668,6 @@ DataService.addClassProperties(
                                     //readOperation.criteria = criteria.clone();
                                     readOperation.criteria = query.criteria;
                                 }
-
                                 if (query.sizeLimit) {
                                     readOperation.data.sizeLimit = query.sizeLimit;
                                 }
@@ -6795,14 +6698,7 @@ DataService.addClassProperties(
 
                                 if (query.hints) {
                                     readOperation.hints = query.hints;
-                                    if (query.hints.referrerOperation) {
-                                        readOperation.referrer = query.hints.referrerOperation;
-                                    }
-                                    if (query.hints.referrerOperations) {
-                                        readOperation.referrers = query.hints.referrerOperations;
-                                    }
                                 }
-                                
 
                                 /*
                         this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
@@ -7410,7 +7306,6 @@ DataService.addClassProperties(
                 - The snapshot may not help us since it could be a property resolved off the primary key
                     if(trigger._getValueStatus(object) == )
 
-
             */
                 //Commentting out the restriction to exclude created objects as we might want to
                 //use it for them as well
@@ -7418,30 +7313,10 @@ DataService.addClassProperties(
                 // if(!this._createdDataObjects || (this._createdDataObjects && !this._createdDataObjects.has(changeEvent.target))) {
                 //Needs to register the change so saving changes / update operations can use it later to decise what to send
                 //console.log("handleChange:",changeEvent);
-                // if (changeEvent.dispatchChain.length > 0) {
-                    // this._logEventChain(changeEvent);
-                // }
                 this.registerDataObjectChangesFromEvent(changeEvent);
                 //}
             },
         },
-
-        // _logEventChain: {
-        //     value: function (changeEvent) {
-        //         let name = changeEvent.target.name || changeEvent.target.objectDescriptor.name,
-        //         message = [
-        //             `Change Event Tracking`,
-        //             `${changeEvent.identifier}  ${name} ${changeEvent.type} --> `
-        //         ];
-
-        //         changeEvent.dispatchChain.forEach((event) => {
-        //             message.push(`${event.identifier} ${event.target.name || event.target.objectDescriptor.name} ${event.type} --> `);
-        //         });
-
-        //         console.log(message.join("\n"));
-
-        //     }
-        // },  
 
         /***************************************************************************
          * Saving Data
