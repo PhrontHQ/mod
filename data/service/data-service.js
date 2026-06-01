@@ -3130,6 +3130,10 @@ DataService.addClassProperties(
                         dataEvent.setComposedPath(composedPath);
                     }
 
+                    if (!this.isConstructorPreparedToHandleDataEvents(objectConstructor)) {
+                        this.prepareConstructorToHandleDataEvents(objectConstructor, dataEvent);
+                    }
+
                     this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
 
                     this.dispatchDataEvent(dataEvent);
@@ -4704,6 +4708,7 @@ DataService.addClassProperties(
                     keyValue = changeEvent.keyValue,
                     addedValues = changeEvent.addedValues,
                     removedValues = changeEvent.removedValues,
+
                     /*
                         We check first if dataObject i being mapped.
                         But if dataObject is actually the value initially fetched
@@ -5496,29 +5501,27 @@ DataService.addClassProperties(
                     promises;
 
                 for (const iObjectDescriptor of transactionObjectDescriptors) {
+                    let iComposedPath = iObjectDescriptor.composedPath;
+
                     /*
-                        this.createdDataObjects.clear();
-                        this.changedDataObjects.clear();
-                        this.deletedDataObjects.clear();
-                        this.dataObjectChanges.clear();
+                        We need to make aTransaction part of the composedPath.
                     */
-                    let dataEvent = this._dataEventForType(eventType);
+                    iComposedPath = iComposedPath.slice();
+                    iComposedPath.splice(iComposedPath.indexOf(this), 0, aTransaction, this);
 
-                    dataEvent.target = iObjectDescriptor;
-                    dataEvent.dataService = this;
-                    dataEvent.identity = identity;
-                    dataEvent.createdDataObjects = this.createdDataObjects.get(iObjectDescriptor);
-                    dataEvent.changedDataObjects = this.changedDataObjects.get(iObjectDescriptor);
-                    dataEvent.deletedDataObjects = this.deletedDataObjects.get(iObjectDescriptor);
-
-                    let iPromise = this.dispatchDataEvent(dataEvent);
+                    let iPromise = this.dispatchDataEventTypeForObject(
+                            eventType,
+                            iObjectDescriptor,
+                            aTransaction,
+                            iComposedPath
+                        );
                     
                     if(iPromise) {
                         if(!promises) {
                             if(!uniquePromise) {
                                 uniquePromise = iPromise;
                             } else {
-                                promises = [uniquePromise, iPromise];
+                                promises = [uniqusePromise, iPromise];
                                 uniquePromise = null; //not really needed
                             }
                         } else {
