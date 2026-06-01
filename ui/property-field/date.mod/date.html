@@ -30,7 +30,8 @@
                 "value": {"<->": "@owner.value"},
                 "min": {"<-": "@owner.min.defined() ? @owner.dateToDateInputStringConverter.convert(@owner.min) : null"},
                 "max": {"<-": "@owner.max.defined() ? @owner.dateToDateInputStringConverter.convert(@owner.max) : null"},
-                "step": {"<-": "@owner.step"}
+                "step": {"<-": "@owner.step"},
+                "readonly": {"<-": "@owner.readonly"}
             }
         },
 
@@ -38,7 +39,8 @@
             "prototype": "ui/component",
             "values": {
                 "element": {"#": "chip"},
-                "hasTemplate": false
+                "hasTemplate": false,
+                "classList.has('ModDatePropertyField-chip--readonly')": {"<-": "@owner.readonly"}
             }
         },
 

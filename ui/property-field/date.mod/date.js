@@ -21,6 +21,7 @@ exports.Date = Component.specialize(/** @lends Date.prototype */{
                     self._isEditMode = true;
                 }
             });
+            this.addOwnPropertyChangeListener("readonly", this);
         }
     },
 
@@ -54,10 +55,30 @@ exports.Date = Component.specialize(/** @lends Date.prototype */{
         }
     },
 
+    _disablePressComposer: {
+        value: function () {
+            if (this._isPressComposerEnabled) {
+                this._isPressComposerEnabled = false;
+                this._chip.removeComposer(this._pressComposer);
+            }
+        }
+    },
+
+    _enablePressComposer: {
+        value: function () {
+            if (!this._isPressComposerEnabled && this._chip) {
+                this._isPressComposerEnabled = true;
+                this._chip.addComposer(this._pressComposer);
+            }
+        }
+    },
+
     prepareForActivationEvents: {
         value: function () {
             this._input.element.addEventListener("blur", this);
-            this._chip.addComposer(this._pressComposer);
+            if (!this.readonly) {
+                this._enablePressComposer();
+            }
         }
     },
 
@@ -73,6 +94,16 @@ exports.Date = Component.specialize(/** @lends Date.prototype */{
             this._isEditMode = true;
             this._input.element.focus();
             console.log(this._input.element);
+        }
+    },
+
+    handleReadonlyChange: {
+        value: function (value) {
+            if (value) {
+                this._enablePressComposer();
+            } else {
+                this._disablePressComposer();
+            }
         }
     },
 

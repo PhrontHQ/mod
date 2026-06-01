@@ -29,6 +29,7 @@
     input[type="date"]::-webkit-datetime-edit-day-field,
     input[type="date"]::-webkit-datetime-edit-text {
         color: transparent /* Change the color of the date parts and separators */
+
     }
 
     input[type="date"] {
@@ -56,6 +57,11 @@
         cursor: pointer;
         user-select: none;
         display: flex;
+
+        &.ModDatePropertyField-chip--readonly {
+            cursor: default;
+        }
+
     }
 
     .ModDatePropertyField-visual {
