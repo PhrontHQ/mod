@@ -536,7 +536,7 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                 
             this.mainService.mergeDataObject(webSocketSession);
 
-            return this.mainService.saveChanges()
+            return this.mainService.saveChangesWithIdentity(identity)
             .then((result) => {
                 return webSocketSession;
             })
