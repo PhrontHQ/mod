@@ -340,6 +340,8 @@ exports.DataTrigger.prototype = Object.create(
                 // Ensure to-Many properties are initialized to their collection type.
                 if ((this.isToMany || this.propertyDescriptor.collectionValueType !== undefined)) {
                     this._ensureCollectionValue(object, _initialValue);
+                } else if (this.propertyDescriptor.isMandatory  && this.propertyDescriptor.ownsValue) {
+                    this._ensureMandatoryValue(object, _initialValue);
                 }
                 // Return the property's current value.
                 return this._valueGetter ? this._valueGetter.call(object) : object[this._privatePropertyName];
@@ -425,6 +427,34 @@ exports.DataTrigger.prototype = Object.create(
                     this._setValue(object, /*value*/initValue, /*_dispatchChange*/(_initialValue && ((_initialValue.length === undefined ? _initialValue.size :_initialValue.length) > 0)) ? true : false, /*_initialValue*/undefined, /*_currentValue*/undefined);
                 }
             },
+        },
+
+        _ensureMandatoryValue: {
+            value: function (object, _initialValue) {
+                if (
+                    // Case 1: collection is not set at all
+                    object[this._privatePropertyName] === undefined ||
+                    // Case 2: collection is mandatory but null
+                    (this.propertyDescriptor.isMandatory === true && object[this._privatePropertyName] === null && this.propertyDescriptor.ownsValue && this.propertyDescriptor._valueDescriptorReference)
+                ) {
+                    let valueDescriptor = this.propertyDescriptor._valueDescriptorReference,
+                    initValue;
+
+                    if (_initialValue) {
+                        if (_initialValue.objectDescriptor === valueDescriptor) {
+                            initValue = _initialValue;
+                        }
+                        // throw "Could not create initial value of class "+valueClass.toString() + "from incompatible initial value: ", _initialValue;
+                                // initValue = new valueClass();
+                    } 
+
+                    if (!initValue) {
+                        initValue = this.service.createDataObject(valueDescriptor);
+                    }
+
+                    this._setValue(object, initValue, false, undefined, undefined);
+                }
+            }
         },
 
         __valueSetter: {

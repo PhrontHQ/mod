@@ -38,6 +38,7 @@ exports.DeleteRule = DeleteRule = new Enum().initWithMembersAndValues(["NULLIFY"
 var Defaults = {
     name: "default",
     cardinality: 1,
+    cardinalityRange: null,
     isMandatory: false,
     readOnly: false,
     denyDelete: false,
@@ -60,6 +61,7 @@ var Defaults = {
     isOneWayEncrypted: false,
     isSerializable: true,
     hasUniqueValues: true,
+    ownsValue: false
 };
 
 
@@ -144,6 +146,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             } else {
                 this._setPropertyWithDefaults(serializer, "cardinality", this.cardinality);
             }
+            this._setPropertyWithDefaults(serializer, "cardinalityRange", this.cardinalityRange);
             this._setPropertyWithDefaults(serializer, "isMandatory", this.isMandatory);
             this._setPropertyWithDefaults(serializer, "readOnly", this.readOnly);
             //Not needed anymore as it's now this.deleteRule === DeleteRule.DENY
@@ -181,6 +184,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._setPropertyWithDefaults(serializer, "isUnique", this.isUnique);
             this._setPropertyWithDefaults(serializer, "isOneWayEncrypted", this.isOneWayEncrypted);
             this._setPropertyWithDefaults(serializer, "hasUniqueValues", this.hasUniqueValues);
+            this._setPropertyWithDefaults(serializer, "ownsValue", this.ownsValue);
             this._setPropertyWithDefaults(serializer, "description", this.description);
 
         }
@@ -203,6 +207,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             if (this.cardinality === -1) {
                 this.cardinality = Infinity;
             }
+            this._overridePropertyWithDefaults(deserializer, "cardinalityRange");
 
             this._overridePropertyWithDefaults(deserializer, "isMandatory", "mandatory");
             this._overridePropertyWithDefaults(deserializer, "readOnly");
@@ -256,6 +261,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._overridePropertyWithDefaults(deserializer, "isOneWayEncrypted");
             this._overridePropertyWithDefaults(deserializer, "hasUniqueValues");
             this._overridePropertyWithDefaults(deserializer, "description");
+            this._overridePropertyWithDefaults(deserializer, "ownsValue");
         }
     },
 
@@ -389,6 +395,26 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      */
     cardinality: {
         value: Defaults.cardinality
+    },
+
+    /**
+     * Cardinality Range of the property descriptor.
+     *
+     * The Cardinality of an property descriptor is the number of values that
+     * can be stored. A cardinality of one means that only one object can be
+     * stored. Only positive values are legal. A value of infinity means that
+     * any number of values can be stored.
+     *
+     * Right now with just one property forHandling Cardinality, we can't deal with something like
+     * minCount and maxCount. minCount and maxCount with equal value would be similar to cardinality,
+     * or we could make cardinality a Range as well.
+     *
+     *
+     * @type {number}
+     * @default {0, 1}
+     */
+    cardinalityRange: {
+        value: Defaults.cardinalityRange
     },
 
     /**
@@ -571,6 +597,14 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      */
     hasUniqueValues: {
         value: Defaults.hasUniqueValues
+    },
+
+    /** 
+     * @type {boolean}
+     * @default false
+     **/
+    ownsValue: {
+        value: Defaults.ownsValue
     },
 
 
