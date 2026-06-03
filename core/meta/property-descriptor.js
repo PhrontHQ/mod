@@ -38,6 +38,7 @@ exports.DeleteRule = DeleteRule = new Enum().initWithMembersAndValues(["NULLIFY"
 var Defaults = {
     name: "default",
     cardinality: 1,
+    cardinalityRange: new Range(0, 1),
     isMandatory: false,
     readOnly: false,
     denyDelete: false,
@@ -60,6 +61,7 @@ var Defaults = {
     isOneWayEncrypted: false,
     isSerializable: true,
     hasUniqueValues: true,
+    ownsValue: false
 };
 
 
@@ -144,6 +146,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             } else {
                 this._setPropertyWithDefaults(serializer, "cardinality", this.cardinality);
             }
+            this._setPropertyWithDefaults(serializer, "cardinalityRange", this.cardinalityRange);
             this._setPropertyWithDefaults(serializer, "isMandatory", this.isMandatory);
             this._setPropertyWithDefaults(serializer, "readOnly", this.readOnly);
             //Not needed anymore as it's now this.deleteRule === DeleteRule.DENY
@@ -181,6 +184,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._setPropertyWithDefaults(serializer, "isUnique", this.isUnique);
             this._setPropertyWithDefaults(serializer, "isOneWayEncrypted", this.isOneWayEncrypted);
             this._setPropertyWithDefaults(serializer, "hasUniqueValues", this.hasUniqueValues);
+            this._setPropertyWithDefaults(serializer, "ownsValue", this.ownsValue);
             this._setPropertyWithDefaults(serializer, "description", this.description);
 
         }
@@ -198,13 +202,10 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
                 this._owner = value;
             }
 
-            this._overridePropertyWithDefaults(deserializer, "cardinality");
+            this._deserializeCardinality(deserializer);
 
-            if (this.cardinality === -1) {
-                this.cardinality = Infinity;
-            }
 
-            this._overridePropertyWithDefaults(deserializer, "isMandatory", "mandatory");
+
             this._overridePropertyWithDefaults(deserializer, "readOnly");
             this._overridePropertyWithDefaults(deserializer, "denyDelete");
             this._overridePropertyWithDefaults(deserializer, "deleteRule");
@@ -256,6 +257,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             this._overridePropertyWithDefaults(deserializer, "isOneWayEncrypted");
             this._overridePropertyWithDefaults(deserializer, "hasUniqueValues");
             this._overridePropertyWithDefaults(deserializer, "description");
+            this._overridePropertyWithDefaults(deserializer, "ownsValue");
         }
     },
 
@@ -311,6 +313,43 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
             }
 
             this[objectKey] = value === undefined ? Defaults[arguments.length > 2 ? arguments[2] : objectKey] : value;
+        }
+    },
+
+    _deserializeCardinality: {
+        value: function (deserializer) {
+            let cardinality = deserializer.getProperty("cardinality"),
+                cardinalityRange = deserializer.getProperty("cardinalityRange"),
+                isMandatory = deserializer.getProperty("mandatory");
+
+            if (cardinalityRange !== undefined && 
+                (cardinality !== undefined || 
+                isMandatory !== undefined)
+            ) {
+                throw `PropertyDescriptor ${this.objectDescriptor.name}.${this.name} can't set cardinalityRange and cardinality/isMandatory`;
+            }
+
+            if (cardinalityRange) {
+                //Assigns cardinality and isMandatory
+                this.cardinalityRange = cardinalityRange;
+            } else if (cardinality !== undefined) {
+                //Assigns cardinalityRange
+                if (cardinality === -1) {
+                    cardinality = Infinity;
+                }
+                this.cardinality = cardinality;
+            } 
+        }
+    },
+
+    _validateCardinality: {
+        value: function (cardinality, cardinalityRange, isMandatory) {
+            if (cardinalityRange && cardinalityRange.begin === 0 && isMandatory) {
+
+                console.warn(`[PropertyDescriptor] Property ${this.owner ? this.owner.name + ".": ""}${this.name} has mismatched cardinality. cardinalityRange.begin = 0 and isMandatory = true`);
+            } else if (cardinalityRange && cardinality !== undefined && cardinalityRange.end !== cardinality) {
+                console.warn(`[PropertyDescriptor] Property ${this.owner ? this.owner.name + ".": ""}${this.name} has mismatched cardinality. cardinalityRange.end (${cardinalityRange.end}) does not equal cardinality (${cardinality})`);
+            }
         }
     },
 
@@ -387,16 +426,86 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      * @type {number}
      * @default 1
      */
-    cardinality: {
-        value: Defaults.cardinality
+    _cardinality: {
+        value: void 0
     },
+
+    cardinality: {
+        get: function () {
+            return this._cardinality === undefined ? Defaults.cardinality : this._cardinality;
+        },
+        set: function (value) {
+            this._cardinality = value;
+            if (this._cardinalityRange === undefined) {
+                this._cardinalityRange = new Range(0, value);
+            }
+            this._validateCardinality(
+                this._cardinality,
+                this._cardinalityRange,
+                this._isMandatory
+            );
+        }
+    },
+
+    /**
+     * Cardinality Range of the property descriptor.
+     *
+     * The cardinality range of a property descriptor is range of the number 
+     * of values that can be stored. Examples:
+     * - {0, 1} : not mandatory and only one object can be stored
+     * - {1, 1} : mandatory and only one object can be stored
+     * - {2, 4} : must have at least 2 objects and no more than 4
+     * - {0, Infinity} : is an array of any length
+     * - {1, Infinity} : must have at least one value
+     * 
+     *
+     * @type {Range}
+     * @default {0, 1}
+     */
+    _cardinalityRange: {
+        value: void 0
+    },
+
+    cardinalityRange: {
+        get: function () {
+            return this._cardinalityRange || Defaults.cardinalityRange;
+        },
+        set: function (value) {
+            this._cardinalityRange = value;
+            if (value && this._cardinality === undefined) {
+                this._cardinality = value.end;
+            }
+            if (value && this._isMandatory === undefined) {
+                this._isMandatory = value.begin !== 0;
+            }
+            this._validateCardinality(
+                this._cardinality,
+                this._cardinalityRange,
+                this._isMandatory
+            );
+        }
+    },
+
 
     /**
      * @type {boolean}
      * @default false
      */
     isMandatory: {
-        value: Defaults.isMandatory
+        get: function () {
+            return this._isMandatory !== undefined ? this._isMandatory : Defaults.isMandatory;
+        },
+        set: function (value) {
+            this._isMandatory = value;
+            if (this.cardinalityRange) {
+                this.cardinalityRange.begin = value ? 1 : 0;
+            }
+            this._validateCardinality(
+                this._cardinality,
+                this._cardinalityRange,
+                this._isMandatory
+            );
+        }
     },
 
     /**
@@ -571,6 +680,18 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      */
     hasUniqueValues: {
         value: Defaults.hasUniqueValues
+    },
+
+    /** 
+     * Indicates whether the value of this property is wholly owned by the object. For example, 
+     * a person's name is owned by the person. It carries no meaning or value when associated
+     * to another person.
+     * 
+     * @type {boolean}
+     * @default false
+     **/
+    ownsValue: {
+        value: Defaults.ownsValue
     },
 
 
