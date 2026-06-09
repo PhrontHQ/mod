@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "owner"}
+                    }
+                },
+                "circle": {
+                    "prototype": "ui/circle.mod",
+                    "values": {
+                        "element": {"#": "circle"}
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="owner" class="Main">
+            <h1>Scoping App</h1>
+            <div class="circles">
+                <div class="Circle"></div>
+                <div data-mod-id="circle"></div>
+            </div>
+        </div>
+    </body>
+</html>
