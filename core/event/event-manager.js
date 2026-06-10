@@ -3196,6 +3196,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         }
                         promise = this._invokeTargetListenerEntryForEvent(iTarget, nextEntry, mutableEvent, mutableEventPhase, undefined/*currentTargetIdentifierSpecificCaptureMethodName*/, undefined/*identifierSpecificCaptureMethodName*/, undefined/*captureMethodName*/, previousPromise);
 
+
                         // if(previousPromise && promise) {
                         //     if(!promises) {
                         //         promises = [previousPromise, promise];
@@ -3436,7 +3437,16 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
             if(promise) {
                 var self = this;
+                let timeoutId = setTimeout(function () {
+                    if (mutableEvent.target && mutableEvent.target.name) {
+                        console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, mutableEvent);
+                    } else {
+                        console.log("Unresolved Event", mutableEvent.type, mutableEvent.id, mutableEvent);
+                    }
+                    
+                }, 2000);
                 mutableEvent.propagationPromise = promise.then(function() {
+                    clearTimeout(timeoutId);
                     self._finalizeHandleEvent(mutableEvent, event);
                 });
             } else {
@@ -3487,9 +3497,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                     previousName;
                 if (this._previousEvent) {
                     previousName = this._previousEvent.target.name || this._previousEvent.target.objectDescriptor.name;
-                    console.log(`[EventManager] Reset previous event ${event.identifier} ${name} ${event.type} to  ${this._previousEvent.identifier} ${previousName} ${this._previousEvent.type}`);
+                    // console.log(`[EventManager] Reset previous event ${event.identifier} ${name} ${event.type} to  ${this._previousEvent.identifier} ${previousName} ${this._previousEvent.type}`);
                 }  else {
-                    console.log(`[EventManager] Clear previous event ${event.identifier} ${name} ${event.type}`);
+                    // console.log(`[EventManager] Clear previous event ${event.identifier} ${name} ${event.type}`);
                 }
             } 
 
@@ -3662,6 +3672,11 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
             if(listenerEntry.once) {
                 this.unregisterTargetEventListener(iTarget, mutableEvent.type, listener, listenerEntry);
+            }
+
+            if (result && result.then) {
+                mutableEvent.triggeredTargets = mutableEvent.triggeredTargets || [];
+                mutableEvent.triggeredTargets.push({target: iTarget, entry: listenerEntry, name: currentTargetIdentifierSpecificPhaseMethodName, result: result});
             }
 
             return result;

@@ -113,6 +113,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             console.debug(this.name+" handleReadOperation(): EmploymentPosition read operation "+readOperation.id+" for "+readOperation.data.readExpressions+", "+readOperation.criteria.toString());
         }
 
+        // if(readOperation.target.name === "Person" || ) {
+            console.log(this.name+" handleReadOperation(): read operation "+readOperation.id);
+        // }
+
         /*
             This is to temporarily prevents a RawDataService to attempt to handle a readOperation that comes
             from a query coming from a mapping's converter that will have a very RawData-specific criteria that
@@ -161,6 +165,14 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
             }
         }
 
+        
+        let timeoutId = setTimeout(function () { 
+            console.log("HttpService Unresolved promise", readOperation.id, readOperation);
+        }, 2000);
+        readOperationCompletionPromise.then(function () {
+            clearTimeout(timeoutId);
+        })
+
         //If we've been asked to return a promise for the read Completion Operation, we do so. Again, this is fragile. IT HAS TO MOVE UP TO RAW DATA SERVICE
         //WE CAN'T RELY ON INDIVIDUAL DATA SERVICE IMPLEMENTORS TO KNOW ABOUT THAT...
         if (this.promisesReadCompletionOperation) {
@@ -197,6 +209,11 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         } else {
             readOperationCompletionPromise = readOperationCompletionPromiseResolve = readOperationCompletionPromiseReject = undefined;
         }
+
+        let isTracking = readOperation.target.name === "Person" || readOperation.target.name === "EmploymentPositionStaffing";
+        // if(readOperation.target.name === "Person") {
+        //     console.log(this.name+" handleReadOperation(): Person read operation "+readOperation.id);
+        // }
 
         if (this.authenticationPolicy && this.authenticationPolicy === AuthenticationPolicy.UP_FRONT) {
             let identityPromise;
@@ -290,6 +307,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                 return resolvedIdentity.objectDescriptor.propertyDescriptorNamed("accessTokens").valueDescriptor
                     .then((resolvedAccessTokenDescriptor) => {
 
+                        if (isTracking) {
+                            console.log("HttpService Resolve AcccesTokenDescriptor", readOperation.id);
+                        }
+
                         let accessTokenDescriptor = resolvedAccessTokenDescriptor ? resolvedAccessTokenDescriptor : this.accessTokenDescriptor;
 
                         if (!registeredAccessToken && !accessTokenDescriptor) {
@@ -313,6 +334,9 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                             tokenDataQuery.hints = {referrerOperation: readOperation};
 
                             return tokenQueryDataStream.then((result) => {
+                                    if (isTracking) {
+                                        console.log("HttpService Resolve AccessToken", readOperation.id);
+                                    }
                                 if (result && result.length === 1) {
                                     let accessToken = result[0];
                                     this.registerAccessTokenForIdentity(accessToken, resolvedIdentity);
@@ -361,6 +385,9 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
             this.mapDataOperationToRawDataOperations(readOperation, readOperations)
                 .then(() => {
+                    if (isTracking) {
+                        console.log("HttpService MapToRawOperations AccessToken", readOperation.id, readOperations?.length === 0);
+                    }
                     if(readOperations?.length === 0) {
                         let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, []);
 
@@ -383,6 +410,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                 });
 
                             } else {
+
+                                if (isTracking) {
+                                    console.log("HttpService MapToRequests", readOperation.id, readOperations?.length === 0);
+                                }
 
                                 let iMapping = this.mappingForObjectDescriptor(iReadOperation.target);
                                 if (typeof iMapping.mapDataOperationToFetchRequests === "function") {

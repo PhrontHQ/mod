@@ -3345,6 +3345,9 @@ RawDataService.addClassProperties({
                 dataOperationRegistration = {
                     dataOperation: dataOperation
                 };
+                if (dataOperation.target.name === "Person") {
+                    console.log("RawDataService.registerPendingDataOperationWithContext", this.name, dataOperation.id, dataOperation);
+                }
 
                 if (context) {
                     dataOperationRegistration.context = context;
@@ -3367,6 +3370,9 @@ RawDataService.addClassProperties({
     unregisterPendingDataOperation: {
         value: function (dataOperation) {
             let registration = this._pendingDataOperationById.get(dataOperation.id);
+            if (dataOperation.target.name === "Person") {
+                console.log("RawDataService.unregisterPendingDataOperation", dataOperation.id, !!registration, dataOperation)
+            }
             if (registration) {
                 registration.completionPromiseResolve();
             }
@@ -3379,6 +3385,9 @@ RawDataService.addClassProperties({
     unregisterDataOperationPendingReferrer: {
         value: function (dataOperation) {
             let registration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            if (dataOperation.target.name === "Person") {
+                console.log("RawDataService.unregisterPendingDataOperationReferrer", dataOperation.id, dataOperation.referrerId, !!registration, dataOperation)
+            }
             if (registration) {
                 registration.completionPromiseResolve();
             }

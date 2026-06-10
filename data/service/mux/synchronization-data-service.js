@@ -123,13 +123,14 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "JobRole"
+                "Person"
             ]);
         }
         return this.__trackedTypes;
     }
 
     _logTypeEvent(objectDescriptor, /*message, element1, element2, ... elementN*/) {
+        let stack = new Error().stack;
         let args = Array.from(arguments),
             logArgs = args.slice(1);
         if (typeof logArgs[0] === "string") {
@@ -137,6 +138,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         } else {
             logArgs.unshift("[SynchronizationDataService]");
         }
+        // logArgs.push(stack.split("\n").slice(1, 4).join("\n"));
         if (!this._trackedTypes || !this._trackedTypes.size) {
             console.log.apply(console, logArgs);
         } else if (this._trackedTypes.has(objectDescriptor.name)) {
@@ -1190,7 +1192,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             //Now that all is done, we're saving:
             return promise.then( () => {
 
-                this._logTypeEvent(readCompletedOperation.referrer.target, "<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": saving changes from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+                this._logTypeEvent(readCompletedOperation.referrer.target, "<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation POST COMPLETED"+readCompletedOperation.id+": saving changes from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
                 /*
                     one more thing: if it's a readOperation for a relationship, we need to make sure the join actually happens.
@@ -1344,7 +1346,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
 
 
-        this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria+": ", readCompletedOperation.data);
+        this._logTypeEvent(readCompletedOperation.referrer?.target, "Capture ReadCompletedOperation BEGIN "+readCompletedOperation.id+" from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer?.id+", for "+readCompletedOperation.referrer?.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer?.criteria+": ", readCompletedOperation.data);
 
         //Record the read completion from that service:
         if(readCompletedOperation.type === ReadCompletedOperationType) {
@@ -1631,6 +1633,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     unregisterReadOperation(aReadOperation) {
         this._childDataServiceReadCompletionOperationByReadOperation.delete(aReadOperation);
+        // if (aReadOperation.rawDataService) {
+
+        // }
+        // aReadOperation.hints.rawDataService.unregisterPendingDataOperation(aReadOperation);
     }
 
     captureSynchronizationDataServiceReadFailedOperation(readFailedOperation) {
