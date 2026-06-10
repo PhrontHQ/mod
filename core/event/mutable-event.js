@@ -394,11 +394,36 @@ var wrapPropertyGetter = function (key, storageKey) {
         },
         /**
          * @type {Property}
-         * @default {Element} null
+         * @default {Array} null
          */
         composedPath: {
             value: function () {
                 return this._composedPath;
+            }
+        },
+
+        /**
+         * @type {Property}
+         * @default {Array} null
+         * An ordered array containing the chain of events that led to the 
+         * dispatch of this one
+         */
+        dispatchChain: {
+            get: function () {
+                return this.tracksDispatchChain ? this._dispatchChain || (this._dispatchChain = []) : null;
+            }
+        },
+
+        /**
+         * @type {Property}
+         * @default {Boolean} false 
+         * Indicates whether the ancestory if this event will be tracked. It is expensive 
+         * so this is only set to true for clearly defined use cases
+         */
+        tracksDispatchChain: {
+            // value: false
+            get: function () {
+                return (this._tracksDispatchChain !== void 0) ? this._tracksDispatchChain : (this._event && this._event.tracksDispatchChain);
             }
         }
 

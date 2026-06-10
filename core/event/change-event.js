@@ -177,6 +177,10 @@ var ChangeEvent = exports.ChangeEvent = Montage.specialize({
      */
     removedValues: {
         value: undefined
+    },
+
+    tracksDispatchChain: {
+        value: true
     }
 
 });
