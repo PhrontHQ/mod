@@ -3251,10 +3251,21 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+    _trackedTargets: {
+        value: new Set(["Person", "OAuthAccessToken", "EmploymentPositionStaffing"])
+    },
+
     handleEvent: {
         enumerable: false,
         value: function (event) {
 
+            if (event.target.name && this._trackedTargets.has(event.target.name) && event.type.indexOf("Operation") !== -1) {
+                let queued = this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event);
+                console.log("EventManager Event", event.target.name, event.id, event.referrerId, event, {
+                    queued: queued,
+                    firstOfKind: !queued && !this._activeEventsByType.has(event.type)
+                });
+            }
             if (this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event)) {
                 if (!this._eventQueueByType.has(event.type)) {
                     this._eventQueueByType.set(event.type, []);
@@ -3319,19 +3330,23 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 targetEntry, targetEntryForEventType,
                 promise;
 
-            if (event.tracksDispatchChain) {
-                if (this._previousEvent && this._previousEvent.dispatchChain && this._previousEvent.dispatchChain.length && event.dispatchChain) {
-                    // console.log(`[EventManager] Mark Event ${event.target.objectDescriptor.name}`);
-                    event.dispatchChain.push.apply(event.dispatchChain, this._previousEvent.dispatchChain);
-                    event.dispatchChain.push(this._previousEvent);
-                } else if (this._previousEvent && event.dispatchChain) {
-                    // console.log(`[EventManager] Push Previous Event ${event.target.objectDescriptor.name}`);
-                    event.dispatchChain.push(this._previousEvent);
-                } else {
-                    // console.log(`[EventManager] Record initial event ${event.target.objectDescriptor.name}`);
-                }
-                this._previousEvent = event;
+            if (event.target.name && this._trackedTargets.has(event.target.name) && event.type.indexOf("Operation") !== -1) {
+                console.log("EventManager HandleEvent", event.target.name, event.id, event.referrerId);
             }
+
+            // if (event.tracksDispatchChain) {
+            //     if (this._previousEvent && this._previousEvent.dispatchChain && this._previousEvent.dispatchChain.length && event.dispatchChain) {
+            //         // console.log(`[EventManager] Mark Event ${event.target.objectDescriptor.name}`);
+            //         event.dispatchChain.push.apply(event.dispatchChain, this._previousEvent.dispatchChain);
+            //         event.dispatchChain.push(this._previousEvent);
+            //     } else if (this._previousEvent && event.dispatchChain) {
+            //         // console.log(`[EventManager] Push Previous Event ${event.target.objectDescriptor.name}`);
+            //         event.dispatchChain.push(this._previousEvent);
+            //     } else {
+            //         // console.log(`[EventManager] Record initial event ${event.target.objectDescriptor.name}`);
+            //     }
+            //     this._previousEvent = event;
+            // }
 
             if(this.isBrowser) {
                 if(
@@ -3439,7 +3454,16 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 var self = this;
                 let timeoutId = setTimeout(function () {
                     if (mutableEvent.target && mutableEvent.target.name) {
-                        console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, mutableEvent);
+                        if (mutableEvent.referredOperations && mutableEvent.referredOperations.length) {
+                            let ancestry = mutableEvent.referredOperations.map(function (referred) {
+                                return " " + referred.type + ":" + referred.target.name + ":" + referred.id + ":" + referred.rawDataService?.name;
+                            }).join("\n");
+                            ancestry = "Referred: \n" + ancestry;
+                            console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, ancestry, mutableEvent);
+
+                        } else {
+                            console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, mutableEvent);
+                        }
                     } else {
                         console.log("Unresolved Event", mutableEvent.type, mutableEvent.id, mutableEvent);
                     }
@@ -3478,6 +3502,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 }
             }
 
+            if (mutableEvent.target && mutableEvent.target.name && mutableEvent.target.name !== "Transaction") {
+                console.log("EventManager _finalizeHandleEvent", mutableEvent.target.name, mutableEvent.id, mutableEvent.referrerId);
+            }
+
             //Handle next event
             let type = mutableEvent.type,
                 next;
@@ -3491,17 +3519,17 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 this._eventQueueByType.delete(type);
             }
 
-            if (this._previousEvent === event || this._previousEvent === mutableEvent) {
-                this._previousEvent = event.dispatchChain[event.dispatchChain.length - 1];
-                let name = event.target.name || event.target.objectDescriptor.name,
-                    previousName;
-                if (this._previousEvent) {
-                    previousName = this._previousEvent.target.name || this._previousEvent.target.objectDescriptor.name;
-                    // console.log(`[EventManager] Reset previous event ${event.identifier} ${name} ${event.type} to  ${this._previousEvent.identifier} ${previousName} ${this._previousEvent.type}`);
-                }  else {
-                    // console.log(`[EventManager] Clear previous event ${event.identifier} ${name} ${event.type}`);
-                }
-            } 
+            // if (this._previousEvent === event || this._previousEvent === mutableEvent) {
+            //     this._previousEvent = event.dispatchChain[event.dispatchChain.length - 1];
+            //     let name = event.target.name || event.target.objectDescriptor.name,
+            //         previousName;
+            //     if (this._previousEvent) {
+            //         previousName = this._previousEvent.target.name || this._previousEvent.target.objectDescriptor.name;
+            //         // console.log(`[EventManager] Reset previous event ${event.identifier} ${name} ${event.type} to  ${this._previousEvent.identifier} ${previousName} ${this._previousEvent.type}`);
+            //     }  else {
+            //         // console.log(`[EventManager] Clear previous event ${event.identifier} ${name} ${event.type}`);
+            //     }
+            // } 
 
         }
     },

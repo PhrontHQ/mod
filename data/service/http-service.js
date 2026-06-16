@@ -167,7 +167,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
         
         let timeoutId = setTimeout(function () { 
-            console.log("HttpService Unresolved promise", readOperation.id, readOperation);
+            console.log("HttpService Unresolved promise", readOperation.target.name, readOperation.id, readOperation);
         }, 2000);
         readOperationCompletionPromise.then(function () {
             clearTimeout(timeoutId);
@@ -308,7 +308,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                     .then((resolvedAccessTokenDescriptor) => {
 
                         if (isTracking) {
-                            console.log("HttpService Resolve AcccesTokenDescriptor", readOperation.id);
+                            console.log("HttpService Resolve AccessTokenDescriptor", readOperation.id);
                         }
 
                         let accessTokenDescriptor = resolvedAccessTokenDescriptor ? resolvedAccessTokenDescriptor : this.accessTokenDescriptor;
@@ -318,6 +318,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                             throw "DataService " + this.identifier + " can't get an access token to handle readOperation " + readOperation
 
                         } else {
+
+                        if (isTracking) {
+                            console.log("HttpService Request AccessToken", readOperation.id);
+                        }
 
                             /*
                                 In the case where the identity is cached locally, and the access token is too. 
@@ -356,6 +360,9 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
             })
                 .catch(error => {
+                    if (isTracking) {
+                        console.log("HttpService Failed AccessToken", readOperation.id);
+                    }
                     let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
                     console.error("Identity promise failed with error", error);
                     return responseOperation;
@@ -461,7 +468,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                             // }
 
                                             let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData);
-                                            console.log("\t" + this.identifier + " handleReadOperation dispatch A responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+                                            console.log("\t" + this.identifier + " handleReadOperation dispatch A responseOperation " + responseOperation.id, responseOperation.referrer.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
 
                                             responseOperation.target.dispatchEvent(responseOperation);
 
@@ -480,7 +487,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                             // responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, error, null);
                                             //Send an empty response instead
                                             let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, []);
-                                            console.log("\t" + this.identifier + " handleReadOperation dispatch B responseOperation " + responseOperation.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
+                                            console.log("\t" + this.identifier + " handleReadOperation dispatch B responseOperation " + responseOperation.id, responseOperation.referrer.id, " for " + responseOperation.referrer.target.name + " like " + responseOperation.referrer.criteria);
 
                                             responseOperation.target.dispatchEvent(responseOperation);
 

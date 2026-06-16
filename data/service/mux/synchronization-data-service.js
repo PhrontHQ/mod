@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person"
+                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Organization", "IncorporatedOrganization"
             ]);
         }
         return this.__trackedTypes;
@@ -753,6 +753,9 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         // mappedObjects.push(dataObject);
 
+        // if (objectDescriptor.name === "Person" && rawData.id === "8b286280-6944-432f-8940-39be0117b14f") {
+        //     debugger;
+        // }
 
         /*
             We're syncing, so we need to grab as much data as we can if we have no guidelines
@@ -1143,7 +1146,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
             // iObject.originDataSnapshot = rawData[i];
 
             if( rawData[i]) {
-                this._logTypeEvent(readCompletedOperation.referrer.target, "<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation from "+readCompletedOperation.rawDataService.identifier+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
+                this._logTypeEvent(readCompletedOperation.referrer.target, "<<<<<<<<<<<<<<<<<<<<<<<<<<<-> Service capture ReadCompletedOperation "+readCompletedOperation.id+": _syncObjectDescriptorRawDataFromReadCompletedOperation from "+readCompletedOperation.rawDataService.identifier+" Iterate Raw Data "+i+", referrer "+readCompletedOperation.referrer.id+", for "+readCompletedOperation.referrer.target.name + (readCompletedOperation.referrer?.data?.readExpressions? (" "+readCompletedOperation.referrer?.data?.readExpressions) : "") + " like "+ readCompletedOperation.referrer.criteria);
 
                 //TODO Test if rawData[i] is already a mapped object and, if so, set iMappingResult to Promise.resolve(rawData[i])
                 // WARNING: We might need to add logic inside _syncObjectDescriptorRawDataFromReadCompletedOperation
@@ -1659,7 +1662,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         this.registerChildDataServiceReadCompletionOperation(readFailedOperation);
 
-        this._logTypeEvent(readFailedOperation.referrer.target, "Sync Service capture ReadFailedOperation "+readFailedOperation.id+" from "+readFailedOperation.rawDataService.identifier+", referrer "+readFailedOperation.referrer.id+", for "+readFailedOperation.referrer.target.name + (readFailedOperation.referrer?.data?.readExpressions? (" "+readFailedOperation.referrer?.data?.readExpressions) : "") + " like "+ readFailedOperation.referrer.criteria+": ", readFailedOperation.data);
+        // this._logTypeEvent(readFailedOperation.referrer.target, "Sync Service capture ReadFailedOperation "+readFailedOperation.id+" from "+readFailedOperation.rawDataService.identifier+", referrer "+readFailedOperation.referrer.id+", for "+readFailedOperation.referrer.target.name + (readFailedOperation.referrer?.data?.readExpressions? (" "+readFailedOperation.referrer?.data?.readExpressions) : "") + " like "+ readFailedOperation.referrer.criteria+": ", readFailedOperation.data);
 
         if((readFailedOperation.data.name === DataOperationErrorNames.DatabaseMissing) || 
         (readFailedOperation.data.name === DataOperationErrorNames.ObjectDescriptorStoreMissing) ) {

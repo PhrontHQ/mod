@@ -392,6 +392,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     __mapRawDataPropertyToObject (record, property, valueDescriptor, object, mainService) {
         let objectDescriptor = object.objectDescriptor,
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
+
+        if (object.objectDescriptor.name === "IncorporatedOrganization") {
+            window.incOrgProperties = window.incOrgProperties || new Set();
+            // debugger
+            window.incOrgProperties.add(property);
+        }
         if(iPropertyDescriptor.cardinality === 1) {
                     let iPropertyValue = object[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
@@ -399,10 +405,17 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                         return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
                             .then((iObjectValue) => {
+                                if (object.objectDescriptor.name === "IncorporatedOrganization") {
+                                    window.incOrgProperties.delete(property);
+                                }
+                                
                                 object[property] = iObjectValue
                             })
         
                     } else {
+                        if (object.objectDescriptor.name === "IncorporatedOrganization") {
+                                    window.incOrgProperties.delete(property);
+                                }
                         object[property] = record[property];
                     }
                 } else {
@@ -431,6 +444,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 );
                             }
                             return Promise.all(mappingPromises).then((values) => {
+                                if (object.objectDescriptor.name === "IncorporatedOrganization") {
+                                    window.incOrgProperties.delete(property);
+                                }
                                 object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                                 return;
                             });
@@ -439,6 +455,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
                         }
                     } else {
+                    if (object.objectDescriptor.name === "IncorporatedOrganization") {
+                                window.incOrgProperties.delete(property);
+                            }
                         object[property] = iPropertyValues;
                     }
                 }
@@ -450,6 +469,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         let recordKeys = Object.keys(record),
             mappingPromises = [];
+
+
 
 
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {
@@ -493,6 +514,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 .then((dataInstances) => {
                         criteria = readOperation.criteria;
                             let predicateFunction = criteria?.predicateFunction;
+
+                        // if (readOperation.criteria.parameters && readOperation.criteria.parameters === "FORD MOTOR COMPANY" || readOperation.criteria.parameters.name === "FORD MOTOR COMPANY") {
+
+                        // }
 
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
                             let parameters = criteria.parameters;

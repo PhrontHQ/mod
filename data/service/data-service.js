@@ -6486,6 +6486,13 @@ DataService.addClassProperties(
                 // make sure type is an object descriptor or a data object descriptor.
                 query.type = this.objectDescriptorForType(query.type);
 
+                // if (query.type.name === "EmploymentPosition" || query.type.name === "EmploymentPositionStaffing" || query.type.name === "Organization") {
+                //     let referred = query.hints.referrerOperations ? query.hints.referrerOperations.map(function (operation) {
+                //         return operation.id
+                //     }).join(",") : query.hints.referrerOperation ? query.hints.referrerOperation.id : "";
+                //     console.log("DataService.fetchData", query.type.name, referred);
+                // }
+
                 if (this.supportsDataOperation) {
                     //Check if we already have a DataStream pending for that same query:
                     if ((stream = this.registeredDataStreamMapForDataQuery(query))) {
@@ -6551,6 +6558,8 @@ DataService.addClassProperties(
                             // } catch (e) {
                             //     stream.dataError(e);
                             // }
+
+
 
                             try {
                                 var readOperation = new DataOperation();
