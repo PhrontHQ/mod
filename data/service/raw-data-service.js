@@ -3392,9 +3392,9 @@ RawDataService.addClassProperties({
     unregisterDataOperationPendingReferrer: {
         value: function (dataOperation) {
             let registration = this._pendingDataOperationById.get(dataOperation.referrerId);
-            if (dataOperation.target.name === "Person") {
-                console.log("RawDataService.unregisterPendingDataOperationReferrer", dataOperation.id, dataOperation.referrerId, !!registration, dataOperation)
-            }
+            // if (dataOperation.target.name === "Person") {
+            //     console.log("RawDataService.unregisterPendingDataOperationReferrer", dataOperation.id, dataOperation.referrerId, !!registration, dataOperation)
+            // }
             if (registration) {
                 registration.completionPromiseResolve();
             }
@@ -3795,13 +3795,23 @@ RawDataService.addClassProperties({
                     this.rawDataDone(stream);
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
-                }
+                } 
                 // else {
                 //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
                 // }
                 //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
+            } else {
+
             }
 
+        }
+    },
+
+    relevantOperationForResponse: {
+        value: function (readOperation) {
+            let referrer = readOperation.referrer;
+            // return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
+            return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
         }
     },
 

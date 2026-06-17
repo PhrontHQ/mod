@@ -123,7 +123,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
     get _trackedTypes() {
         if (!this.__trackedTypes) {
             this.__trackedTypes = new Set([
-                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Organization", "IncorporatedOrganization"
+                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Organization", "IncorporatedOrganization", "JobRole"
             ]);
         }
         return this.__trackedTypes;

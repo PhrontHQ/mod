@@ -1014,6 +1014,7 @@ WebSocketDataOperationService.addClassProperties({
             this._socketOpenPromise.then(() => {
                 var serializedOperation = this._serializer.serializeObject(operation);
 
+
                  var operationDataKBSize = sizeof(serializedOperation) / 1024;
 
                 //console.debug("----> send "+operationDataKBSize+" KB operation "+serializedOperation);

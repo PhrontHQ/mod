@@ -6598,7 +6598,11 @@ DataService.addClassProperties(
                                 if (query.criteria) {
                                     //readOperation.criteria = criteria.clone();
                                     readOperation.criteria = query.criteria;
+                                    if (query.criteria.parameters === "019a4e83-203a-76de-bf6f-7f26739d65fd") {
+                                        window.suborgOperation = readOperation;
+                                    }
                                 }
+
                                 if (query.sizeLimit) {
                                     readOperation.data.sizeLimit = query.sizeLimit;
                                 }

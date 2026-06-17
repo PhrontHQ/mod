@@ -3259,6 +3259,15 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         enumerable: false,
         value: function (event) {
 
+            if (typeof window === "object" && !window._eventQueueByType) {
+                window.eventQueueByType = this._eventQueueByType;
+                window.activeEventsByType = this._activeEventsByType;
+            }
+            if (typeof window === "undefined") {
+                this._handleEvent(event);
+                return;
+            }
+
             if (event.target.name && this._trackedTargets.has(event.target.name) && event.type.indexOf("Operation") !== -1) {
                 let queued = this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event);
                 console.log("EventManager Event", event.target.name, event.id, event.referrerId, event, {
@@ -3500,24 +3509,26 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                     document.body.removeEventListener("DOMAttrModified", this.domModificationEventHandler, true);
                     document.body.removeEventListener("DOMCharacterDataModified", this.domModificationEventHandler, true);
                 }
+
+                // if (mutableEvent.target && mutableEvent.target.name && mutableEvent.type.indexOf("Operation") !== -1) {
+                //     console.log("EventManager _finalizeHandleEvent", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, mutableEvent.referrerId, mutableEvent);
+                // }
+
+                //Handle next event
+                let type = mutableEvent.type,
+                    next;
+                if (this._eventQueueByType.has(type) && this._eventQueueByType.get(type).length) {
+                    next = this._eventQueueByType.get(type).pop();
+                    this._activeEventsByType.get(type).delete(event);
+                    this._activeEventsByType.get(type).add(next);
+                        this._handleEvent(next);
+                } else {
+                    this._activeEventsByType.delete(type);
+                    this._eventQueueByType.delete(type);
+                }
             }
 
-            if (mutableEvent.target && mutableEvent.target.name && mutableEvent.target.name !== "Transaction") {
-                console.log("EventManager _finalizeHandleEvent", mutableEvent.target.name, mutableEvent.id, mutableEvent.referrerId);
-            }
 
-            //Handle next event
-            let type = mutableEvent.type,
-                next;
-            if (this._eventQueueByType.has(type) && this._eventQueueByType.get(type).length) {
-                next = this._eventQueueByType.get(type).pop();
-                this._activeEventsByType.get(type).delete(event);
-                this._activeEventsByType.get(type).add(next);
-                    this._handleEvent(next);
-            } else {
-                this._activeEventsByType.delete(type);
-                this._eventQueueByType.delete(type);
-            }
 
             // if (this._previousEvent === event || this._previousEvent === mutableEvent) {
             //     this._previousEvent = event.dispatchChain[event.dispatchChain.length - 1];

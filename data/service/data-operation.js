@@ -270,6 +270,10 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             serializer.setProperty("timeStamp", this.timeStamp);
             serializer.setProperty("clientId", this.clientId);
 
+            if (this.type === "readCompletedOperation" && this.target && this.target.name === "Organization") {
+                debugger;
+            }
+
             if(this.target) {
                 serializer.setProperty("target", this.target);
 
@@ -297,8 +301,12 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
                 serializer.setProperty("referrerId", this.referrerId);
             }
 
-            if(this.referrer) {
+            if (this.referrer) {
                 serializer.setProperty("referrer", this.referrer);
+            }
+
+            if (this.referrers) {
+                serializer.setProperty("referrers", this.referrers);
             }
 
             serializer.setProperty("criteria", this._criteria);
@@ -420,6 +428,10 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
                 this.referrer = value;
             }
 
+            value = deserializer.getProperty("referrers");
+            if (value !== void 0) {
+                this.referrers = value;
+            }
 
             value = deserializer.getProperty("criteria");
             if (value !== void 0) {
@@ -695,13 +707,22 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             return this._referrer;
         },
         set: function(value) {
+            if (Array.isArray(value)) {
+                debugger;
+            }
             if(value !== this._referrer) {
                 if (this._referrer) {
                     this._referrer.referredOperations.delete(this);
                 }
                 this._referrer = value;
                 if (this._referrer) {
-                    this._referrer.referredOperations.push(this);
+                    if (this._referrer.referredOperations) {
+                        this._referrer.referredOperations.push(this);
+                    } else {
+                        debugger;
+                        this._referrer.referredOperations = [this];
+                    }
+                    
                 }
             }
         }

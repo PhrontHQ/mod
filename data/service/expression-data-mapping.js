@@ -1408,7 +1408,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                 const targetPath = aRule.targetPath,
                                         propertyDescriptor = aRule.propertyDescriptor;
                                 if ((data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPositionStaffing")
-                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition")) {
+                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition") || 
+                                (object.dataIdentifier.typeName === "JobRole")) {
                                     // console.log("ExpressionDataMapping.mapProperty START", targetPath);
                                     window.unmappedProperties = window.unmappedProperties || new Set();
                                     window.unmappedProperties.add(object.dataIdentifier.typeName + "." + targetPath);
@@ -1416,7 +1417,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
                                 result = result.then((resultValue) => {
                                     if ((data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPositionStaffing")
-                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition")) {
+                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition") || 
+                                (object.dataIdentifier.typeName === "JobRole")) {
                                         // console.log("ExpressionDataMapping.mapProperty DONE", targetPath);
                                         window.unmappedProperties.delete(object.dataIdentifier.typeName + "." + targetPath);
                                     }
