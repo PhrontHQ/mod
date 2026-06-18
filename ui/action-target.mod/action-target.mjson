@@ -1,5 +1,5 @@
 {
-    "objectDescriptor_pressTarget_enabled": {
+    "objectDescriptor_actionTarget_enabled": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "enabled",
@@ -9,7 +9,7 @@
             "valueType": "boolean"
         }
     },
-    "objectDescriptor_pressTarget_preventFocus": {
+    "objectDescriptor_actionTarget_preventFocus": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "preventFocus",
@@ -19,7 +19,7 @@
             "valueType": "boolean"
         }
     },
-    "objectDescriptor_pressTarget_holdThreshold": {
+    "objectDescriptor_actionTarget_holdThreshold": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "holdThreshold",
@@ -29,7 +29,7 @@
             "valueType": "number"
         }
     },
-    "objectDescriptor_pressTarget_active": {
+    "objectDescriptor_actionTarget_active": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "active",
@@ -39,7 +39,7 @@
             "valueType": "boolean"
         }
     },
-    "objectDescriptor_pressTarget_detail": {
+    "objectDescriptor_actionTarget_detail": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "detail",
@@ -57,52 +57,52 @@
     "root": {
         "prototype": "core/meta/module-object-descriptor",
         "values": {
-            "name": "PressTarget",
+            "name": "ActionTarget",
             "parent": {
                 "@": "objectDescriptor_component_reference"
             },
             "propertyDescriptors": [
                 {
-                    "@": "objectDescriptor_pressTarget_enabled"
+                    "@": "objectDescriptor_actionTarget_enabled"
                 },
                 {
-                    "@": "objectDescriptor_pressTarget_preventFocus"
+                    "@": "objectDescriptor_actionTarget_preventFocus"
                 },
                 {
-                    "@": "objectDescriptor_pressTarget_holdThreshold"
+                    "@": "objectDescriptor_actionTarget_holdThreshold"
                 },
                 {
-                    "@": "objectDescriptor_pressTarget_active"
+                    "@": "objectDescriptor_actionTarget_active"
                 },
                 {
-                    "@": "objectDescriptor_pressTarget_detail"
+                    "@": "objectDescriptor_actionTarget_detail"
                 }
             ],
             "propertyDescriptorGroups": {
-                "PressTarget": [
+                "ActionTarget": [
                     {
-                        "@": "objectDescriptor_pressTarget_enabled"
+                        "@": "objectDescriptor_actionTarget_enabled"
                     },
                     {
-                        "@": "objectDescriptor_pressTarget_preventFocus"
+                        "@": "objectDescriptor_actionTarget_preventFocus"
                     },
                     {
-                        "@": "objectDescriptor_pressTarget_holdThreshold"
+                        "@": "objectDescriptor_actionTarget_holdThreshold"
                     },
                     {
-                        "@": "objectDescriptor_pressTarget_active"
+                        "@": "objectDescriptor_actionTarget_active"
                     },
                     {
-                        "@": "objectDescriptor_pressTarget_detail"
+                        "@": "objectDescriptor_actionTarget_detail"
                     }
                 ]
             },
             "objectDescriptorModule": {
-                "%": "ui/press-target.mod/press-target.mjson"
+                "%": "ui/action-target.mod/action-target.mjson"
             },
-            "exportName": "PressTarget",
+            "exportName": "ActionTarget",
             "module": {
-                "%": "ui/press-target.mod"
+                "%": "ui/action-target.mod"
             }
         }
     }

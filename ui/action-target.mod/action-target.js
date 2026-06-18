@@ -1,36 +1,21 @@
  /*global require, exports*/
 
 /**
- * @module mod/ui/press-target
+ * @module mod/ui/action-target
  * @requires mod/ui/component
  * @requires mod/composer/press-composer
  * @requires collections/map
  */
+const { Control } = require("ui/control");
 var Component = require("../component").Component,
     PressComposer = require("../../composer/press-composer").PressComposer,
     Map = require("core/collections/map");
 
 /**
- * @class PressTarget
- * @extends Component
+ * @class ActionTarget
+ * @extends Control
  */
-var PressTarget = exports.PressTarget = Component.specialize( /** @lends PressTarget.prototype # */ {
-
-    /**
-     * Dispatched when the button is activated through a mouse click, finger
-     * tap, or when focused and the spacebar is pressed.
-     *
-     * @event PressTarget#action
-     * @property {Map} detail - The detail object as defined in {@link AbstractControl#detail}
-     */
-
-    /**
-     * Dispatched when the button is pressed for a period of time, set by
-     * {@link PressTarget#holdThreshold}.
-     *
-     * @event PressTarget#longAction
-     * @property {Map} detail - The detail object as defined in {@link PressTarget#detail}
-     */
+var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionTarget.prototype # */ {
 
     /**
      * @private
@@ -74,7 +59,7 @@ var PressTarget = exports.PressTarget = Component.specialize( /** @lends PressTa
 
     /**
      * @function
-     * @fires PressTarget#action
+     * @fires ActionTarget#action
      */
     dispatchActionEvent: {
         value: function () {
@@ -100,14 +85,11 @@ var PressTarget = exports.PressTarget = Component.specialize( /** @lends PressTa
      * @constructs
      */
     constructor: {
-        value: function PressTarget() {
+        value: function ActionTarget() {
             this._pressComposer = new PressComposer();
             this.addComposer(this._pressComposer);
             this._pressComposer.defineBinding("longPressThreshold", {"<-": "holdThreshold", source: this});
 
-            //classList management
-            this.defineBinding("classList.has('mod--disabled')", {"<-": "!enabled"});
-            this.defineBinding("classList.has('mod--active')", {"<-": "active"});
         }
     },
 
