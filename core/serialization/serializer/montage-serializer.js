@@ -65,15 +65,15 @@ var MontageSerializer = Montage.specialize({
 
     serialize: {
         value: function(objects) {
-            var serializationString;
-
-            this._labeler.initWithObjects(objects);
 
             if(this._hasSerialized) {
                 this._builder.init();
+                this._labeler.cleanup();
                 this._malker.cleanup();
                 this._visitor.cleanup();
             }
+            
+            this._labeler.initWithObjects(objects);
 
             for (var label in objects) {
                 if (Object.hasOwnProperty.call(objects, label)) {
@@ -81,7 +81,7 @@ var MontageSerializer = Montage.specialize({
                 }
             }
 
-            serializationString = this._formatSerialization(
+            const serializationString = this._formatSerialization(
                 this._builder.getSerialization(
                     this._serializationIndentation
                 )

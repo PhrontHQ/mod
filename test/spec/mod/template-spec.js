@@ -166,7 +166,7 @@ describe("spec/mod/template-spec", function () {
                 expect(objects).toEqual(expectedObjects);
                 expect(children.length).toBe(1);
                 // there must be a better way to compare DOM tree's...
-                expect(children[0].outerHTML).toBe('<span data-mod-id="text"></span>');
+                expect(children[0].outerHTML).toBe('<span data-mod-id="text" class="mod-tests"></span>');
             }, function(reason) {
                 fail(reason);
             }).finally(function () {
