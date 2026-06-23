@@ -3252,7 +3252,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     },
 
     _trackedTargets: {
-        value: new Set(["Person", "OAuthAccessToken", "EmploymentPositionStaffing"])
+        value: new Set(["Person", "EmploymentPositionStaffing", "EmploymentPosition", "JobRole"])
     },
 
     handleEvent: {
@@ -3294,11 +3294,11 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         value: function (event) {
             let referrer;
             if (event.referrer) {
-                return this._isActive(event.referrer);
+                return this._isActive(event.referrer) || this._hasActiveReferrer(event.referrer);
             } else if (event.referrers) {
                 let i, n, isActive;
                 for (i = 0, n = event.referrers.length; i < n && !isActive; ++i) {
-                    isActive = this._isActive(event.referrers[i]);
+                    isActive = this._isActive(event.referrers[i]) || this._hasActiveReferrer(event.referrers[i]);
                 }
                 return isActive;
             }

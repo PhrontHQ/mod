@@ -3795,7 +3795,9 @@ RawDataService.addClassProperties({
                     this.rawDataDone(stream);
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
-                } 
+                } else {
+                    this.unregisterDataOperationPendingReferrer(operation);
+                }
                 // else {
                 //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
                 // }
@@ -3811,7 +3813,7 @@ RawDataService.addClassProperties({
         value: function (readOperation) {
             let referrer = readOperation.referrer;
             // return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
-            return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
+            return referrer && (referrer.type !== DataOperation.Type.ReadCompletedOperation && referrer.type !== DataOperation.Type.ReadFailedOperation) ? referrer : readOperation;
         }
     },
 
