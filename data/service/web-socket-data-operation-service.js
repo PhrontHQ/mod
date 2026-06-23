@@ -823,6 +823,9 @@ WebSocketDataOperationService.addClassProperties({
                 it might be simpler, but probably a bit less efficient
 
             */
+            // if (readOperation.criteria && readOperation.criteria.expression === "originDataSnapshot.AzureGraphDataService.id == $id" && readOperation.target.name === "EmploymentPosition") {
+            //     debugger;
+            // }
             readOperationCompletionPromise = this.callDelegateMethod("rawDataServiceWillHandleReadOperation", this, readOperation);
             if(readOperationCompletionPromise) {
                 readOperationCompletionPromise = readOperationCompletionPromise.then((readOperation) => {

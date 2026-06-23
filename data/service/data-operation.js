@@ -270,9 +270,6 @@ exports.DataOperationErrorNames = DataOperationErrorNames = new Enum().initWithM
             serializer.setProperty("timeStamp", this.timeStamp);
             serializer.setProperty("clientId", this.clientId);
 
-            if (this.type === "readCompletedOperation" && this.target && this.target.name === "Organization") {
-                debugger;
-            }
 
             if(this.target) {
                 serializer.setProperty("target", this.target);

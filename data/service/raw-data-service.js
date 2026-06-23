@@ -3352,9 +3352,6 @@ RawDataService.addClassProperties({
                 dataOperationRegistration = {
                     dataOperation: dataOperation
                 };
-                if (dataOperation.target.name === "Person") {
-                    console.log("RawDataService.registerPendingDataOperationWithContext", this.name, dataOperation.id, dataOperation);
-                }
 
                 if (context) {
                     dataOperationRegistration.context = context;
@@ -3377,9 +3374,6 @@ RawDataService.addClassProperties({
     unregisterPendingDataOperation: {
         value: function (dataOperation) {
             let registration = this._pendingDataOperationById.get(dataOperation.id);
-            if (dataOperation.target.name === "Person") {
-                console.log("RawDataService.unregisterPendingDataOperation", dataOperation.id, !!registration, dataOperation)
-            }
             if (registration) {
                 registration.completionPromiseResolve();
             }
@@ -3396,7 +3390,8 @@ RawDataService.addClassProperties({
             //     console.log("RawDataService.unregisterPendingDataOperationReferrer", dataOperation.id, dataOperation.referrerId, !!registration, dataOperation)
             // }
             if (registration) {
-                registration.completionPromiseResolve();
+                registration.completionPromiseResolve(dataOperation);
+                // registration.completionPromiseResolve();
             }
             this._pendingDataOperationById.delete(dataOperation.referrerId);
             
@@ -3795,7 +3790,9 @@ RawDataService.addClassProperties({
                     this.rawDataDone(stream);
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
-                } 
+                } else {
+                    this.unregisterDataOperationPendingReferrer(operation);
+                }
                 // else {
                 //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
                 // }
@@ -3811,7 +3808,7 @@ RawDataService.addClassProperties({
         value: function (readOperation) {
             let referrer = readOperation.referrer;
             // return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
-            return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
+            return referrer && (referrer.type !== DataOperation.Type.ReadCompletedOperation && referrer.type !== DataOperation.Type.ReadFailedOperation) ? referrer : readOperation;
         }
     },
 

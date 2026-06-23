@@ -3251,8 +3251,26 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+    _parseUrlTrackedTypes: {
+        value: function () {
+            if (typeof window !== "undefined") {
+                const params = new URLSearchParams(location.search);
+                const trackedTypes = params.get("trackedTypes");
+                return trackedTypes ? new Set(trackedTypes.split(",")) : null;
+            }
+            return null;
+        }
+    },
+
     _trackedTargets: {
-        value: new Set(["Person", "OAuthAccessToken", "EmploymentPositionStaffing"])
+        get: function () {
+            if (!this.__trackedTargets) {
+                this.__trackedTargets = this._parseUrlTrackedTypes() || new Set(
+                    ["Person", "EmploymentPositionStaffing", "EmploymentPosition", "JobRole"]
+                );
+            }
+            return this.__trackedTargets;
+        }
     },
 
     handleEvent: {
@@ -3294,11 +3312,11 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         value: function (event) {
             let referrer;
             if (event.referrer) {
-                return this._isActive(event.referrer);
+                return this._isActive(event.referrer) || this._hasActiveReferrer(event.referrer);
             } else if (event.referrers) {
                 let i, n, isActive;
                 for (i = 0, n = event.referrers.length; i < n && !isActive; ++i) {
-                    isActive = this._isActive(event.referrers[i]);
+                    isActive = this._isActive(event.referrers[i]) || this._hasActiveReferrer(event.referrers[i]);
                 }
                 return isActive;
             }
@@ -3461,25 +3479,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
             if(promise) {
                 var self = this;
-                let timeoutId = setTimeout(function () {
-                    if (mutableEvent.target && mutableEvent.target.name) {
-                        if (mutableEvent.referredOperations && mutableEvent.referredOperations.length) {
-                            let ancestry = mutableEvent.referredOperations.map(function (referred) {
-                                return " " + referred.type + ":" + referred.target.name + ":" + referred.id + ":" + referred.rawDataService?.name;
-                            }).join("\n");
-                            ancestry = "Referred: \n" + ancestry;
-                            console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, ancestry, mutableEvent);
-
-                        } else {
-                            console.log("Unresolved Event", mutableEvent.type, mutableEvent.target.name, mutableEvent.id, mutableEvent);
-                        }
-                    } else {
-                        console.log("Unresolved Event", mutableEvent.type, mutableEvent.id, mutableEvent);
-                    }
-                    
-                }, 2000);
                 mutableEvent.propagationPromise = promise.then(function() {
-                    clearTimeout(timeoutId);
                     self._finalizeHandleEvent(mutableEvent, event);
                 });
             } else {
@@ -3527,8 +3527,6 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                     this._eventQueueByType.delete(type);
                 }
             }
-
-
 
             // if (this._previousEvent === event || this._previousEvent === mutableEvent) {
             //     this._previousEvent = event.dispatchChain[event.dispatchChain.length - 1];
@@ -3713,10 +3711,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 this.unregisterTargetEventListener(iTarget, mutableEvent.type, listener, listenerEntry);
             }
 
-            if (result && result.then) {
-                mutableEvent.triggeredTargets = mutableEvent.triggeredTargets || [];
-                mutableEvent.triggeredTargets.push({target: iTarget, entry: listenerEntry, name: currentTargetIdentifierSpecificPhaseMethodName, result: result});
-            }
+            // if (result && result.then) {
+            //     mutableEvent.triggeredTargets = mutableEvent.triggeredTargets || [];
+            //     mutableEvent.triggeredTargets.push({target: iTarget, entry: listenerEntry, name: currentTargetIdentifierSpecificPhaseMethodName, result: result});
+            // }
 
             return result;
 

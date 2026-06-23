@@ -120,17 +120,25 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
     }
 
+    _parseUrlTrackedTypes() {
+        if (typeof window !== "undefined") {
+            const params = new URLSearchParams(location.search);
+            const trackedTypes = params.get("trackedTypes");
+            return trackedTypes ? new Set(trackedTypes.split(",")) : null;
+        }
+        return null;
+    }
+
     get _trackedTypes() {
         if (!this.__trackedTypes) {
-            this.__trackedTypes = new Set([
-                "Person", "EmploymentPosition", "EmploymentPositionStaffing", "Organization", "IncorporatedOrganization", "JobRole"
+            this.__trackedTypes = this._parseUrlTrackedTypes() || new Set([
+                "Person"
             ]);
         }
         return this.__trackedTypes;
     }
 
     _logTypeEvent(objectDescriptor, /*message, element1, element2, ... elementN*/) {
-        let stack = new Error().stack;
         let args = Array.from(arguments),
             logArgs = args.slice(1);
         if (typeof logArgs[0] === "string") {
@@ -138,7 +146,6 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         } else {
             logArgs.unshift("[SynchronizationDataService]");
         }
-        // logArgs.push(stack.split("\n").slice(1, 4).join("\n"));
         if (!this._trackedTypes || !this._trackedTypes.size) {
             console.log.apply(console, logArgs);
         } else if (this._trackedTypes.has(objectDescriptor.name)) {
@@ -557,8 +564,10 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 this.destinationDataService.handleReadOperation(originDataSnapshotReadOperation)
                 .then((resultOperation) => {
 
+
+
                     //If data is found, we let it retur, it should?
-                    if(resultOperation.type === DataOperation.Type.ReadCompletedOperation && (resultOperation.data !=- null || resultOperation.data?.length > 0)) {
+                    if(resultOperation && resultOperation.type === DataOperation.Type.ReadCompletedOperation && (resultOperation.data !=- null || resultOperation.data?.length > 0)) {
                         this._logTypeEvent(readOperation.target, "originDataSnapshotLookUp result FOUND for readOperation "+originDataSnapshotReadOperation.id+" from "+readOperation.identifier+" for "+readOperation.target.name+ " like "+ readOperation.criteria);
 
                         readOperation.stopImmediatePropagation();

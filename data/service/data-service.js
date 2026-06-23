@@ -7256,31 +7256,30 @@ DataService.addClassProperties(
                 // if(!this._createdDataObjects || (this._createdDataObjects && !this._createdDataObjects.has(changeEvent.target))) {
                 //Needs to register the change so saving changes / update operations can use it later to decise what to send
                 //console.log("handleChange:",changeEvent);
-                if (changeEvent.dispatchChain.length > 0) {
-                    // debugger;
+                // if (changeEvent.dispatchChain.length > 0) {
                     // this._logEventChain(changeEvent);
-                }
+                // }
                 this.registerDataObjectChangesFromEvent(changeEvent);
                 //}
             },
         },
 
-        _logEventChain: {
-            value: function (changeEvent) {
-                let name = changeEvent.target.name || changeEvent.target.objectDescriptor.name,
-                message = [
-                    `Change Event Tracking`,
-                    `${changeEvent.identifier}  ${name} ${changeEvent.type} --> `
-                ];
+        // _logEventChain: {
+        //     value: function (changeEvent) {
+        //         let name = changeEvent.target.name || changeEvent.target.objectDescriptor.name,
+        //         message = [
+        //             `Change Event Tracking`,
+        //             `${changeEvent.identifier}  ${name} ${changeEvent.type} --> `
+        //         ];
 
-                changeEvent.dispatchChain.forEach((event) => {
-                    message.push(`${event.identifier} ${event.target.name || event.target.objectDescriptor.name} ${event.type} --> `);
-                });
+        //         changeEvent.dispatchChain.forEach((event) => {
+        //             message.push(`${event.identifier} ${event.target.name || event.target.objectDescriptor.name} ${event.type} --> `);
+        //         });
 
-                console.log(message.join("\n"));
+        //         console.log(message.join("\n"));
 
-            }
-        },  
+        //     }
+        // },  
 
         /***************************************************************************
          * Saving Data

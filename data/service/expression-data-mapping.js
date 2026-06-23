@@ -1680,15 +1680,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      */
     mapRawDataToObjectProperty: {
         value: function (data, object, propertyName, context, scope, registerMappedPropertiesAsChanged) {
-            if (object.objectDescriptor.name === "Person" && (propertyName === "employmentPosition" || propertyName === "employmentHistory")) {
-                console.log("ExpressionDataMapping: " + object.objectDescriptor.name + " " + propertyName, context);
-            }
-            // if (object.dataIdentifier.typeName === "EmploymentPositionStaffing") {
-            //     console.log("ExpressionDataMapping: " + object.objectDescriptor.name + " " + propertyName, context);
-            // }
-            if (object.dataIdentifier.typeName === "EmploymentPosition") {
-                console.log("ExpressionDataMapping: " + object.objectDescriptor.name + " " + propertyName, context);
-            }
+
             if (object.objectDescriptor.name === "Person" || object.dataIdentifier.typeName === "EmploymentPositionStaffing" || object.dataIdentifier.typeName === "EmploymentPosition") {
                 let timeoutid = setTimeout(function () {
                     console.log("ExpressionDataMapping: Failed to map " + propertyName + " on " + object.objectDescriptor.name, data, context, scope);

@@ -341,7 +341,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             let criteria = new Criteria().initWithExpression("identifier == $", aDataIdentifier.primaryKey),
                 iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
 
-            console.log("SerializedDataService._objectPromiseForDataIdentifier", aDataIdentifier.typeName, aDataIdentifier.primaryKey);
 
             if (dataOperation) {
                 iObjectValueQuery.hints = {referrerOperation: dataOperation};
