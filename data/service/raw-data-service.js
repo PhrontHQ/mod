@@ -1535,6 +1535,10 @@ RawDataService.addClassProperties({
                 return Promise.resolveNull;
             }
 
+            if (type.name === "EmploymentPositionStaffing") {
+                console.log("RawDataService.resolveObjectForTypeRawData", type.name, rawData, context);
+            }
+
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
 
@@ -1555,6 +1559,9 @@ RawDataService.addClassProperties({
 
             if (Promise.is(result)) {
                 return result.then(function () {
+                    if (type.name === "EmploymentPositionStaffing") {
+                        console.log("RawDataService.resolveObjectForTypeRawData DONE", type.name, rawData, context);
+                    }
                     return object;
                 });
             } else {
@@ -3345,6 +3352,9 @@ RawDataService.addClassProperties({
                 dataOperationRegistration = {
                     dataOperation: dataOperation
                 };
+                if (dataOperation.target.name === "Person") {
+                    console.log("RawDataService.registerPendingDataOperationWithContext", this.name, dataOperation.id, dataOperation);
+                }
 
                 if (context) {
                     dataOperationRegistration.context = context;
@@ -3366,6 +3376,13 @@ RawDataService.addClassProperties({
 
     unregisterPendingDataOperation: {
         value: function (dataOperation) {
+            let registration = this._pendingDataOperationById.get(dataOperation.id);
+            if (dataOperation.target.name === "Person") {
+                console.log("RawDataService.unregisterPendingDataOperation", dataOperation.id, !!registration, dataOperation)
+            }
+            if (registration) {
+                registration.completionPromiseResolve();
+            }
             this._pendingDataOperationById.delete(dataOperation.id);
             //Backup until bug fixed
             //DataService.mainService.unregisterDataStreamForDataOperation(dataOperation);
@@ -3374,7 +3391,15 @@ RawDataService.addClassProperties({
 
     unregisterDataOperationPendingReferrer: {
         value: function (dataOperation) {
+            let registration = this._pendingDataOperationById.get(dataOperation.referrerId);
+            // if (dataOperation.target.name === "Person") {
+            //     console.log("RawDataService.unregisterPendingDataOperationReferrer", dataOperation.id, dataOperation.referrerId, !!registration, dataOperation)
+            // }
+            if (registration) {
+                registration.completionPromiseResolve();
+            }
             this._pendingDataOperationById.delete(dataOperation.referrerId);
+            
             //Backup until bug fixed
             //DataService.mainService.unregisterDataStreamForDataOperation(dataOperation);
         }
@@ -3770,13 +3795,25 @@ RawDataService.addClassProperties({
                     this.rawDataDone(stream);
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
+                } else {
+                    this.unregisterDataOperationPendingReferrer(operation);
                 }
                 // else {
                 //     console.log("receiving operation of type:"+operation.type+", but can't find a matching stream");
                 // }
                 //console.log("handleReadCompleted -clear _thenableByOperationId- referrerId: ",operation.referrerId);
+            } else {
+
             }
 
+        }
+    },
+
+    relevantOperationForResponse: {
+        value: function (readOperation) {
+            let referrer = readOperation.referrer;
+            // return referrer && referrer.type !== "readCompletedOperation" ? referrer : readOperation;
+            return referrer && (referrer.type !== DataOperation.Type.ReadCompletedOperation && referrer.type !== DataOperation.Type.ReadFailedOperation) ? referrer : readOperation;
         }
     },
 

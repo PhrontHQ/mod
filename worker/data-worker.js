@@ -606,10 +606,12 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
             try {
                 var deserializedOperationPromise = this.deserializer.deserializeObject();
             } catch (ex) {
+                console.error(ex);
                 deserializedOperationPromise = this.tryToConvertMessageToDataOperation(message);
             }
         
             deserializedOperationPromise.catch((error) => {
+                console.error(error);
                 return this.tryToConvertMessageToDataOperation(message);
             })
             .then((deserializedOperation) => {
@@ -643,8 +645,8 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                         })
                     }
                 } else {
-                    console.error("No deserialization for ",serializedOperation);
-                    return Promise.reject("Unknown message: ",serializedOperation);    
+                    console.error("No deserialization for ",message);
+                    return Promise.reject("Unknown message: ",message);    
                 }
             });
 

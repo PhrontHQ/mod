@@ -6486,6 +6486,13 @@ DataService.addClassProperties(
                 // make sure type is an object descriptor or a data object descriptor.
                 query.type = this.objectDescriptorForType(query.type);
 
+                // if (query.type.name === "EmploymentPosition" || query.type.name === "EmploymentPositionStaffing" || query.type.name === "Organization") {
+                //     let referred = query.hints.referrerOperations ? query.hints.referrerOperations.map(function (operation) {
+                //         return operation.id
+                //     }).join(",") : query.hints.referrerOperation ? query.hints.referrerOperation.id : "";
+                //     console.log("DataService.fetchData", query.type.name, referred);
+                // }
+
                 if (this.supportsDataOperation) {
                     //Check if we already have a DataStream pending for that same query:
                     if ((stream = this.registeredDataStreamMapForDataQuery(query))) {
@@ -6552,6 +6559,8 @@ DataService.addClassProperties(
                             //     stream.dataError(e);
                             // }
 
+
+
                             try {
                                 var readOperation = new DataOperation();
 
@@ -6589,7 +6598,11 @@ DataService.addClassProperties(
                                 if (query.criteria) {
                                     //readOperation.criteria = criteria.clone();
                                     readOperation.criteria = query.criteria;
+                                    if (query.criteria.parameters === "019a4e83-203a-76de-bf6f-7f26739d65fd") {
+                                        window.suborgOperation = readOperation;
+                                    }
                                 }
+
                                 if (query.sizeLimit) {
                                     readOperation.data.sizeLimit = query.sizeLimit;
                                 }
@@ -6620,7 +6633,14 @@ DataService.addClassProperties(
 
                                 if (query.hints) {
                                     readOperation.hints = query.hints;
+                                    if (query.hints.referrerOperation) {
+                                        readOperation.referrer = query.hints.referrerOperation;
+                                    }
+                                    if (query.hints.referrerOperations) {
+                                        readOperation.referrers = query.hints.referrerOperations;
+                                    }
                                 }
+                                
 
                                 /*
                         this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
@@ -7228,6 +7248,7 @@ DataService.addClassProperties(
                 - The snapshot may not help us since it could be a property resolved off the primary key
                     if(trigger._getValueStatus(object) == )
 
+
             */
                 //Commentting out the restriction to exclude created objects as we might want to
                 //use it for them as well
@@ -7235,10 +7256,31 @@ DataService.addClassProperties(
                 // if(!this._createdDataObjects || (this._createdDataObjects && !this._createdDataObjects.has(changeEvent.target))) {
                 //Needs to register the change so saving changes / update operations can use it later to decise what to send
                 //console.log("handleChange:",changeEvent);
+                if (changeEvent.dispatchChain.length > 0) {
+                    // debugger;
+                    // this._logEventChain(changeEvent);
+                }
                 this.registerDataObjectChangesFromEvent(changeEvent);
                 //}
             },
         },
+
+        _logEventChain: {
+            value: function (changeEvent) {
+                let name = changeEvent.target.name || changeEvent.target.objectDescriptor.name,
+                message = [
+                    `Change Event Tracking`,
+                    `${changeEvent.identifier}  ${name} ${changeEvent.type} --> `
+                ];
+
+                changeEvent.dispatchChain.forEach((event) => {
+                    message.push(`${event.identifier} ${event.target.name || event.target.objectDescriptor.name} ${event.type} --> `);
+                });
+
+                console.log(message.join("\n"));
+
+            }
+        },  
 
         /***************************************************************************
          * Saving Data

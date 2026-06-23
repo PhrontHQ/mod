@@ -1396,6 +1396,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         */
                         service.mappingWillMapRawDataToObjectProperty(this, data, object, aRule.targetPath, context, mappingScope);
 
+                        if (data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" && object.dataIdentifier.typeName === "EmploymentPositionStaffing") {
+                            console.log("ExpressionDataMapping.mapProperty START", aRule.targetPath);
+                        }
+
                         // console.log("mapRawDataToObject "+ this.service.dataIdentifierForObject(object)+" WILL MAP "+ aRule.targetPath);
 
                         result = this.mapRawDataToObjectProperty(data, object, aRule.targetPath, context, mappingScope, registerMappedPropertiesAsChanged);
@@ -1403,7 +1407,22 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                             if (this._isAsync(result)) {
                                 const targetPath = aRule.targetPath,
                                         propertyDescriptor = aRule.propertyDescriptor;
+                                if ((data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPositionStaffing")
+                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition") || 
+                                (object.dataIdentifier.typeName === "JobRole")) {
+                                    // console.log("ExpressionDataMapping.mapProperty START", targetPath);
+                                    window.unmappedProperties = window.unmappedProperties || new Set();
+                                    window.unmappedProperties.add(object.dataIdentifier.typeName + "." + targetPath);
+                                }
+
                                 result = result.then((resultValue) => {
+                                    if ((data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPositionStaffing")
+                                || (data.id === "8b286280-6944-432f-8940-39be0117b14f" || object.dataIdentifier.typeName === "EmploymentPosition") || 
+                                (object.dataIdentifier.typeName === "JobRole")) {
+                                        // console.log("ExpressionDataMapping.mapProperty DONE", targetPath);
+                                        window.unmappedProperties.delete(object.dataIdentifier.typeName + "." + targetPath);
+                                    }
+                                    // console.log("ExpressionDataMapping.mapProperty DONE", targetPath);
                                     this._registerMappedPropertyValueAsChangesForCreatedObject(targetPath, resultValue, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));      
                                     /*
                                         Tell our service: mappingDidMapRawDataToObjectPropertyValue
@@ -1414,6 +1433,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                                     return resultValue;
                                 });
                             } else {
+                                if (data.employeeId === "8b286280-6944-432f-8940-39be0117b14f" && object.dataIdentifier.typeName === "EmploymentPositionStaffing") {
+                                    console.log("ExpressionDataMapping.mapProperty DONE", aRule.targetPath);
+                                }
                                 this._registerMappedPropertyValueAsChangesForCreatedObject(aRule.targetPath, result, (changesForDataObject || (changesForDataObject = service.changesForDataObject(object))), object, (mainService || (mainService = service.mainService)));
                                 /*
                                     Tell our service: mappingDidMapRawDataToObjectPropertyValue
@@ -1657,6 +1679,24 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
     mapRawDataToObjectProperty: {
+        value: function (data, object, propertyName, context, scope, registerMappedPropertiesAsChanged) {
+
+            if (object.objectDescriptor.name === "Person" || object.dataIdentifier.typeName === "EmploymentPositionStaffing" || object.dataIdentifier.typeName === "EmploymentPosition") {
+                let timeoutid = setTimeout(function () {
+                    console.log("ExpressionDataMapping: Failed to map " + propertyName + " on " + object.objectDescriptor.name, data, context, scope);
+                }, 4000);
+                let result = this.___mapRawDataToObjectProperty(data, object, propertyName, context, scope, registerMappedPropertiesAsChanged);
+                result.then(function () {
+                    clearTimeout(timeoutid);
+                });
+                return result;
+            } else {
+                return this.___mapRawDataToObjectProperty(data, object, propertyName, context, scope, registerMappedPropertiesAsChanged);
+            }
+        }
+    },
+
+    ___mapRawDataToObjectProperty: {
         value: function (data, object, propertyName, context, scope = this._scope.nest(data), registerMappedPropertiesAsChanged) {
             var rule = this.objectMappingRuleForPropertyName(propertyName),
                 propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName);
@@ -1669,6 +1709,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 propertyScope,
                 locales,
                 debug = DataService.debugProperties.has(propertyName) || (rule && rule.debug === true);
+
+            if (object.objectDescriptor.name === "Person" && (propertyName === "employmentPosition" || propertyName === "employmentHistory")) {
+                console.log("ExpressionDataMapping 2: " + object.objectDescriptor.name + " " + propertyName, context, data);
+            }
 
 
             //Simplistic and potentially wrong, but if there's no properties on data for that rule, then there's no point doing it

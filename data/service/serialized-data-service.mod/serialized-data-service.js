@@ -333,13 +333,18 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
     
 
-    _objectPromiseForDataIdentifier(aDataIdentifier, mainService) {
+    _objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation) {
         let iObjectValue = mainService.objectForDataIdentifier(aDataIdentifier);
 
         if(!iObjectValue) {
             
             let criteria = new Criteria().initWithExpression("identifier == $", aDataIdentifier.primaryKey),
                 iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
+
+
+            if (dataOperation) {
+                iObjectValueQuery.hints = {referrerOperation: dataOperation};
+            }
 
 
             return mainService.fetchData(iObjectValueQuery).catch((e) => {
@@ -363,7 +368,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
     /* adds a promise resolving to the value to mappingPromises passed in*/
-    _mapRawDataPropertyToObject (record, property, object, mappingPromises, mainService) {
+    _mapRawDataPropertyToObject (record, property, object, mappingPromises, mainService, context) {
         let objectDescriptor = object.objectDescriptor,
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
 
@@ -376,10 +381,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             if(iPropertyDescriptor.valueDescriptor) {
                 if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
                     mappingPromises.push(iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
-                        return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService);
+                        return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService, context);
                     }));
                 } else {
-                    return this.__mapRawDataPropertyToObject(record, property, iPropertyDescriptor.valueDescriptor, object, mainService);
+                    return this.__mapRawDataPropertyToObject(record, property, iPropertyDescriptor.valueDescriptor, object, mainService, context);
                 }
 
             } else {
@@ -389,20 +394,39 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
 
-    __mapRawDataPropertyToObject (record, property, valueDescriptor, object, mainService) {
+    __mapRawDataPropertyToObject (record, property, valueDescriptor, object, mainService, context) {
         let objectDescriptor = object.objectDescriptor,
-            iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property);
+            iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property),
+            dataOperation = context instanceof DataOperation ? context : null;
+
+        let trackMapping = object.objectDescriptor.name === "IncorporatedOrganization" || object.objectDescriptor.name === "Organization" || object.objectDescriptor.name === "JobRole";
+
+        if (trackMapping) {
+            window.incOrgProperties = window.incOrgProperties || new Map();
+            // debugger
+            if (!window.incOrgProperties.has(object)) {
+                window.incOrgProperties.set(object, new Set());
+            }
+            window.incOrgProperties.get(object).add(property);
+        }
         if(iPropertyDescriptor.cardinality === 1) {
                     let iPropertyValue = object[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
                         let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record.identifier);
 
-                        return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
+                        return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
+                                if (trackMapping) {
+                                    window.incOrgProperties.get(object).delete(property);
+                                }
+                                
                                 object[property] = iObjectValue
                             })
         
                     } else {
+                                if (trackMapping) {
+                                    window.incOrgProperties.get(object).delete(property);
+                                }
                         object[property] = record[property];
                     }
                 } else {
@@ -427,10 +451,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
 
                                 mappingPromises.push(
-                                    this._objectPromiseForDataIdentifier(aDataIdentifier, mainService)
+                                    this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                                 );
                             }
                             return Promise.all(mappingPromises).then((values) => {
+                                if (trackMapping) {
+                                    window.incOrgProperties.get(object).delete(property);
+                                }
                                 object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                                 return;
                             });
@@ -439,6 +466,9 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
                         }
                     } else {
+                        if (trackMapping) {
+                            window.incOrgProperties.get(object).delete(property);
+                        }
                         object[property] = iPropertyValues;
                     }
                 }
@@ -452,8 +482,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             mappingPromises = [];
 
 
+
+
         for(let countI = recordKeys.length, i = 0; (i<countI); i++) {
-            this._mapRawDataPropertyToObject(record, recordKeys[i], object, mappingPromises, mainService);
+            this._mapRawDataPropertyToObject(record, recordKeys[i], object, mappingPromises, mainService, context);
         }
 
         if(mappingPromises.length) {
@@ -493,6 +525,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 .then((dataInstances) => {
                         criteria = readOperation.criteria;
                             let predicateFunction = criteria?.predicateFunction;
+
+                        // if (readOperation.criteria.parameters && readOperation.criteria.parameters === "FORD MOTOR COMPANY" || readOperation.criteria.parameters.name === "FORD MOTOR COMPANY") {
+
+                        // }
 
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
                             let parameters = criteria.parameters;
@@ -651,13 +687,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 //     return this[methodName]?.(readOperation)
                 // } else {
                 //     rawDataArray = null;
-                    let responseOperation = this.responseOperationForReadOperation(readOperation.referrer ? readOperation.referrer : readOperation, null, rawData, /*isNotLast*/false,/*responseOperationTarget*/responseOperationTarget  );
+                    let responseOperation = this.responseOperationForReadOperation(this.relevantOperationForResponse(readOperation), null, rawData, /*isNotLast*/false,/*responseOperationTarget*/responseOperationTarget  );
                     responseOperationTarget.dispatchEvent(responseOperation);             
                 // }
             }  
         } else {
             let responseOperation = this.responseOperationForReadOperation(
-                readOperation.referrer ? readOperation.referrer : readOperation,
+                this.relevantOperationForResponse(readOperation),
                 null,
                 rawData
             );
