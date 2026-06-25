@@ -3262,36 +3262,41 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+
     _trackedTargets: {
         get: function () {
             if (!this.__trackedTargets) {
-                this.__trackedTargets = this._parseUrlTrackedTypes() || new Set(
-                    ["Person", "EmploymentPositionStaffing", "EmploymentPosition", "JobRole"]
-                );
+                let isLocalModding = currentEnvironment.isLocalModding;
+                this.__trackedTargets = this._parseUrlTrackedTypes() || (isLocalModding ? 
+                //Default tracked targets
+                new Set(
+                    ["Person", "EmploymentPosition"]
+                 ) : null);
             }
             return this.__trackedTargets;
+        }
+    },
+
+    _shouldTrackEvent: {
+        value: function (event) {
+            let trackingEnabled = this._trackedTargets !== null,
+                targetName = event.target.name;
+
+            return trackingEnabled && this._trackedTargets.has(targetName);
         }
     },
 
     handleEvent: {
         enumerable: false,
         value: function (event) {
-
-            if (typeof window === "object" && !window._eventQueueByType) {
-                window.eventQueueByType = this._eventQueueByType;
-                window.activeEventsByType = this._activeEventsByType;
-            }
             if (typeof window === "undefined") {
                 this._handleEvent(event);
                 return;
             }
 
-            if (event.target.name && this._trackedTargets.has(event.target.name) && event.type.indexOf("Operation") !== -1) {
+            if (this._shouldTrackEvent(event)) {
                 let queued = this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event);
-                console.log("EventManager Event", event.target.name, event.id, event.referrerId, event, {
-                    queued: queued,
-                    firstOfKind: !queued && !this._activeEventsByType.has(event.type)
-                });
+                console.log(`[EventManager] received ${event.type} for target: ${event.target.name}, event.id: ${event.id}, event.referrerId: ${event.id}, queued: ${queued}, root: ${!queued && !this._activeEventsByType.has(event.type)}`, event);
             }
             if (this._activeEventsByType.has(event.type) &&  !this._hasActiveReferrer(event)) {
                 if (!this._eventQueueByType.has(event.type)) {
@@ -3357,8 +3362,8 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 targetEntry, targetEntryForEventType,
                 promise;
 
-            if (event.target.name && this._trackedTargets.has(event.target.name) && event.type.indexOf("Operation") !== -1) {
-                console.log("EventManager HandleEvent", event.target.name, event.id, event.referrerId);
+            if (this._shouldTrackEvent(event)) {
+                console.log(`[EventManager] handle ${event.type} for target ${event.target.name}, event.id: ${event.id}, event.referrerId: ${event.referrerId}`);
             }
 
             // if (event.tracksDispatchChain) {

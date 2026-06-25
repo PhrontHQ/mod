@@ -7,7 +7,9 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
     { DataObject } = require("../../model/data-object"),
-    DataOperation = require("../data-operation").DataOperation;
+    DataOperation = require("../data-operation").DataOperation,
+    currentEnvironment = require("core/environment").currentEnvironment;
+
 
 
 /**
@@ -131,14 +133,18 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
     get _trackedTypes() {
         if (!this.__trackedTypes) {
-            this.__trackedTypes = this._parseUrlTrackedTypes() || new Set([
-                "Person"
-            ]);
+            let isLocalModding = currentEnvironment.isLocalModding;
+            this.__trackedTypes = this._parseUrlTrackedTypes() || (isLocalModding ? new Set([
+                "Person", "EmploymentPosition"
+            ]) : null);
         }
         return this.__trackedTypes;
     }
 
     _logTypeEvent(objectDescriptor, /*message, element1, element2, ... elementN*/) {
+        if (this._trackedTypes === null) {
+            return;
+        }
         let args = Array.from(arguments),
             logArgs = args.slice(1);
         if (typeof logArgs[0] === "string") {

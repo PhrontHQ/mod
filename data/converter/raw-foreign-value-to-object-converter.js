@@ -133,10 +133,6 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 //var localResult,
                     localPartialResult;
 
-                if (typeToFetch.name === "EmploymentPosition" || typeToFetch.name === "EmploymentPositionStaffing" || typeToFetch.name === "Organization" ) {
-                    console.log("ExpressionDataMapping._fetchConvertedDataForObjectDescriptorCriteria", typeToFetch, currentRule.propertyDescriptor.name, referrerOperation && referrerOperation.id, criteria);
-                }
-
                 /*
                     Leaving a trace of localPartialResult here. Unless I'm missing something, the problem with a partial result 
                     is that we don't really have an easy way to return a partial result with the promise-based API, 
