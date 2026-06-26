@@ -4,7 +4,6 @@ const { VisualOrientation } = require("core/enums/visual-orientation");
 const { VisualPosition } = require("core/enums/visual-position");
 const { PressComposer } = require("composer/press-composer");
 const { KeyComposer } = require("composer/key-composer");
-const { Control } = require("ui/control");
 const { Montage } = require("core/core");
 const { ActionTarget } = require("ui/action-target.mod/action-target");
 
@@ -14,7 +13,7 @@ const { ActionTarget } = require("ui/action-target.mod/action-target");
  * Wraps a native <code>&lt;button></code> or <code>&lt;input[type="button"]></code> HTML element.
  * The element's standard attributes are exposed as bindable properties.
  * @class module:"mod/ui/native/button.mod".Button
- * @extends module:mod/ui/control.Control
+ * @extends module:mod/ui/action-target.mod/action-target
  * @fires action
  * @fires hold
  *
@@ -257,11 +256,11 @@ const Button = (exports.Button = class Button extends ActionTarget {
      * @default 1000
      */
     get holdThreshold() {
-        return this._pressComposer.longPressThreshold;
+        return super.holdThreshold;
     }
 
     set holdThreshold(value) {
-        this._pressComposer.longPressThreshold = value;
+        super.holdThreshold = value;
     }
 
     __pressComposer = null;
@@ -301,25 +300,9 @@ const Button = (exports.Button = class Button extends ActionTarget {
      * @protected
      */
     prepareForActivationEvents() {
-        this._pressComposer.addEventListener("pressStart", this, false);
+        super.prepareForActivationEvents();
         this._spaceKeyComposer.addEventListener("keyPress", this, false);
         this._enterKeyComposer.addEventListener("keyPress", this, false);
-    }
-
-    /**
-     * Override addEventListener for optimization
-     * @override
-     * @protected
-     * @param {String} type - The event type
-     * @param {Function} listener - The event listener
-     * @param {boolean} useCapture - The useCapture flag
-     */
-    addEventListener(type, listener, useCapture) {
-        super.addEventListener(type, listener, useCapture);
-
-        if (type === "longAction") {
-            this._pressComposer.addEventListener("longPress", this, false);
-        }
     }
 
     // <---- Event Handlers ---->
@@ -346,8 +329,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
      */
     handlePressStart(mutableEvent) {
         if (!this._promise) {
-            this.active = true;
-            this._addEventListeners();
+            super.handlePressStart(mutableEvent);
         }
     }
 
@@ -359,9 +341,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
      */
     handlePress(mutableEvent) {
         if (!this._promise) {
-            this.active = false;
-            this.dispatchActionEvent(event.details);
-            this._removeEventListeners();
+            super.handlePress(mutableEvent);
         }
     }
 
@@ -373,16 +353,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
      */
     handleLongPress(mutableEvent) {
         if (!this._promise) {
-            // When we fire the "hold" event we don't want to fire the
-            // "action" event as well.
-            this._pressComposer.cancelPress();
-            this._removeEventListeners();
-
-            const longActionEvent = document.createEvent("CustomEvent");
-
-            // FIXME: InitCustomEvent is deprecated
-            longActionEvent.initCustomEvent("longAction", true, true, null);
-            this.dispatchEvent(longActionEvent);
+            super.handleLongPress(mutableEvent);
         }
     }
 
@@ -392,8 +363,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
      * @param {MutableEvent} mutableEvent - The event object
      */
     handlePressCancel(mutableEvent) {
-        this.active = false;
-        this._removeEventListeners();
+        super.handlePressCancel(mutableEvent);
     }
 
     // <---- Life Cycle ---->
@@ -436,30 +406,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
 
     // <---- Private ---->
 
-    /**
-     * Adds event listeners to the button.
-     * @private
-     */
-    _addEventListeners() {
-        this._pressComposer.addEventListener("press", this, false);
-        this._pressComposer.addEventListener("pressCancel", this, false);
-
-        // FIXME: @benoit: we should maybe have a flag for this kind of event.
-        // can be tricky with the event delegation for example if we don't add it.
-        // same issue for: the pressComposer and the translate composer.
-        this._pressComposer.addEventListener("longPress", this, false);
-    }
-
-    /**
-     * Removes event listeners from the button.
-     * @private
-     */
-    _removeEventListeners() {
-        this._pressComposer.removeEventListener("press", this, false);
-        this._pressComposer.removeEventListener("pressCancel", this, false);
-        this._pressComposer.removeEventListener("longPress", this, false);
-    }
-
+   
     /**
      * Applies the current image position's styling by updating CSS classes
      * @private
