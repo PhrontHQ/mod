@@ -8,6 +8,7 @@
  */
 const { Control } = require("ui/control");
 var Component = require("../component").Component,
+    KeyComposer = require("../../composer/key-composer").KeyComposer,
     PressComposer = require("../../composer/press-composer").PressComposer,
     Map = require("core/collections/map");
 
@@ -81,15 +82,98 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
         }
     },
 
+    debounceOptions: {
+        value: {
+            leading: true,
+            trailing: false
+        }
+    },
+
+    _debounceThreshold: {
+        value: 300
+    },
+
+    _debounced: {
+        value: false
+    },
+
+    debounceThreshold: {
+        get: function () {
+            return this._debounceThreshold;
+        },
+        set: function (value) {
+            this._debounceThreshold = Number(value);
+
+            if (this._debounced) {
+                this.dispatchActionEvent = this.debounce(
+                    this.dispatchActionEvent.bind(this),
+                    this._debounceThreshold,
+                    this.debounceOptions
+                );
+            }
+        }
+    },
+
+    debounced: {
+        get: function () {
+            return this._debounced;
+        },
+        set: function (value) {
+            this._debounced = Boolean(value);
+
+            if (this._debounced) {
+                this.dispatchActionEvent = this.debounce(
+                    this.dispatchActionEvent.bind(this),
+                    this._debounceThreshold,
+                    this.debounceOptions
+                );
+            } else {
+                this.dispatchActionEvent = this.constructor.prototype.dispatchActionEvent;
+            }
+        }
+    },
+
+    _promise: {
+        value: undefined
+    },
+
+    promise: {
+        get: function () {
+            return this._promise;
+        },
+        set: function (promise) {
+            var shouldClearPendingState,
+                currentTrackedPromise;
+
+            if (this._promise === promise) {
+                return;
+            }
+
+            shouldClearPendingState = !!this._promise;
+            this._promise = promise;
+
+            if (promise) {
+                this.classList.add("mod--pending");
+                currentTrackedPromise = promise;
+
+                promise.finally(function () {
+                    if (this._promise === currentTrackedPromise) {
+                        this.classList.remove("mod--pending");
+                        this._promise = undefined;
+                    }
+                }.bind(this));
+            } else if (shouldClearPendingState) {
+                this.classList.remove("mod--pending");
+            }
+        }
+    },
+
     /**
      * @constructs
      */
     constructor: {
         value: function ActionTarget() {
-            this._pressComposer = new PressComposer();
-            this.addComposer(this._pressComposer);
             this._pressComposer.defineBinding("longPressThreshold", {"<-": "holdThreshold", source: this});
-
         }
     },
 
@@ -157,8 +241,47 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
      * @default null
      * @private
      */
-    _pressComposer: {
+    __pressComposer: {
         value: null
+    },
+
+    _pressComposer: {
+        get: function () {
+            if (!this.__pressComposer) {
+                this.__pressComposer = new PressComposer();
+                this.addComposer(this.__pressComposer);
+            }
+
+            return this.__pressComposer;
+        }
+    },
+
+    __spaceKeyComposer: {
+        value: null
+    },
+
+    _spaceKeyComposer: {
+        get: function () {
+            if (!this.__spaceKeyComposer) {
+                this.__spaceKeyComposer = KeyComposer.createKey(this, "space", "space");
+            }
+
+            return this.__spaceKeyComposer;
+        }
+    },
+
+    __enterKeyComposer: {
+        value: null
+    },
+
+    _enterKeyComposer: {
+        get: function () {
+            if (!this.__enterKeyComposer) {
+                this.__enterKeyComposer = KeyComposer.createKey(this, "enter", "enter");
+            }
+
+            return this.__enterKeyComposer;
+        }
     },
 
     /**
@@ -190,6 +313,8 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
             this._pressComposer.addEventListener("pressStart", this, false);
             this._pressComposer.addEventListener("press", this, false);
             this._pressComposer.addEventListener("pressCancel", this, false);
+            this._spaceKeyComposer.addEventListener("keyPress", this, false);
+            this._enterKeyComposer.addEventListener("keyPress", this, false);
         }
     },
 
@@ -212,6 +337,10 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
      */
     handlePressStart: {
         value: function (event) {
+            if (this._promise) {
+                return;
+            }
+
             this.active = true;
 
             if (event.touch) {
@@ -233,9 +362,26 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
      */
     handlePress: {
         value: function (event) {
+            if (this._promise) {
+                return;
+            }
+
             this.active = false;
             this.dispatchActionEvent();
             document.removeEventListener("touchmove", this, false);
+        }
+    },
+
+    handleKeyPress: {
+        value: function (event) {
+            if (this._promise) {
+                return;
+            }
+
+            if (event.identifier === "space" || event.identifier === "enter") {
+                this.active = false;
+                this.dispatchActionEvent();
+            }
         }
     },
 
@@ -251,6 +397,10 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
 
     handleLongPress: {
         value: function (event) {
+            if (this._promise) {
+                return;
+            }
+
             // When we fire the "longAction" event we don't want to fire the
             // "action" event as well.
             this._pressComposer.cancelPress();
