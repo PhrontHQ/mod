@@ -1,0 +1,21 @@
+# Grid Systems Research
+
+## [gridless.design](https://gridless.design/)
+
+- ## [History](https://gridless.design/history)
+
+  "One of the ways that bridged the gap between artboards and the web was to conditionally change the layout based on the device's screen dimensions. An engineer could include additional rules, commonly known as “breakpoints”, that conditionally applied layout changes based on the size of the screen. The dimensions set to trigger these changes were often popular device sizes which designers would also use as artboard sizes. This seemingly kept web design and engineering in unison but in reality, it only forced the web to be explicit in layout and dimension again. Now engineers were coding specific layout changes to occur based on the given artboards. As stated before, no designer can anticipate all possible layouts. Nor should an engineer attempt to code layout exactly as specified by design.
+
+  To be clear, style properties such as color and typography should often be followed to design specifications by an engineer. However, layout must be interpreted in order to provide a smart responsive design. No design tool is yet able to provide guidelines for a proper responsive approach which prepares for all possible content and dimension changes. This comes with experience as a skilled web engineer since these specifications cannot easily be represented as guidelines within design tools.
+
+  Another problem with breakpoints is they are only related to the device's screen dimensions. Initially, one may believe that if you change the page layout at a breakpoint, smaller layouts that are related to the larger layout can change along with that breakpoint. Again, this is the same pattern as print layout; one layout for one specific set of dimensions. However, the trouble is compounded because developers have not had the tools to trigger layout changes from anywhere but the page (or artboard) level. **If HTML elements were able to make significant layout changes based on the container they are in, as required to make visually interesting layouts in HTML, then a designer would not need to consider each page layout as a whole but instead the rules of the components inside of different size containers. Designing at the atomic level first with an understanding that the content can change will help inform larger layouts that may never be fully realized by a designer but still remain an accessible and well-designed experience.**"
+
+- ## [For Designers](https://gridless.design/for-designers)
+
+    "It’s helpful to think of these things as individual components; perhaps from a design system. Each component can be a self-contained experience that adapts to changes based on the parent container it is placed into. A good example could be a navigation bar that collapses overflow items into a flyout menu. Longer words in the navigation will cause the overflow to trigger earlier than shorter words. A well crafted reusable component will have these rules self-contained and not dependent on other elements or the page itself to change.
+
+    From here, very few components can be constrained to align to an overlaid design grid. This is due to the content variations within these components and the ways that they can be altered by other stakeholders and users that will eventually need to flow outside of a design grid."
+
+    "Designers should also consider containers in terms of percentage of the parent instead of how many grid columns are expected. When designing a form for example, instead of describing that the fields should span 6 out of 12 columns, describe that the fields span 50% of the width of the container. It’s important to relate the size of the component to the container instead of the page as that is how a developer will ultimately need to implement it. When the field layout needs to change between desktop (6 out of 12 columns) to tablet (4 out of 8 columns), the ratio is still the same (50%)."
+
+- ## [For Sevelopers](https://gridless.design/for-developers)
