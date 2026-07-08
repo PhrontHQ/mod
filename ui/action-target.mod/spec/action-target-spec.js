@@ -17,7 +17,7 @@ describe("test/ui/action-target-spec", function () {
         describe("disabled property", function () {
             var anActionTarget;
             beforeEach(function () {
-                anActionTarget = new Button();
+                anActionTarget = new ActionTarget();
                 anActionTarget.element = MockDOM.element();
                 anActionTarget.originalElement = anActionTarget.element;
             });
@@ -36,40 +36,9 @@ describe("test/ui/action-target-spec", function () {
                 expect(anActionTarget.element.disabled).toBeTruthy();
             });
         });
-        describe("active target", function () {
-            var anActionTarget, anElement;
-            beforeEach(function () {
-                anActionTarget = new Button();
-                anElement = MockDOM.element();
-            });
-            it("should set tabindex if needed", function () {
-                anElement.tagName = "DIV";
-                spyOn(anElement, "setAttribute");
-                spyOn(anElement, "removeAttribute");
-
-                anActionTarget.element = anElement;
-                anActionTarget._draw();
-                anActionTarget.draw();
-                expect(anElement.setAttribute).toHaveBeenCalledWith("tabindex", "0");
-                anActionTarget.preventFocus = true;
-                anActionTarget._draw();
-                anActionTarget.draw();
-                expect(anElement.removeAttribute).toHaveBeenCalledWith("tabindex");
-            });
-            it("shouldn't set tabindex if not needed", function () {
-                anElement.tagName = "BUTTON";
-                spyOn(anElement, "setAttribute");
-
-                anActionTarget.element = anElement;
-                anActionTarget._draw();
-                anActionTarget.draw();
-                expect(anElement.setAttribute).not.toHaveBeenCalledWith("tabindex", "-1");
-            });
-        });
-
         describe("converter", function () {
             beforeEach(function () {
-                anActionTarget = new Button();
+                anActionTarget = new ActionTarget();
                 anActionTarget.element = MockDOM.element();
                 anActionTarget.originalElement = anActionTarget.element;
                 anActionTarget.element.firstChild = MockDOM.element();
@@ -91,7 +60,7 @@ describe("test/ui/action-target-spec", function () {
         describe("events", function () {
             var anActionTarget, anElement, listener;
             beforeEach(function () {
-                anActionTarget = new Button();
+                anActionTarget = new ActionTarget();
                 anElement = MockDOM.element();
                 listener = {
                     handleEvent: function () {}
@@ -172,7 +141,7 @@ describe("test/ui/action-target-spec", function () {
     });
     describe("objectDescriptor", function () {
         it("can be created", function (done) {
-            var objectDescriptorPromise = Button.objectDescriptor;
+            var objectDescriptorPromise = ActionTarget.objectDescriptor;
             objectDescriptorPromise.then(function (objectDescriptor) {
                 expect(objectDescriptor).not.toBeNull();
             }, function (err) {

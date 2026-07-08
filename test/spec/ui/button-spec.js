@@ -28,6 +28,36 @@ describe("test/ui/button-spec", function () {
                 expect(aButton.label).toEqual("");
             });
         });
+        describe("active target", function () {
+            var aButton, anElement;
+            beforeEach(function () {
+                aButton = new Button();
+                anElement = MockDOM.element();
+            });
+            it("should set tabindex if needed", function () {
+                anElement.tagName = "DIV";
+                spyOn(anElement, "setAttribute");
+                spyOn(anElement, "removeAttribute");
+
+                aButton.element = anElement;
+                aButton._draw();
+                aButton.draw();
+                expect(anElement.setAttribute).toHaveBeenCalledWith("tabindex", "0");
+                aButton.preventFocus = true;
+                aButton._draw();
+                aButton.draw();
+                expect(anElement.removeAttribute).toHaveBeenCalledWith("tabindex");
+            });
+            it("shouldn't set tabindex if not needed", function () {
+                anElement.tagName = "BUTTON";
+                spyOn(anElement, "setAttribute");
+
+                aButton.element = anElement;
+                aButton._draw();
+                aButton.draw();
+                expect(anElement.setAttribute).not.toHaveBeenCalledWith("tabindex", "-1");
+            });
+        });
         describe("draw", function () {
             var aButton;
             beforeEach(function () {
