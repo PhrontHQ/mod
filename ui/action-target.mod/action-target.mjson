@@ -1,0 +1,109 @@
+{
+    "objectDescriptor_actionTarget_enabled": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "enabled",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "valueType": "boolean"
+        }
+    },
+    "objectDescriptor_actionTarget_preventFocus": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "preventFocus",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "valueType": "boolean"
+        }
+    },
+    "objectDescriptor_actionTarget_holdThreshold": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "holdThreshold",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "valueType": "number"
+        }
+    },
+    "objectDescriptor_actionTarget_active": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "active",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "valueType": "boolean"
+        }
+    },
+    "objectDescriptor_actionTarget_detail": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "detail",
+            "objectDescriptor": {
+                "@": "root"
+            },
+            "valueType": "object",
+            "readOnly": true,
+            "collectionValueType": "dict"
+        }
+    },
+    "objectDescriptor_component_reference": {
+        "object": "ui/component.mjson"
+    },
+    "root": {
+        "prototype": "core/meta/module-object-descriptor",
+        "values": {
+            "name": "ActionTarget",
+            "parent": {
+                "@": "objectDescriptor_component_reference"
+            },
+            "propertyDescriptors": [
+                {
+                    "@": "objectDescriptor_actionTarget_enabled"
+                },
+                {
+                    "@": "objectDescriptor_actionTarget_preventFocus"
+                },
+                {
+                    "@": "objectDescriptor_actionTarget_holdThreshold"
+                },
+                {
+                    "@": "objectDescriptor_actionTarget_active"
+                },
+                {
+                    "@": "objectDescriptor_actionTarget_detail"
+                }
+            ],
+            "propertyDescriptorGroups": {
+                "ActionTarget": [
+                    {
+                        "@": "objectDescriptor_actionTarget_enabled"
+                    },
+                    {
+                        "@": "objectDescriptor_actionTarget_preventFocus"
+                    },
+                    {
+                        "@": "objectDescriptor_actionTarget_holdThreshold"
+                    },
+                    {
+                        "@": "objectDescriptor_actionTarget_active"
+                    },
+                    {
+                        "@": "objectDescriptor_actionTarget_detail"
+                    }
+                ]
+            },
+            "objectDescriptorModule": {
+                "%": "ui/action-target.mod/action-target.mjson"
+            },
+            "exportName": "ActionTarget",
+            "module": {
+                "%": "ui/action-target.mod"
+            }
+        }
+    }
+}

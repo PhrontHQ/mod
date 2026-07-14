@@ -141,8 +141,8 @@
             "helpKey": ""
         }
     },
-    "objectDescriptor_control_reference": {
-        "object": "ui/control.mjson"
+    "objectDescriptor_action_target_reference": {
+        "object": "ui/action-target.mod/action-target.mjson"
     },
     "root": {
         "prototype": "core/meta/module-object-descriptor",
@@ -150,7 +150,7 @@
             "name": "button",
             "customPrototype": false,
             "parent": {
-                "@": "objectDescriptor_control_reference"
+                "@": "objectDescriptor_action_target_reference"
             },
             "propertyDescriptors": [
                 {

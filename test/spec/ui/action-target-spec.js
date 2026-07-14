@@ -1,0 +1,1 @@
+require('mod/ui/action-target.mod/spec/action-target-spec');

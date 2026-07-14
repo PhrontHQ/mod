@@ -2,10 +2,7 @@
 
 const { VisualOrientation } = require("core/enums/visual-orientation");
 const { VisualPosition } = require("core/enums/visual-position");
-const { PressComposer } = require("composer/press-composer");
-const { KeyComposer } = require("composer/key-composer");
-const { Control } = require("ui/control");
-const { Montage } = require("core/core");
+const { ActionTarget } = require("ui/action-target.mod/action-target");
 
 // TODO: migrate away from using undefinedGet and undefinedSet
 
@@ -13,7 +10,7 @@ const { Montage } = require("core/core");
  * Wraps a native <code>&lt;button></code> or <code>&lt;input[type="button"]></code> HTML element.
  * The element's standard attributes are exposed as bindable properties.
  * @class module:"mod/ui/native/button.mod".Button
- * @extends module:mod/ui/control.Control
+ * @extends module:mod/ui/action-target.mod/action-target
  * @fires action
  * @fires hold
  *
@@ -46,7 +43,7 @@ const { Montage } = require("core/core");
  * }
  * <button data-mod-id="btnElement"></button>
  */
-const Button = (exports.Button = class Button extends Control {
+const Button = (exports.Button = class Button extends ActionTarget {
     /** @lends module:"mod/ui/native/button.mod".Button# */
 
     // <---- Static ---->
@@ -56,72 +53,6 @@ const Button = (exports.Button = class Button extends Control {
     static VisualPosition = VisualPosition;
 
     // <---- Properties ---->
-
-    static {
-        /**
-         * Options for debouncing the action event.
-         * Immediately invokes the function and then ignores any calls made
-         * within the threshold period.
-         * @type {Object}
-         * @default { leading: true, trailing: false }
-         */
-        Montage.defineProperties(this.prototype, {
-            debounceOptions: {
-                value: {
-                    leading: true,
-                    trailing: false,
-                },
-            },
-
-            _debounceThreshold: { value: 300 }, // milliseconds
-
-            _debounced: { value: false },
-        });
-    }
-
-    get debounceThreshold() {
-        return this._debounceThreshold;
-    }
-
-    /**
-     * The debounce threshold in milliseconds.
-     * @type {number}
-     * @default 300
-     */
-    set debounceThreshold(value) {
-        this._debounceThreshold = Number(value);
-
-        if (this._debounced) {
-            this.dispatchActionEvent = this.debounce(
-                this.dispatchActionEvent.bind(this),
-                this._debounceThreshold,
-                this.debounceOptions
-            );
-        }
-    }
-
-    get debounced() {
-        return this._debounced;
-    }
-
-    /**
-     * Indicates whether the action event is debounced.
-     * @type {boolean}
-     * @default false
-     */
-    set debounced(value) {
-        this._debounced = Boolean(value);
-
-        if (this._debounced) {
-            this.dispatchActionEvent = this.debounce(
-                this.dispatchActionEvent.bind(this),
-                this._debounceThreshold,
-                this.debounceOptions
-            );
-        } else {
-            this.dispatchActionEvent = Button.prototype.dispatchActionEvent;
-        }
-    }
 
     _visualPosition = VisualPosition.start;
 
@@ -213,188 +144,6 @@ const Button = (exports.Button = class Button extends Control {
         }
     }
 
-    _promise = undefined;
-
-    get promise() {
-        return this._promise;
-    }
-
-    set promise(promise) {
-        // Only proceed if the new promise is different from the current one
-        if (this._promise === promise) return;
-
-        const shouldClearPendingState = !!this._promise;
-        this._promise = promise;
-
-        if (promise) {
-            // Set up pending state when promise is set
-            this.classList.add("mod--pending");
-
-            // Store reference to track this specific promise
-            const currentTrackedPromise = promise;
-
-            // Clear state when promise resolves/rejects
-            // TODO: we should propably add an error state?...
-            promise.finally(() => {
-                // Only clear if this is still the active promise
-                if (this._promise === currentTrackedPromise) {
-                    this.classList.remove("mod--pending");
-                    this._promise = undefined;
-                }
-            });
-        } else if (shouldClearPendingState) {
-            // Clear pending state when the current promise is set to null
-            this.classList.remove("mod--pending");
-        }
-    }
-
-    /**
-     * The amount of time in milliseconds the user must press and hold
-     * the button a <code>hold</code> event is dispatched.
-     * The default is 1 second.
-     * @type {number}
-     * @default 1000
-     */
-    get holdThreshold() {
-        return this._pressComposer.longPressThreshold;
-    }
-
-    set holdThreshold(value) {
-        this._pressComposer.longPressThreshold = value;
-    }
-
-    __pressComposer = null;
-
-    get _pressComposer() {
-        if (!this.__pressComposer) {
-            this.__pressComposer = new PressComposer();
-            this.addComposer(this.__pressComposer);
-        }
-
-        return this.__pressComposer;
-    }
-
-    __spaceKeyComposer = null;
-
-    get _spaceKeyComposer() {
-        if (!this.__spaceKeyComposer) {
-            this.__spaceKeyComposer = KeyComposer.createKey(this, "space", "space");
-        }
-
-        return this.__spaceKeyComposer;
-    }
-
-    __enterKeyComposer = null;
-
-    get _enterKeyComposer() {
-        if (!this.__enterKeyComposer) {
-            this.__enterKeyComposer = KeyComposer.createKey(this, "enter", "enter");
-        }
-
-        return this.__enterKeyComposer;
-    }
-
-    /**
-     * Prepares the component for activation events.
-     * @override
-     * @protected
-     */
-    prepareForActivationEvents() {
-        this._pressComposer.addEventListener("pressStart", this, false);
-        this._spaceKeyComposer.addEventListener("keyPress", this, false);
-        this._enterKeyComposer.addEventListener("keyPress", this, false);
-    }
-
-    /**
-     * Override addEventListener for optimization
-     * @override
-     * @protected
-     * @param {String} type - The event type
-     * @param {Function} listener - The event listener
-     * @param {boolean} useCapture - The useCapture flag
-     */
-    addEventListener(type, listener, useCapture) {
-        super.addEventListener(type, listener, useCapture);
-
-        if (type === "longAction") {
-            this._pressComposer.addEventListener("longPress", this, false);
-        }
-    }
-
-    // <---- Event Handlers ---->
-
-    /**
-     * Dispatching the action event on spacebar & enter when the button is focused.
-     * @param {MutableEvent} mutableEvent - The event object
-     * @protected
-     * @fires action
-     */
-    handleKeyPress(mutableEvent) {
-        const { identifier } = mutableEvent;
-
-        if (identifier === "space" || identifier === "enter") {
-            this.active = false;
-            this.dispatchActionEvent();
-        }
-    }
-
-    /**
-     * Called when the user starts interacting with the component.
-     * @protected
-     * @param {MutableEvent} mutableEvent - The event object
-     */
-    handlePressStart(mutableEvent) {
-        if (!this._promise) {
-            this.active = true;
-            this._addEventListeners();
-        }
-    }
-
-    /**
-     * Called when the user has interacted with the button.
-     * @protected
-     * @param {MutableEvent} mutableEvent - The event object
-     * @fires action
-     */
-    handlePress(mutableEvent) {
-        if (!this._promise) {
-            this.active = false;
-            this.dispatchActionEvent(event.details);
-            this._removeEventListeners();
-        }
-    }
-
-    /**
-     * Called when the user has interacted with the button for a long time.
-     * @protected
-     * @param {MutableEvent} mutableEvent - The event object
-     * @fires longAction
-     */
-    handleLongPress(mutableEvent) {
-        if (!this._promise) {
-            // When we fire the "hold" event we don't want to fire the
-            // "action" event as well.
-            this._pressComposer.cancelPress();
-            this._removeEventListeners();
-
-            const longActionEvent = document.createEvent("CustomEvent");
-
-            // FIXME: InitCustomEvent is deprecated
-            longActionEvent.initCustomEvent("longAction", true, true, null);
-            this.dispatchEvent(longActionEvent);
-        }
-    }
-
-    /**
-     * Called when all interaction is over.
-     * @protected
-     * @param {MutableEvent} mutableEvent - The event object
-     */
-    handlePressCancel(mutableEvent) {
-        this.active = false;
-        this._removeEventListeners();
-    }
-
     // <---- Life Cycle ---->
 
     enterDocument(firstDraw) {
@@ -435,30 +184,7 @@ const Button = (exports.Button = class Button extends Control {
 
     // <---- Private ---->
 
-    /**
-     * Adds event listeners to the button.
-     * @private
-     */
-    _addEventListeners() {
-        this._pressComposer.addEventListener("press", this, false);
-        this._pressComposer.addEventListener("pressCancel", this, false);
-
-        // FIXME: @benoit: we should maybe have a flag for this kind of event.
-        // can be tricky with the event delegation for example if we don't add it.
-        // same issue for: the pressComposer and the translate composer.
-        this._pressComposer.addEventListener("longPress", this, false);
-    }
-
-    /**
-     * Removes event listeners from the button.
-     * @private
-     */
-    _removeEventListeners() {
-        this._pressComposer.removeEventListener("press", this, false);
-        this._pressComposer.removeEventListener("pressCancel", this, false);
-        this._pressComposer.removeEventListener("longPress", this, false);
-    }
-
+   
     /**
      * Applies the current image position's styling by updating CSS classes
      * @private
