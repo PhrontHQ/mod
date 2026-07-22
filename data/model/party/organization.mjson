@@ -26,6 +26,9 @@
             "userInterfaceDescriptorModules": {
                 "*": {
                     "%": "./organization-ui-descriptor.mjson"
+                },
+                "mod/ui/cascading-list.mod": {
+                    "%": "./organization-cascading-list-ui-descriptor.mjson"
                 }
             }
 

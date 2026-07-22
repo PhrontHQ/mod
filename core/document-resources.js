@@ -130,7 +130,12 @@ exports.DocumentResources = class DocumentResources extends Montage {
                 const classListScope = cssContext.classListScope;
                 const cssLayerName = cssContext.cssLayerName;
                 const stylesheet = target.sheet;
-                const cssRules = stylesheet.cssRules;
+                let cssRules;
+                try {
+                    cssRules = stylesheet.cssRules;
+                } catch (e) {
+                    cssRules = [];
+                }
 
                 /**
                  * Adding CSS Layers, and Scoping for components in dev mode.

@@ -18,6 +18,10 @@ var Component = require("../component").Component,
  */
 var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionTarget.prototype # */ {
 
+    hasTemplate: {
+        value: false
+    },
+
     /**
      * @private
      * @property {Map} value
