@@ -44,6 +44,7 @@ exports.DataIdentifier = Montage.specialize(/** @lends DataIdentifier.prototype 
 
     /**
      * The ObjectDescriptor associated with a dataIdentifier if available
+     * TODO: Rename to typeDescriptor
      *
      * @type {ObjectDescriptor}
      */
