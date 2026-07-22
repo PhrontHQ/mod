@@ -77,6 +77,11 @@ DataStream = exports.DataStream = DataProvider.specialize(/** @lends DataStream.
         }
     },
 
+    objectDescriptor: {
+        get: function () {
+            return this._query?.type;
+        }
+    },
     /**
      * The criteria defining the data returned in this stream.
      *
