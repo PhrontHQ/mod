@@ -22,6 +22,10 @@ var ActionTarget = exports.ActionTarget = Control.specialize( /** @lends ActionT
         value: false
     },
 
+    hasTemplate: {
+        value: false
+    },
+
     /**
      * @private
      * @property {Map} value
