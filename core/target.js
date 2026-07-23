@@ -110,6 +110,7 @@ exports.Target = class Target extends Montage {
              * @property {Array<Target>}
              */
             composedPath: { value: undefined },
+            
         });
     }
 
@@ -217,6 +218,21 @@ exports.Target = class Target extends Montage {
             composer.unload();
             composer._isLoaded = false;
         }
+    }
+
+    /**
+     * Return composed path for the target. 
+     * 
+     * 
+     * @param {Event} [event] - The event for which this path will be followed
+     * @returns {Function}
+     */
+    composedPathForEvent(event) {
+        return undefined
+    }
+
+    _composedPathForType(event) {
+        
     }
 
     /**
