@@ -2110,9 +2110,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             var eventTypeBucket;
             if (identifier) {
                 eventTypeBucket = this._bubbleMethodNameByEventTypeIdentifier_.get(eventType) || (this._bubbleMethodNameByEventTypeIdentifier_.set(eventType, new Map())).get(eventType);
-                return eventTypeBucket.get(identifier) || (eventTypeBucket.set(identifier, ("handle" + (capitalizedIdentifier || identifier.toCapitalized()) + (capitalizedEventType || eventType.toCapitalized())))).get(identifier);
+                return eventTypeBucket.get(identifier) || (eventTypeBucket.set(identifier, `handle${(capitalizedIdentifier || identifier.toCapitalized())}${(capitalizedEventType || eventType.toCapitalized())}`)).get(identifier);
             } else {
-                return this._bubbleMethodNameByEventType_.get(eventType) || (this._bubbleMethodNameByEventType_.set(eventType, ("handle" + (capitalizedEventType || eventType.toCapitalized())))).get(eventType);
+                return this._bubbleMethodNameByEventType_.get(eventType) || (this._bubbleMethodNameByEventType_.set(eventType, `handle${(capitalizedEventType || eventType.toCapitalized())}`)).get(eventType);
             }
         }
     },
@@ -2133,10 +2133,10 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             var eventTypeBucket;
             if (identifier) {
                 eventTypeBucket = this._catptureMethodNameByEventTypeIdentifier_.get(eventType) || (this._catptureMethodNameByEventTypeIdentifier_.set(eventType,new Map())).get(eventType);
-                return eventTypeBucket.get(identifier) || (eventTypeBucket.set(identifier,("capture" + (capitalizedIdentifier || identifier.toCapitalized()) + (capitalizedEventType || eventType.toCapitalized())))).get(identifier);
+                return eventTypeBucket.get(identifier) || (eventTypeBucket.set(identifier,`capture${(capitalizedIdentifier || identifier.toCapitalized())}${(capitalizedEventType || eventType.toCapitalized())}`)).get(identifier);
             } else {
                 return this._captureMethodNameByEventType_.get(eventType) ||
-                    (this._captureMethodNameByEventType_.set(eventType, ("capture" + (capitalizedEventType || eventType.toCapitalized())))).get(eventType);
+                    (this._captureMethodNameByEventType_.set(eventType, `capture${(capitalizedEventType || eventType.toCapitalized())}`)).get(eventType);
             }
         }
     },
