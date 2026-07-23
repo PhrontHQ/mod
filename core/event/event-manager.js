@@ -3539,7 +3539,6 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         console.warn("[EventManager] Target was removed from complete event path ", iTarget, mutableEvent);
                         continue;
                     }
-
                     if(eventPath.length !== countI || mutableEvent.currentTarget === iTarget) {
                         //eventPath was modified
                         while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
@@ -4120,6 +4119,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         //remainder of the hierarchy
                         path = targetCandidate.composedPathForEvent && targetCandidate.composedPathForEvent(event);
                         if (path) {
+                            //The array may be cached in targetCandidate. Make a copy so we don't modify it. 
+                            //Assumes composedPathForEvent returns the full path from this target
+                            //Should we instead continue traversing the path from the last target on the composedPath?
                             eventPath.push.apply(eventPath, path);
                             break;
                         } else {

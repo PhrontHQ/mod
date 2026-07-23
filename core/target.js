@@ -220,6 +220,7 @@ exports.Target = class Target extends Montage {
         }
     }
 
+
     /**
      * Return composed path for the target. 
      * 

@@ -1170,7 +1170,7 @@ Object.defineProperties(
          * @returns {Object.<string, DataTrigger>}
          */
         addTriggers: {
-            value: function (service, type, prototype, requisitePropertyDescriptors) {
+            value: function (service, type, prototype) {
                 // This function was split into two to provide backwards compatibility
                 // to existing Montage data projects.  Future montage data projects
                 // should base their object descriptors on Montage's version of object
@@ -1178,7 +1178,7 @@ Object.defineProperties(
                 var isMontageDataType = type instanceof DataObjectDescriptor || type instanceof ModelObjectDescriptor;
                 return isMontageDataType
                     ? this._addTriggersForMontageDataType(service, type, prototype, name)
-                    : this._addTriggers(service, type, prototype, requisitePropertyDescriptors);
+                    : this._addTriggers(service, type, prototype);
             },
         },
 
