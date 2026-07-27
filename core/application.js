@@ -17,6 +17,7 @@ var Target = require("./target").Target,
     Criteria = require("./criteria").Criteria,
     DataQuery = require("../data/model/data-query").DataQuery,
     IdentityManager = require("../data/service/identity-manager").IdentityManager,
+    // EditingContext = _require ("../data/service/editing-context").EditingContext,
     Slot;
 
 require("./dom");
@@ -102,33 +103,41 @@ var Application = exports.Application = class Application extends Target {
 
             //URGENT: We need to further test that we don't already have a valid Authorization to use before authenticating.
 
-            var identityServices = IdentityManager.identityServices,
-                identityObjectDescriptors,
-                authenticationPromise,
-                //    userObjectDescriptor = this.
-                selfUserCriteria,
-                identityQuery;
 
-            //Temporarily Bypassing authentication:
-            if(identityServices && identityServices.length > 0) {
-                //Shortcut, there could be multiple one we need to flatten.
-                identityObjectDescriptors = identityServices[0].types;
+            //This identity code is being removed for multiple reasons
+            //1. Application should have no dependency on mainService
+            //2. There may be multiple identityServices so we can't assume identityServices[0] is the right one
+            //3. An identityService may have multiple types so we can't assume that identityService.types[0] is the right one
+            // We should instead fetch identities based on the data the app is trying to fetch
+            // At the moment, this is done at the app-level so this is not used
 
-                if(identityObjectDescriptors.length > 0) {
-                    //selfUserCriteria = new Criteria().initWithExpression("identity == $", "self");
-                    identityQuery = DataQuery.withTypeAndCriteria(identityObjectDescriptors[0]);
+            // var identityServices = IdentityManager.identityServices,
+            //     identityObjectDescriptors,
+            var authenticationPromise;
+            //     //    userObjectDescriptor = this.
+            //     selfUserCriteria,
+            //     identityQuery;
 
-                    authenticationPromise = self.mainService.fetchData(identityQuery)
-                    .then(function(userIdenties) {
-                        self.identity = userIdenties[0];
-                    });
+            // //Temporarily Bypassing authentication:
+            // if(identityServices && identityServices.length > 0) {
+            //     //Shortcut, there could be multiple one we need to flatten.
+            //     identityObjectDescriptors = identityServices[0].types;
 
-                }
-            }
-            else {
+            //     if(identityObjectDescriptors.length > 0) {
+            //         //selfUserCriteria = new Criteria().initWithExpression("identity == $", "self");
+            //         identityQuery = DataQuery.withTypeAndCriteria(identityObjectDescriptors[0]);
+
+            //         authenticationPromise = self.mainService.fetchData(identityQuery)
+            //         .then(function(userIdenties) {
+            //             self.identity = userIdenties[0];
+            //         });
+
+            //     }
+            // }
+            // else {
                 //Needs to beef-up the case we have a first anonymous user who could come back later.
                 authenticationPromise = Promise.resolve(true);
-            }
+            // }
 
             return authenticationPromise;
 
@@ -222,6 +231,15 @@ Montage.defineProperties(exports.Application.prototype,
             }
             return mainApplication;
         }
+    },
+
+    /**
+     * 
+     * @public
+     * @property {DataService} value
+     */
+    mainService: {
+        value: undefined
     },
 
     /**
@@ -560,6 +578,40 @@ Montage.defineProperties(exports.Application.prototype,
     },
 
 
+    editingContexts: {
+        get: function () {
+            return this._editingContexts || (this._editingContexts = new Set());
+        }
+    },
+
+    mainEditingContext: {
+        get: function () {
+            return this._mainEditingContext;
+        },
+        set: function (value) {
+            if (this._mainEditingContext !== value) {
+                if (this._mainEditingContext) {
+                    this.unregisterEditingContext(this._mainEditingContext)
+                }
+                this._mainEditingContext = value;
+                if (value) {
+                    this.registerEditingContext(value);
+                }
+            }
+        }
+    },
+
+    registerEditingContext: {
+        value: function (editingContext) {
+            this.editingContexts.add(editingContext);
+        }
+    },
+
+    unregisterEditingContext: {
+        value: function (editingContext) {
+            this.editingContexts.delete(editingContext);
+        }
+    },
 
     /**
      * @private

@@ -28,7 +28,7 @@ const Object = global.Object, //Cache for scope traversal performance
     ReadEvent = require("../model/read-event").ReadEvent,
     DataOperationErrorNames = require("./data-operation").DataOperationErrorNames,
     Transaction = require("../model/transaction").Transaction,
-    TransactionDescriptor = require("../model/transaction.mjson").montageObject,
+    // TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     TransactionEvent = require("../model/transaction-event").TransactionEvent,
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
     ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject
@@ -1103,6 +1103,7 @@ DataService.addClassProperties(
             },
         },
 
+        //Move to uniquingService
         objectDescriptorForType: {
             value: function (type) {
                 var descriptor =
@@ -3241,6 +3242,7 @@ DataService.addClassProperties(
          * @argument {DataObjectDescriptor} type - The type of object to create.
          * @returns {Object}                     - The created object.
          */
+        //Move to uniquingService
         _createDataObject: {
             value: function (type, dataIdentifier) {
                 var objectDescriptor = this.objectDescriptorForType(type),
@@ -5632,7 +5634,8 @@ DataService.addClassProperties(
 
                             transactionCreateEvent.type = TransactionEvent.transactionCreate;
                             transactionCreateEvent.transaction = transaction;
-                            TransactionDescriptor.dispatchEvent(transactionCreateEvent);
+                            transaction.objectDescriptor.dispatchEvent(transactionCreateEvent);
+                            // TransactionDescriptor.dispatchEvent(transactionCreateEvent);
 
                             return transactionCreateEvent.propagationPromise || Promise.resolve();
                         })
@@ -5660,7 +5663,8 @@ DataService.addClassProperties(
 
                             //console.log("saveChanges: dispatchEvent transactionPrepareEvent transaction-"+this.identifier, transaction);
 
-                            TransactionDescriptor.dispatchEvent(transactionPrepareEvent);
+                            transaction.objectDescriptor.dispatchEvent(transactionPrepareEvent);
+                            // TransactionDescriptor.dispatchEvent(transactionPrepareEvent);
 
                             return transactionPrepareEvent.propagationPromise || Promise.resolve();
                         })
@@ -5693,7 +5697,8 @@ DataService.addClassProperties(
 
                             //console.log("saveChanges: dispatchEvent transactionCommitEvent transaction-"+this.identifier, transaction);
 
-                            TransactionDescriptor.dispatchEvent(transactionCommitEvent);
+                            transaction.objectDescriptor.dispatchEvent(transactionCommitEvent);
+                            // TransactionDescriptor.dispatchEvent(transactionCommitEvent);
 
                             return transactionCommitEvent.propagationPromise
                                 ? transactionCommitEvent.propagationPromise
@@ -5849,7 +5854,8 @@ DataService.addClassProperties(
 
                 transactionRollbackEvent.type = TransactionEvent.transactionRollback;
                 transactionRollbackEvent.transaction = transaction;
-                TransactionDescriptor.dispatchEvent(transactionRollbackEvent);
+                transaction.objectDescriptor.dispatchEvent(transactionRollbackEvent);
+                // TransactionDescriptor.dispatchEvent(transactionRollbackEvent);
 
                 return (transactionRollbackEvent.propagationPromise || Promise.resolve())
                     .then(function () {
@@ -6508,6 +6514,16 @@ DataService.addClassProperties(
          * this method.
          */
         fetchData: {
+            /*****
+             * Refactor so this can receive a ReadOperation (or ReadOperation-like object) and resolved with 
+             * a ReadCompletedOperation. 
+             * 
+             * "ReadOperation-like object" means a POJO that contains the options required to 
+             * create a ReadOperation. This lets the caller call fetchData without having to 
+             * import and instantiate their own ReadOperation. It is meant to mimic the fetch API 
+             * which allows you to pass a url and options OR pass a Request object.
+             * 
+             */
             value: function (queryOrType, optionalCriteria, optionalStream) {
                 if (!queryOrType) {
                     return Promise.resolveNull;
@@ -7294,10 +7310,7 @@ DataService.addClassProperties(
 
                 // if(!this._createdDataObjects || (this._createdDataObjects && !this._createdDataObjects.has(changeEvent.target))) {
                 //Needs to register the change so saving changes / update operations can use it later to decise what to send
-                //console.log("handleChange:",changeEvent);
-                // if (changeEvent.dispatchChain.length > 0) {
-                    // this._logEventChain(changeEvent);
-                // }
+                // console.log("DataService.handleChange:",changeEvent);
                 this.registerDataObjectChangesFromEvent(changeEvent);
                 //}
             },

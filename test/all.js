@@ -138,32 +138,33 @@ module.exports = require("mod/testing/run")
         { name: "spec/data/raw-data-service" },
         { name: "spec/data/raw-data-type-mapping-spec" },
         { name: "spec/data/integration", node: false },
+        { name: "spec/data/transaction" },
+        
+        // // Meta
+        // { name: "spec/meta/module-object-descriptor-spec" },
+        // { name: "spec/meta/object-descriptor-spec" },
+        // { name: "spec/meta/converter-object-descriptor-spec", node: false },
+        // { name: "spec/meta/build-in-component-object-descriptor-spec", node: false },
+        // { name: "spec/meta/component-object-descriptor-spec", node: false },
+        // { name: "spec/meta/controller-object-descriptor-spec", node: false },
+        // { name: "spec/meta/event-descriptor-spec", node: false },
+        // { name: "spec/meta/expression-validation-rule-spec" },
 
-        // Meta
-        { name: "spec/meta/module-object-descriptor-spec" },
-        { name: "spec/meta/object-descriptor-spec" },
-        { name: "spec/meta/converter-object-descriptor-spec", node: false },
-        { name: "spec/meta/build-in-component-object-descriptor-spec", node: false },
-        { name: "spec/meta/component-object-descriptor-spec", node: false },
-        { name: "spec/meta/controller-object-descriptor-spec", node: false },
-        { name: "spec/meta/event-descriptor-spec", node: false },
-        { name: "spec/meta/expression-validation-rule-spec" },
-
-        // Geo
-        { name: "spec/geo/circle" },
-        { name: "spec/geo/geometry" },
-        { name: "spec/geo/geometry-collection" },
-        { name: "spec/geo/line-string" },
-        { name: "spec/geo/multi-line-string" },
-        { name: "spec/geo/multi-point" },
-        { name: "spec/geo/multi-polygon" },
-        { name: "spec/geo/point" },
-        { name: "spec/geo/point-2d" },
-        { name: "spec/geo/polygon" },
-        { name: "spec/geo/position" },
-        { name: "spec/geo/rect" },
-        { name: "spec/geo/size" },
-        { name: "spec/data/serialized-data-service-spec" }
+        // // Geo
+        // { name: "spec/geo/circle" },
+        // { name: "spec/geo/geometry" },
+        // { name: "spec/geo/geometry-collection" },
+        // { name: "spec/geo/line-string" },
+        // { name: "spec/geo/multi-line-string" },
+        // { name: "spec/geo/multi-point" },
+        // { name: "spec/geo/multi-polygon" },
+        // { name: "spec/geo/point" },
+        // { name: "spec/geo/point-2d" },
+        // { name: "spec/geo/polygon" },
+        // { name: "spec/geo/position" },
+        // { name: "spec/geo/rect" },
+        // { name: "spec/geo/size" },
+        // { name: "spec/data/serialized-data-service-spec" }
     ])
     .then(
         function () {

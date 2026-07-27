@@ -1648,6 +1648,40 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
     //     }
     // },
 
+    mapRawDataToObjectPropertyTracked: {
+        value: function (data, object, propertyName, context, scope, registerMappedPropertiesAsChanged) {
+            window.objectsToMappedProperties = window.objectsToMappedProperties || new Map();
+            let timeoutId = setTimeout(function () {
+                console.log(`${object.objectDescriptor.name} failed to map property ${propertyName} in 3 seconds`);
+            }, 3000);
+
+            if (!window.objectsToMappedProperties.has(object)) {
+                window.objectsToMappedProperties.set(object, new Set());
+            }
+
+            window.objectsToMappedProperties.get(object).add(propertyName);
+            let result = this._mapRawDataToObjectProperty(data, object, propertyName, context, scope, registerMappedPropertiesAsChanged);
+            
+            if (this._isAsync(result)) {
+                return result.then(function (result) {
+                    clearTimeout(timeoutId);
+                    window.objectsToMappedProperties.get(object).delete(propertyName);
+                    return result;
+                });
+            } else {
+                window.objectsToMappedProperties.get(object).delete(propertyName);
+                clearTimeout(timeoutId);
+                return result;
+            }
+        }
+    },
+
+    mapRawDataToObjectProperty: {
+        value: function (data, object, propertyName, context, scope, registerMappedPropertiesAsChanged) {
+            return this.mapRawDataToObjectPropertyTracked(data, object, propertyName, context, scope, registerMappedPropertiesAsChanged)
+        }
+    },
+
     /**
      * Maps the value of a single raw data property onto the model object
      *
@@ -1661,7 +1695,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
      *
      */
 
-    mapRawDataToObjectProperty: {
+_mapRawDataToObjectProperty: {
         value: function (data, object, propertyName, context, scope = this._scope.nest(data), registerMappedPropertiesAsChanged) {
             var rule = this.objectMappingRuleForPropertyName(propertyName),
                 propertyDescriptor = rule && this.objectDescriptor.propertyDescriptorForName(propertyName);

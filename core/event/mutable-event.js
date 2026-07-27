@@ -175,7 +175,7 @@ var wrapPropertyGetter = function (key, storageKey) {
          */
         stopPropagation: {
             value: function () {
-                if(this._event) this._event.stopPropagation();
+                if(this._event && this._event.stopPropagation) this._event.stopPropagation();
                 // TODO only if the event is cancellable?
                 this.propagationStopped = true;
             }

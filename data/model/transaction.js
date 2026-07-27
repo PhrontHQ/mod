@@ -1,6 +1,6 @@
 var Montage = require("../../core/core").Montage,
     uuid = require("../../core/uuid"),
-    DataService = require("../service/data-service").DataService,
+    CountedSet = require("core/counted-set").CountedSet,
     Transaction;
 
 /**
@@ -242,67 +242,111 @@ var Montage = require("../../core/core").Montage,
     },
 
 
-    deserializeSelf: {
-        value: function (deserializer) {
-            this.super(deserializer);
+    /****
+     * Commenting out because the methods below were never called and 
+     * they introduce a dependency on DataService which itself depends on
+     * Transaction. 
+     */
+    // deserializeSelf: {
+    //     value: function (deserializer) {
+    //         this.super(deserializer);
 
-            var result, value;
-            value = deserializer.getProperty("identifier");
-            if (value !== void 0) {
-                this.identifier = value;
-            }
+    //         var result, value;
+    //         value = deserializer.getProperty("identifier");
+    //         if (value !== void 0) {
+    //             this.identifier = value;
+    //         }
 
-            value = deserializer.getProperty("objectDescriptorModuleIds");
-            if (value !== void 0) {
-                var mainService = DataService.mainService,
-                    i, iObjectDescriptorModuleId, countI,
-                    objectDescriptors = [];
+    //         value = deserializer.getProperty("objectDescriptorModuleIds");
+    //         if (value !== void 0) {
+    //             var mainService = DataService.mainService,
+    //                 i, iObjectDescriptorModuleId, countI,
+    //                 objectDescriptors = [];
 
-                for(i=0, countI = value.length; (i<countI); i++) {
-                    iObjectDescriptorModuleId = value[i];
-                    iObjectDescriptor = this.mainService.objectDescriptorWithModuleId(iObjectDescriptorModuleId);
-                    if(!iObjectDescriptor) {
-                        console.warn("Transation -deserializeSelf(): Could not find an ObjecDescriptor with moduleId "+iObjectDescriptorModuleId);
-                    } else {
-                        objectDescriptors.push(iObjectDescriptor);
-                    }
-                }
+    //             for(i=0, countI = value.length; (i<countI); i++) {
+    //                 iObjectDescriptorModuleId = value[i];
+    //                 iObjectDescriptor = mainService.objectDescriptorWithModuleId(iObjectDescriptorModuleId);
+    //                 if(!iObjectDescriptor) {
+    //                     console.warn("Transation -deserializeSelf(): Could not find an ObjecDescriptor with moduleId "+iObjectDescriptorModuleId);
+    //                 } else {
+    //                     objectDescriptors.push(iObjectDescriptor);
+    //                 }
+    //             }
 
-                this.objectDescriptors = objectDescriptors;
-            }
-            // value = deserializer.getProperty("scope");
-            // if (value !== void 0) {
-            //     this.scope = value;
-            // }
+    //             this.objectDescriptors = objectDescriptors;
+    //         }
+    //         // value = deserializer.getProperty("scope");
+    //         // if (value !== void 0) {
+    //         //     this.scope = value;
+    //         // }
 
-        }
+    //     }
 
-    },
-    serializeSelf: {
-        value: function (serializer) {
-            this.super(serializer);
+    // },
+    // serializeSelf: {
+    //     value: function (serializer) {
+    //         this.super(serializer);
 
-            if(this.identifier) {
-                serializer.setProperty("identifier", this.identifier);
-            }
+    //         if(this.identifier) {
+    //             serializer.setProperty("identifier", this.identifier);
+    //         }
 
-            if(this.objectDescriptors) {
-                var objectDescriptorModuleIds = this.objectDescriptors.map((objectDescriptor) => {return objectDescriptor.module.id});
+    //         if(this.objectDescriptors) {
+    //             var objectDescriptorModuleIds = this.objectDescriptors.map((objectDescriptor) => {return objectDescriptor.module.id});
 
-                serializer.setProperty("objectDescriptorModuleIds", objectDescriptorModuleIds);
-            }
-
-
-            // if(this.applicationCredentials) {
-            //     serializer.setProperty("applicationCredentials", this.applicationCredentials);
-            // }
-
-            // if(this.scope) {
-            //     serializer.setProperty("scope", this.scope);
-            // }
-        }
-    },
+    //             serializer.setProperty("objectDescriptorModuleIds", objectDescriptorModuleIds);
+    //         }
 
 
+    //         // if(this.applicationCredentials) {
+    //         //     serializer.setProperty("applicationCredentials", this.applicationCredentials);
+    //         // }
+
+    //         // if(this.scope) {
+    //         //     serializer.setProperty("scope", this.scope);
+    //         // }
+    //     }
+    // },
+
+
+    // // /***************
+    // //  * Change Management
+    // //  */
+    // registerObject: {
+    //     value: function (object) {
+    //         //Can I assume object.objectDescriptor is set here? 
+    //         let objectDescriptor = object.objectDescriptor,
+    //             service = this.service || DataService.mainService,
+    //             changedDataObjects, createdDataObjects, value;
+
+    //         //Is it possible to check other transactions?
+    //         if (service.isObjectCreated(object)) {
+    //             createdDataObjects = this.createdDataObjects;
+    //             value = createdDataObjects.get(objectDescriptor);
+
+    //             if (!value) {
+    //                 createdDataObjects.set(objectDescriptor, (value = new Set()));
+    //             }
+    //             if (!value.has(object)) {
+    //                 object.addEventListener("change", this);
+    //             }
+    //             value.add(object);
+    //         } else {
+
+    //             changedDataObjects = this.updatedDataObjects;
+    //             value = changedDataObjects.get(objectDescriptor);
+
+    //             if (!value) {
+    //                 changedDataObjects.set(objectDescriptor, (value = new Set()));
+    //             }
+    //             if (!value.has(object)) {
+    //                 object.addEventListener("change", this);
+    //             }
+    //             value.add(object);
+    //         }
+
+    //         this.objectDescriptorsWithChanges.add(objectDescriptor);
+    //     }
+    // }
 
 });
