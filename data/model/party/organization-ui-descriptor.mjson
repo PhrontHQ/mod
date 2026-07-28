@@ -2,6 +2,9 @@
     "root": {
         "prototype": "core/meta/user-interface-descriptor",
         "values": {
+            "inspectorComponentModule": {
+                "%": "data/model/inspectors/organization.mod"
+            },
             "collectionNameExpression": "'Organization'",
             "collectionInspectorComponentModule": {
                 "%": "ui/list.mod"
