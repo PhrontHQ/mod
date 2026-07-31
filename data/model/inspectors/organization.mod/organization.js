@@ -38,7 +38,6 @@ exports.Organization = class Organization extends Component {
     }
 
     _handleSelectionChange(plus, minus, index) {
-        console.log("Organization inspector role selection changed:", this.roleSelection);
         var obj = {plus: plus, context: this.context};
         this.dispatchEventNamed("cascadingListPush", true, false, obj);
     }
