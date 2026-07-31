@@ -5,6 +5,13 @@ const DataService = require("../../../../data/service/data-service").DataService
 
 exports.Organization = class Organization extends Component {
 
+    context = null;
+
+    getContext() {
+        const grandparent = this.parentComponent && this.parentComponent.parentComponent;
+        return grandparent && grandparent.context;
+    }
+
     _roleSelection;
 
     get roleSelection() {
@@ -15,7 +22,6 @@ exports.Organization = class Organization extends Component {
         if (this._roleSelection !== value) {
             this._roleSelection = value;
         }
-        this.dispatchEventNamed("cascadingListPush", true, false, value);
     }
 
     enterDocument(firstTime) {
@@ -26,8 +32,15 @@ exports.Organization = class Organization extends Component {
             this.#buildJobRolesFromDepartment(this.data).then((roles) => {
                 this.roles = roles;
             });
-    
+            this.context = this.getContext();
+            this.addRangeAtPathChangeListener("roleSelection", this, "_handleSelectionChange");
         }
+    }
+
+    _handleSelectionChange(plus, minus, index) {
+        console.log("Organization inspector role selection changed:", this.roleSelection);
+        var obj = {plus: plus, context: this.context};
+        this.dispatchEventNamed("cascadingListPush", true, false, obj);
     }
 
 
