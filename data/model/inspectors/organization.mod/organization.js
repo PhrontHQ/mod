@@ -4,6 +4,20 @@ const DataService = require("../../../../data/service/data-service").DataService
 
 
 exports.Organization = class Organization extends Component {
+
+    _roleSelection;
+
+    get roleSelection() {
+        return this._roleSelection;
+    }
+
+    set roleSelection(value) {
+        if (this._roleSelection !== value) {
+            this._roleSelection = value;
+        }
+        this.dispatchEventNamed("cascadingListPush", true, false, value);
+    }
+
     enterDocument(firstTime) {
         if (firstTime) {
             if (!this.data){
