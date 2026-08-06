@@ -21,7 +21,7 @@
             "roleListController": {
                 "prototype": "../../../../core/range-controller",
                 "values": {
-                    "content": {"<-": "@owner.roles"}
+                    "content": {"<-": "@owner.data.suborganizations.map{jobRoles}.flatten()"}
                 }
             },
             "roleListItem": {

@@ -2,8 +2,8 @@
     "root": {
         "prototype": "core/meta/user-interface-descriptor",
         "values": {
-            "cascadingListItemHeaderRightCollectionNameExpression": "'Add'",
-            "cascadingListItemHeaderRightNameExpression": "isNew ? '' : 'Edit'",
+            "cascadingListItemHeaderRightCollectionNameExpression": "",
+            "cascadingListItemHeaderRightNameExpression": "'Add'",
             "cascadingListItemFooterMiddleCollectionNameExpression": "length + ' item' + (length == 1 ? '' : 's')"
         }
     }

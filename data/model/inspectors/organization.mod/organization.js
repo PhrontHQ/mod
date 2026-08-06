@@ -42,7 +42,6 @@ exports.Organization = class Organization extends Component {
         this.dispatchEventNamed("cascadingListPush", true, false, obj);
     }
 
-
     #buildJobRolesFromDepartment(department) {
         return DataService.mainService
             .updateObjectProperties(department, "suborganizations")
