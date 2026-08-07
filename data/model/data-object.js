@@ -104,6 +104,16 @@ exports.DataObject = class DataObject extends Target {
             templateInstances: { value: false },
 
             /**
+             * Everything has a beginning and an end. This represents the lifespan of the real-world instance modeled. 
+             * For a Person it would be that date of birth and of death. 
+             * The creationDate is when the digital instance representing that person was created. Different
+             *
+             * @property {Range}
+             * @default undefined
+             */
+            existenceTimeRange: { value: undefined },
+
+            /**
              * The description of what a data object is
              *
              * @property {String}
