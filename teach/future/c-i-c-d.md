@@ -1,4 +1,4 @@
-# Continuous Integration/Continuous Develpent
+# Continuous Integration/Continuous Development
 
 
 - [Run your GitHub Actions locally!](https://nektosact.com)
