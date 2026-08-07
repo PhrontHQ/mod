@@ -245,7 +245,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                 var operationDataKBSize = sizeof(dataMessage) / 1024;
                 if(operationDataKBSize < this.MAX_PAYLOAD_SIZE) {
                     //console.log("operation size is "+operationDataKBSize);
-                    //console.log("OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #1 operation.referrerId "+operation.referrerId);
+                    //console.log(`OperationCoordinator: dispatchOperationToConnectionClientId() connection.postToConnection #1  operation.id: ${operation.id}, operation.referrerId: ${operation.referrerId}`);
 
                     return this._sendData(undefined, clientId, dataMessage)
                     .then(function() {
@@ -266,7 +266,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
 
                     */
 
-                //console.log("dispatchOperationToConnectionClientId: referrerId "+operation.referrerId);
+                    //console.log("dispatchOperationToConnectionClientId: referrerId "+operation.referrerId);
 
                     var integerSizeQuotient = Math.floor(operationDataKBSize / this.MAX_PAYLOAD_SIZE),
                         sizeRemainder = operationDataKBSize % this.MAX_PAYLOAD_SIZE,
@@ -301,7 +301,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
                         }
 
                         //Sends the last if some left:
-                        if(lengthRemainder || operationData.length) {
+                        if(operationData.length > 0 && lengthRemainder) {
                             iPromise = this._dispatchOperationToConnectionClientIdAfterResolvedPromise(operation, clientId, iPromise);
 
                         }
