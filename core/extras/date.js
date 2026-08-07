@@ -94,7 +94,7 @@ if(!Date.hasOwnProperty("date")) {
 
     /**
      *  Returns a date object representing the current date and time.
-     *  If configuredm, that date can be manipulated to do time-shifting,
+     *  If configured, that date can be manipulated to do time-shifting,
      *  useful in apps dealing with business logic around time, 
      *  like what to do is someones is late for appointments for example. 
      *  It then helps to test logic by shifting "app time" in the past / future 
