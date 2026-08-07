@@ -1453,7 +1453,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 If there's a value, we attempt to merge it. mergeDataObject takes care of deciding if value
                 is a DataObject worth tracking
             */
-            if(value) {
+            //if(value) {
+            if(value && value.objectDescriptor) {
                 _mainService.mergeDataObject(value);
             }
     
@@ -2818,6 +2819,10 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //Add checks to make sure that data matches expectations of propertyDescriptor.cardinality
             // console.debug( this.service.dataIdentifierForObject(object).objectDescriptor.name+" - "+propertyDescriptor.name+" _setObjectValueForPropertyDescriptor on object id: "+ this.service.dataIdentifierForObject(object).primaryKey);
 
+            /*
+                if shouldFlagObjectBeingMapped is false we wany the value set for that property to be accounted as a change, because it's a merged object,
+                probably an object created from raw data from an origin service, and mapped to an instance, for example by a SynchronizationDataService.
+            */
             if (shouldFlagObjectBeingMapped) {
                 this.service.rootService._objectsBeingMapped.add(object);
             }

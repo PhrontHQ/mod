@@ -235,7 +235,7 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
 
             return sessionPromise.then(function(session) {
 
-                console.log("DataWorker handleAuthorize with session:",session);
+                console.log("DataWorker handleAuthorize with session id:",session.id);
                 var identity = session?.identity,
                     identityObjectDescriptor,
                     webSocketSessionObjectDescriptor;
@@ -358,6 +358,10 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                     return self.responseForEventAuthorization(event, serializedAuthorizedIdentity, false, errorOperation);
 
                     // callback(failedResponse(500, JSON.stringify(err)))
+                })
+                .finally(() => {
+                    //Make sure we clear this no matter what
+                    this.identity = null;
                 });
 
 
@@ -457,6 +461,8 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
 
     startSessionForOperation: {
         value: function(webSocketSession, operation) {
+            //console.debug("###### startSessionForOperation: session.id"+webSocketSession.id+", operation.id:", operation.id);
+
             /*  
                 We should set the operation.data to be the WebSocketSession we received from the client, itywhich has the identy property
                 NOT the identity directly
@@ -464,6 +470,10 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                 
             */
             const identity = operation.data;
+
+            //For now we're going to hold the identity on the worker for the duration of servicing
+            this.identity = identity;
+
             //All we need from original event should be in operation
 
             /*
@@ -533,11 +543,14 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                 The webSocketSession may exists if a client app reconnects after some inactivity that could have prompted the server to close the connection
             */
 
-                
+            //console.debug("#### WILL this.mainService.mergeDataObject(webSocketSession (id:"+webSocketSession.id+ ", dataIdentifier.primaryKey: "+webSocketSession.dataIdentifier?.primaryKey);
             this.mainService.mergeDataObject(webSocketSession);
+            //console.debug("#### DID this.mainService.mergeDataObject(webSocketSession (id:"+webSocketSession.id+ ", dataIdentifier.primaryKey: "+webSocketSession.dataIdentifier.primaryKey);
 
+            //console.debug("#### WILL this.mainService.saveChangesWithIdentity(webSocketSession (id:"+webSocketSession.id+ ", dataIdentifier.primaryKey: "+webSocketSession.dataIdentifier.primaryKey);
             return this.mainService.saveChangesWithIdentity(identity)
             .then((result) => {
+                //console.debug("#### DID this.mainService.saveChangesWithIdentity(webSocketSession (id:"+webSocketSession.id+ ", dataIdentifier.primaryKey: "+webSocketSession.dataIdentifier.primaryKey);
                 return webSocketSession;
             })
             .catch((error) => {

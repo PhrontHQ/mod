@@ -223,6 +223,11 @@ WebSocketDataOperationService.addClassProperties({
 
                 webSocketSessionConnection.existenceTimeRange = new Range(Date.date, null);
                 session.connections = [webSocketSessionConnection];
+
+
+            //Workaround for now:
+            session.id = session.dataIdentifier.primaryKey;
+
             /*
                 TEMPORARY FIXME
                 hard-coding applicationId and applicationCredentials to run some tests.
@@ -238,6 +243,7 @@ WebSocketDataOperationService.addClassProperties({
         //    }
 
 
+            //console.debug("#### _createSocket: WebSocketSession.id is "+session.id);
 
             if(applicationIdentity) {
                 session.identity = applicationIdentity;
@@ -1032,7 +1038,6 @@ WebSocketDataOperationService.addClassProperties({
                 // if(isMod) {
                 //     console.log("send message size: "+ this._bytesConverter.convert(this._textEncoder.encode(serializedOperation).length));
                 // }
-                //console.log("_socketSendOperation: ",serializedOperation);
 
                 this._socket.send(serializedOperation);
             });
