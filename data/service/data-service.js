@@ -3130,9 +3130,7 @@ DataService.addClassProperties(
                         dataEvent.setComposedPath(composedPath);
                     }
 
-                    if (!this.isConstructorPreparedToHandleDataEvents(objectConstructor)) {
-                        this.prepareConstructorToHandleDataEvents(objectConstructor, dataEvent);
-                    }
+                    this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
 
                     this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
 
@@ -5521,7 +5519,7 @@ DataService.addClassProperties(
                             if(!uniquePromise) {
                                 uniquePromise = iPromise;
                             } else {
-                                promises = [uniqusePromise, iPromise];
+                                promises = [uniquePromise, iPromise];
                                 uniquePromise = null; //not really needed
                             }
                         } else {
@@ -5601,6 +5599,8 @@ DataService.addClassProperties(
                     //     this.objectDescriptorsWithChanges
                     // ));
                     transaction.objectDescriptors = new Set(this.objectDescriptorsWithChanges);
+
+                // return dispatchWillSavePromise.then(() => {
 
                 /*
                     Properly set the transaction's identity property.
