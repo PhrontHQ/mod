@@ -9,11 +9,17 @@ var Montage = require("../../core/core").Montage;
  * has a URL representation, which is conceptually aligned with the notion of
  * resource. It should have:
  *
- * - a host/source/origin: where the data come from. Automatically generated
- * primary keys exists in only one environment - Dev, test, prod, etc...,
- * (a user's authorization (if any necessary) should be left to be resolved
- * by a client receiving the identifier, only people authenticated and authorized
- * would be able to get it and that happens at DataService level)
+ * - a host/source/origin: where the data come from:
+ * 
+ *  - The environment: Automatically generated primary keys exists in only one environment - Dev, test, prod, etc...,
+ *      (a user's authorization (if any necessary) should be left to be resolved
+ *      by a client receiving the identifier, only people authenticated and authorized
+ *      would be able to get it and that happens at DataService level)
+ * 
+ * - The instance of where the data is stored, which is also different per environment. But for applications with international users,
+ *   it also could mean that there are different instances per geo/legal requirements: 
+ *      - european users would have their data stored in an instance physically hosted in Europe
+ *      - United States citizens would have their data stored in an instance physically hosted in the US
  *
  * - a type
  *
