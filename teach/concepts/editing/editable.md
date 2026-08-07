@@ -3,6 +3,8 @@ Intro
 * What defines editability
 
   * Editability is a data-level concept, in the end, for a known user, it's a true / false answer
+  * There's an overlap with access control, same idea, implementation should leverage work done
+  * There is a difference between editing an instance's property and creating a brand new instance. These correspond to create and update operations and related accessss control
   * With zero configuration, every UI control that can change data need to know whether it should allow editing or not
   * It always involves a party, user or system, with a known identity
   * It can be applied at the type level - can't edit Devices
