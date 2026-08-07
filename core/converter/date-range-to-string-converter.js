@@ -83,9 +83,9 @@ var DateRangeToStringConverter = exports.DateRangeToStringConverter = Converter.
     convert: {
         value: function (range) {
 
-            if(!range.begin || !range.end) {
-                let begin = range.begin || null,
-                    end = range.end || null,
+            if(!range?.begin || !range?.end) {
+                let begin = range?.begin || null,
+                    end = range?.end || null,
                     rangeFormattedParts = this.dateTimeFormat.formatRangeToParts(begin, end);
                 
                 return !begin && !end
