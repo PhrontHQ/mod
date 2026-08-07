@@ -377,6 +377,7 @@ exports.DataObject = class DataObject extends Target {
      */
 
     static prepareToHandleDataEvents(event) {
+        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create, this, false);
         event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
         event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
     }
@@ -394,6 +395,18 @@ exports.DataObject = class DataObject extends Target {
         createEvent.dataObject.creationIdentity = createEvent.identity;
     }
 
+    /**
+     * Handles a DataEvent.create event. DataObject Class listens to itself so it's part of the composedPath of every subclass, 
+     * for which it needs to do the following
+     * 
+     * @listens DataEvent.create
+     * @param {DataEvent} event - The DataEvent event carrying a created data object.
+     * @returns {void}
+     */
+    static handleCreate(createEvent) {
+        createEvent.dataObject.creationDate = createEvent.dataObject.modificationDate = new Date();
+        createEvent.dataObject.creationIdentity = createEvent.identity;
+    }
 
     static handleWillSave(event) {
         const objectDescriptor = event.target,

@@ -1,6 +1,5 @@
 var Montage = require("../../core/core").Montage,
     Target = require("core/target").Target,
-    DataObjectDescriptor = require("./data-object.mjson").montageObject,
     uuid = require("../../core/uuid"),
     DataService = require("../service/data-service").DataService;
 
@@ -18,7 +17,6 @@ const Transaction = exports.Transaction = class Transaction extends Target {
 
         this.identifier = uuid.generate();
         this._completionPromiseFunctionsByParticipant = new Map();
-        DataObjectDescriptor.addEventListener("change", this, false);
         return this;
     }
 

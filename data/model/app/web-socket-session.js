@@ -104,13 +104,6 @@ const WebSocketSession = exports.WebSocketSession = class WebSocketSession exten
         event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create,this,false);
     }
 
-    static handleCreate(event) {
-        
-        if(!event.dataObject.id) {
-            event.dataObject.id = uuid.generate();
-        }
-    }
-
     /*
         TODO: Serialization of DataObjects and subclassess need to be automatic. Maybe just removing this?
     */
