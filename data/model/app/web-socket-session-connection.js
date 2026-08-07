@@ -2,7 +2,8 @@
     @module phront/data/main.mod/model/app/web-socket-session
 */
 
-var Montage = require("../../../core/core").Montage;
+const    Montage = require("core/core").Montage,
+        DataObject = require("../data-object").DataObject;
 
 /**
  * @class WebSocketSessionConnection
@@ -16,28 +17,24 @@ var Montage = require("../../../core/core").Montage;
  * it add another use case where we'd had more re-connections.
  */
 
-exports.WebSocketSessionConnection = Montage.specialize(/** @lends WebSocketSession.prototype */ {
-    constructor: {
-        value: function WebSocketSessionConnection() {
-            this.super();
-            return this;
-        }
-    },
+const WebSocketSessionConnection = exports.WebSocketSessionConnection = class WebSocketSessionConnection extends DataObject {
+    static {
 
-    /**
-     * The WebSocket connectionId that’s created and provided by AWS API Gateway
-     */
-    serverConnectionId: {
-        value: undefined
-    },
+        Montage.defineProperties(this.prototype, {
 
-    /**
-     * The time range modeling the beginning and end of the session
-     * @property {Range<Date>} value
-     */
-    existenceTimeRange: {
-        value: undefined,
-        serializable: true
+            /**
+             * The WebSocketSession the connection belongs to
+             */
+            session: {
+                value: undefined
+            },
+
+            /**
+             * The WebSocket connectionId that’s created and provided by AWS API Gateway
+             */
+            serverConnectionId: {
+                value: undefined
+            }
+        });
     }
-
-});
+}
