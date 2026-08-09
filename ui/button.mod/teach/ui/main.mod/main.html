@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
         <link rel="stylesheet" type="text/css" href="main.css" />
@@ -6,7 +6,8 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "main"}
+                        "element": {"#": "main"},
+                        "visualStyle": {"@": "visualStyle"}
                     },
                     "listeners":[
                         {
@@ -18,6 +19,17 @@
                             "listener": {"@": "owner"}
                         }
                     ]
+                },
+                 "visualStyle": {
+                    "prototype": "mod/ui/visual-style.mod",
+                    "values": {
+                        "controlBorderWidth": "1px",
+                        "controlBorderRadius": "8px",
+                        "controlLabelSize": "16px",
+                        "controlBackgroundFill": "rgba(243, 244, 246, 1)",
+                        "controlSelectionFill": "rgba(252, 252, 252, 1)",
+                        "textFill": "hsl(0, 0%, 0%, 1)"
+                    }
                 },
                 "simpleButton": {
                     "prototype": "mod/ui/button.mod",
@@ -91,10 +103,10 @@
                     <div data-arg="visual">+</div>
                 </button>
                 <button data-mod-id="button-promise" class="button"></button>
-                <span data-mod-id="text" class="infoText"></span>
-                <br />
+
                 <button>Bare Button</button>
                 <button data-mod-id="button-debounced" class="button"></button>
+                <span data-mod-id="text" class="infoText"></span>
             </section>
         </div>
     </body>

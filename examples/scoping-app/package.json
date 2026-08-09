@@ -1,0 +1,10 @@
+{
+    "name": "scoping-app",
+    "version": "1.0.0",
+    "dependencies": {
+        "mod": "*"
+    },
+    "mappings": {
+        "mod": "../../"
+    }
+}
