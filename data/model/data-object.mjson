@@ -5,6 +5,7 @@
             "name": "DataObject",
             "propertyDescriptors": [
                 {"@": "fullModuleId"},
+                {"@": "dataIdentifier"},
                 {"@": "date"},
                 {"@": "originId"},
                 {"@": "originDataSnapshot"},
@@ -50,6 +51,19 @@
             "name": "fullModuleId",
             "valueType": "string",
             "description": "The moduleId of the instance descriptor for that instance"
+        }
+    },
+
+    "DataIdentifierDescriptor": {
+        "object": "./data-identifier.mjson"
+    },
+
+    "dataIdentifier": {
+        "prototype": "core/meta/property-descriptor",
+        "values": {
+            "name": "dataIdentifier",
+            "valueDescriptor": {"@": "DataIdentifierDescriptor"},
+            "description": "The data identifier unique to that object"
         }
     },
 
