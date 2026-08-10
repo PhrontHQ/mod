@@ -471,13 +471,20 @@ var FlowTranslateComposer = exports.FlowTranslateComposer = TranslateComposer.sp
         }
     },
 
+
+    _linearScrollRatio: {
+        get: function() {
+            return this._flow.isCameraEnabled ? 500 / this._flow._height : 1;
+        }
+    },
+
     // TODO doc
     /**
      */
     _updateLinearScroll: {
         value: function () {
             var flow = this._flow,
-                ratio = flow.isCameraEnabled ? 500 / flow._height : 1,
+                ratio = this._linearScrollRatio,
                 x = ((this._pageX - this._startPageX) * this._linearScrollingVector[0] * ratio * flow._sceneScaleX.denominator) / flow._sceneScaleX.numerator,
                 y = ((this._pageY - this._startPageY) * this._linearScrollingVector[1] * ratio * flow._sceneScaleY.denominator) / flow._sceneScaleY.numerator,
                 squaredMagnitude = this._linearScrollingVector[0] * this._linearScrollingVector[0] + this._linearScrollingVector[1] * this._linearScrollingVector[1],
