@@ -5619,7 +5619,6 @@ DataService.addClassProperties(
                     deletedDataObjects
                 );
 
-
                 /*  
                     DEBUG LOG:
                 */
