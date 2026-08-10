@@ -5,6 +5,7 @@ const   Worker = require("./worker").Worker,
         DESCENDING = DataOrdering.DESCENDING,    
         AuthorizationPolicy = require("../data/service/authorization-policy").AuthorizationPolicy,
         DataOperation = require("../data/service/data-operation").DataOperation,
+        ObjectDescriptor = require("../core/meta/object-descriptor").ObjectDescriptor,
         OperationCoordinator = require("../data/service/operation-coordinator").OperationCoordinator,
         Deserializer = require("../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
         MontageSerializer = require("../core/serialization/serializer/montage-serializer").MontageSerializer,
@@ -660,6 +661,10 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
 
             if(deserializedOperation && !deserializedOperation.target && deserializedOperation.dataDescriptor) {
                 deserializedOperation.target = this.mainService.objectDescriptorWithModuleId(deserializedOperation.dataDescriptor);
+            }
+
+            if (deserializedOperation.target) {
+                ObjectDescriptor.prepareToDispatchDataOperation(deserializedOperation.target);
             }
 
             //Add connection (custom) info the operation:

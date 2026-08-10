@@ -651,6 +651,18 @@ ObjectDescriptor.addClassProperties(
             },
         },
 
+        handlingServices: {
+            get: function () {
+                return this._handlingServices || (this._handlingServices = new Set());
+            }
+        },
+
+        registerHandlingService: {
+            value: function (dataService) {
+                this.handlingServices.add(dataService);
+            }
+        },
+
         /**
          * An ObjectDescriptor's composedPath cached
          * @property {Array} _composedPath
@@ -663,7 +675,7 @@ ObjectDescriptor.addClassProperties(
                 if (!this._composedPath) {
                     let composedPath = (this._composedPath = [this]),
                         nextTargetCandidate = this.parent,
-                        dataServices = this.eventManager.application.mainService.descendantServicesForType(this);
+                        dataServices = [...this.handlingServices];
 
                     //Add all ObjectDescriptor parents
                     do {
@@ -2049,6 +2061,23 @@ ObjectDescriptor.addClassProperties(
         blueprint: require("../core")._objectDescriptorDescriptor,
     },
     {
+
+        _preparedObjectDescriptors: {
+            get: function () {
+                return this.__preparedObjectDescriptors || (this.___preparedObjectDescriptors = new Set());
+            }
+        },
+
+        prepareToDispatchDataOperation: {
+            value: function (objectDescriptor) {
+                if (!this._preparedObjectDescriptors.has(objectDescriptor)) {
+                    this._preparedObjectDescriptors.add(objectDescriptor);
+                    this.dispatchEventNamed("prepareObjectDescriptor", true, true, objectDescriptor);
+                }
+            }
+        },
+
+
         /**
          * @deprecated
          * Creates a default object descriptor with all enumerable properties.
@@ -2112,6 +2141,8 @@ ObjectDescriptor.addClassProperties(
         },
     }
 );
+
+Montage.defineProperties(ObjectDescriptor, Object.getOwnPropertyDescriptors(Target.prototype));
 
 exports.UnknownObjectDescriptor = Object.freeze(new ObjectDescriptor().initWithName("Unknown"));
 exports.UnknownPropertyDescriptor = Object.freeze(

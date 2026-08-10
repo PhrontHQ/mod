@@ -369,12 +369,37 @@ DataService.addClassProperties(
                             defaultEventManager.application.mainService =
                                 this;
                     }
+                } 
+
+                if (this.parentService === this.mainService) {
+                    ObjectDescriptor.addEventListener("prepareObjectDescriptor", this);
                 }
+                
 
                 if (this.authorizationPolicy === AuthorizationPolicyType.UpfrontAuthorizationPolicy) {
                     exports.DataService.authorizationManager.registerServiceWithUpfrontAuthorizationPolicy(this);
                 }
             },
+        },
+
+        handlePrepareObjectDescriptor: {
+            value: function (event) {
+                let objectDescriptor = event.detail,
+                    childServices, i, n;
+
+                if (this.handlesType(objectDescriptor)) {
+                    childServices = this.descendantServicesForType(objectDescriptor);
+                    if (Array.isArray(childServices)) {
+                        for (i = 0, n = childServices.length; i < n; i++) {
+                            objectDescriptor.registerHandlingService(childServices[i]);
+                        }
+                    } else if (childServices) {
+                        objectDescriptor.registerHandlingService(childServices);
+                    }
+                    
+                    objectDescriptor.registerHandlingService(this);
+                }
+            }
         },
 
         currentEnvironment: {
@@ -918,7 +943,13 @@ DataService.addClassProperties(
                 // });
 
                 if (typesPromises) {
-                    this._childServiceRegistrationPromise = Promise.all(typesPromises);
+                    if (this._childServiceRegistrationPromise) {
+                        this._childServiceRegistrationPromise = this._childServiceRegistrationPromise.then(() => {
+                            return Promise.all(typesPromises);
+                        });
+                    } else {
+                        this._childServiceRegistrationPromise = Promise.all(typesPromises);
+                    }
                 }
             },
         },
@@ -3089,14 +3120,15 @@ DataService.addClassProperties(
             value: function (type) {
                 if (this.isRootService) {
                     var service = this.childServiceForType(type),
+                        descriptor = this.objectDescriptorForType(type),
                         //Gives a chance to raw data service to provide a primary key for clien-side creation/
                         //Especially useful for systems that use uuid as primary keys.
                         //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
                         object = this._createDataObject(
                             type,
-                            service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
+                            service.dataIdentifierForNewObjectWithObjectDescriptor(descriptor)
                         );
-
+                    
                     this.registerCreatedDataObject(object);
 
                     return object;
@@ -3218,6 +3250,9 @@ DataService.addClassProperties(
                 // constructor = this._getPrototypeForType(objectDescriptor).constructor,
                 // object = new constructor;
                 // //object = Reflect.construct(constructor, this._emptyArray);
+
+                ObjectDescriptor.prepareToDispatchDataOperation(objectDescriptor);
+
 
                 if (object) {
                     delegateDataIdentifier =
@@ -5327,6 +5362,8 @@ DataService.addClassProperties(
                         this.objectDescriptorsWithChanges
                     ));
 
+                ObjectDescriptor.prepareToDispatchDataOperation(TransactionDescriptor);
+
                 //console.log("saveChanges: transaction-"+this.identifier, transaction);
                 console.log(
                     "saveChanges: createdDataObjects [" + createdDataObjects.length + "]: ",
@@ -6558,6 +6595,8 @@ DataService.addClassProperties(
                             // } catch (e) {
                             //     stream.dataError(e);
                             // }
+
+                            ObjectDescriptor.prepareToDispatchDataOperation(query.type);
 
 
 

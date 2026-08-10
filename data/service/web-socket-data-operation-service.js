@@ -4,7 +4,7 @@ var DataService = require("./data-service").DataService,
     Promise = require("core/promise").Promise,
     Date = require("core/extras/date").Date,
     Range = require("core/range").Range,
-
+    ObjectDescriptor = require("core/meta/object-descriptor").ObjectDescriptor,
     evaluate = require("core/frb/evaluate"),
     Set = require("core/collections/set"),
     Map = require("core/collections/map"),
@@ -433,6 +433,7 @@ WebSocketDataOperationService.addClassProperties({
                         // }
                         //operation.target = self;
                         operation.rawDataService = this;
+                        ObjectDescriptor.prepareToDispatchDataOperation(operation.target);
                         defaultEventManager.handleEvent(operation);
 
                         operation.propagationPromise.then(() => {
