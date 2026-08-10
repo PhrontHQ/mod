@@ -1907,12 +1907,18 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 if(!eventDefinition) {
                     console.debug("Event type "+eventType+" missed definition");
                 }
+                
+                if(typeof listenerOptions === "object" && eventDefinition) {
+                    Object.setPrototypeOf(listenerOptions, eventDefinition);
+                }
+                eventOpts = listenerOptions;
+                
 
-                eventOpts = this.isPassiveEventType(eventType)
-                    ? {passive: true}
-                    : eventDefinition
-                        ? eventDefinition.bubbles
-                        : true; //by default
+                // eventOpts = this.isPassiveEventType(eventType)
+                //     ? {passive: true}
+                //     : eventDefinition
+                //         ? eventDefinition.bubbles
+                //         : true; //by default
 
 
                 // eventOpts = {
@@ -1920,6 +1926,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 //     capture: true
                 // }
 
+                eventOpts = 
                 listenerTarget.nativeAddEventListener((eventDefinition ? (eventDefinition.type || eventType) : eventType), this, eventOpts);
             }
             // console.log("started listening: ", eventType, listenerTarget)
