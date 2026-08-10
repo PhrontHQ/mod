@@ -77,6 +77,13 @@ DataStream = exports.DataStream = DataProvider.specialize(/** @lends DataStream.
         }
     },
 
+
+    // The EditingContext that created this stream and manages 
+    // its resulting data
+    editingContext: {
+        value: undefined
+    },
+
     objectDescriptor: {
         get: function () {
             return this._query?.type;

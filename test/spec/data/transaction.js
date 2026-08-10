@@ -10,7 +10,7 @@ const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mj
 const CategoyDescriptor = require("spec/data/logic/model/category.mjson").montageObject;
 const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObject;
 
-const mainService = require("spec/data/logic/service/montage-data.mjson").montageObject;
+const mainService = require("spec/data/logic/service/main.mjson").montageObject;
 
 
 describe("A Transaction", function () {

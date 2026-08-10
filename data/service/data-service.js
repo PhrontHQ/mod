@@ -6383,7 +6383,7 @@ DataService.addClassProperties(
                 );
             },
         },
-        registerReadEvent: {
+        registerReadOperation: {
             value: function (readEvent) {
                 this._rawDataServiceHandlersByReadEventId.set(readEvent.id, undefined);
             },
@@ -6438,7 +6438,7 @@ DataService.addClassProperties(
                 return handlers && handlers.length > 0;
             },
         },
-        unregisterReadEvent: {
+        unregisterReadOperation: {
             value: function (readEvent) {
                 if (!this.hasRegisteredRawDataServiceHandlerForReadEvent(readEvent)) {
                     /*
@@ -6598,15 +6598,15 @@ DataService.addClassProperties(
                             //     readEvent.query = query;
                             //     readEvent.dataStream = stream;
 
-                            //     self.registerReadEvent(readEvent);
+                            //     self.registerReadOperation(readEvent);
 
                             //     query.type.dispatchEvent(readEvent);
                             //     if(readEvent.propagationPromise) {
                             //         readEvent.propagationPromise.finally(() => {
-                            //             self.unregisterReadEvent(readEvent);
+                            //             self.unregisterReadOperation(readEvent);
                             //         });
                             //     } else {
-                            //         self.unregisterReadEvent(readEvent);
+                            //         self.unregisterReadOperation(readEvent);
                             //     }
                             // } catch (e) {
                             //     stream.dataError(e);
@@ -6617,154 +6617,17 @@ DataService.addClassProperties(
 
 
                             try {
-                                var readOperation = new DataOperation();
+                                var readOperation = self.makeReadOperationForStream(stream);
 
-                                readOperation.type = DataOperation.Type.ReadOperation;
-                                readOperation.target = query.type;
-
-                                if (query.identity) {
-                                    readOperation.identity = query.identity;
-                                } else if (self.identity) {
-                                    readOperation.identity = self.identity;
-                                }
-
-                                //Need to add a check to see if criteria may have more spefific instructions for "locale".
-                                /*
-                            1/19/2021 - we were only adding locale when the object descriptor being fetched has some localizableProperties, but a criteria may involve a subgraph and we wou'd have to go through the syntactic tree of the criteria, and readExpressions, to figure out if anywhere in that subgraph, there might be localizable properties we need to include the locales for.
-
-                            Since we're localized by default, we're going to include it no matter what, it's going to be more rare that it is not needed than it is.
-                        */
-                                /*
-                            WIP Adds locale as needed. Most common case is that it's left to the framework to qualify what Locale to use.
-
-                            A core principle is that each data object (DO) has a locale property behaving in the following way:
-                            locales has 1 locale value, a locale object.
-                            This is the most common use case. The property’s getter returns the user’s locale.
-                            Fetching an object with a criteria asking for a specific locale will return an object in that locale.
-                            Changing the locale property of an object to another locale instance (singleton in Locale’s case), updates all the values of its localizable properties to the new locale set.
-                            locales has either no value, or “*” equivalent, an “All Locale Locale”
-                            This feches the json structure and returns all the values in all the locales
-                            locales has an array of locale instances.
-                            If locale’s cardinality is > 1 then each localized property would return a json/dictionary of locale->value instead of 1 value.
-                        */
-
-                                readOperation.locales = self.userLocales;
-
-                                if (query.criteria) {
-                                    //readOperation.criteria = criteria.clone();
-                                    readOperation.criteria = query.criteria;
-                                    if (query.criteria.parameters === "019a4e83-203a-76de-bf6f-7f26739d65fd") {
-                                        window.suborgOperation = readOperation;
-                                    }
-                                }
-
-                                if (query.sizeLimit) {
-                                    readOperation.data.sizeLimit = query.sizeLimit;
-                                }
-                                if (query.batchSize) {
-                                    readOperation.data.batchSize = query.batchSize;
-                                }
-                                if (query.orderings && query.orderings > 0) {
-                                    rawOrderings = [];
-                                    // self._mapObjectDescriptorOrderingsToRawOrderings(objectDescriptor, query.sortderings,rawOrderings);
-                                    // readOperation.data.orderings = rawOrderings;
-                                    readOperation.data.orderings = query.orderings;
-                                }
-                                if (query.readExpressions && query.readExpressions.length) {
-                                    readOperation.data.readExpressions = query.readExpressions;
-                                }
-                                /*
-                            We need to do this in node's DataWorker, it's likely that we'll want that client side as well, where it's some sort of token set post authorization.
-                        */
-                                if (self.application.identity && self.shouldAuthenticateReadOperation) {
-                                    readOperation.identity = self.application.identity;
-                                }
-
-                                /* to save bandwidth, if it's true - the default, we won't include the key */
-                                if (!query.includesChildObjectDescriptors) {
-                                    readOperation.data.includesChildObjectDescriptors =
-                                        query.includesChildObjectDescriptors;
-                                }
-
-                                if (query.hints) {
-                                    readOperation.hints = query.hints;
-                                    if (query.hints.referrerOperation) {
-                                        readOperation.referrer = query.hints.referrerOperation;
-                                    }
-                                    if (query.hints.referrerOperations) {
-                                        readOperation.referrers = query.hints.referrerOperations;
-                                    }
-                                }
-                                
-
-                                /*
-                        this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
-                        phront-service does it, but we need to stop doing it half way there and the other half over there.
-                        SaveChanges is cleaner, but the job is also easier there.
-                    */
-                                let criteria = query.criteria,
-                                    parameters = criteria ? criteria.parameters : undefined;
-                                rawParameters = parameters;
-
-                                // if (parameters && typeof criteria.parameters === "object") {
-                                //     var keys = Object.keys(parameters),
-                                //         i,
-                                //         countI,
-                                //         iKey,
-                                //         iValue,
-                                //         iRecord,
-                                //         criteriaClone;
-
-                                //     //rawParameters = Array.isArray(parameters) ? [] : {};
-
-                                //     for (i = 0, countI = keys.length; i < countI; i++) {
-                                //         iKey = keys[i];
-                                //         iValue = parameters[iKey];
-                                //         if (!iValue) {
-                                //             console.warn(
-                                //                 "fetchData: criteria ",
-                                //                 criteria,
-                                //                 "has value: " + value + " for parameter key " + iKey
-                                //             );
-                                //         } else {
-                                //             if (iValue.dataIdentifier) {
-                                //                 if (!criteriaClone) {
-                                //                     criteriaClone = criteria.clone();
-                                //                     rawParameters = criteriaClone.parameters;
-                                //                 }
-                                //                 /*
-                                //             this isn't working because it's causing triggers to fetch properties we don't have
-                                //             and somehow fails, but it's wastefull. Going back to just put primary key there.
-                                //         */
-                                //                 // iRecord = {};
-                                //                 // rawParameters[iKey] = iRecord;
-                                //                 // (promises || (promises = [])).push(
-                                //                 //     self._mapObjectToRawData(iValue, iRecord)
-                                //                 // );
-                                //                 rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
-                                //             }
-                                //             // else {
-                                //             //     rawParameters[iKey] = iValue;
-                                //             // }
-                                //         }
-                                //     }
-
-                                //     if (criteriaClone) {
-                                //         readOperation.criteria = criteriaClone;
-                                //     }
-                                // }
-
-                                readOperation.dataStream = stream;
-
-                                self.registerReadEvent(readOperation);
+                                self.registerReadOperation(readOperation);
 
                                 query.type.dispatchEvent(readOperation);
                                 if (readOperation.propagationPromise) {
                                     readOperation.propagationPromise.finally(() => {
-                                        self.unregisterReadEvent(readOperation);
+                                        self.unregisterReadOperation(readOperation);
                                     });
                                 } else {
-                                    self.unregisterReadEvent(readOperation);
+                                    self.unregisterReadOperation(readOperation);
                                 }
                             } catch (e) {
                                 stream.dataError(e);
@@ -6822,6 +6685,162 @@ DataService.addClassProperties(
                 // Return the passed in or created stream.
                 return stream;
             },
+        },
+
+        /*
+            Create a ReadOperation from stream. Subclasses can override to customize how the properties
+            on the Operation are assigned.
+
+            This was extracted so EditingContext could have access to the stream before the 
+            ReadOperation is dispatched
+        */
+        makeReadOperationForStream: {
+            value: function (stream) {
+                return this._makeReadOperationForStream(stream);
+            }
+        },
+
+        _makeReadOperationForStream: {
+            value: function (stream) {
+                var readOperation = new DataOperation(),
+                    query = stream.query;
+
+                readOperation.type = DataOperation.Type.ReadOperation;
+                readOperation.target = query.type;
+
+                if (query.identity) {
+                    readOperation.identity = query.identity;
+                } else if (this.identity) {
+                    readOperation.identity = this.identity;
+                }
+
+                //Need to add a check to see if criteria may have more spefific instructions for "locale".
+                /*
+                    1/19/2021 - we were only adding locale when the object descriptor being fetched has some localizableProperties, but a criteria may involve a subgraph and we wou'd have to go through the syntactic tree of the criteria, and readExpressions, to figure out if anywhere in that subgraph, there might be localizable properties we need to include the locales for.
+
+                    Since we're localized by default, we're going to include it no matter what, it's going to be more rare that it is not needed than it is.
+                */
+                /*
+                    WIP Adds locale as needed. Most common case is that it's left to the framework to qualify what Locale to use.
+
+                    A core principle is that each data object (DO) has a locale property behaving in the following way:
+                    locales has 1 locale value, a locale object.
+                    This is the most common use case. The property’s getter returns the user’s locale.
+                    Fetching an object with a criteria asking for a specific locale will return an object in that locale.
+                    Changing the locale property of an object to another locale instance (singleton in Locale’s case), updates all the values of its localizable properties to the new locale set.
+                    locales has either no value, or “*” equivalent, an “All Locale Locale”
+                    This feches the json structure and returns all the values in all the locales
+                    locales has an array of locale instances.
+                    If locale’s cardinality is > 1 then each localized property would return a json/dictionary of locale->value instead of 1 value.
+                */
+
+                readOperation.locales = this.userLocales;
+
+                if (query.criteria) {
+                    //readOperation.criteria = criteria.clone();
+                    readOperation.criteria = query.criteria;
+                }
+
+                if (query.sizeLimit) {
+                    readOperation.data.sizeLimit = query.sizeLimit;
+                }
+                if (query.batchSize) {
+                    readOperation.data.batchSize = query.batchSize;
+                }
+                if (query.orderings && query.orderings > 0) {
+                    rawOrderings = [];
+                    // self._mapObjectDescriptorOrderingsToRawOrderings(objectDescriptor, query.sortderings,rawOrderings);
+                    // readOperation.data.orderings = rawOrderings;
+                    readOperation.data.orderings = query.orderings;
+                }
+                if (query.readExpressions && query.readExpressions.length) {
+                    readOperation.data.readExpressions = query.readExpressions;
+                }
+                /*
+                    We need to do this in node's DataWorker, it's likely that we'll want that client side as well, where it's some sort of token set post authorization.
+                */
+                if (this.application.identity && this.shouldAuthenticateReadOperation) {
+                    readOperation.identity = this.application.identity;
+                }
+
+                /* to save bandwidth, if it's true - the default, we won't include the key */
+                if (!query.includesChildObjectDescriptors) {
+                    readOperation.data.includesChildObjectDescriptors =
+                        query.includesChildObjectDescriptors;
+                }
+
+                if (query.hints) {
+                    readOperation.hints = query.hints;
+                    if (query.hints.referrerOperation) {
+                        readOperation.referrer = query.hints.referrerOperation;
+                    }
+                    if (query.hints.referrerOperations) {
+                        readOperation.referrers = query.hints.referrerOperations;
+                    }
+                }
+                
+
+                /*
+                    this is half-assed, we're mapping full objects to RawData, but not the properties in the expression.
+                    phront-service does it, but we need to stop doing it half way there and the other half over there.
+                    SaveChanges is cleaner, but the job is also easier there.
+                */
+                let criteria = query.criteria,
+                    parameters = criteria ? criteria.parameters : undefined;
+                rawParameters = parameters;
+
+                // if (parameters && typeof criteria.parameters === "object") {
+                //     var keys = Object.keys(parameters),
+                //         i,
+                //         countI,
+                //         iKey,
+                //         iValue,
+                //         iRecord,
+                //         criteriaClone;
+
+                //     //rawParameters = Array.isArray(parameters) ? [] : {};
+
+                //     for (i = 0, countI = keys.length; i < countI; i++) {
+                //         iKey = keys[i];
+                //         iValue = parameters[iKey];
+                //         if (!iValue) {
+                //             console.warn(
+                //                 "fetchData: criteria ",
+                //                 criteria,
+                //                 "has value: " + value + " for parameter key " + iKey
+                //             );
+                //         } else {
+                //             if (iValue.dataIdentifier) {
+                //                 if (!criteriaClone) {
+                //                     criteriaClone = criteria.clone();
+                //                     rawParameters = criteriaClone.parameters;
+                //                 }
+                //                 /*
+                //             this isn't working because it's causing triggers to fetch properties we don't have
+                //             and somehow fails, but it's wastefull. Going back to just put primary key there.
+                //         */
+                //                 // iRecord = {};
+                //                 // rawParameters[iKey] = iRecord;
+                //                 // (promises || (promises = [])).push(
+                //                 //     self._mapObjectToRawData(iValue, iRecord)
+                //                 // );
+                //                 rawParameters[iKey] = iValue.dataIdentifier.primaryKey;
+                //             }
+                //             // else {
+                //             //     rawParameters[iKey] = iValue;
+                //             // }
+                //         }
+                //     }
+
+                //     if (criteriaClone) {
+                //         readOperation.criteria = criteriaClone;
+                //     }
+                // }
+
+                readOperation.dataStream = stream;
+
+                return readOperation;
+            }
         },
 
         _fetchRawData: {

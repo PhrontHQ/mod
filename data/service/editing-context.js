@@ -2,6 +2,15 @@ const DataService = require("./data-service").DataService;
 
 
 
+/**********
+ * 
+ * Questions/Notes
+ * 1. Once EditingContext.fetchData converts the query to a ReadOperation, it is removed from the flow. The RawDataService dispatches the read completed and calls rawDataDone. So 
+ *    How does EditingContext get a hold of the resulting data to begin listening to changes?
+ * 
+ * 
+ */
+
 /****
  * Alternate Names Under Consideration
  * 
@@ -43,6 +52,10 @@ const EditingContext = exports.EditingContext = class EditingContext extends Dat
 
     get deletedDataObjects() {
         return this._deletedDataObjects || (this._deletedDataObjects = new Map());
+    }
+
+    get managedInstances() {
+        return this._managedInstances || (this._managedInstances = new Map());
     }
 
 
@@ -744,6 +757,42 @@ const EditingContext = exports.EditingContext = class EditingContext extends Dat
                     this._objectsBeingMapped.delete(value);
                 }
             }
+    }
+
+
+    /***************
+    * Fetch Data
+    */
+
+    // fetchData(queryOrType, optionalCriteria, optionalStream) {
+
+    // }
+
+    /***
+     * 
+     * Pass the editing context with the data stream
+     * Then in RawDataService, you can ask the EditingContext to create the object and 
+     * it can register it at that point. It avoids the need to loop again after the 
+     * fetch is complete
+     * 
+     */
+
+    makeReadOperationForStream(stream) {
+        let readOperation = this._makeReadOperationForStream(stream);
+        stream.editingContext = this;
+        return readOperation;
+    }
+
+    registerManagedInstanceForType(type, instance) {
+        let set, i, n;
+        if (!this._managedInstances.has(type)) {
+            this._managedInstances.set(type, new Set());
+        }
+        this._managedInstances.get(type).add(instance);
+    }
+
+    captureReadCompletedOperation(readCompletedOperation) {
+        console.log("EditingContext.captureReadCompletedOperation", readCompletedOperation);
     }
 
     static {

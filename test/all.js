@@ -130,6 +130,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/data/data-provider" },
         { name: "spec/data/data-service" },
         { name: "spec/data/data-stream" },
+        { name: "spec/data/editing-context" },
         { name: "spec/data/expression-data-mapping" },
         { name: "spec/data/enumeration" },
         { name: "spec/data/http-service" },

@@ -1417,6 +1417,10 @@ RawDataService.addClassProperties({
                 // }
             }
 
+            if (stream.editingContext) {
+                stream.editingContext.registerManagedInstanceForType(type, object);
+            }
+
 
             //If we're already have a snapshot, we've already fetched and
             //instanciated an object for that identifier previously.
