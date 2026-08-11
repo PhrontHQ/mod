@@ -213,6 +213,10 @@ var Overlay = exports.Overlay = Component.specialize( /** @lends Overlay.prototy
                 if (this._dismissOnExternalInteraction) {
                     this._pressComposer.addEventListener("pressStart", this, false);
                 }
+
+                this.dispatchEventNamed("visibilityChange", true, true, {
+                    isVisible: true,
+                });
             }
         }
     },
@@ -237,6 +241,10 @@ var Overlay = exports.Overlay = Component.specialize( /** @lends Overlay.prototy
                 if (this._dismissOnExternalInteraction) {
                     this._pressComposer.removeEventListener("pressStart", this, false);
                 }
+
+                this.dispatchEventNamed("visibilityChange", true, true, {
+                    isVisible: false,
+                });
             }
         }
     },
