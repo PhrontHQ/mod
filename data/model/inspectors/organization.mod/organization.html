@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="organization.css">
+    <script type="text/mod-serialization">
+        {
+            "owner": {
+                "values": {
+                    "element": {"#": "owner"},
+                    "roleSelection": {"<-": "@roleList.selection"}
+                }
+            },
+            "roleList": {
+                "prototype": "../../../../ui/repetition.mod",
+                "values": {
+                    "element": {"#": "roleList"},
+                    "contentController": {"@": "roleListController"},
+                    "isSelectionEnabled": true
+                }
+            },
+            "roleListController": {
+                "prototype": "../../../../core/range-controller",
+                "values": {
+                    "content": {"<-": "@owner.data.suborganizations.map{jobRoles}.flatten()"}
+                }
+            },
+            "roleListItem": {
+                "prototype": "../../../../ui/text.mod",
+                "values": {
+                    "element": {"#": "roleListItem"},
+                    "value": {"<-": "@roleList:iteration.object.name"},
+                    "object": {"<-": "@roleList:iteration.object"}
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div data-mod-id="owner" class="OrganizationInspector">
+        <div class="field">
+            <div class="roleList" data-mod-id="roleList">
+                <div class="roleListItem">
+                    <div data-mod-id="roleListItem" class="roleListItemName"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

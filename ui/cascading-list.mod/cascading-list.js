@@ -244,6 +244,16 @@ CascadingList.addClassProperties( {
             if (!this._populatePromise && object) {
                 var self = this;
 
+                if(Array.isArray(object)){
+                    //TODO:
+                    //1) Find the highest common ancestor with existing object descriptor among all instances in the array
+                    //2) Grab UI descriptor for that ancestor
+                }
+                else{
+                    //TODO:
+                    //1) Refactor below to be used in both cases once UI descriptor is obtained
+
+                }
                 this._populatePromise = this.loadUserInterfaceDescriptor(object).then(function (UIDescriptor) {
                     var context = self._createCascadingListContextWithObjectAndColumnIndex(
                         object,
