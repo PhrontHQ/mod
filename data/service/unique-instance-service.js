@@ -1,4 +1,7 @@
 const Target = require("core/target").Target,
+    DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    DataObjectDescriptor = require("../model/data-object-descriptor").DataObjectDescriptor,
+    DataTrigger = require("./data-trigger").DataTrigger,
     defaultEventManager = require("core/event/event-manager").defaultEventManager,
     Montage = require("core/core").Montage,
     PropertyChanges = require("core/collections/listen/property-changes"),
@@ -9,17 +12,17 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
      * Unsure
      */
     registerInstance(instance) {
-        this.registeredObjectsForObjectDescriptor(instance.objectDescriptor).push(instance);
+        this.registeredInstancesForObjectDescriptor(instance.objectDescriptor).push(instance);
     }
 
     unregisterInstance(instance) {
-            this.registeredObjectsForObjectDescriptor(instance.objectDescriptor).delete(instance);
+        this.registeredInstancesForObjectDescriptor(instance.objectDescriptor).delete(instance);
     }
 
-    //Should be moved to EditingContext
+    // //Should be moved to EditingContext
     // registerCreatedInstance(instance) {
-    //     var objectDescriptor = this.objectDescriptorForInstance(dataObject),
-    //         createdDataObjects = this.createdDataObjects,
+    //     var objectDescriptor = this.objectDescriptorForInstance(instance),
+    //         createdDataObjects = this.createdInstances,
     //         value = createdDataObjects.get(objectDescriptor);
     //     if (!value) {
     //         createdDataObjects.set(objectDescriptor, (value = new Set()));
@@ -37,11 +40,11 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
     //     this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
     // }
 
-    // unregisterCreatedDataObject(instance) {
+    // unregisterCreatedInstance(instance) {
     //     var objectDescriptor = this.objectDescriptorForInstance(dataObject),
-    //         value = this.createdDataObjects.get(objectDescriptor);
+    //         value = this.createdInstances.get(objectDescriptor);
     //     if (value) {
-    //         value.delete(dataObject);
+    //         value.delete(instance);
     //         this.objectDescriptorsWithChanges.delete(objectDescriptor);
     //     }
     // }
@@ -73,28 +76,22 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
      * Needs to be async to allow lazy loading of prototypes
      */
     createInstance(type) {
-        var service = this.childServiceForType(type),
-            //Gives a chance to raw data service to provide a primary key for clien-side creation/
-            //Especially useful for systems that use uuid as primary keys.
-            //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
-            object = this._createDataObject(
+        return this._createInstance(
                 type,
                 this.dataIdentifierForNewInstanceWithObjectDescriptor(this.objectDescriptorForType(type))
             );
-
-        this.registerCreatedDataObject(object);
     }
 
     _createInstance(type, dataIdentifier) {
         var objectDescriptor = this.objectDescriptorForType(type),
-                object = Object.create(this._getPrototypeForType(objectDescriptor)),
+                instance = Object.create(this._getPrototypeForType(objectDescriptor)),
                 dataIdentifierDataService = dataIdentifier.dataService,
                 delegateDataIdentifier;
             // constructor = this._getPrototypeForType(objectDescriptor).constructor,
             // object = new constructor;
             // //object = Reflect.construct(constructor, this._emptyArray);
 
-            if (object) {
+            if (instance) {
                 delegateDataIdentifier =
                     dataIdentifierDataService.callDelegateMethod(
                         "dataIdentifierForRawDataServiceCreatingObjectWithDataIdentifier",
@@ -107,14 +104,14 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
                 dataIdentifier to the object
             */
                 if (delegateDataIdentifier !== dataIdentifier) {
-                    this.mainService.recordObjectForDataIdentifier(object, dataIdentifier);
+                    this.mainService.recordObjectForDataIdentifier(instance, dataIdentifier);
                     dataIdentifier = delegateDataIdentifier;
                 }
                 //This needs to be done before a user-land code can attempt to do
                 //anything inside its constructor, like creating a binding on a relationships
                 //causing a trigger to fire, not knowing about the match between identifier
                 //and object... If that's feels like a real situation, it is.
-                this.registerUniqueInstanceWithDataIdentifier(object, dataIdentifier);
+                this.registerUniqueInstanceWithDataIdentifier(instance, dataIdentifier);
                 // if (dataIdentifier && this.isUniquing) {
                 //     this.recordDataIdentifierForObject(dataIdentifier, object);
                 //     this.recordObjectForDataIdentifier(object, dataIdentifier);
@@ -122,27 +119,59 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
 
                 //This can't work with ES Classes
                 //object = object.constructor.call(object) || object;
-                if (object) {
-                    this._setObjectType(object, objectDescriptor);
-                    this._objectDescriptorForObjectCache.set(object, objectDescriptor);
+                if (instance) {
+                    this._setInstanceType(instance, objectDescriptor);
+                    this._objectDescriptorForInstanceCache.set(instance, objectDescriptor);
 
                     //This is an in-memory cache of all objects with the same objectDescriptor, regarding of the fact that are new objects or fetched
-                    this.registerDataObject(object);
+                    this.registerInstance(instance);
                 }
 
                 dataIdentifierDataService.callDelegateMethod(
-                    "rawDataServiceDidCreateObject",
+                    "uniqueInstanceServiceDidCreateInstance",
                     dataIdentifierDataService,
-                    object
+                    instance
                 );
             }
-            return object;
+            return instance;
     }
 
 
 
     primaryKeyForNewInstanceWithObjectDescriptor(type) {
         return uuid.generate( Date.now(), /* isFull, to include hyphens*/ true);
+    }
+
+    /**
+     * Returns a unique DataIdentifier for an object
+     * [fetchObjectProperty()]{@link DataService#fetchObjectProperty} instead
+     * of this method. That method will be called by this method when needed.
+     *
+     * @method
+     * @argument {object} object         - The object for which a DataIdentifier is
+     *                                      being requested.
+     *
+     * @returns {DataIdentifier}        - An object's DataIdentifier
+     */
+    dataIdentifierForInstance(instance) {
+        //If we don't have a local / native one, we return the one assigned by the main service
+        //let dataIdentifier = this._dataIdentifierByObject.get(object) || object.dataIdentifier;
+        let dataIdentifier = this._dataIdentifierByInstance.get(instance);
+
+        //When we merge in a graph of data object's it's possible that those objects are
+        if (!dataIdentifier) {
+            // throw "No dataIdentifier found for data object: "+object;
+            dataIdentifier = this.createDataIdentifierForInstance(instance);
+            this.registerUniqueInstanceWithDataIdentifier(instance, dataIdentifier);
+            this.recordDataIdentifierForInstance(dataIdentifier, instance);
+        }
+
+        return dataIdentifier;
+    }
+
+
+    createDataIdentifierForInstance(instance) {
+        return this.dataIdentifierForNewInstanceWithObjectDescriptor(instance.objectDescriptor);
     }
             
     dataIdentifierForNewInstanceWithObjectDescriptor(objectDescriptor) {
@@ -281,6 +310,14 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
         this._instanceByDataIdentifier.delete(dataIdentifier);
     }
 
+    registeredInstancesForObjectDescriptor(objectDescriptor) {
+        return (
+                    this._instancesByObjectDescriptor.get(objectDescriptor) ||
+                    (this._instancesByObjectDescriptor.set(objectDescriptor, []) &&
+                        this._instancesByObjectDescriptor.get(objectDescriptor))
+                );
+    }
+
     /******
      * Type/Object Descriptors Management
      */
@@ -291,6 +328,56 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
             (typeof type === "string" && this._moduleIdToObjectDescriptorMap[type]);
 
         return descriptor || type;
+    }
+
+        /**
+         * Returns an object descriptor for the provided object.  If this service
+         * does not have an object descriptor for this object it will ask its
+         * parent for one.
+         *
+         * TODO: looks like we're looping all the time and not caching a lookup"
+         * Why isn't objectDescriptorWithModuleId used??
+         *
+         * @param {object}
+         * @returns {ObjectDescriptor|null} if an object descriptor is not found this
+         * method will return null.
+         */
+    objectDescriptorForInstance(instance) {
+        var objectDescriptor = this._objectDescriptorForInstanceCache.get(instance);
+
+                if (!objectDescriptor) {
+                    objectDescriptor = this.objectDescriptorForType(instance?.constructor);
+                }
+
+                if (!objectDescriptor) {
+                    var types = this.types,
+                        objectInfo = Montage.getInfoForObject(instance),
+                        moduleId = objectInfo.moduleId,
+                        objectName = objectInfo.objectName,
+                        module,
+                        exportName,
+                        i,
+                        n;
+
+                    objectDescriptor = this.objectDescriptorWithModuleId(moduleId);
+                    for (i = 0, n = types.length; i < n && !objectDescriptor; i += 1) {
+                        module = types[i].module;
+                        exportName = module && types[i].exportName;
+                        if (module && moduleId === module.id && objectName === exportName) {
+                            if (objectDescriptor !== types[i]) {
+                                console.error(
+                                    "objectDescriptorWithModuleId cached an objectDescriptor and objectDescriptorForObject finds another"
+                                );
+                            }
+                            objectDescriptor = types[i];
+                        }
+                    }
+                    return (
+                        objectDescriptor || (this.parentService && this.parentService.objectDescriptorForObject(instance))
+                    );
+                } else {
+                    return objectDescriptor;
+                }
     }
 
     _registerObjectDescriptor(jObjectDescriptor, moduleIdToObjectDescriptorMap = this._moduleIdToObjectDescriptorMap) {
@@ -331,22 +418,22 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
      * no type can be determined.
      */
     _getInstanceType(instance) {
-        var type = this._typeRegistry.get(object),
-            moduleId = typeof object === "string" ? object : this._getModuleIdForObject(object);
-        while (!type && object) {
-            if (object.constructor.TYPE instanceof DataObjectDescriptor) {
+        var type = this._typeRegistry.get(instance),
+            moduleId = typeof object === "string" ? instance : this._getModuleIdForInstance(instance);
+        while (!type && instance) {
+            if (instance.constructor.TYPE instanceof DataObjectDescriptor) {
                 type = object.constructor.TYPE;
             } else if (this._moduleIdToObjectDescriptorMap[moduleId]) {
                 type = this._moduleIdToObjectDescriptorMap[moduleId];
             } else {
-                object = Object.getPrototypeOf(object);
+                instance = Object.getPrototypeOf(instance);
             }
         }
         return type;
     }
 
     _getModuleIdForInstance(instance) {
-        var info = Montage.getInfoForObject(object);
+        var info = Montage.getInfoForObject(instance);
         return [info.moduleId, info.objectName].join("/");
     }
 
@@ -429,7 +516,7 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
             FIXME
             we're "lucky" here as when this is called, the current DataService hasn't registered yet the mappings, so we end up creating triggers for all property descriptors.
         */
-                dataTriggers = this.DataTrigger.addTriggers(
+                dataTriggers = DataTrigger.addTriggers(
                     this,
                     objectDescriptor,
                     prototype
@@ -515,6 +602,21 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
         }
     }
     
+
+    /******
+     * Testing
+     */
+
+    reset() {
+        this._dataIdentifierByInstance.clear();
+        this._instanceByDataIdentifier.clear();
+        this._instancePrototypes.clear();
+        this._instanceTriggers.clear();
+        this._constructorToObjectDescriptorMap.clear();
+        this._instancesByObjectDescriptor.clear();
+        this._moduleIdToObjectDescriptorMap = {};
+        this._typeRegistry.clear();
+    }
 
 
 })
@@ -614,6 +716,32 @@ UniqueInstanceService.addClassProperties({
     _moduleIdToObjectDescriptorMap: {
         value: {}
     },
+
+    /**
+     * A DataObject will always be decribed by only one ObjectDescriptor, even when we support more "main" dataServices.
+     * So caching on prototype so it serves everyone.
+     *
+     * @private
+     * @method
+     * @argument {DataObjectDescriptor} type - The type of object to create.
+     * @returns {Object}                     - The created object.
+     */
+    _objectDescriptorForInstanceCache: {
+        value: new WeakMap()
+    },
+
+    /**
+     * A WeakMap where keys are ObjectDescriptors and values are all instances of data objects of that type
+     *
+     * @private
+     * @method
+     * @argument {DataObjectDescriptor} type - The type of object to create.
+     * @returns {Object}                     - The created object.
+     */
+
+    _instancesByObjectDescriptor: {
+        value: new WeakMap(),
+    },
     
 
     /************
@@ -656,3 +784,5 @@ UniqueInstanceService.addClassProperties({
         },
     }
 })
+
+exports.defaultUniqueInstanceService = exports.UniqueInstanceService.defaultUniqueInstanceService = new UniqueInstanceService();

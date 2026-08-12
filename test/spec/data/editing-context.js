@@ -15,7 +15,6 @@ describe("An EditingContext", function () {
     beforeAll((done) => {
         mainService._childServiceRegistrationPromise.then(() => {
             let categoryService = mainService.childServiceForType(CategoryDescriptor);
-            debugger;
             done();
         });
     });
@@ -32,14 +31,42 @@ describe("An EditingContext", function () {
             data = result;
         }).catch((e) => {
             error = e;
+            console.error(e);
         }).finally(() => {
             expect(error).toBe(null);
             expect(data).toBeDefined();
             expect(Array.isArray(data)).toBe(true);
             expect(data.length).toBe(3);
-            expect(editingContext._managedInstances.size).toBe(1);
-            expect(editingContext._managedInstances.get(CategoryDescriptor).size).toBe(3);
+            expect(editingContext.managedInstances.size).toBe(1);
+            expect(editingContext.managedInstances.get(CategoryDescriptor).size).toBe(3);
             done();
         });
+    });
+
+    it("can create instance", () => {
+        let editingContext = new EditingContext(),
+            instance = editingContext.createInstance(movieDescriptor);
+            
+
+        expect(instance).toBeDefined();
+        expect(editingContext.createdInstances.get(movieDescriptor).has(instance)).toBe(true);
+        expect(editingContext.objectDescriptorsWithChanges.has(movieDescriptor)).toBe(true);
+        expect(editingContext.managedInstances.get(movieDescriptor).size).toBe(1);
+
+    });
+
+    it("can track changes on managedInstance", () => {
+        let editingContext = new EditingContext(),
+            instance = editingContext.createInstance(movieDescriptor),
+            changes;
+            
+        editingContext.autosave = false;
+
+        instance.title = "Forrest Gump";
+        changes = editingContext.changesForInstance(instance);
+        expect(changes).toBeDefined();
+        expect(changes.has("title")).toBe(true);
+        expect(changes.get("title")).toBe("Forrest Gump");
+
     });
 })

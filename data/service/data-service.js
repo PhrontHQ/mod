@@ -7310,6 +7310,7 @@ DataService.addClassProperties(
         handleChange: {
             value: function (changeEvent) {
                 //Adding check to avoid changes from property-fetching
+                console.log("ChangeEvent");
                 let trigger = this._triggerForObjectProperty(changeEvent.target, changeEvent.key),
                     triggerValueStatus = trigger._getValueStatus(changeEvent.target);
 
@@ -7514,7 +7515,7 @@ DataService.addClassProperties(
          * @argument {Object} object - The object who will be reset.
          * @returns {external:Promise} - A promise fulfilled when the data operation is ready.
          */
-        saveDataOperationFoObject: {
+        saveDataOperationForObject: {
             value: function (object) {},
         },
 

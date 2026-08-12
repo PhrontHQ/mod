@@ -1418,7 +1418,7 @@ RawDataService.addClassProperties({
             }
 
             if (stream.editingContext) {
-                stream.editingContext.registerManagedInstanceForType(type, object);
+                stream.editingContext.registerManagedInstanceForType(object, type);
             }
 
 

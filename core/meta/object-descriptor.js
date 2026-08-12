@@ -672,18 +672,19 @@ ObjectDescriptor.addClassProperties(
         },
         composedPath: {
             get: function () {
-                if (!this._composedPath) {
-                    this._composedPath = this._computeComposedPath();
-                }
-                return this._composedPath;
+                return this.composedPathForEvent();
             }
         },
         _computeComposedPath: {
             value: function () {
                 let composedPath = [this],
                     nextTargetCandidate = this.parent,
-                    dataServices = [...this.handlingServices],
-                    editingContexts = Array.from(this.eventManager.application.editingContexts);
+                    dataServices = [...this.handlingServices];
+            
+                //EditingContexts are added/removed in a way that DataServices are not. 
+                //For all relevant editing contexts in the system to be included in the path, we'd need
+                //to recalculate the path each time one is added/removed.
+                    // editingContexts = Array.from(this.eventManager.application.editingContexts);
 
                 //Add all ObjectDescriptor parents
                 do {
@@ -694,7 +695,7 @@ ObjectDescriptor.addClassProperties(
                 } while (nextTargetCandidate);
 
                 //Add all EditingContexts
-                composedPath.push.apply(composedPath, editingContexts);
+                // composedPath.push.apply(composedPath, editingContexts);
 
                 //Add all Services handling this object:
                 composedPath.push.apply(composedPath, dataServices);
@@ -704,6 +705,7 @@ ObjectDescriptor.addClassProperties(
                 return composedPath;
             },
         },
+
 
         composedPathForEvent: {
             value: function (event) {
