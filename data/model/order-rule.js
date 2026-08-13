@@ -48,6 +48,24 @@ exports.OrderingDirection = OrderDirection;
  * @extends external:Montage
  */
 exports.OrderRule = Montage.specialize(/** @lends OrderRule.prototype */ {
+    /*
+        TODO:
+        Let's create an IndexBasedOrderRule - static , singleton
+
+        Using FRB's expression from:
+        
+        Enumerate
+            An enumeration observer produces [index, value] pairs. You can bind to the index or the value in subsequent stages. The prefix dot distinguishes the zeroeth property from the literal zero.
+
+            var object = {letters: ['a', 'b', 'c', 'd']};
+            bind(object, "lettersAtEvenIndexes", {
+                "<-": "letters.enumerate().filter{!(.0 % 2)}.map{.1}"
+            });
+            expect(object.lettersAtEvenIndexes).toEqual(['a', 'c']);
+            object.letters.shift();
+            expect(object.lettersAtEvenIndexes).toEqual(['b', 'd']);
+
+    */
 
     /**
      * An expression to be applied to objects in a set to yield a value
@@ -60,10 +78,7 @@ exports.OrderRule = Montage.specialize(/** @lends OrderRule.prototype */ {
     },
 
     /**
-     * Whether objects to be sorted will be sorted with the
-     * [expression's]{@link OrderRule#expression} value
-     * [ascending]{@link OrderDirection.Ascending} or
-     * [descending]{@link OrderDirection.Descending}.
+     * Backward compatibility for order
      *
      * @type {OrderDirection}
      */
@@ -75,6 +90,14 @@ exports.OrderRule = Montage.specialize(/** @lends OrderRule.prototype */ {
             this.order = value;
         }
     },
+    /**
+     * Whether objects to be sorted will be sorted with the
+     * [expression's]{@link OrderRule#expression} value
+     * [ascending]{@link OrderDirection.Ascending} or
+     * [descending]{@link OrderDirection.Descending}.
+     *
+     * @type {OrderDirection}
+     */
     order: {
         value: OrderDirection.Ascending
     }
