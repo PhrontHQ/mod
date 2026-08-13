@@ -217,19 +217,19 @@ DataService.addClassProperties(
                 */
                     // self.addEventListener(DataOperation.Type.ReadOperation, self, true);
 
-                    mainService.addEventListener("change", this, false);
+                    // mainService.addEventListener("change", this, false);
 
-                    mainService.addEventListener(DataOperation.Type.NoOp, this, false);
-                    mainService.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.CreateTransactionFailedOperation, this, false);
-                    mainService.addEventListener(DataOperation.Type.CreateTransactionCompletedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.NoOp, this, false);
+                    // mainService.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.CreateTransactionFailedOperation, this, false);
+                    // mainService.addEventListener(DataOperation.Type.CreateTransactionCompletedOperation, this, false);
 
                     // mainService.addEventListener(DataOperation.Type.BatchCompletedOperation,this,false);
                     // mainService.addEventListener(DataOperation.Type.BatchFailedOperation,this,false);
@@ -482,26 +482,26 @@ DataService.addClassProperties(
                 if (value !== this._isMainService) {
                     this._isMainService = value;
                     if (value) {
-                        this.addRangeAtPathChangeListener("userLocales", this, "handleUserLocalesRangeChange");
+                        // this.addRangeAtPathChangeListener("userLocales", this, "handleUserLocalesRangeChange");
 
                         /*
                         Prepare to listen for ReadOperation that will be dispatched by RawDataServices that
                         handle that Read Event, so we can know the data services that handled it
                     */
-                        this.application.addEventListener(DataOperation.Type.ReadOperation, this, true);
-                        this.addEventListener("change", this, false);
+                        // this.application.addEventListener(DataOperation.Type.ReadOperation, this, true);
+                        // this.addEventListener("change", this, false);
 
-                        this.addEventListener(DataOperation.Type.NoOp, this, false);
-                        this.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.CreateTransactionFailedOperation, this, false);
-                        this.addEventListener(DataOperation.Type.CreateTransactionCompletedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.NoOp, this, false);
+                        // this.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.CreateTransactionFailedOperation, this, false);
+                        // this.addEventListener(DataOperation.Type.CreateTransactionCompletedOperation, this, false);
                         // this.addEventListener(DataOperation.Type.BatchCompletedOperation,this,false);
                         // this.addEventListener(DataOperation.Type.BatchFailedOperation,this,false);
                         // this.addEventListener(DataOperation.Type.TransactionUpdatedOperation,this,false);
@@ -510,7 +510,7 @@ DataService.addClassProperties(
                         // this.addEventListener(DataOperation.Type.RollbackTransactionFailedOperation,this,false);
                         // this.addEventListener(DataOperation.Type.RollbackTransactionCompletedOperation,this,false);
                     } else {
-                        this.removeRangeAtPathChangeListener("userLocales", this, "handleUserLocalesRangeChange");
+                        // this.removeRangeAtPathChangeListener("userLocales", this, "handleUserLocalesRangeChange");
                     }
                 }
             },
@@ -2924,35 +2924,35 @@ DataService.addClassProperties(
             },
         },
 
-        /**
-         * Records an object's DataIdentifier
-         *
-         * @method
-         * @argument {object} object                        - an Object.
-         * @argument {DataIdentifier} dataIdentifier        - The object whose property values are
-         */
-        recordDataIdentifierForObject: {
-            value: function (dataIdentifier, object) {
-                /*
-                When we have a SynchronizationDataService in-between MainService and RawDataOnes, dataIdentifier and
-                    this._dataIdentifierByObject.get(object) are actually not the same. need to figure out why, but narrowing the test
-                to verify they have the same primaryKey should help for now.
-            */
-                if (
-                    this._dataIdentifierByObject.has(object) &&
-                    this._dataIdentifierByObject.get(object)?.primaryKey !== dataIdentifier.primaryKey
-                ) {
-                    //throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
-                    console.error(
-                        "WARNING: recordDataIdentifierForObject when one already exists:" + JSON.stringify(object)
-                    );
-                }
-                /*
-                TODO: This is called twice when this._dataIdentifierByObject already contains (object, dataIdentifier)
-            */
-                this._dataIdentifierByObject.set(object, dataIdentifier);
-            },
-        },
+        // /**
+        //  * Records an object's DataIdentifier
+        //  *
+        //  * @method
+        //  * @argument {object} object                        - an Object.
+        //  * @argument {DataIdentifier} dataIdentifier        - The object whose property values are
+        //  */
+        // recordDataIdentifierForObject: {
+        //     value: function (dataIdentifier, object) {
+        //         /*
+        //         When we have a SynchronizationDataService in-between MainService and RawDataOnes, dataIdentifier and
+        //             this._dataIdentifierByObject.get(object) are actually not the same. need to figure out why, but narrowing the test
+        //         to verify they have the same primaryKey should help for now.
+        //     */
+        //         if (
+        //             this._dataIdentifierByObject.has(object) &&
+        //             this._dataIdentifierByObject.get(object)?.primaryKey !== dataIdentifier.primaryKey
+        //         ) {
+        //             //throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
+        //             console.error(
+        //                 "WARNING: recordDataIdentifierForObject when one already exists:" + JSON.stringify(object)
+        //             );
+        //         }
+        //         /*
+        //         TODO: This is called twice when this._dataIdentifierByObject already contains (object, dataIdentifier)
+        //     */
+        //         this._dataIdentifierByObject.set(object, dataIdentifier);
+        //     },
+        // },
 
         /**
          * Remove an object's DataIdentifier
@@ -6734,7 +6734,7 @@ DataService.addClassProperties(
                     If locale’s cardinality is > 1 then each localized property would return a json/dictionary of locale->value instead of 1 value.
                 */
 
-                readOperation.locales = this.userLocales;
+                readOperation.locales = this.localesForOperation(readOperation);
 
                 if (query.criteria) {
                     //readOperation.criteria = criteria.clone();
@@ -9069,59 +9069,63 @@ DataService.addClassProperties(
          * @property Array {Locale}
          */
 
-        _userLocales: {
-            value: undefined,
+        // _userLocales: {
+        //     value: undefined,
+        // },
+
+        // userLocales: {
+        //     get: function () {
+        //         return this._userLocales || ((this._userLocales = [Locale.systemLocale]) && this._userLocales);
+        //     },
+        //     set: function (value) {
+        //         if (value !== this._userLocales) {
+        //             this._userLocales = value;
+        //         }
+        //     },
+        // },
+        localesForOperation: {
+            value: function (operation) {
+                let user = operation.identity && operation.identity.user;
+                return user ? user.preferredLocales : [Locale.systemLocale];
+            }
         },
 
-        userLocales: {
-            get: function () {
-                return this.isRootService
-                    ? this._userLocales || ((this._userLocales = [Locale.systemLocale]) && this._userLocales)
-                    : this.rootService.userLocales;
-            },
-            set: function (value) {
-                if (value !== this._userLocales) {
-                    this._userLocales = value;
-                }
-            },
-        },
+        // _userLocalesCriteria: {
+        //     value: undefined,
+        // },
 
-        _userLocalesCriteria: {
-            value: undefined,
-        },
+        // userLocalesCriteria: {
+        //     get: function () {
+        //         return this.isRootService
+        //             ? this._userLocalesCriteria || (this._userLocalesCriteria = this._createUserLocalesCriteria())
+        //             : this.rootService.userLocalesCriteria;
+        //     },
+        //     set: function (value) {
+        //         if (value !== this._userLocalesCriteria) {
+        //             this._userLocalesCriteria = value;
+        //         }
+        //     },
+        // },
 
-        userLocalesCriteria: {
-            get: function () {
-                return this.isRootService
-                    ? this._userLocalesCriteria || (this._userLocalesCriteria = this._createUserLocalesCriteria())
-                    : this.rootService.userLocalesCriteria;
-            },
-            set: function (value) {
-                if (value !== this._userLocalesCriteria) {
-                    this._userLocalesCriteria = value;
-                }
-            },
-        },
+        // _createUserLocalesCriteria: {
+        //     value: function () {
+        //         return new Criteria().initWithExpression("locales == $DataServiceUserLocales", {
+        //             DataServiceUserLocales: this.userLocales,
+        //         });
+        //     },
+        // },
 
-        _createUserLocalesCriteria: {
-            value: function () {
-                return new Criteria().initWithExpression("locales == $DataServiceUserLocales", {
-                    DataServiceUserLocales: this.userLocales,
-                });
-            },
-        },
+        // handleUserLocalesChange: {
+        //     value: function (value, key, object) {
+        //         this.userLocalesCriteria = this._createUserLocalesCriteria();
+        //     },
+        // },
 
-        handleUserLocalesChange: {
-            value: function (value, key, object) {
-                this.userLocalesCriteria = this._createUserLocalesCriteria();
-            },
-        },
-
-        handleUserLocalesRangeChange: {
-            value: function (plus, minus) {
-                this.userLocalesCriteria = this._createUserLocalesCriteria();
-            },
-        },
+        // handleUserLocalesRangeChange: {
+        //     value: function (plus, minus) {
+        //         this.userLocalesCriteria = this._createUserLocalesCriteria();
+        //     },
+        // },
 
         /**
          * Returns the locales for a specific object's locale. Default implementation

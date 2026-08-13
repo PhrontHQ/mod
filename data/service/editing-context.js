@@ -1,6 +1,7 @@
 const DataService = require("./data-service").DataService,
     uniqueInstanceService = require("./unique-instance-service").defaultUniqueInstanceService,
     DataEvent = require("../model/data-event").DataEvent,
+    DataOperation = require("./data-operation").DataOperation,
     ObjectPool = require("core/object-pool").ObjectPool,
     defaultEventManager = require("core/event/event-manager").defaultEventManager;
 
@@ -30,7 +31,20 @@ const EditingContext = (exports.EditingContext = class EditingContext extends Da
         if (defaultEventManager.application) {
             defaultEventManager.application.registerEditingContext(this);
         }
+        this.application.addEventListener(DataOperation.Type.ReadOperation, this, true);
         this.addEventListener("change", this, false);
+
+        this.addEventListener(DataOperation.Type.NoOp, this, false);
+        this.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
+        this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+        this.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
+        this.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
+        this.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
+        this.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
+        this.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
+        this.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
+        this.addEventListener(DataOperation.Type.CreateTransactionFailedOperation, this, false);
+        this.addEventListener(DataOperation.Type.CreateTransactionCompletedOperation, this, false);
     }
     /***************
      * Change Management
@@ -837,6 +851,32 @@ const EditingContext = (exports.EditingContext = class EditingContext extends Da
      * Operations
      */
 
+    captureReadOperation(readOperation) {
+        if (!this._rawDataServiceHandlersByReadOperationId.has(readOperation.id)) {
+            return;
+        }
+        if (readOperation.rawDataService) {
+            this.registerRawDataServiceForReadOperation(readOperation.rawDataService, readOperation);
+        }
+
+        //console.log("captureReadOperation: "+readOperation.target.name+", criteria.expression: "+readOperation.criteria.expression+", criteria.parameters: "+JSON.stringify(readOperation.criteria.parameters), readOperation);
+        if (this.performsAccessControl) {
+            var self = this,
+                result = this.evaluateAccessPoliciesForDataOperation(readOperation);
+
+            if (this._isAsync(result)) {
+                /*
+                Returning a promise from the event handler ensures the next listener inline doesn't get involed until we're done.
+            */
+                return result.then(function (value) {
+                    return self._captureReadOperationPostAccessPoliciesEvaluation(readOperation);
+                });
+            } else {
+                self._captureReadOperationPostAccessPoliciesEvaluation(readOperation);
+            }
+        }
+    }
+
     handleReadFailedOperation(operation) {
         var stream = this._thenableByOperationId.get(operation.referrerId);
         if (stream) {
@@ -875,32 +915,32 @@ const EditingContext = (exports.EditingContext = class EditingContext extends Da
     }
 
     // //Is this used?
-    // registerReadOperation(readOperation) {
-    //     this._rawDataServiceHandlersByReadOperationId.set(readOperation.id, undefined);
-    // }
+    registerReadOperation(readOperation) {
+        this._rawDataServiceHandlersByReadOperationId.set(readOperation.id, undefined);
+    }
 
     // //Is this used?
-    // unregisterReadOperation(readOperation) {
-    //     if (!this.hasRegisteredRawDataServiceHandlerForReadEvent(readOperation)) {
-    //         /*
-    //         This means no RawDataService were able to handle that read.
-    //         We need to report am error
-    //     */
-    //         /*
-    //         REFACTOR: There could be more than one rawDataService handling a read operation.
+    unregisterReadOperation(readOperation) {
+        // if (!this.hasRegisteredRawDataServiceHandlerForReadOperation(readOperation)) {
+        //     /*
+        //     This means no RawDataService were able to handle that read.
+        //     We need to report am error
+        // */
+        //     /*
+        //     REFACTOR: There could be more than one rawDataService handling a read operation.
 
-    //         RawDataService in handleRead used to create a readDataOperation for itself,
-    //         and set itself as:
-    //                     readOperation.rawDataService = this;
-    //         Now in captureReadOperation(), it's missing...
+        //     RawDataService in handleRead used to create a readDataOperation for itself,
+        //     and set itself as:
+        //                 readOperation.rawDataService = this;
+        //     Now in captureReadOperation(), it's missing...
 
-    //     */
-    //         //readEvent.dataStream.dataError(new Error("No RawDataService to handle query for "+readEvent.dataStream.query.type.name));
-    //     }
+        // */
+        //     //readEvent.dataStream.dataError(new Error("No RawDataService to handle query for "+readEvent.dataStream.query.type.name));
+        // }
 
-    //     this._rawDataServiceHandlersByReadOperationId.delete(readOperation.id);
-    //     // ReadEvent.checkin(readOperation);
-    // }
+        this._rawDataServiceHandlersByReadOperationId.delete(readOperation.id);
+        // ReadEvent.checkin(readOperation);
+    }
 
     /***************
      * Read Only

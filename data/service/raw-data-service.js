@@ -1,3 +1,5 @@
+const { defaultUniqueInstanceService } = require("./unique-instance-service");
+
 var Montage = require("core/core").Montage,
     DataService = require("./data-service").DataService,
     assign = require("../../../core/frb/assign"),
@@ -86,14 +88,41 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
         this._defaultRawDataTypeIdentificationCriteriaByType = new Map();
 
         if (this.supportsDataOperation) {
+            this.addEventListener(DataOperation.Type.ReadOperation, this, false);
+            this.addEventListener(DataOperation.Type.CreateOperation, this, false);
+            this.addEventListener(DataOperation.Type.UpdateOperation, this, false);
+            this.addEventListener(DataOperation.Type.MergeOperation, this, false);
+            this.addEventListener(DataOperation.Type.DeleteOperation, this, false);
+            
             this.addEventListener(DataOperation.Type.ReadUpdateOperation, this, false);
             this.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
             this.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+            // mainService.addEventListener(DataOperation.Type.NoOp, this, false);
+            // mainService.addEventListener(DataOperation.Type.ReadFailedOperation, this, false);
+            // mainService.addEventListener(DataOperation.Type.ReadCompletedOperation, this, false);
+            this.addEventListener(DataOperation.Type.UpdateFailedOperation, this, false);
+            this.addEventListener(DataOperation.Type.UpdateCompletedOperation, this, false);
+            this.addEventListener(DataOperation.Type.CreateFailedOperation, this, false);
+            this.addEventListener(DataOperation.Type.CreateCompletedOperation, this, false);
+            this.addEventListener(DataOperation.Type.DeleteFailedOperation, this, false);
+            this.addEventListener(DataOperation.Type.DeleteCompletedOperation, this, false);
+
+            this.addEventListener(ReadEvent.read, this, false);
+            /*
+                DataOperations on their way out:
+            */
+
+            
 
             if (this.supportsTransaction) {
-                this.addEventListener(DataOperationType.createTransactionOperation, this, false);
-                this.addEventListener(DataOperationType.createTransactionCompletedOperation, this, false);
-                this.addEventListener(DataOperationType.createTransactionFailedOperation, this, false);
+                this.addEventListener(DataOperation.Type.PerformTransactionOperation,this, false);
+                this.addEventListener(DataOperation.Type.CreateTransactionOperation, this, false);
+                this.addEventListener(DataOperation.Type.AppendTransactionOperation, this, false);
+                this.addEventListener(DataOperation.Type.CommitTransactionOperation, this, false);
+                this.addEventListener(DataOperation.Type.RollbackTransactionOperation, this, false);
+                this.addEventListener(DataOperationType.CreateTransactionOperation, this, false);
+                this.addEventListener(DataOperationType.CreateTransactionCompletedOperation, this, false);
+                this.addEventListener(DataOperationType.CreateTransactionFailedOperation, this, false);
                 this.addEventListener(DataOperation.Type.BatchCompletedOperation, this, false);
                 this.addEventListener(DataOperation.Type.BatchFailedOperation, this, false);
                 this.addEventListener(DataOperation.Type.TransactionUpdatedOperation, this, false);
@@ -355,34 +384,138 @@ RawDataService.addClassProperties({
     addMainServiceEventListeners: {
         value: function () {
 
-            if (this.canSaveData) {
-                this.mainService.addEventListener(TransactionEvent.transactionCreate, this, false);
-            }
+            // if (this.canSaveData) {
+            //     this.mainService.addEventListener(TransactionEvent.transactionCreate, this, false);
+            // }
 
-            if (this.supportsDataOperation) {
-                this.addEventListener(ReadEvent.read, this, false);
-                /*
-                    DataOperations on their way out:
-                */
+            // if (this.supportsDataOperation) {
+            //     this.addEventListener(ReadEvent.read, this, false);
+            //     /*
+            //         DataOperations on their way out:
+            //     */
 
-                this.addEventListener(DataOperation.Type.ReadOperation, this, false);
-                this.addEventListener(DataOperation.Type.CreateOperation, this, false);
-                this.addEventListener(DataOperation.Type.UpdateOperation, this, false);
-                this.addEventListener(DataOperation.Type.MergeOperation, this, false);
-                this.addEventListener(DataOperation.Type.DeleteOperation, this, false);
-                this.addEventListener(DataOperation.Type.PerformTransactionOperation,this, false);
-                this.addEventListener(DataOperation.Type.CreateTransactionOperation, this, false);
-                this.addEventListener(DataOperation.Type.AppendTransactionOperation, this, false);
-                this.addEventListener(DataOperation.Type.CommitTransactionOperation, this, false);
-                this.addEventListener(DataOperation.Type.RollbackTransactionOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.ReadOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.CreateOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.UpdateOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.MergeOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.DeleteOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.PerformTransactionOperation,this, false);
+            //     this.addEventListener(DataOperation.Type.CreateTransactionOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.AppendTransactionOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.CommitTransactionOperation, this, false);
+            //     this.addEventListener(DataOperation.Type.RollbackTransactionOperation, this, false);
 
-                this.mainService.addEventListener(DataOperation.Type.AppendTransactionCompletedOperation, this, false);
-                this.mainService.addEventListener(DataOperation.Type.AppendTransactionFailedOperation, this, false);
+            //     this.mainService.addEventListener(DataOperation.Type.AppendTransactionCompletedOperation, this, false);
+            //     this.mainService.addEventListener(DataOperation.Type.AppendTransactionFailedOperation, this, false);
 
 
-            }
+            // }
         }
     },
+
+        /***************************************************************************
+         * Offline
+         */
+
+        _initializeOffline: {
+            value: function () {
+                // TODO: This code assumes that the first instance of DataService or
+                // of one of its subclasses is either the
+                // root service, and that no instance of DataService subclasses are.
+                // This needs to be fixed to allow DataService child services and
+                // DataService subclass root services.
+                var self = this;
+                if (
+                    // typeof global.addEventListener === "function" &&
+                    !RawDataService._isOfflineInitialized
+                ) {
+                    RawDataService._isOfflineInitialized = true;
+                    global.addEventListener("online", function (event) {
+                        self.rootService.isOffline = false;
+                    });
+                    global.addEventListener("offline", function (event) {
+                        self.rootService.isOffline = true;
+                    });
+                }
+            }
+        },
+
+        _isOfflineInitialized: {
+            value: false,
+        },
+
+        /**
+         * Returns a value derived from and continuously updated with the value of
+         * [navigator.onLine]{@link https://developer.mozilla.org/en-US/docs/Web/API/NavigatorOnLine/onLine}.
+         *
+         * Root services are responsible for tracking offline status, and subclasses
+         * not designed to be root services should override this property to get
+         * its value from their root service.
+         *
+         * @type {boolean}
+         */
+        isOffline: {
+            get: function () {
+                if (this._isOffline === undefined) {
+                    // Determine the initial value from the navigator state and call
+                    // the public setter so _goOnline() is invoked if appropriate.
+                    this.isOffline = !navigator.onLine;
+                }
+                return this._isOffline;
+            },
+            set: function (offline) {
+                var self = this;
+                if (this._willBeOffline === null) {
+                    // _goOnline() just finished, set _isOffline to the desired
+                    // value and clear the "just finished" flag in _willBeOffline.
+                    this._isOffline = offline ? true : false;
+                    this._willBeOffline = undefined;
+                } else if (this._willBeOffline !== undefined) {
+                    // _goOnline() is in progress, just record the future value.
+                    this._willBeOffline = offline ? true : false;
+                } else if (this._isOffline === false) {
+                    // Already online and not starting up, no need for _goOnline().
+                    this._isOffline = offline ? true : false;
+                } else if (!offline) {
+                    // Going from offline to online, or starting up online, so
+                    // assume we were last offline, call _goOnline(), and only
+                    // change the value  when that's done.
+                    this._isOffline = true;
+                    this._willBeOffline = false;
+                    this._goOnline().then(function () {
+                        var offline = self._willBeOffline;
+                        self._willBeOffline = null;
+                        self.isOffline = offline;
+                        return null;
+                    });
+                }
+            },
+        },
+
+        _isOffline: {
+            // `undefined` on startup, otherwise always `true` or `false`.
+            value: false,
+        },
+
+        _willBeOffline: {
+            // `true` or `false` while _goOnline() is in progress, `null` just after
+            // it's done, `undefined` otherwise.
+            value: undefined,
+        },
+
+        _goOnline: {
+            value: function () {
+                var self = this;
+                return this.readOfflineOperations()
+                    .then(function (operations) {
+                        operations.sort(this._compareOfflineOperations);
+                        return self.performOfflineOperations(operations);
+                    })
+                    .catch(function (e) {
+                        console.error(e);
+                    });
+            },
+        },
 
 
     /**
@@ -1162,9 +1295,10 @@ RawDataService.addClassProperties({
      */
     isOffline: {
         get: function () {
-            return this === this.rootService ?
-                this.superForGet("isOffline")() :
-                this.rootService.isOffline;
+            // return this === this.rootService ?
+            //     this.superForGet("isOffline")() :
+            //     this.rootService.isOffline;
+            return RawDataService.isOffline;
         }
     },
 
@@ -1352,7 +1486,7 @@ RawDataService.addClassProperties({
                 readExpressions = stream.query.readExpressions,
                 dataIdentifier,
                 object,
-                //object = this.rootService.objectForDataIdentifier(dataIdentifier),
+                //object = this.rootService.instanceForDataIdentifier(dataIdentifier),
                 isUpdateToExistingObject = false,
                 result;
 
@@ -1575,15 +1709,16 @@ RawDataService.addClassProperties({
     },
 
 
+
     objectForTypeRawData: {
         value: function (type, rawData, dataIdentifier, context) {
             // var dataIdentifier = this.dataIdentifierForTypeRawData(type,rawData);
 
-            // return this.rootService.objectForDataIdentifier(dataIdentifier) ||
+            // return this.rootService.instanceForDataIdentifier(dataIdentifier) ||
             //         this.getDataObject(type, rawData, dataIdentifier, context);
 
 
-            var object = this.rootService.objectForDataIdentifier(dataIdentifier);
+            var object = defaultUniqueInstanceService.instanceForDataIdentifier(dataIdentifier);
 
             //Consolidation, recording snapshot even if we already had an object
             //Record snapshot before we may create an object
@@ -1592,12 +1727,73 @@ RawDataService.addClassProperties({
 
             if (!object) {
                 //iDataIdentifier argument should be all we need later on
-                object = this.getDataObject(type, rawData, dataIdentifier, context);
-                this.recordDataIdentifierForObject(dataIdentifier, object);
+                object = defaultUniqueInstanceService.getInstance(type, rawData, dataIdentifier, context);
+                this.recordDataIdentifierForInstance(dataIdentifier, object);
             }
             return object;
 
         }
+    },
+
+    /**
+     * Records an object's DataIdentifier
+     *
+     * @method
+     * @argument {object} object                        - an Object.
+     * @argument {DataIdentifier} dataIdentifier        - The object whose property values are
+     */
+    recordDataIdentifierForInstance: {
+        value: function (dataIdentifier, instance) {
+            /*
+            When we have a SynchronizationDataService in-between MainService and RawDataOnes, dataIdentifier and
+                this.instanceForDataIdentifier.get(object) are actually not the same. need to figure out why, but narrowing the test
+            to verify they have the same primaryKey should help for now.
+        */
+            if (
+                this._dataIdentifierByInstance.has(instance) &&
+                this._dataIdentifierByInstance.get(instance)?.primaryKey !== dataIdentifier.primaryKey
+            ) {
+                //throw new Error("recordDataIdentifierForObject when one already exists:"+JSON.stringify(object));
+                console.error(
+                    "WARNING: recordDataIdentifierForObject when one already exists:" + JSON.stringify(object)
+                );
+            }
+            /*
+            TODO: This is called twice when this._dataIdentifierByInstance already contains (object, dataIdentifier)
+        */
+            this._dataIdentifierByInstance.set(object, dataIdentifier);
+        },
+    },
+
+    /**
+     * Remove an object's DataIdentifier
+     *
+     * @method
+     * @argument {object} object         - an object
+     */
+    removeDataIdentifierForInstance: {
+        value: function (instance) {
+            // console.log("removeDataIdentifierForObject(",object);
+            this.instanceForDataIdentifier.delete(object);
+        },
+    },
+
+    __dataIdentifierByInstance: {
+        value: null,
+    },
+
+    _dataIdentifierByInstance: {
+        // This property is shared with all child services.
+        // If created lazily the wrong data identifier will be returned when
+        // accessed by a child service.
+
+        /*
+        Benoit 2/13/2025. Going for a per service bookkeeping, so rootService is the one creating and uniquing
+        objects, but RawDataServices can keep track with their own native dataIdentifiers
+    */
+        get: function () {
+            return this.__dataIdentifierByInstance || (this.__dataIdentifierByInstance = new WeakMap());
+        },
     },
 
     _defaultRawDataTypeIdentificationCriteriaByType: {
@@ -3192,7 +3388,7 @@ RawDataService.addClassProperties({
             /*
             1) dataIdentifierForTypePrimaryKey(type, primaryKey)
 
-            2) objectForDataIdentifier
+            2) instanceForDataIdentifier
             */
            /*
             Simplifying assumptions for now:
@@ -3203,7 +3399,7 @@ RawDataService.addClassProperties({
 
                 if(typeof criteria.parameters === "string") {
                         dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch,criteria.parameters);
-                        existingObject = this.rootService.objectForDataIdentifier(dataIdentifier);
+                        existingObject = defaultUniqueInstanceService.instanceForDataIdentifier(dataIdentifier);
                 } else if(Array.isArray(criteria.parameters)) {
                     var rootService = this.rootService,
                         array = criteria.parameters, i=0, iObject,
@@ -3212,7 +3408,7 @@ RawDataService.addClassProperties({
 
                     while( i < array.length ) {
                         dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch,array[i]);
-                        iObject = rootService.objectForDataIdentifier(dataIdentifier);
+                        iObject = rootService.instanceForDataIdentifier(dataIdentifier);
                         if(iObject) {
                             //Add to result
                             (existingObject || (existingObject = [])).push(iObject);
@@ -3258,7 +3454,7 @@ RawDataService.addClassProperties({
                     if(iSnapshotDataIdentifierKey.objectDescriptor === typeToFetch) {
                         iSnapshot = snapshot.get(iSnapshotDataIdentifierKey);
                         if(criteria.evaluate(iSnapshot)) {
-                            iObject = mainService.objectForDataIdentifier(iSnapshotDataIdentifierKey);
+                            iObject = mainService.instanceForDataIdentifier(iSnapshotDataIdentifierKey);
                             if(iObject) {
                                 (result || (result = [])).push(iObject);
                             } else {

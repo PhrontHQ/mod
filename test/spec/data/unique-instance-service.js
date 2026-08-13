@@ -4,17 +4,19 @@ var UniqueInstanceService = require("mod/data/service/unique-instance-service").
     // ModuleReference = require("mod/core/module-reference").ModuleReference,
     // RawDataService = require("mod/data/service/raw-data-service").RawDataService,
     defaultEventManager = require("mod/core/event/event-manager").defaultEventManager,
-    mainService = require("spec/data/logic/service/main.mjson").montageObject;
+    childServices = require("spec/data/logic/service/main-flat.mjson").montageObject;
 
 const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mjson").montageObject;
 const CategoryDescriptor = require("spec/data/logic/model/category.mjson").montageObject;
 const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObject;
 
+let personDescriptor = require("mod/data/model/party/person.mjson").montageObject;
+
 describe("A UniqueInstanceService", function () {
 
     let uniqueInstanceService;
 
-    beforeAll((done) => {
+    beforeAll(() => {
         // mainService._childServiceRegistrationPromise.then(() => {
         //     let categoryService = mainService.childServiceForType(CategoryDescriptor);
         //     debugger;
@@ -22,7 +24,6 @@ describe("A UniqueInstanceService", function () {
         // });
         uniqueInstanceService = UniqueInstanceService.defaultUniqueInstanceService;
         uniqueInstanceService.reset();
-        done();
     });
 
     beforeEach(() => {

@@ -699,7 +699,7 @@ ObjectDescriptor.addClassProperties(
 
                 //Add all Services handling this object:
                 composedPath.push.apply(composedPath, dataServices);
-                composedPath.push(this.eventManager.application.mainService);
+                // composedPath.push(this.eventManager.application.mainService);
                 composedPath.push(this.eventManager.application);
 
                 return composedPath;

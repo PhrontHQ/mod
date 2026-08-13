@@ -4,7 +4,7 @@ var EditingContext = require("mod/data/service/editing-context").EditingContext,
     // ModuleReference = require("mod/core/module-reference").ModuleReference,
     // RawDataService = require("mod/data/service/raw-data-service").RawDataService,
     defaultEventManager = require("mod/core/event/event-manager").defaultEventManager,
-    mainService = require("spec/data/logic/service/main.mjson").montageObject;
+    childServices = require("spec/data/logic/service/main-flat.mjson").montageObject;
 
 const AnimatedMovieDescriptor = require("spec/data/logic/model/animated-movie.mjson").montageObject;
 const CategoryDescriptor = require("spec/data/logic/model/category.mjson").montageObject;
@@ -12,12 +12,15 @@ const movieDescriptor = require("spec/data/logic/model/movie.mjson").montageObje
 
 describe("An EditingContext", function () {
 
-    beforeAll((done) => {
-        mainService._childServiceRegistrationPromise.then(() => {
-            let categoryService = mainService.childServiceForType(CategoryDescriptor);
-            done();
-        });
+    let categoryService;
+    beforeAll(() => {
+        categoryService = childServices[0];
     });
+
+    it("Doesn't need a mainService", function () {
+        expect(defaultEventManager.application.mainService).not.toBeDefined();
+    });
+
     it("can be created", function () {
         expect(new EditingContext()).toBeDefined();
     });
