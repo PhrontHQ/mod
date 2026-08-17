@@ -1514,7 +1514,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
 
     /**
-     * @function
+     * @method
      * Remove the cached path for target and all targets that have this target in their 
      * composed path for the event type. This will force it 
      * to be recalculated the next time an event for this type/target is handled
