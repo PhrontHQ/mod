@@ -4110,6 +4110,7 @@ DataService.addClassProperties(
                         return;
                     } else {
                         addedValueAsObjectsBeingMapped = true;
+                        //If propertyDescriptor.cardinality > 1, and it's a set the array is the value and we're now checking for that
                         this._objectsBeingMapped.add(value);
                     }
                 }
@@ -4218,7 +4219,8 @@ DataService.addClassProperties(
                         dataObject,
                         propertyDescriptor,
                         value,
-                        inversePropertyDescriptor
+                        inversePropertyDescriptor,
+                        addedValueAsObjectsBeingMapped
                     );
 
                     if (previousValue) {
@@ -4226,7 +4228,8 @@ DataService.addClassProperties(
                             dataObject,
                             propertyDescriptor,
                             previousValue,
-                            inversePropertyDescriptor
+                            inversePropertyDescriptor,
+                            addedValueAsObjectsBeingMapped
                         );
                     }
                     // for(var i=0, countI = value.length, iValue; (i<countI); i++) {
@@ -4587,7 +4590,24 @@ DataService.addClassProperties(
                     keyValue = changeEvent.keyValue,
                     addedValues = changeEvent.addedValues,
                     removedValues = changeEvent.removedValues,
-                    isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject),
+                    /*
+                        We check first if dataObject i being mapped.
+                        But if dataObject is actually the value initially fetched
+                        and this is the system updating the grap, the inverse property
+                        then the value side would be what was flagged as being mapped.
+
+                        In either case, it tells us we're in the context of fetching and those
+                        are not changes that need to be considered for saving
+                    */
+                    isDataObjectBeingMapped = this._objectsBeingMapped.has(dataObject) || (
+                        this._objectsBeingMapped.has(keyValue)
+                            ? true
+                            : addedValues?.length
+                                ? this._objectsBeingMapped.has(addedValues[0])
+                                : removedValues?.length
+                                    ? this._objectsBeingMapped.has(removedValues[0])
+                                    : false
+                    ),
                     changesForDataObject = this.changesForDataObject(dataObject),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
