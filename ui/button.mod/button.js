@@ -152,17 +152,17 @@ const Button = (exports.Button = class Button extends ActionTarget {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
 
+            // Discard any whitespace-only #text node left by template indentation
             const lastChild = this.element.lastChild;
-
-            // Ensure that the last child is a text node
-            // Any whitespace (including indentation) in the template will create a #text node
-            // But just in case (compressed version) we still check if the last child is a text node
-            if (!lastChild || lastChild.nodeType !== Node.TEXT_NODE) {
-                // Create a text node if the last child is not a text node
-                this.element.appendChild(document.createTextNode(""));
+            if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
+                this.element.removeChild(lastChild);
             }
 
-            this._labelNode = this.element.lastChild;
+            const span = document.createElement("span");
+            span.appendChild(document.createTextNode(''));
+            this.element.appendChild(span);
+
+            this._labelNode = span.firstChild;
 
             // Apply Button styles
             this._applyVisualPositionStyles();
