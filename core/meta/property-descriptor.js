@@ -61,6 +61,7 @@ var Defaults = {
     isOneWayEncrypted: false,
     isSerializable: true,
     hasUniqueValues: true,
+    allowsDuplicateValues: false,
     ownsValue: false
 };
 
@@ -183,7 +184,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
 
             this._setPropertyWithDefaults(serializer, "isUnique", this.isUnique);
             this._setPropertyWithDefaults(serializer, "isOneWayEncrypted", this.isOneWayEncrypted);
-            this._setPropertyWithDefaults(serializer, "hasUniqueValues", this.hasUniqueValues);
+            this._setPropertyWithDefaults(serializer, "allowsDuplicateValues", this.allowsDuplicateValues);
             this._setPropertyWithDefaults(serializer, "ownsValue", this.ownsValue);
             this._setPropertyWithDefaults(serializer, "description", this.description);
 
@@ -255,7 +256,7 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
 
             this._overridePropertyWithDefaults(deserializer, "isUnique");
             this._overridePropertyWithDefaults(deserializer, "isOneWayEncrypted");
-            this._overridePropertyWithDefaults(deserializer, "hasUniqueValues");
+            this._overridePropertyWithDefaults(deserializer, "hasUniqueValues", "allowsDuplicateValues");
             this._overridePropertyWithDefaults(deserializer, "description");
             this._overridePropertyWithDefaults(deserializer, "ownsValue");
         }
@@ -678,9 +679,34 @@ exports.PropertyDescriptor = Montage.specialize( /** @lends PropertyDescriptor# 
      * @type {boolean}
      * @default false
      */
+    //rename to allowsDuplicateValues....
     hasUniqueValues: {
-        value: Defaults.hasUniqueValues
+        get: function() {
+            return !this.allowsNullValues;
+        },
+        set: function(value) {
+            if(!value !== this.allowsNullValues) {
+                this.allowsNullValues = !value;
+            }
+        }
     },
+    allowsDuplicateValues: {
+        value: Defaults.allowsDuplicateValues
+    },
+
+
+    /**
+     * models if a collection is allowed to contain null values, any number of null values
+     * as the name implies. If one collection needs to restrict the number of nulls to 1 and only 1,
+     * then allowsDuplicateValues would have to be set to false.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    allowsNullValues: {
+        value: Defaults.allowsNullValues
+    },
+
 
     /** 
      * Indicates whether the value of this property is wholly owned by the object. For example, 

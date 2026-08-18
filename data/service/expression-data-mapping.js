@@ -2859,7 +2859,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                         value = [value];
                         this._assignObjectValueOrDefault(object, propertyName, value, propertyDescriptor);
                     } else {
-                        if(objectPropertyValue.includes(value) && propertyDescriptor.hasUniqueValues) {
+                        if(objectPropertyValue.includes(value) && !propertyDescriptor.allowsDuplicateValues) {
                             console.warn("Attempted to add duplicate value for property "+propertyName+" already contains it: ", value);
                         } else {
                             objectPropertyValue.push(value);

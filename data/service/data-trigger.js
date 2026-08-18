@@ -570,6 +570,30 @@ exports.DataTrigger.prototype = Object.create(
 
                                         isEmpty true if an array has a length of zero or it only contains undefined values
                                     */
+
+
+                                    /*
+                                    
+                                        TODO:
+
+                                        if (!this.propertyDescriptor.allowsDuplicateValue)
+
+                                        We're not handling it well. For once, when we get called, the change is already made
+                                        So we'd have to look into the array and remove already-added duplicates to enforce it.
+                                        
+                                        One thought. As much as the "will" observer are pure courtesy, the sense that observers can't do anything to prevent the value
+                                        to be added to the array proeprty, or set if it's a full array or a value if the property is a to-one,
+
+                                        Moving this proprietary observing to a change event would come with capture and bubble phase, and if the propagation is stopped,
+                                        then the target shouldn't do the work of adding the value, and we'd now have the ability to prevent such an add to happen in the firt place
+                                        instead of having to correct after it did...
+
+                                        For now, we'll rely on enforcing the rules in the UI before it gets added, but programmatically, it's going to stay non-deal.
+
+                                        This isn't even covering the case where changes are made client-side on a property that may not even be fully loaded, meaning we 
+                                        could have a duplicate in stored data that the client-side hasn't fetched yet. That would get settled on save, but before?
+
+                                    */
                                     //if (plus?.length > 0 || minus?.length > 0) {
                                     if (!plus?.isEmpty || !minus?.isEmpty) {
                                         // If we're not in the middle of a mapping...:
@@ -1093,7 +1117,7 @@ exports.DataTrigger.prototype = Object.create(
                                      * So if there's an empty value on the object, we fill, if it has values, we merge
                                      */
                                     if (Array.isArray(localValue) && propertyValue.length > 0) {
-                                        if (self.propertyDescriptor.hasUniqueValues && localValue.length > 0) {
+                                        if (!self.propertyDescriptor.allowsDuplicateValues && localValue.length > 0) {
                                             for (let iValue of propertyValue) {
                                                 if (!localValue.includes(iValue)) {
                                                     localValue.push(iValue);
