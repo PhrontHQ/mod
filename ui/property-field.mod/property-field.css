@@ -56,7 +56,7 @@
 
     & .controlWrapper {
 
-        flex: none;
+        flex: 2;/* more room for content*/
         overflow: hidden;
 
         & > .ModPropertyField-control {
