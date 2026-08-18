@@ -1539,15 +1539,27 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
     __clearCachedPathForTargetAndEventType: {
         value: function (capture, target, eventType) {
-            if (capture) {
-                if (this._capturePathByTargetAndEventType.has(target) && this._capturePathByTargetAndEventType.get(target).has(eventType)) {
-                    this._capturePathByTargetAndEventType.get(target).delete(eventType);
-                }
-            } else {
-                if (this._bubblePathByTargetAndEventType.has(target) && this._bubblePathByTargetAndEventType.get(target).has(eventType)) {
-                    this._bubblePathByTargetAndEventType.get(target).delete(eventType);
-                }
-            }
+
+            console.time("__clearCachedPathForTargetAndEventType");
+            capture 
+                ? this._capturePathByTargetAndEventType.get(target)?.delete(eventType)
+                : this._bubblePathByTargetAndEventType.get(target)?.delete(eventType);
+            console.timeEnd("__clearCachedPathForTargetAndEventType");
+
+            // console.time("__clearCachedPathForTargetAndEventType");
+            // if (capture) {
+            //     if (this._capturePathByTargetAndEventType.has(target) && this._capturePathByTargetAndEventType.get(target).has(eventType)) {
+            //         this._capturePathByTargetAndEventType.get(target).delete(eventType);
+            //     }
+            // } else {
+            //     if (this._bubblePathByTargetAndEventType.has(target) && this._bubblePathByTargetAndEventType.get(target).has(eventType)) {
+            //         this._bubblePathByTargetAndEventType.get(target).delete(eventType);
+            //     }
+            // }
+            // console.timeEnd("__clearCachedPathForTargetAndEventType");
+
+            console.count("__clearCachedPathForTargetAndEventType: _capturePathByTargetAndEventType size: "+this._capturePathByTargetAndEventType.size )
+            console.count("__clearCachedPathForTargetAndEventType: _bubblePathByTargetAndEventType size: "+this._bubblePathByTargetAndEventType.size )
         }
     },
 
