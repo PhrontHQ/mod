@@ -684,8 +684,9 @@ ObjectDescriptor.addClassProperties(
                     nextTargetCandidate = this.parent,
                     //on main was: dataServices = [...this.handlingServices];
 
-                    dataServices = this.eventManager.application.mainService.descendantServicesForType(this),
-                    editingContexts = Array.from(this.eventManager.application.editingContexts);
+                    dataServices = this.eventManager.application.mainService.descendantServicesForType(this);
+                    //Benoit: commemting out, not there yet
+                    //editingContexts = Array.from(this.eventManager.application.editingContexts);
 
                 //Add all ObjectDescriptor parents
                 do {
@@ -696,7 +697,8 @@ ObjectDescriptor.addClassProperties(
                 } while (nextTargetCandidate);
 
                 //Add all EditingContexts
-                composedPath.push.apply(composedPath, editingContexts);
+                //Benoit: commemting out, not there yet
+                //composedPath.push.apply(composedPath, editingContexts);
 
                 //Add all Services handling this object:
                 composedPath.push.apply(composedPath, dataServices);
