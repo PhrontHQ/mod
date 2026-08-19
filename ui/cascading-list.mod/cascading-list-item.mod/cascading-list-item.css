@@ -69,7 +69,7 @@
 }
 
 .CascadingListItemAction-footer.middle {
-    color: #030303;
+    color: var(--visual-style-text-fill);
     font-size: 12px;
     font-size: .75rem;
 }

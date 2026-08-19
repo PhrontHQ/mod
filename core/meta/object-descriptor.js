@@ -673,26 +673,49 @@ ObjectDescriptor.addClassProperties(
         composedPath: {
             get: function () {
                 if (!this._composedPath) {
-                    let composedPath = (this._composedPath = [this]),
-                        nextTargetCandidate = this.parent,
-                        dataServices = [...this.handlingServices];
-
-                    //Add all ObjectDescriptor parents
-                    do {
-                        if (nextTargetCandidate) {
-                            composedPath.push(nextTargetCandidate);
-                            nextTargetCandidate = nextTargetCandidate.parent;
-                        }
-                    } while (nextTargetCandidate);
-
-                    //Add all Services handling this object:
-                    composedPath.push.apply(composedPath, dataServices);
-                    composedPath.push(this.eventManager.application.mainService);
-                    composedPath.push(this.eventManager.application);
+                    this._composedPath = this._computeComposedPath();
                 }
-
                 return this._composedPath;
+            }
+        },
+        _computeComposedPath: {
+            value: function () {
+                let composedPath = [this],
+                    nextTargetCandidate = this.parent,
+                    //on main was: dataServices = [...this.handlingServices];
+
+                    dataServices = this.eventManager.application.mainService.descendantServicesForType(this);
+                    //Benoit: commemting out, not there yet
+                    //editingContexts = Array.from(this.eventManager.application.editingContexts);
+
+                //Add all ObjectDescriptor parents
+                do {
+                    if (nextTargetCandidate) {
+                        composedPath.push(nextTargetCandidate);
+                        nextTargetCandidate = nextTargetCandidate.parent;
+                    }
+                } while (nextTargetCandidate);
+
+                //Add all EditingContexts
+                //Benoit: commemting out, not there yet
+                //composedPath.push.apply(composedPath, editingContexts);
+
+                //Add all Services handling this object:
+                composedPath.push.apply(composedPath, dataServices);
+                composedPath.push(this.eventManager.application.mainService);
+                composedPath.push(this.eventManager.application);
+
+                return composedPath;
             },
+        },
+
+        composedPathForEvent: {
+            value: function (event) {
+                if (!this._composedPath) {
+                    this._composedPath = this._computeComposedPath();
+                }
+                return this._composedPath;
+            }
         },
 
         _descriptorTraversingExpression: {

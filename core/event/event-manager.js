@@ -1498,6 +1498,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                     isNewTarget = true;
                 }
             }
+
+            //Force optimized event path to be recalculated to account for new listener
+            this._clearCachedPathForTargetAndEventType(listenerOptions.capture, target, eventType);
             //console.log("targetEntryForEventType",targetEntryForEventType);
 
             //We'll check/cache the callbacks when we first dispatch
@@ -1506,6 +1509,64 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             //if (targetEntryForEventType.size === 1 && typeof target.nativeAddEventListener === "function") {
                     this._observeTarget_forEventType_(target, eventType, listenerOptions);
             }
+        }
+    },
+
+
+    /**
+     * @method
+     * Remove the cached path for target and all targets that have this target in their 
+     * composed path for the event type. This will force it 
+     * to be recalculated the next time an event for this type/target is handled
+     */
+    _clearCachedPathForTargetAndEventType: {
+        value: function (capture, target, eventType) {
+            let targetsByType = this._dispatchedTargetsByEventTypeByComposedPathMember.get(target);
+
+            if(targetsByType) {
+                let dispatchedTargets = targetsByType.get(eventType);
+                if(dispatchedTargets) {
+                    let dispatchedTargetsIterator = dispatchedTargets.entries();
+
+                    if (dispatchedTargetsIterator) {
+                        let dTarget;
+                        while ((dTarget = dispatchedTargetsIterator.next().value)) {
+                            this.__clearCachedPathForTargetAndEventType(capture, dTarget, eventType);
+                        }
+                    }
+                }
+            }
+
+            this.__clearCachedPathForTargetAndEventType(capture, target, eventType);
+
+        }
+    },
+
+    __clearCachedPathForTargetAndEventType: {
+        value: function (capture, target, eventType) {
+
+            //Benoit: Optimized to reduce calls on this._capturePathByTargetAndEventType/this._bubblePathByTargetAndEventType
+            var phasePathTargetEntry;
+            if (capture) {
+                if ((phasePathTargetEntry = this._capturePathByTargetAndEventType).get(target)) {
+                    phasePathTargetEntry.delete(eventType);
+                }
+            } else {
+                if ((phasePathTargetEntry = this._bubblePathByTargetAndEventType).get(target)) {
+                    phasePathTargetEntry.delete(eventType);
+                }
+            }
+
+            //OG from Thomas for reference for now
+            // if (capture) {
+            //     if (this._capturePathByTargetAndEventType.has(target) && this._capturePathByTargetAndEventType.get(target).has(eventType)) {
+            //         this._capturePathByTargetAndEventType.get(target).delete(eventType);
+            //     }
+            // } else {
+            //     if (this._bubblePathByTargetAndEventType.has(target) && this._bubblePathByTargetAndEventType.get(target).has(eventType)) {
+            //         this._bubblePathByTargetAndEventType.get(target).delete(eventType);
+            //     }
+            // }
         }
     },
 
@@ -1561,6 +1622,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             if(this._isDOMTargetChangeListener(target, eventType, optionsOrUseCapture)) {
                 this._resizeObserver.unobserve(target);
             }
+
+            //Force optimized event path to be recalculated to account for removed listener
+            this._clearCachedPathForTargetAndEventType(listenerOptions.capture, target, eventType);
 
             this._stopObservingTargeForEventTypeIfNeeded(target, eventType, targetEntryForEventType);
             // if(targetEntryForEventType && !targetEntryForEventType.get(Event_CAPTURING_PHASE) && !targetEntryForEventType.get(Event_BUBBLING_PHASE)) {
@@ -3155,27 +3219,44 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     },
 
     _invokeTargetListenersForEventPhase: {
-        value: function(iTarget, mutableEvent, phase, _eventType, promise) {
+        value: function(iTarget, mutableEvent, phase, _eventType, promise, phaseEventPath) {
             if(promise && promise.then) {
                 return promise.then(() => {
+                    let eventType = (_eventType || mutableEvent.type)
                     if(!mutableEvent.immediatePropagationStopped) {
-                        return this.__invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType);
+                        return this.__invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType, phaseEventPath);
+
+                    // Target has listener for this event and phase so add it to optimized path. The optimized path 
+                    // is only calculated once so we need to continue evaluating targets even if propagation is stopped
+                    } else if (phaseEventPath && this._registeredEventListenersOnTarget_eventType_eventPhase(iTarget, eventType, phase)) {
+                        if (phase === Event_CAPTURING_PHASE) {
+                            phaseEventPath.unshift(iTarget);
+                        } else if (phaseEventPath) {
+                            phaseEventPath.push(iTarget);
+                        }
                     }
                 });
             } else {
-                return this.__invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType);
+                return this.__invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType, phaseEventPath);
             }
         }
     },
 
-
+    //TODO: @tejaede - document why phaseEventPath is now an argument
     __invokeTargetListenersForEventPhase: {
-        value: function __invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType) {
+        value: function __invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType, phaseEventPath) {
             var eventType = (_eventType || mutableEvent.type),
                 listenerEntries = this._registeredEventListenersOnTarget_eventType_eventPhase(iTarget, eventType, phase);
 
+
             if (listenerEntries) {
 
+                //Target has listener for this event and phase so add it to cache
+                if (phaseEventPath && phase === Event_CAPTURING_PHASE) {
+                    phaseEventPath.unshift(iTarget);
+                } else if (phaseEventPath) {
+                    phaseEventPath.push(iTarget);
+                }
                 // currentTargetIdentifierSpecificCaptureMethodName = this.methodNameForCapturePhaseOfEventType(eventType, iTarget.identifier, capitalizedEventType);
                 if (Array.isArray(listenerEntries)) {
                     var j=0,
@@ -3194,7 +3275,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                                 previousPromise = promise;
                             }
                         }
-                        promise = this._invokeTargetListenerEntryForEvent(iTarget, nextEntry, mutableEvent, mutableEventPhase, undefined/*currentTargetIdentifierSpecificCaptureMethodName*/, undefined/*identifierSpecificCaptureMethodName*/, undefined/*captureMethodName*/, previousPromise);
+                        promise = this._invokeTargetListenerEntryForEvent(iTarget, nextEntry, mutableEvent, mutableEventPhase, previousPromise);
 
 
                         // if(previousPromise && promise) {
@@ -3233,7 +3314,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                     /*
                         There's only one listener, so no previous promise to pass
                     */
-                    return this._invokeTargetListenerEntryForEvent(iTarget, listenerEntries, mutableEvent, mutableEvent.eventPhase, undefined/*currentTargetIdentifierSpecificCaptureMethodName*/, undefined/*identifierSpecificCaptureMethodName*/, undefined/*captureMethodName*/, /*promise*/undefined);
+                    return this._invokeTargetListenerEntryForEvent(iTarget, listenerEntries, mutableEvent, mutableEvent.eventPhase, /*promise*/undefined);
                 }
             }
         }
@@ -3336,6 +3417,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
+
     /**
      @function
      @param {Event} event The handled event.
@@ -3350,6 +3432,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             var i,
                 iTarget,
                 eventPath,
+                completeEventPath, 
+                captureOptimizedEventPath, bubbleOptimizedEventPath,
+                phasePathByType,
                 eventType = event.type,
                 eventDefinition = this.eventDefinitions[eventType],
                 eventBubbles = event.bubbles,
@@ -3379,6 +3464,13 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             //     }
             //     this._previousEvent = event;
             // }
+
+            // ... operation 1 ...
+            
+
+            // 2. Accumulate the duration of all matching measures later
+            
+
 
             if(this.isBrowser) {
                 if(
@@ -3421,8 +3513,8 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             }
 
             mutableEventTarget = mutableEvent.target;
-            eventPath = this.eventPathForTarget(mutableEventTarget);
-            mutableEvent._composedPath = eventPath;
+            // eventPath = this.eventPathForTarget(mutableEventTarget);
+            completeEventPath = this.pathForEvent(mutableEvent);
 
 
             // Let the delegate handle the event first
@@ -3434,50 +3526,106 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 this._pointerStorage.storeEvent(mutableEvent);
             }
 
-
-            targetEntry = this._targetEventListeners.get(mutableEventTarget);
-            targetEntryForEventType = targetEntry ? targetEntry.get(eventType) : null;
-
             // Capture Phase Distribution
             mutableEvent.eventPhase = CAPTURING_PHASE;
-            /*
-                 The event path we generate is from bottom to top, capture needs to traverse this backwards
-                 As eventPath now includes the target, we need to stop at index 1 in capture, and start from in bubble
-            */
-            i = eventPath.length;
-            let countI = i;
-            while (i>1 && !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[--i])) {
-                if(eventPath.length !== countI || mutableEvent.currentTarget === iTarget) {
-                    //eventPath was modified
-                    while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
-                }
-                mutableEvent.currentTarget = iTarget;
 
-                promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise);
+            
+            phasePathByType = this._pathTypeMapForPhaseAndTarget(CAPTURING_PHASE, mutableEventTarget);
+            //Check if we have an optimized path for this event type
+            if (!phasePathByType.has(eventType)) {
+                captureOptimizedEventPath = [];
+                eventPath = completeEventPath;
+            } else {
+                eventPath = phasePathByType.get(eventType);               
             }
 
+            mutableEvent._composedPath = completeEventPath;
+
+            //If capture path has been calculated as empty, it is stored in the cache as false
+            if (eventPath) {
+                /*
+                    The event path we generate is from bottom to top, capture needs to traverse this backwards
+                    As eventPath now includes the target, we need to stop at index 1 in capture, and start from in bubble
+                */
+                i = eventPath.length;
+                let countI = i;
+                let limit = eventPath[0] === mutableEventTarget ? 1 : 0;
+                while (i>limit && !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[--i])) {
+                    
+                    //Target was included in optimized event path, but was removed from the complete path so it should not
+                    //be evaluated. A better way to do this is to remove the item from the optimized path as well.
+                    if (!completeEventPath.has(iTarget)) {
+                        console.warn("[EventManager] Target was removed from complete event path ", iTarget, mutableEvent);
+                        continue;
+                    }
+
+                    if(eventPath.length !== countI || mutableEvent.currentTarget === iTarget) {
+                        //eventPath was modified
+                        while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
+                    }
+                    mutableEvent.currentTarget = iTarget;
+                    this._registerComposedPathMemberForDispatchedTargetAndEventType(iTarget, mutableEventTarget, eventType);
+                    promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise, captureOptimizedEventPath);
+                }
+
+                if (captureOptimizedEventPath && (mutableEvent.immediatePropagationStopped || mutableEvent.propagationStopped)) {
+                    while (i>1 && (iTarget = eventPath[--i])) {
+                        this._registerComposedPathMemberForDispatchedTargetAndEventType(iTarget, mutableEventTarget, eventType);
+                        if (this._registeredEventListenersOnTarget_eventType_eventPhase(iTarget, eventType, CAPTURING_PHASE)) {
+                            captureOptimizedEventPath.unshift(iTarget);
+                        }
+                    }
+                }
+            }
+
+            phasePathByType = this._pathTypeMapForPhaseAndTarget(BUBBLING_PHASE, mutableEventTarget);
+
+            //Check if we have an optimized path for this event type
+            if (!phasePathByType.has(eventType)) {
+                bubbleOptimizedEventPath = [];
+                eventPath = completeEventPath;
+            } else {
+                eventPath = phasePathByType.get(eventType);
+            }
+
+            
             // At Target Distribution
             if (!mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped) {
                 mutableEvent.eventPhase = Event_AT_TARGET;
                 mutableEvent.currentTarget = iTarget = mutableEventTarget;
                 //Capture
-                promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise);
+                promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, CAPTURING_PHASE, eventType, promise, captureOptimizedEventPath);
 
                 //Bubble
-                promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, BUBBLING_PHASE, eventType, promise);
+                promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, BUBBLING_PHASE, eventType, promise, bubbleOptimizedEventPath);
             }
 
-            /*
-                 Bubble Phase Distribution
-                 As eventPath now includes the target, we need to stop at index 1 in capture, and start from in bubble
-            */
-            if(eventBubbles) {
-                mutableEvent.eventPhase = BUBBLING_PHASE;
-                for (i = 1; !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[i]); i++) {
-                    mutableEvent.currentTarget = iTarget;
+            if (eventPath) {
+                /*
+                    Bubble Phase Distribution
+                    As eventPath now includes the target, we need to stop at index 1 in capture, and start from in bubble
+                */
+                if(eventBubbles) {
+                    mutableEvent.eventPhase = BUBBLING_PHASE;
+                    let start = eventPath[0] === mutableEventTarget ? 1 : 0;
+                    for (i = start; !mutableEvent.immediatePropagationStopped && !mutableEvent.propagationStopped && (iTarget = eventPath[i]); i++) {
+                        if (!completeEventPath.has(iTarget)) {
+                            console.warn("[EventManager] Target was removed from complete event path ", iTarget, mutableEvent);
+                            continue;
+                        }
 
-                    promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, BUBBLING_PHASE, eventType, promise);
+                        mutableEvent.currentTarget = iTarget;
 
+                        promise = this._invokeTargetListenersForEventPhase(iTarget, mutableEvent, BUBBLING_PHASE, eventType, promise, bubbleOptimizedEventPath);
+                    }
+
+                    if (bubbleOptimizedEventPath && (mutableEvent.immediatePropagationStopped || mutableEvent.propagationStopped)) {
+                        for (; (iTarget = eventPath[i]); i++) {
+                            if (this._registeredEventListenersOnTarget_eventType_eventPhase(iTarget, eventType, BUBBLING_PHASE)) {
+                                bubbleOptimizedEventPath.push(iTarget);
+                            }
+                        }
+                    }
                 }
             }
 
@@ -3485,17 +3633,58 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             if(promise) {
                 var self = this;
                 mutableEvent.propagationPromise = promise.then(function() {
+                    if (captureOptimizedEventPath) {
+                        self._capturePathByTargetAndEventType.get(mutableEventTarget).set(eventType, captureOptimizedEventPath.length ? captureOptimizedEventPath : false);
+                    }
+                    if (bubbleOptimizedEventPath) {
+                        self._bubblePathByTargetAndEventType.get(mutableEventTarget).set(eventType, bubbleOptimizedEventPath.length ? bubbleOptimizedEventPath : false);
+                    }
                     self._finalizeHandleEvent(mutableEvent, event);
                 });
             } else {
+                if (captureOptimizedEventPath) {
+                    this._capturePathByTargetAndEventType.get(mutableEventTarget).set(eventType, captureOptimizedEventPath.length ? captureOptimizedEventPath : false);
+                }
+                if (bubbleOptimizedEventPath) {
+                    this._bubblePathByTargetAndEventType.get(mutableEventTarget).set(eventType, bubbleOptimizedEventPath.length ? bubbleOptimizedEventPath : false);
+                }
                 this._finalizeHandleEvent(mutableEvent, event);
             }
 
-            //console.profileEnd("handleEvent "+event.type);
-            //console.groupTimeEnd("handleEvent");
-
             // performance.mark('event-manager:handleEvent:end');
             // performance.measure('handleEvent', 'event-manager:handleEvent:start', 'event-manager:handleEvent:end');
+            /*
+                Running the following in the console will print the cumulative time processing events (not including async handling)
+                const entries = performance.getEntriesByName("handleEvent");
+                const totalCumulativeTime = entries.reduce((sum, entry) => sum + entry.duration, 0);
+                console.log(totalCumulativeTime)
+            */
+        }
+    },
+
+    _pathTypeMapForPhaseAndTarget: {
+        value: function (phase, target) {
+            let cache = phase === Event_CAPTURING_PHASE ? this._capturePathByTargetAndEventType : this._bubblePathByTargetAndEventType;
+            if (!cache.has(target)) {
+                cache.set(target, new Map());
+            }
+            return cache.get(target);
+        }
+    },
+
+    _registerComposedPathMemberForDispatchedTargetAndEventType: {
+        value: function (target, dispatchedTarget, eventType) {
+            let cache = this._dispatchedTargetsByEventTypeByComposedPathMember,
+                typeForTarget;
+
+            if (!cache.has(target)) {
+                cache.set(target, new Map());
+            }
+            typeForTarget = cache.get(target);
+             if (!typeForTarget.has(eventType)) {
+                typeForTarget.set(eventType, new Set());
+            }
+            return typeForTarget.get(eventType).add(dispatchedTarget);
         }
     },
 
@@ -3582,17 +3771,17 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     // },
 
     _invokeTargetListenerEntryForEvent: {
-        value: function _invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase, currentTargetIdentifierSpecificPhaseMethodName, targetIdentifierSpecificPhaseMethodName, phaseMethodName, promise) {
+        value: function _invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase, promise) {
             if(promise && promise.then) {
                 return promise.then(() => {
                     if(!mutableEvent.immediatePropagationStopped) {
-                        return this.__invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase, currentTargetIdentifierSpecificPhaseMethodName, targetIdentifierSpecificPhaseMethodName, phaseMethodName);
+                        return this.__invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase);
                     } else {
                         throw new Error("immediatePropagationStopped");
                     }
                 });
             } else {
-                return this.__invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase, currentTargetIdentifierSpecificPhaseMethodName, targetIdentifierSpecificPhaseMethodName, phaseMethodName);
+                return this.__invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase);
             }
         }
     },
@@ -3638,7 +3827,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
      * @private
      */
     __invokeTargetListenerEntryForEvent: {
-        value: function __invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase, currentTargetIdentifierSpecificPhaseMethodName, targetIdentifierSpecificPhaseMethodName, phaseMethodName) {
+        value: function __invokeTargetListenerEntryForEvent(iTarget, listenerEntry, mutableEvent, phase) {
             var listener = listenerEntry.listener,
                 callback,
                 // callbacks = listenerEntry.callbacks,
@@ -3709,7 +3898,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         ? callback.call(iTarget, mutableEvent)
                         : callback.call(listener, mutableEvent);
 
-                }
+                } 
             //}
 
             if(listenerEntry.once) {
@@ -3839,30 +4028,99 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         value: function (target) {
 
             if (this.isBrowser && (this.isElement(target) || target instanceof Document || target === window)) {
-                return this._eventPathForDomTarget(target);
+                return this._pathForDomTarget(target);
             } else {
                 return this._eventPathForTarget(target);
             }
         }
     },
 
+    pathForEvent: {
+        enumerable: false,
+        value: function (event) {
+            let target = event.target;
+            if (this.isBrowser && (this.isElement(target) || target instanceof Document || target === window)) {
+                return this._pathForDomTarget(target);
+            } else {
+                return this._pathForEvent(event);
+            }
+        }
+    },
+
+    /*****
+     * @property {Map<Target, Map<string, Array>>}
+     * 
+     * Caches the items in a target's hierarchy that have a capture listener for the event type.
+     * 
+     * For example, say Grandchild.composedPath = [Grandchild, Child, Parent, Grandparent] and only Parent has a capture
+     * listener for event type "action". The Map would look like the following
+     * 
+     * Map {
+     *   Grandchild: Map {
+     *     "action": [Parent]
+     *   }
+     * }
+     * 
+     */
+    _capturePathByTargetAndEventType: {
+        get: function () {
+            return this.__capturePathByTargetAndEventType || (this.__capturePathByTargetAndEventType = new Map());
+        }
+    },
+
+    /*****
+     * @property {Map<Target, Map<string, Array>>}
+     * 
+     * Caches the items in a target's hierarchy that have a (non-capture) listener for the event type.
+     * 
+     * For example, say Grandchild.composedPath = [Grandchild, Child, Parent, Grandparent] and only Child and Grandparent have
+     * a non-capture listener for event type "action". The Map would look like the following
+     * 
+     * Map {
+     *   Grandchild: Map {
+     *     "action": [Child, Grandparent]
+     *   }
+     * }
+     * 
+     */
+    _bubblePathByTargetAndEventType: {
+        get: function () {
+            return this.__bubblePathByTargetAndEventType || (this.__bubblePathByTargetAndEventType = new Map());
+        }
+    },
+
+    /*****
+     * @property {Map<Target, Map<string, Set<Target>>}
+     * 
+     * Reverse lookup from a Target to all of the Targets whose composed path it is in. 
+     * 
+     */
+    _dispatchedTargetsByEventTypeByComposedPathMember: {
+        get: function () {
+            return this.__dispatchedTargetsByEventTypeByComposedPathMember || (this.__dispatchedTargetsByEventTypeByComposedPathMember = new Map());
+        }
+    },
+
+
     /**
-     * Build the event target chain for the the specified Target
+     * Build the event target chain for the the specified Event
      * @private
      */
-    _eventPathForTarget: {
+    _pathForEvent: {
         enumerable: false,
-        value: function (target) {
+        value: function (event) {
+            let target = event.target,
+                path;
 
             if (!target) {
                 return this._emptyComposedPath;
-            } else if(target.composedPath) {
-                /*
-                    If target has a commposedPath, it's likely cached.
-                    So in case it's mutated by a listner, we're making a copy
-                    to  guard against that.
-                */
-                return Array.from(target.composedPath);
+            }
+            path = target.composedPathForEvent && target.composedPathForEvent(event);
+
+            if(path) {
+                // Target may cache path so we make a copy to protect it from 
+                // being manipulated by the handlers
+                return Array.from(path);
             } else {
 
                 var targetCandidate = target,
@@ -3877,8 +4135,16 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
                 do {
                     if (!discoveredTargets.has(targetCandidate)) {
-                        eventPath.push(targetCandidate);
-                        discoveredTargets.set(targetCandidate,true);
+                        //If any target along the hierarchy provides a composed path, use it for the 
+                        //remainder of the hierarchy
+                        path = targetCandidate.composedPathForEvent && targetCandidate.composedPathForEvent(event);
+                        if (path) {
+                            eventPath.push.apply(eventPath, path);
+                            break;
+                        } else {
+                            eventPath.push(targetCandidate);
+                            discoveredTargets.set(targetCandidate,true);
+                        }
                     }
 
                     targetCandidate = targetCandidate.nextTarget;
@@ -3895,7 +4161,6 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
                 return eventPath;
             }
-
         }
     },
 
@@ -3906,7 +4171,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
      * Build the event target chain for the the specified DOM target
      * @private
      */
-    _eventPathForDomTarget: {
+    _pathForDomTarget: {
         enumerable: false,
         value: function (target) {
 
