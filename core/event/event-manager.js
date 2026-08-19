@@ -1521,14 +1521,19 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
      */
     _clearCachedPathForTargetAndEventType: {
         value: function (capture, target, eventType) {
-            let targetsByType = this._dispatchedTargetsByEventTypeByComposedPathMember.get(target),
-                dispatchedTargets = targetsByType && targetsByType.get(eventType),
-                dispatchedTargetsIterator = dispatchedTargets && dispatchedTargets.entries(),
-                dTarget;
+            let targetsByType = this._dispatchedTargetsByEventTypeByComposedPathMember.get(target);
 
-            if (dispatchedTargetsIterator) {
-                while ((dTarget = dispatchedTargetsIterator.next().value)) {
-                    this.__clearCachedPathForTargetAndEventType(capture, dTarget, eventType);
+            if(targetsByType) {
+                let dispatchedTargets = targetsByType.get(eventType);
+                if(dispatchedTargets) {
+                    let dispatchedTargetsIterator = dispatchedTargets.entries();
+
+                    if (dispatchedTargetsIterator) {
+                        let dTarget;
+                        while ((dTarget = dispatchedTargetsIterator.next().value)) {
+                            this.__clearCachedPathForTargetAndEventType(capture, dTarget, eventType);
+                        }
+                    }
                 }
             }
 
@@ -1540,13 +1545,19 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     __clearCachedPathForTargetAndEventType: {
         value: function (capture, target, eventType) {
 
-            console.time("__clearCachedPathForTargetAndEventType");
-            capture 
-                ? this._capturePathByTargetAndEventType.get(target)?.delete(eventType)
-                : this._bubblePathByTargetAndEventType.get(target)?.delete(eventType);
-            console.timeEnd("__clearCachedPathForTargetAndEventType");
+            //Benoit: Optimized to reduce calls on this._capturePathByTargetAndEventType/this._bubblePathByTargetAndEventType
+            var phasePathTargetEntry;
+            if (capture) {
+                if ((phasePathTargetEntry = this._capturePathByTargetAndEventType).get(target)) {
+                    phasePathTargetEntry.delete(eventType);
+                }
+            } else {
+                if ((phasePathTargetEntry = this._bubblePathByTargetAndEventType).get(target)) {
+                    phasePathTargetEntry.delete(eventType);
+                }
+            }
 
-            // console.time("__clearCachedPathForTargetAndEventType");
+            //OG from Thomas for reference for now
             // if (capture) {
             //     if (this._capturePathByTargetAndEventType.has(target) && this._capturePathByTargetAndEventType.get(target).has(eventType)) {
             //         this._capturePathByTargetAndEventType.get(target).delete(eventType);
@@ -1556,10 +1567,6 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             //         this._bubblePathByTargetAndEventType.get(target).delete(eventType);
             //     }
             // }
-            // console.timeEnd("__clearCachedPathForTargetAndEventType");
-
-            console.count("__clearCachedPathForTargetAndEventType: _capturePathByTargetAndEventType size: "+this._capturePathByTargetAndEventType.size )
-            console.count("__clearCachedPathForTargetAndEventType: _bubblePathByTargetAndEventType size: "+this._bubblePathByTargetAndEventType.size )
         }
     },
 
@@ -3235,7 +3242,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         }
     },
 
-
+    //TODO: @tejaede - document why phaseEventPath is now an argument
     __invokeTargetListenersForEventPhase: {
         value: function __invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType, phaseEventPath) {
             var eventType = (_eventType || mutableEvent.type),
