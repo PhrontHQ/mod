@@ -152,33 +152,9 @@ const Button = (exports.Button = class Button extends ActionTarget {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
 
-            // Discard any whitespace-only #text node left by template indentation
-            const lastChild = this.element.lastChild;
-            if (lastChild && lastChild.nodeType === Node.TEXT_NODE) {
-                this.element.removeChild(lastChild);
-            }
-
-            const span = document.createElement("span");
-            span.appendChild(document.createTextNode(''));
-            this.element.appendChild(span);
-
-            this._labelNode = span.firstChild;
-
-            // Apply Button styles
+          
             this._applyVisualPositionStyles();
             this._applyVisualOrientationStyles();
-        }
-    }
-
-    /**
-     * Draws the component.
-     * @override
-     */
-    draw() {
-        super.draw();
-
-        if (this._labelNode) {
-            this._labelNode.data = this.label;
         }
     }
 
