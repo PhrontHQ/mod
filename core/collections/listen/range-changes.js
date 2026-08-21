@@ -149,6 +149,10 @@ RangeChanges.prototype.removeRangeChangeListener = function (listener, token, be
         if(listeners._current === listener) {
             listeners._current = null;
         }
+        /*
+            Just because we don't have a single listener that is the listener passed in, it doesn't mean we have an array. 
+            It could be another single listener as well. So we add a check before assuming
+        */
         else if (Array.isArray(listeners._current)) {
             var index = listeners._current.lastIndexOf(listener);
             if (index === -1) {
