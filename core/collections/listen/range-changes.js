@@ -149,7 +149,7 @@ RangeChanges.prototype.removeRangeChangeListener = function (listener, token, be
         if(listeners._current === listener) {
             listeners._current = null;
         }
-        else {
+        else if (Array.isArray(listeners._current)) {
             var index = listeners._current.lastIndexOf(listener);
             if (index === -1) {
                 throw new Error("Can't remove range change listener: does not exist: token " + JSON.stringify(token));
