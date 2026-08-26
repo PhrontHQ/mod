@@ -1,4 +1,4 @@
-/*global Window, Document, Element, Event, Components, Touch, MontageElement */
+/*global Window, Document, Element, Event, Components, Touch, MontageElement */
 
 /**
  * @author Lea Verou
@@ -1526,12 +1526,19 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             if(targetsByType) {
                 let dispatchedTargets = targetsByType.get(eventType);
                 if(dispatchedTargets) {
-                    let dispatchedTargetsIterator = dispatchedTargets.entries();
+                    let dispatchedTargetsIterator = dispatchedTargets.values();
 
                     if (dispatchedTargetsIterator) {
-                        let dTarget;
-                        while ((dTarget = dispatchedTargetsIterator.next().value)) {
-                            this.__clearCachedPathForTargetAndEventType(capture, dTarget, eventType);
+                        let dispatchedTargetsIteration;
+                        while ((dispatchedTargetsIteration = dispatchedTargetsIterator.next()) && !dispatchedTargetsIteration.done) {
+                            /* 
+                                The problem is that for pointermove and target === document,
+                                dTarget is an array, with twice the same object in it, which is itself a problem
+                                And we pass dTarget to  this.__clearCachedPathForTargetAndEventType()
+                                which clearly expects that to be an object instead.
+
+                            */
+                            this.__clearCachedPathForTargetAndEventType(capture, dispatchedTargetsIteration.value, eventType);
                         }
                     }
                 }
@@ -1548,11 +1555,11 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             //Benoit: Optimized to reduce calls on this._capturePathByTargetAndEventType/this._bubblePathByTargetAndEventType
             var phasePathTargetEntry;
             if (capture) {
-                if ((phasePathTargetEntry = this._capturePathByTargetAndEventType).get(target)) {
+                if ((phasePathTargetEntry = this._capturePathByTargetAndEventType.get(target))) {
                     phasePathTargetEntry.delete(eventType);
                 }
             } else {
-                if ((phasePathTargetEntry = this._bubblePathByTargetAndEventType).get(target)) {
+                if ((phasePathTargetEntry = this._bubblePathByTargetAndEventType.get(target))) {
                     phasePathTargetEntry.delete(eventType);
                 }
             }
@@ -3222,6 +3229,7 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
         value: function(iTarget, mutableEvent, phase, _eventType, promise, phaseEventPath) {
             if(promise && promise.then) {
                 return promise.then(() => {
+                    //FIXME: the eventType variable is only used in this._registeredEventListenersOnTarget_eventType_eventPhase() call bellow, why?
                     let eventType = (_eventType || mutableEvent.type)
                     if(!mutableEvent.immediatePropagationStopped) {
                         return this.__invokeTargetListenersForEventPhase(iTarget, mutableEvent, phase, _eventType, phaseEventPath);
@@ -3559,7 +3567,14 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                         continue;
                     }
 
-                    if(eventPath.length !== countI || mutableEvent.currentTarget === iTarget) {
+                    /*
+                        Benoit 8/26/2026 With optimized path that can contain only one value, we can end up with 
+                        i === -1 here amd the loop bellow leaves us with iTarget undefined, before we got to 
+                        this._invokeTargetListenersForEventPhase(iTarget,...)
+
+                        So adding (i > 0) to the condition to enter the block dealing with modified path
+                    */
+                    if((i > 0) && (eventPath.length !== countI || mutableEvent.currentTarget === iTarget)) {
                         //eventPath was modified
                         while((iTarget = eventPath[--i]) === mutableEvent.currentTarget) {};
                     }
