@@ -173,15 +173,13 @@ exports.DocumentResources = class DocumentResources extends Montage {
                             const scopeSelectorRegExp = this._scopeSelectorRegExp;
                             const scopeRule = stylesheet.cssRules[iStart];
                             const scopeRuleCSSText = scopeRule.cssText;
-                            let scopeSelector;
                             let match;
 
                             // Delete current scopeRule
                             stylesheet.deleteRule(iStart);
 
                             while ((match = scopeSelectorRegExp.exec(scopeRuleCSSText)) !== null) {
-                                scopeSelector = `.${cssLayerName}${match[1]}`;
-                                scopeRuleCSSText = scopeRuleCSSText.replace(match[1], scopeSelector);
+                                scopeRuleCSSText = scopeRuleCSSText.replace(match[1], `.${cssLayerName}${match[1]}`);
                             }
 
                             stylesheet.insertRule(scopeRuleCSSText);
