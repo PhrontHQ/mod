@@ -133,7 +133,8 @@ exports.DocumentResources = class DocumentResources extends Montage {
                 let cssRules;
                 try {
                     cssRules = stylesheet.cssRules;
-                } catch (e) {
+                } catch (error) {
+                    console.warn(`Can't access stylesheet ${stylesheet.href} cssRules`, error);
                     cssRules = [];
                 }
 
@@ -171,7 +172,7 @@ exports.DocumentResources = class DocumentResources extends Montage {
                         } else if (cssRules[iStart] instanceof CSSScopeRule) {
                             // Add the layer name in scope
                             const scopeSelectorRegExp = this._scopeSelectorRegExp;
-                            const scopeRule = stylesheet.cssRules[iStart];
+                            const scopeRule = cssRules[iStart];
                             const scopeRuleCSSText = scopeRule.cssText;
                             let match;
 
@@ -185,20 +186,31 @@ exports.DocumentResources = class DocumentResources extends Montage {
                             stylesheet.insertRule(scopeRuleCSSText);
                         }
 
-                        let scopeRule = stylesheet.cssRules[iStart];
+                        let scopeRule = cssRules[iStart];
 
                         // If the CSS is scoped, we move it into the CSSLayerBlockRule
                         if (scopeRule && scopeRule instanceof CSSScopeRule) {
-                            stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
-                            let packageLayer = stylesheet.cssRules[iStart];
+                            try {
+                                stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
+                            }
+                            catch (error) {
+                                console.warn(`Can't insertRule into stylesheet ${stylesheet.href}`, error);
+                            }
+                            let packageLayer = cssRules[iStart];
 
-                            scopeRule = stylesheet.cssRules[++iStart];
+                            scopeRule = cssRules[++iStart];
 
                             stylesheet.deleteRule(iStart);
                             packageLayer.insertRule(scopeRule.cssText);
                         } else if (this.automaticallyAddsCSSLayerToUnscoppedCSS) {
-                            stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
-                            let packageLayer = stylesheet.cssRules[iStart];
+                            try {
+                                stylesheet.insertRule(`@layer ${cssLayerName} {}`, iStart);
+                            }
+                            catch (error) {
+                                console.warn(`Can't insertRule into stylesheet ${stylesheet.href}`, error);
+                            }
+
+                            let packageLayer = cssRules[iStart];
 
                             // We layer all rules
                             for (let i = cssRules.length - 1; i > iStart; i--) {
