@@ -14,10 +14,12 @@
             "type": "node",
             "request": "launch",
             "name": "Launch http server",
-            "runtimeVersion": "22",
+            "runtimeVersion": "24",
             "runtimeArgs": [
                 "${workspaceFolder}/node_modules/http-server/bin/http-server",
+                "${workspaceFolder}/",
                 "--silent",
+                "--gzip",
                 "-c", /* disable caching with -1 value */
                 "-1",
                 "-p",
