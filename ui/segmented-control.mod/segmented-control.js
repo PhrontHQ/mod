@@ -144,9 +144,9 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             const [selectedIteration] = selectedIterations;
 
             if (selectedIteration) {
-                this.thumbElement.style.display = "block";
                 const segmentElement = selectedIteration.firstElement;
                 this._moveThumbToSegment(segmentElement);
+                this.thumbElement.style.display = "block";
             } else {
                 // If no segment is selected, hide the thumb
                 this.thumbElement.style.display = "none";
