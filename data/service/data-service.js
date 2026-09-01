@@ -5602,6 +5602,16 @@ DataService.addClassProperties(
 
                 // return dispatchWillSavePromise.then(() => {
 
+
+                console.log(
+                    "saveChanges: createdDataObjects [" + createdDataObjects.length + "]: ",
+                    createdDataObjects,
+                    "changedDataObjects [" + changedDataObjects.length + "]: ",
+                    changedDataObjects,
+                    "deletedDataObjects [" + deletedDataObjects.length + "]: ",
+                    deletedDataObjects
+                );
+
                 /*
                     Properly set the transaction's identity property.
                     This could allow to implement an "super user" feature. Adding the ability for someone else
