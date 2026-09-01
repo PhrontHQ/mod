@@ -2124,7 +2124,7 @@ ObjectDescriptor.addClassProperties(
         _readInstancesMatchingCriteria: {
             value: function (criteria, options) {
                 var readOperation = new DataOperation(),
-                    parameters, rawParameters;
+                    parameters;
 
                 readOperation.type = DataOperation.Type.ReadOperation;
                 readOperation.target = this;
@@ -2207,9 +2207,10 @@ ObjectDescriptor.addClassProperties(
             //console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+ this.dataIdentifierForObject(object)+", property: "+propertyName);
 
             var self = this,
-                objectDescriptor = this.objectDescriptorForObject(object),
+                objectDescriptor = object.objectDescriptor,
                 propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
-                isObjectCreated = this.isObjectCreated(object),
+                // isObjectCreated = this.isObjectCreated(object), //How do we replace this?
+                isObjectCreated = false, //Temporary while we create a way to ask the UniqueInstanceService for this info
                 idOrder;
 
             /* 
@@ -2249,46 +2250,49 @@ ObjectDescriptor.addClassProperties(
                 //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
 
 
+                //TODO: Replace with the creation of an operation
                 var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor)),
-                    objectSnapshot = this.snapshotForObject(object);
+                    readOperation = new DataOperation();
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
-                propertyNameQuery.hints = {rawDataService: this};
+                // propertyNameQuery.hints = {rawDataService: this};
+
+                //The job to ensure the ReadOperation has the appropriate information on the snapshot belongs in RawDataService.handleReadOperation
 
                 /*
                     Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
                 */
-               let mapping = this.mappingForType(objectDescriptor),
-                    rule = mapping.objectMappingRuleForPropertyName(propertyName);
+            //    let mapping = this.mappingForType(objectDescriptor),
+            //         rule = mapping.objectMappingRuleForPropertyName(propertyName);
 
-                if(!rule) {
-                    console.warn.once(`${this.identifier}: No Object Mapping Rule Found For ${objectDescriptor.name} property named '${propertyName}'`);
-                    return Promise.resolveNull;
-                }
+            //     if(!rule) {
+            //         console.warn.once(`${this.identifier}: No Object Mapping Rule Found For ${objectDescriptor.name} property named '${propertyName}'`);
+            //         return Promise.resolveNull;
+            //     }
                 
-                let requirements = rule.requirements,
-                    hintSnapshot;
+            //     let requirements = rule.requirements,
+            //         hintSnapshot;
 
-                if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
-                    hintSnapshot = (propertyNameQuery.hints.snapshot || (propertyNameQuery.hints.snapshot = {}));
-                    for(let i=0, countI = requirements.length; (i<countI); i++) {
+            //     if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+            //         hintSnapshot = (propertyNameQuery.hints.snapshot || (propertyNameQuery.hints.snapshot = {}));
+            //         for(let i=0, countI = requirements.length; (i<countI); i++) {
 
-                        /* This is getting into mapping's business so it should migrate there */
-                        /* 
-                            If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
-                            So we can save time and return right away
-                        */
-                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
-                            return Promise.resolve(null);
-                        }
-                        hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
-                        if (Array.isArray(objectSnapshot[requirements[i]])) {
-                            idOrder = objectSnapshot[requirements[i]];
-                        }
-                    }
+            //             /* This is getting into mapping's business so it should migrate there */
+            //             /* 
+            //                 If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
+            //                 So we can save time and return right away
+            //             */
+            //             if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
+            //                 return Promise.resolve(null);
+            //             }
+            //             hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
+            //             if (Array.isArray(objectSnapshot[requirements[i]])) {
+            //                 idOrder = objectSnapshot[requirements[i]];
+            //             }
+            //         }
 
 
-                }
+            //     }
 
 
                 /*
@@ -2302,9 +2306,6 @@ ObjectDescriptor.addClassProperties(
                     
                     We pass that as a hint through DataQuery's hints property.
                 */
-                if(objectSnapshot?.hasOwnProperty("originDataSnapshot")) {
-                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = objectSnapshot.originDataSnapshot;
-                }
 
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
                 propertyNameQuery.readExpressions = [propertyName];
@@ -2358,6 +2359,7 @@ ObjectDescriptor.addClassProperties(
                         return fetchResult[propertyName];
                     }
                 });
+            }
             }
         }
     },

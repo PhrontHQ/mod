@@ -244,6 +244,8 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
         if (!operation.dataStream) {
             operation.dataStream = DataStream.withTypeOrQuery(operation.target);
         }
+
+        
     }
 
 
@@ -1080,6 +1082,44 @@ RawDataService.addClassProperties({
                     }
                 });
             }
+        }
+    },
+
+    // Called in handleReadOperation to ensure that any required info from the snapshot
+    // is available on the query
+    snapshotRequirementsForProperty: {
+        value: function (object, propertyName) {
+            let mapping = this.mappingForType(object.objectDescriptor),
+                rule = mapping.objectMappingRuleForPropertyName(propertyName);
+
+            if(!rule) {
+                console.warn.once(`${this.identifier}: No Object Mapping Rule Found For ${objectDescriptor.name} property named '${propertyName}'`);
+                return Promise.resolveNull;
+            }
+            
+            let requirements = rule.requirements,
+                hintSnapshot;
+
+            if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                hintSnapshot = (hintSnapshot || ( {}));
+                for(let i=0, countI = requirements.length; (i<countI); i++) {
+
+                    /* This is getting into mapping's business so it should migrate there */
+                    /* 
+                        If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
+                        So we can save time and return right away
+                    */
+                    if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
+                        return Promise.resolve(null);
+                    }
+                    hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
+                    if (Array.isArray(objectSnapshot[requirements[i]])) {
+                        idOrder = objectSnapshot[requirements[i]];
+                    }
+                }
+            }
+
+            return hintSnapshot;
         }
     },
 
