@@ -783,7 +783,7 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
                 var wheelEventName = typeof window.onwheel !== "undefined" || typeof window.WheelEvent !== "undefined" ?
                     "wheel" : "mousewheel";
 
-                this._element.addEventListener(wheelEventName, this, false);
+                this._element.addEventListener(wheelEventName, this, {capture: false, passive:false});
                 this._element.addEventListener(wheelEventName, this, true);
             }
         }
@@ -1249,6 +1249,22 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
         }
     },
 
+    _linearScrollingVector: {
+        value: [-300, 0]
+    },
+
+    /**
+     * A constant 2d vector used to transform a drag vector into a scroll vector
+     */
+    linearScrollingVector: {
+        get: function () {
+            return this._linearScrollingVector;
+        },
+        set: function (value) {
+            this._linearScrollingVector = value;
+        }
+    },
+
     handleWheel: {
         value: function (event) {
             if (!this.enabled) {
@@ -1267,11 +1283,14 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
 
 
                 if (this.axis !== "vertical") {
-                    this.translateX = this._translateX - ((event.wheelDeltaX || -event.deltaX || 0)* 20) / 120;
+                    //this.translateX = this._translateX - ((event.wheelDeltaX || -event.deltaX || 0)* 20) / 120;
+                    this.translateX = this._translateX - ((event.deltaX || 0));
+                    console.debug("handleWheel: this.translateX = "+this.translateX);
                 }
 
                 if (this.axis !== "horizontal") {
-                    this.translateY = this._translateY - ((event.wheelDeltaY || -event.deltaY || 0)* 20) / 120;
+                    //this.translateY = this._translateY - ((event.wheelDeltaY || -event.deltaY || 0)* 20) / 120;
+                    this.translateY = this._translateY - ((event.deltaY || 0));
                 }
 
                 this.isMoving = true;
@@ -1300,6 +1319,119 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
         }
     },
 
+    handleWheel_wip_from_flow_translate_composer: {
+        value: function (event) {
+            var self = this;
+
+            // If this composers' component is claiming the "wheel" pointer then handle the event
+            if (this.eventManager.isPointerClaimedByComponent(this._WHEEL_POINTER, this)) {
+                this._observedPointer = this._WHEEL_POINTER;
+
+                var oldScroll = this._scroll,
+                    deltaX = event.wheelDeltaX || -event.deltaX || 0,
+                    deltaY = event.wheelDeltaY || -event.deltaY || 0,
+                    delta;
+
+                if (this.translateStrideX) {
+                    clearTimeout(this._mousewheelStrideTimeout);
+                    if (Math.abs(this._linearScrollingVector[0]) > Math.abs(this._linearScrollingVector[1])) {
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            delta = this._linearScrollingVector[0] * -deltaX / Math.abs(this._linearScrollingVector[0]);
+                        } else {
+                            delta = 0;
+                        }
+                    } else {
+                        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                            delta = 0;
+                        } else {
+                            delta = this._linearScrollingVector[1] * -deltaY / Math.abs(this._linearScrollingVector[1]);
+                        }
+                    }
+                    if ((this._mousewheelStrideTimeout === null) || (Math.abs(delta) > Math.abs(this._previousDelta * (this._mousewheelStrideTimeout === null ? 2 : 4)))) {
+                        if (delta > 1) {
+                            this.callDelegateMethod("previousStride", this);
+                        } else {
+                            if (delta < -1) {
+                                this.callDelegateMethod("nextStride", this);
+                            }
+                        }
+                    }
+                    this._mousewheelStrideTimeout = setTimeout(function () {
+                        self._mousewheelStrideTimeout = null;
+                        self._previousDelta = 0;
+                    }, 70);
+                    self._previousDelta = delta;
+                    if (delta !== 0 && this._shouldPreventDefault(event)) {
+                        event.preventDefault();
+                    }
+                } else {
+                    if (this._translateEndTimeout === null) {
+                        this._dispatchTranslateStart();
+                    }
+                    this._pageX = this._pageX + ((deltaX * 20) / 100);
+                    this._pageY = this._pageY + ((deltaY * 20) / 100);
+                    this._updateScroll();
+                    this._dispatchTranslate();
+                    clearTimeout(this._translateEndTimeout);
+                    this._translateEndTimeout = setTimeout(function () {
+                        self._dispatchTranslateEnd();
+                        self._translateEndTimeout = null;
+
+                        if (self.eventManager.isPointerClaimedByComponent(self._WHEEL_POINTER, self)) {
+                            self.eventManager.forfeitPointer(self._WHEEL_POINTER, self);
+                        }
+
+                    }, 400);
+
+                    // If we're not at one of the extremes (i.e. the scroll actually
+                    // changed the translate) then we want to preventDefault to stop
+                    // the page scrolling.
+                    if (oldScroll !== this._scroll && this._shouldPreventDefault(event)) {
+                        event.preventDefault();
+                    }
+                }
+                // this.eventManager.forfeitPointer(this._WHEEL_POINTER, this.component);
+
+                // If we're not at one of the extremes (i.e. the scroll actually changed the translate)
+                // then we want to preventDefault to stop the page scrolling.
+                // event.preventDefault();
+            }
+        }
+    },
+
+    // TODO doc
+    /**
+     */
+    _updateScroll: {
+        value: function () {
+            this._updateLinearScroll();
+        }
+    },
+
+    _linearScrollRatio: {
+        get: function() {
+            return 1;
+        }
+    },
+
+    // TODO doc
+    /**
+     */
+    _updateLinearScroll: {
+        value: function () {
+            var flow = this._flow,
+                ratio = this._linearScrollRatio,
+                x = /*(*/ (this._pageX - this._startPageX) /* * this._linearScrollingVector[0] * ratio * flow._sceneScaleX.denominator) / flow._sceneScaleX.numerator */,
+                y = /*(*/ (this._pageY - this._startPageY) /* * this._linearScrollingVector[1] * ratio * flow._sceneScaleY.denominator) / flow._sceneScaleY.numerator */,
+                squaredMagnitude = 1 /*this._linearScrollingVector[0] * this._linearScrollingVector[0] + this._linearScrollingVector[1] * this._linearScrollingVector[1]*/,
+                scroll = (x + y) / squaredMagnitude;
+
+            this.scroll += scroll - this._previousScrollDelta;
+            this._previousScrollDelta = scroll;
+        }
+    },
+
+
     _bezierTValue: {
         value: function (x, p1x, p1y, p2x, p2y) {
             var a = 1 - 3 * p2x + 3 * p1x,
@@ -1327,6 +1459,10 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
             translateStartEvent.initCustomEvent("translateStart", true, true, null);
             translateStartEvent.translateX = x;
             translateStartEvent.translateY = y;
+
+            //Is this to workaround the fact that today the target is the translate composer itself:
+            translateStartEvent.targetElement = this.element;
+
             // Event needs to be the same shape as the one in flow-translate-composer
             translateStartEvent.scroll = 0;
             translateStartEvent.pointer = this._observedPointer;
@@ -1341,6 +1477,10 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
             translateEndEvent.initCustomEvent("translateEnd", true, true, null);
             translateEndEvent.translateX = this._translateX;
             translateEndEvent.translateY = this._translateY;
+
+            //Is this to workaround the fact that today the target is the translate composer itself:
+            translateEndEvent.targetElement = this.element;
+
             // Event needs to be the same shape as the one in flow-translate-composer
             translateEndEvent.scroll = 0;
             translateEndEvent.pointer = this._observedPointer;
@@ -1355,6 +1495,10 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
             translateCancelEvent.initCustomEvent("translateCancel", true, true, null);
             translateCancelEvent.translateX = this._translateX;
             translateCancelEvent.translateY = this._translateY;
+
+            //Is this to workaround the fact that today the target is the translate composer itself:
+            translateCancelEvent.targetElement = this.element;
+
             // Event needs to be the same shape as the one in flow-translate-composer
             translateCancelEvent.scroll = 0;
             translateCancelEvent.pointer = this._observedPointer;
@@ -1368,6 +1512,10 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
             translateEvent.initCustomEvent("translate", true, true, null);
             translateEvent.translateX = this._translateX;
             translateEvent.translateY = this._translateY;
+
+            //Is this to workaround the fact that today the target is the translate composer itself:
+            translateEvent.targetElement = this.element;
+
             // Event needs to be the same shape as the one in flow-translate-composer
             translateEvent.scroll = 0;
             translateEvent.pointer = this._observedPointer;
@@ -1389,7 +1537,7 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
     endY: {value: null, enumerable: false},
 
     translateStrideX: {
-        value: null
+        value: 0.0001
     },
 
     translateStrideY: {

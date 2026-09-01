@@ -25,11 +25,19 @@
                 }
             },
             "roleListItem": {
-                "prototype": "../../../../ui/text.mod",
+                "prototype": "../../../../ui/list-item-menu.mod",
                 "values": {
                     "element": {"#": "roleListItem"},
-                    "value": {"<-": "@roleList:iteration.object.name"},
-                    "object": {"<-": "@roleList:iteration.object"}
+                    "data": {"<-": "@roleList:iteration.object.name"},
+                    "object": {"<-": "@roleList:iteration.object"},
+                    "minDistanceBeforeClose": 1200
+                }
+            },
+            "delete": {
+                "prototype": "../../../../ui/button.mod",
+                "values": {
+                    "element": {"#": "delete"},
+                    "label": "Delete"
                 }
             }
         }
@@ -40,7 +48,11 @@
         <div class="field">
             <div class="roleList" data-mod-id="roleList">
                 <div class="roleListItem">
-                    <div data-mod-id="roleListItem" class="roleListItemName"></div>
+                    <div data-mod-id="roleListItem" class="roleListItemName">
+                        <div data-arg="options-right">
+                            <button data-mod-id="delete" class="delete"></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
