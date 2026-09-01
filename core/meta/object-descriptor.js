@@ -2184,22 +2184,180 @@ ObjectDescriptor.addClassProperties(
         //Replaces DataService.fetchObjectProperty. It can be used in 
         //Mapping, Converters, and DataTriggers to unify those code paths
         readInstanceProperties: {
-            value: function (instance, propertyName, isObjectCreated, isUpdate) {
+            value: function (instance, propertyNames) {
                 if (!instance) {
                     return Promise.resolve(null);
                 } else {
                     let promises = [],
                         i,
-                        countI,
-                        names = isArray(propertyNames) ? propertyNames : arguments,
-                        start = names === propertyNames ? 0 : 1;
+                        countI;
 
-                    for (i = 0, countI = objects.length; i < countI; i++) {
-                        promises.push(this._getOrUpdateObjectProperties(objects[i], names, start, false));
+                    for (i = 0, countI = propertyNames.length; i < countI; i++) {
+                        promises.push(this._readInstanceProperty(instance, propertyNames[i]));
                     }
 
                     return Promise.all(promises);
                 }
+            }
+        },
+
+        _readInstanceProperty: {
+            value: function (object, propertyName) {
+
+            //console.warn("\t~~~ "+this.identifier+" fetchRawObjectProperty: "+ this.dataIdentifierForObject(object)+", property: "+propertyName);
+
+            var self = this,
+                objectDescriptor = this.objectDescriptorForObject(object),
+                propertyDescriptor = objectDescriptor.propertyDescriptorNamed(propertyName),
+                isObjectCreated = this.isObjectCreated(object),
+                idOrder;
+
+            /* 
+                If an object is created and didn't come from an origin data service 
+                then there's no way we could fetch a property from somewhere
+            */
+            if(isObjectCreated && !object.originDataSnapshot) {
+                /*
+                    return Promise.resolve(null);
+                    
+                    was coded under the assumption that if an object is just created, there can't be any property we could get for it.
+                    But here's a use case where this is wrong: 
+                        - a UserIdentity object is fetched through an auth raw data service doing the login via an identity provider.
+                        - with an SynchronizationService above, so the raw data service doing the login via an identity provider is an origin service
+                        - that UserIdentity is now treated as created as it is intended to be saved in SynchronizationService's destination service
+                        - Which will happen as part of the (websocket) session being created by passing the UserIdentity
+                        - and that websocket isn't opened yet
+                        - most likely because I removed UserIdenty and AuthToken from the model in mod, so WebSocketDataService hasn't yet handled a fetch yet 
+                        - We're fetching the user associated with the UserIdentity
+                        - if we weren't shorting with return Promise.resolve(null), we're building a fetch
+                        - that fetch should trigger opening the socket, saving the UserIdentity via the destinationService
+                        - no person will be found for that user
+                        - so an origin data service related to the ClientOAuthDataService will handle the readOperation
+                        - in order to do so, it needs an access token that it will fetch
+                        - that fetch will be handled by the ClientOAuthDataService
+                        - the token is returned
+                        - the origin data service fetch the person/profile rsw data
+                        - that gets converted to a Person
+                        - returned via this method to fullfill the user property on the UserIdentity
+                        - and then that Person and its relation to the UserIdentitu should be saved in the destination service
+
+                */
+                return Promise.resolve(null);
+            } else {
+
+                //TODO: leverage this as used in the foreign key value converter to find the object locally first
+                //return service.objectWithDescriptorMatchingRawDataPrimaryKeyCriteria(typeToFetch, criteria);
+
+
+                var propertyNameQuery = DataQuery.withTypeAndCriteria(objectDescriptor, self.rawCriteriaForObject(object, objectDescriptor)),
+                    objectSnapshot = this.snapshotForObject(object);
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.hints = {rawDataService: this};
+
+                /*
+                    Analyze if we have a local mapping and see what aspect of the snapshot we need to send:
+                */
+               let mapping = this.mappingForType(objectDescriptor),
+                    rule = mapping.objectMappingRuleForPropertyName(propertyName);
+
+                if(!rule) {
+                    console.warn.once(`${this.identifier}: No Object Mapping Rule Found For ${objectDescriptor.name} property named '${propertyName}'`);
+                    return Promise.resolveNull;
+                }
+                
+                let requirements = rule.requirements,
+                    hintSnapshot;
+
+                if(objectSnapshot && requirements?.length > 0 && !requirements.equals(mapping.rawDataPrimaryKeys)) {
+                    hintSnapshot = (propertyNameQuery.hints.snapshot || (propertyNameQuery.hints.snapshot = {}));
+                    for(let i=0, countI = requirements.length; (i<countI); i++) {
+
+                        /* This is getting into mapping's business so it should migrate there */
+                        /* 
+                            If this is the form toManyArray.has($), then if we have the value of toManyArray and it's null or empty, there's no way we'd find something on the other side...
+                            So we can save time and return right away
+                        */
+                        if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
+                            return Promise.resolve(null);
+                        }
+                        hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
+                        if (Array.isArray(objectSnapshot[requirements[i]])) {
+                            idOrder = objectSnapshot[requirements[i]];
+                        }
+                    }
+
+
+                }
+
+
+                /*
+                    FIXME: Context, as we're fetching an object property, in a situation where the app's rely on some
+                    origin data services, the data from those services may not be imported yet. In which case, the worker
+                    will need info to do so, and origin-related data info is stored in the originDataSnapshot property.
+
+                    If we happen to have that client-side, we can send it as part of the attempt to acquire that object's property value 
+                    from an origin service. If we don't the SynchronizationDataService (or any other analoguous logic) will have to fetch it from the DB
+                    using the criteria here that specify the object, to support obtaining that data from origin services.
+                    
+                    We pass that as a hint through DataQuery's hints property.
+                */
+                if(objectSnapshot?.hasOwnProperty("originDataSnapshot")) {
+                    (propertyNameQuery.hints || (propertyNameQuery.hints = {})).originDataSnapshot = objectSnapshot.originDataSnapshot;
+                }
+
+                propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
+                propertyNameQuery.readExpressions = [propertyName];
+
+                //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+
+                return DataService.mainService.fetchData(propertyNameQuery)
+                .then((fetchResult) => {
+
+                    // console.debug("object === fetchResult[0]", object === fetchResult[0]);
+                    /*******
+                     * 2/27/2026
+                     * 
+                     * TODO: Incororpate ordered and sparse arrays into the model. 
+                     * 
+                     * The logic below is necessary 
+                     * because the query generated in postgres fails to do 2 things. 
+                     * 1. Include null values of a sparse array
+                     * 2. Maintain the order of the values in the DB. 
+                     * 
+                     */
+                    if(Array.isArray(fetchResult)) {
+                        if (idOrder) {
+                            let reordered = [],
+                                resultsById = new Map();
+                            fetchResult.forEach(function (object) {
+                                resultsById.set(object.dataIdentifier.primaryKey, object);
+                            });
+                            for (let i = 0, countI = idOrder.length; i < countI; i++) {
+                                if (idOrder[i]) {
+                                    reordered.push(resultsById.get(idOrder[i]))
+                                } else {
+                                    reordered.push(idOrder[i]);
+                                }
+                            }
+                            fetchResult = reordered;
+                        }
+                        if(fetchResult[0] !== object) {
+                            if(propertyDescriptor.cardinality === 1) {
+                                return fetchResult[0] || null;
+                            } else {
+                                return fetchResult;
+                            }    
+                        }
+                    } else {
+                    /*
+                        Bug fix fetchResult should always be an arry resolving from fetchData(), but in case there's been an exception,
+                        keeping 
+                    */
+                        console.warn("Investigate: propertyNameQuery DataService.fetchData.then() did not resolve to an array...",propertyNameQuery);
+                        return fetchResult[propertyName];
+                    }
+                });
             }
         }
     },
