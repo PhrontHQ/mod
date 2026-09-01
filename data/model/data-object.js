@@ -18,6 +18,17 @@ const Target = require("core/target").Target;
 exports.DataObject = class DataObject extends Target {
     static {
         Montage.defineProperties(this.prototype, {
+
+            objectDescriptor: {
+                get: function () {
+                    return this._objectDescriptor;
+                },
+                set: function (value) {
+                    this._objectDescriptor = value;
+                    // debugger;
+                }
+            },
+
             /**
              * The full moduleId of the object, starting by the name of the package it belongs to
              *

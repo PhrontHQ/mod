@@ -20,34 +20,61 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
     }
 
     // //Should be moved to EditingContext
-    // registerCreatedInstance(instance) {
-    //     var objectDescriptor = this.objectDescriptorForInstance(instance),
-    //         createdDataObjects = this.createdInstances,
-    //         value = createdDataObjects.get(objectDescriptor);
-    //     if (!value) {
-    //         createdDataObjects.set(objectDescriptor, (value = new Set()));
-    //     }
+    registerCreatedInstance(instance) {
+        var objectDescriptor = this.objectDescriptorForInstance(instance),
+            createdDataObjects = this.createdInstances,
+            value = createdDataObjects.get(objectDescriptor);
+        if (!value) {
+            createdDataObjects.set(objectDescriptor, (value = new Set()));
+        }
 
-    //     /*
-    //     This makes sure that properties' data triggers' valueStatus are set to null
-    //     ensuring there's no reference to it in a storage
-    // */
-    //     //////////this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
+        /*
+        This makes sure that properties' data triggers' valueStatus are set to null
+        ensuring there's no reference to it in a storage
+    */
+        //////////this._setCreatedObjectPropertyTriggerStatusToNull(dataObject);
 
-    //     value.add(dataObject);
-    //     this.objectDescriptorsWithChanges.add(objectDescriptor);
+        // value.add(dataObject);
+        // this.objectDescriptorsWithChanges.add(objectDescriptor);
 
-    //     this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
-    // }
+        // this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
+    }
 
-    // unregisterCreatedInstance(instance) {
-    //     var objectDescriptor = this.objectDescriptorForInstance(dataObject),
-    //         value = this.createdInstances.get(objectDescriptor);
-    //     if (value) {
-    //         value.delete(instance);
-    //         this.objectDescriptorsWithChanges.delete(objectDescriptor);
-    //     }
-    // }
+    get createdInstances() {
+        return this._createdInstances || (this._createdInstances = new Map());
+    }
+
+    unregisterCreatedInstance(instance) {
+        var objectDescriptor = this.objectDescriptorForInstance(dataObject),
+            value = this.createdInstances.get(objectDescriptor);
+        if (value) {
+            value.delete(instance);
+            this.objectDescriptorsWithChanges.delete(objectDescriptor);
+        }
+    }
+
+    isInstanceCreated(instance) {
+        var objectDescriptor = this.objectDescriptorForInstance(instance),
+            createdInstances = this.createdInstances.get(objectDescriptor), //Do we need to check other EditingContexts?
+            isObjectCreated = createdInstances && createdInstances.has(instance);
+
+        if (!isObjectCreated) {
+            var pendingTransactions = this._pendingTransactions;
+
+            if (pendingTransactions && pendingTransactions.length) {
+                for (var i = 0, countI = pendingTransactions.length; i < countI; i++) {
+                    if (pendingTransactions[i].createdInstances.get(objectDescriptor)?.has(instance)) {
+                        return true;
+                    }
+                }
+                return false;
+            } else {
+                return false;
+            }
+        }
+
+        return isObjectCreated;
+    }
     
 
     /******
@@ -68,6 +95,7 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
                 instance = this._createInstance(type, dataIdentifier);
             }
         }
+        return instance;
     }
 
     /*
@@ -76,10 +104,13 @@ const UniqueInstanceService = (exports.UniqueInstanceService = class UniqueInsta
      * Needs to be async to allow lazy loading of prototypes
      */
     createInstance(type) {
-        return this._createInstance(
+        let instance = this._createInstance(
                 type,
                 this.dataIdentifierForNewInstanceWithObjectDescriptor(this.objectDescriptorForType(type))
             );
+
+        this.registerCreatedInstance(instance);
+        return instance;
     }
 
     _createInstance(type, dataIdentifier) {

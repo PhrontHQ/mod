@@ -30,6 +30,8 @@ CategoryService.addClassProperties({
                 return;
             }
 
+            console.log("CategoryService.handleReadOperation", readOperation);
+
             var parameters = readOperation.criteria && readOperation.criteria.parameters,
                 rawData;
 

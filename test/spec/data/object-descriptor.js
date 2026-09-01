@@ -1,6 +1,8 @@
 var ObjectDescriptor = require("mod/data/model/object-descriptor").ObjectDescriptor,
     Montage = require("mod/core/core").Montage,
-    PropertyDescriptor = require("mod/data/model/property-descriptor").PropertyDescriptor;
+    PropertyDescriptor = require("mod/data/model/property-descriptor").PropertyDescriptor,
+    CategoryDescriptor = require("spec/data/logic/model/category.mjson").montageObject,
+    childServices = require("spec/data/logic/service/main-flat.mjson").montageObject;
 
 describe("An ObjectDescriptor", function() {
 
@@ -74,6 +76,19 @@ describe("An ObjectDescriptor", function() {
         expect(Object.keys(descriptor2.propertyDescriptors).sort()).toEqual(['_serializableAttributeProperties', propertyName3, propertyName4].sort());
     });
 
+    it("can fetch data", function (done) {
+        let error;
+        CategoryDescriptor.readInstancesMatchingCriteria().then(function (data) {
+            expect(data).toBeDefined();
+            expect(Array.isArray(data)).toBe(true);
+        }).catch((e) => {
+            error = e;
+        }).finally(() => {
+            expect(error).toBeUndefined();
+            done();
+        });
+    });
+
     // TODO [Charles]: Update this for API changes.
     xit("can add relationships", function () {
         // Generate test data.
@@ -129,5 +144,7 @@ describe("An ObjectDescriptor", function() {
 
 
     xit("needs to be further tested", function () {});
+
+
 
 });

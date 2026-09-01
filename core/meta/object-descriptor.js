@@ -2,10 +2,13 @@ const { ExpressionValidationRule } = require("./expression-validation-rule");
 
 var Montage = require("../core").Montage,
     Target = require("../target").Target,
+    DataOperation = require("../../data/service/data-operation").DataOperation,
+    DataQuery = require("../../data/model/data-query").DataQuery,
     DerivedDescriptor = require("./derived-descriptor").DerivedDescriptor,
     EventDescriptor = require("./event-descriptor").EventDescriptor,
     Map = require("../collections/map"),
     ModelModule = require("./model"),
+    MutableEvent = require("../event/mutable-event").MutableEvent,
     Promise = require("../promise").Promise,
     PropertyDescriptor = require("./property-descriptor").PropertyDescriptor,
     Set = require("../collections/set"),
@@ -2080,23 +2083,149 @@ ObjectDescriptor.addClassProperties(
 
         blueprintModuleId: require("../core")._objectDescriptorModuleIdDescriptor,
         blueprint: require("../core")._objectDescriptorDescriptor,
+
+        /************
+         * Fetch Data
+         */
+
+        /********
+         * The goal here is the remove the need for classes to reference an editing context or service in order to fetch data. 
+         * 
+         * The reason for this change is: DataTriggers used to be created in the main service and were 
+         * given a reference to that main service. It would use this to call fetchObjectProperty. 
+         * The new architecture removes the main service so DataTrigger needs a new way to fetch
+         * property data. The DataTrigger (and many other classes) already have access to the 
+         * object descriptor for their related instance so the plan is to move methods for 
+         * fetching data of a type to the object descriptors themselves. 
+         * 
+         * 
+         * 
+         * ObjectDescriptor.readInstancesMatchingCriteria(criteria); (e.g. Person.readInstancesMatchingCriteria(criteria))
+         * ObjectDescriptor.readInstanceProperties(instance, properties); (e.g. Person.readInstanceProperties(instance, properties))
+         * ObjectDescriptor.readInstancesProperties(instances, properties); (e.g. Person.readInstancesProperties(instances, properties))
+         * ObjectDescriptor.readInstancePropertiesMatchingCriteria(instance, properties, criteria); (e.g. Person.readInstancePropertiesMatchingCriteria(instance, properties, criteria))
+         * ObjectDescriptor.readInstanceExpressionsMatchingCriteria(instance, expressions, criteria); (e.g. Person.readInstanceExpressionsMatchingCriteria(instance, expressions, criteria))
+         */
+
+        readInstancesMatchingCriteria: {
+            value: function (criteria, options) {
+                let result = ObjectDescriptor.prepareToDispatchDataOperation(this);
+                if (result && result.then) {
+                    result.then(() => {
+                        return this._readInstancesMatchingCriteria(criteria, options);
+                    });
+                } else {
+                    return this._readInstancesMatchingCriteria(criteria, options);
+                }
+            }
+        },
+
+        // How do we get identity? 
+        _readInstancesMatchingCriteria: {
+            value: function (criteria, options) {
+                var readOperation = new DataOperation(),
+                    parameters, rawParameters;
+
+                readOperation.type = DataOperation.Type.ReadOperation;
+                readOperation.target = this;
+                readOperation.criteria = criteria;
+
+
+                // if (query.identity) {
+                //     readOperation.identity = query.identity;
+                // } else if (this.identity) {
+                //     readOperation.identity = this.identity;
+                // }
+
+                if (options && options.sizeLimit) {
+                    readOperation.data.sizeLimit = options.sizeLimit;
+                }
+                
+                if (options && options.batchSize) {
+                    readOperation.data.batchSize = options.batchSize;
+                }
+
+                if (options && options.orderings) {
+                    readOperation.data.orderings = options.orderings;
+                }
+
+                if (options && options.readExpressions) {
+                    readOperation.data.orderings = options.readExpressions;
+                }
+
+                // if (this.application.identity && this.shouldAuthenticateReadOperation) {
+                //     readOperation.identity = this.application.identity;
+                // }
+
+                if (options && options.includesChildObjectDescriptors) {
+                    readOperation.data.includesChildObjectDescriptors =
+                        options.includesChildObjectDescriptors;
+                }
+
+                if (options && options.hints) {
+                    readOperation.hints = options.hints;
+                    if (options.hints.referrerOperation) {
+                        readOperation.referrer = options.hints.referrerOperation;
+                    }
+                    if (options.hints.referrerOperations) {
+                        readOperation.referrers = options.hints.referrerOperations;
+                    }
+                }
+                
+                parameters = criteria ? criteria.parameters : undefined;
+                rawParameters = parameters;
+
+                this.dispatchEvent(readOperation);
+
+                return readOperation.dataStream;
+            }
+        },
+
+        //Replaces DataService.fetchObjectProperty. It can be used in 
+        //Mapping, Converters, and DataTriggers to unify those code paths
+        readInstanceProperties: {
+            value: function (instance, propertyName, isObjectCreated, isUpdate) {
+                if (!instance) {
+                    return Promise.resolve(null);
+                } else {
+                    let promises = [],
+                        i,
+                        countI,
+                        names = isArray(propertyNames) ? propertyNames : arguments,
+                        start = names === propertyNames ? 0 : 1;
+
+                    for (i = 0, countI = objects.length; i < countI; i++) {
+                        promises.push(this._getOrUpdateObjectProperties(objects[i], names, start, false));
+                    }
+
+                    return Promise.all(promises);
+                }
+            }
+        }
     },
     {
 
+
+
+
         _preparedObjectDescriptors: {
             get: function () {
-                return this.__preparedObjectDescriptors || (this.___preparedObjectDescriptors = new Set());
+                return this.__preparedObjectDescriptors || (this.___preparedObjectDescriptors = new Map());
             }
         },
 
         prepareToDispatchDataOperation: {
             value: function (objectDescriptor) {
                 if (!this._preparedObjectDescriptors.has(objectDescriptor)) {
-                    this._preparedObjectDescriptors.add(objectDescriptor);
-                    this.dispatchEventNamed("prepareObjectDescriptor", true, true, objectDescriptor);
+                    console.log("ObjectDescriptor.prepareToDispatchDataOperation");
+                    let event = MutableEvent.fromType("prepareObjectDescriptor", true, true, objectDescriptor);
+                    this.dispatchEvent(event);
+                    this._preparedObjectDescriptors.set(objectDescriptor, event.propagationPromise);
                 }
+                return this._preparedObjectDescriptors.get(objectDescriptor);
             }
         },
+
 
 
         /**

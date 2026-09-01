@@ -7,6 +7,7 @@ var Montage = require("core/core").Montage,
     Criteria = require("../../core/criteria").Criteria,
     DataMapping = require("./data-mapping").DataMapping,
     DataIdentifier = require("../model/data-identifier").DataIdentifier,
+    DataStream = require("../service/data-stream").DataStream,
     RawDataIdentifier = require("../model/raw-data-identifier").RawDataIdentifier,
     UserIdentity = require("../model/app/user-identity").UserIdentity,
     Deserializer = require("../../core/serialization/deserializer/montage-deserializer").MontageDeserializer,
@@ -88,6 +89,7 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
         this._defaultRawDataTypeIdentificationCriteriaByType = new Map();
 
         if (this.supportsDataOperation) {
+            this.addEventListener(DataOperation.Type.ReadOperation, this, true);
             this.addEventListener(DataOperation.Type.ReadOperation, this, false);
             this.addEventListener(DataOperation.Type.CreateOperation, this, false);
             this.addEventListener(DataOperation.Type.UpdateOperation, this, false);
@@ -139,6 +141,35 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
     }
 
 
+    handlePrepareObjectDescriptor(event) {
+        let objectDescriptor = event.detail;
+        console.log("RawDataService.handlePrepareObjectDescriptor");
+        if (this.handlesType(objectDescriptor)) {
+            if (objectDescriptor.object) {
+                this._registerSelfWithObjectDescriptor(objectDescriptor)
+            } else if (objectDescriptor.module && typeof objectDescriptor.loadObjectFromModule === "function") {
+                return objectDescriptor.loadObjectFromModule().then(() => {
+                    this._registerSelfWithObjectDescriptor(objectDescriptor);
+                });
+            }
+        }
+    }
+
+    _registerSelfWithObjectDescriptor(objectDescriptor) {
+        console.log("RawDataService._registerSelfWithObjectDescriptor");
+        let childServices = this.descendantServicesForType(objectDescriptor),
+            i, n;
+        if (Array.isArray(childServices)) {
+            for (i = 0, n = childServices.length; i < n; i++) {
+                objectDescriptor.registerHandlingService(childServices[i]);
+            }
+        } else if (childServices) {
+            objectDescriptor.registerHandlingService(childServices);
+        }
+        
+        objectDescriptor.registerHandlingService(this);
+    }
+
 
     /**
      * This method needs to evolve to handle the coordination betwen the resolution of the readOperation itself and all derivatives needed 
@@ -170,6 +201,8 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
      */
 
     handleReadOperation(readOperation) {
+
+        console.log("RawDataService.handleReadOperation", readOperation);
 
         /*
             This gives a chance to the delegate to do something async by returning a Promise from rawDataServiceWillHandleReadOperation(readOperation).
@@ -205,6 +238,12 @@ const RawDataService = exports.RawDataService = class RawDataService extends Dat
             return readOperationCompletionPromise;
         }
 
+    }
+
+    captureReadOperation(operation) {
+        if (!operation.dataStream) {
+            operation.dataStream = DataStream.withTypeOrQuery(operation.target);
+        }
     }
 
 
@@ -1551,6 +1590,8 @@ RawDataService.addClassProperties({
                 // }
             }
 
+
+
             if (stream.editingContext) {
                 stream.editingContext.registerManagedInstanceForType(object, type);
             }
@@ -1711,8 +1752,8 @@ RawDataService.addClassProperties({
 
 
     objectForTypeRawData: {
-        value: function (type, rawData, dataIdentifier, context) {
-            // var dataIdentifier = this.dataIdentifierForTypeRawData(type,rawData);
+        value: function (type, rawData, _dataIdentifier, context) {
+            var dataIdentifier = _dataIdentifier || this.dataIdentifierForTypeRawData(type, rawData);
 
             // return this.rootService.instanceForDataIdentifier(dataIdentifier) ||
             //         this.getDataObject(type, rawData, dataIdentifier, context);
@@ -1761,7 +1802,7 @@ RawDataService.addClassProperties({
             /*
             TODO: This is called twice when this._dataIdentifierByInstance already contains (object, dataIdentifier)
         */
-            this._dataIdentifierByInstance.set(object, dataIdentifier);
+            this._dataIdentifierByInstance.set(instance, dataIdentifier);
         },
     },
 

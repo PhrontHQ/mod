@@ -134,7 +134,7 @@ module.exports = require("mod/testing/run")
         // { name: "spec/data/expression-data-mapping" },
         // { name: "spec/data/enumeration" },
         // { name: "spec/data/http-service" },
-        // { name: "spec/data/object-descriptor" },
+        { name: "spec/data/object-descriptor" },
         // "spec/data/property-descriptor",
         // { name: "spec/data/raw-data-service" },
         // { name: "spec/data/raw-data-type-mapping-spec" },

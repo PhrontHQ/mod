@@ -316,7 +316,7 @@ exports.DataTrigger.prototype = Object.create(
                     shouldFetch !== false &&
                     this._getValueStatus(object) !== null &&
                     (!this.propertyDescriptor.definition || !this.propertyDescriptor.isDerived) &&
-                    !this._service.isObjectCreated(object)
+                    !this._service.isInstanceCreated(object)
                 ) {
                     /**
                      * if the trigger's property descriptor has a definition, there are 2 cases:
@@ -901,7 +901,7 @@ exports.DataTrigger.prototype = Object.create(
                 //  currentValue should be the same as initialValue
                 if (
                     currentValue !== initialValue &&
-                    dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isObjectCreated(object))*/
+                    dispatchChange /*&& (!this._service._objectsBeingMapped.has(object) || this._service.isInstanceCreated(object))*/
                 ) {
                     //Dispatch update event
                     var changeEvent = new ChangeEvent();
@@ -980,7 +980,7 @@ exports.DataTrigger.prototype = Object.create(
                  * might be able to read some property that might be derived from the raw values of the property already set on it.
                  * So let's leave the bottom layers to figure that out.
                  */
-                // if(!this._service.isObjectCreated(object)) {
+                // if(!this._service.isInstanceCreated(object)) {
                 var status = this._getValueStatus(object);
 
                 return status
@@ -1049,8 +1049,17 @@ exports.DataTrigger.prototype = Object.create(
             value: function (object, isUpdate) {
                 var self = this;
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
+
+            /********
+             * 
+             * ObjectDescriptor.readInstancesMatchingCriteria(criteria);
+             * ObjectDescriptor.readInstanceProperties(instance, properties);
+             * ObjectDescriptor.readInstancePropertiesMatchingCriteria(instance, properties, criteria);
+             * ObjectDescriptor.readInstanceExpressionsMatchingCriteria(instance, expressions, criteria);
+             */
+
                 this._service
-                    .fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate)
+                    .fetchObjectProperty(object, this._propertyName, /*isInstanceCreated*/ this._service.isInstanceCreated(object), isUpdate)
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 

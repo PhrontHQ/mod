@@ -1,3 +1,4 @@
+
 const Object = global.Object, //Cache for scope traversal performance
     Montage = require("core/core").Montage,
     Target = require("core/target").Target,
@@ -20,6 +21,7 @@ const Object = global.Object, //Cache for scope traversal performance
     DataEvent = require("../model/data-event").DataEvent,
     PropertyDescriptor = require("core/meta/property-descriptor").PropertyDescriptor,
     DeleteRule = require("core/meta/property-descriptor").DeleteRule,
+    defaultUniqueInstanceService = require("./unique-instance-service").defaultUniqueInstanceService,
     deprecate = require("core/deprecate"),
     currentEnvironment = require("core/environment").currentEnvironment,
     PropertyChanges = require("core/collections/listen/property-changes"),
@@ -373,6 +375,12 @@ DataService.addClassProperties(
 
                 if (this.parentService === this.mainService) {
                     ObjectDescriptor.addEventListener("prepareObjectDescriptor", this);
+                    let i, n;
+                    for (i = 0, n = this._childServiceTypes.length; i < n; i++) {
+                        if (!this._childServiceTypes[i].object) {
+                            this._childServiceTypes[i].loadObjectFromModule();
+                        }
+                    }
                 }
                 
 
@@ -1035,7 +1043,7 @@ DataService.addClassProperties(
                 Object.defineProperty(prototype, "dataIdentifier", {
                     enumerable: true,
                     get: function () {
-                        return mainService.dataIdentifierForObject(this);
+                        return defaultUniqueInstanceService.dataIdentifierForInstance(this);
                     },
                 });
                 Object.defineProperty(prototype, "snapshot", {
@@ -2438,6 +2446,7 @@ DataService.addClassProperties(
          * value has been received and set on the specified property of the passed
          * in object.
          */
+
         fetchObjectProperty: {
             value: function (object, propertyName, isObjectCreated, isUpdate) {
                 var childServices = this.childServicesForType(object.objectDescriptor),
@@ -2447,6 +2456,7 @@ DataService.addClassProperties(
                         ) &&
                         (!childServices || (childServices && childServices.length == 0)),
                     useDelegate = isHandler && typeof this.fetchRawObjectProperty === "function",
+                    //delegateFunction is better handled with readExpressions. This will NOT be moved to ObjectDescriptor.read... methods
                     delegateFunction = !useDelegate && isHandler && this._delegateFunctionForPropertyName(propertyName),
                     propertyDescriptor =
                         !useDelegate &&
@@ -2902,17 +2912,16 @@ DataService.addClassProperties(
                 let dataIdentifier = this._dataIdentifierByObject.get(object);
 
                 //When we merge in a graph of data object's it's possible that those objects are
-                if (!dataIdentifier && this !== this.mainService) {
-                    dataIdentifier = this.mainService.dataIdentifierForObject(object);
+                if (!dataIdentifier) {
+                    dataIdentifier = defaultUniqueInstanceService.dataIdentifierForInstance(object);
                     if (!dataIdentifier) {
                         // throw "No dataIdentifier found for data object: "+object;
                         dataIdentifier = this.createDataIdentifierForObject(object);
                         if (this.parentService === this.mainService) {
-                            this.mainService.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
-                            this.mainService.recordDataIdentifierForObject(dataIdentifier, object);
+                            defaultUniqueInstanceService.registerUniqueInstanceWithDataIdentifier(object, dataIdentifier);
+                            defaultUniqueInstanceService.recordDataIdentifierForInstance(dataIdentifier, object);
                         }
                     }
-                    this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
                 }
                 return dataIdentifier;
             },
@@ -6513,6 +6522,8 @@ DataService.addClassProperties(
          * were or will be added, whether this stream was provided to or created by
          * this method.
          */
+
+        //Consider moving to EditingContext
         fetchData: {
             /*****
              * Refactor so this can receive a ReadOperation (or ReadOperation-like object) and resolved with 
@@ -6612,26 +6623,45 @@ DataService.addClassProperties(
                             //     stream.dataError(e);
                             // }
 
-                            ObjectDescriptor.prepareToDispatchDataOperation(query.type);
+                            let preparePromise = ObjectDescriptor.prepareToDispatchDataOperation(query.type);
 
 
+                            if (preparePromise && preparePromise.then) {
+                                preparePromise.then(() => {
+                                    var readOperation = self.makeReadOperationForStream(stream);
 
-                            try {
-                                var readOperation = self.makeReadOperationForStream(stream);
+                                    self.registerReadOperation(readOperation);
 
-                                self.registerReadOperation(readOperation);
-
-                                query.type.dispatchEvent(readOperation);
-                                if (readOperation.propagationPromise) {
-                                    readOperation.propagationPromise.finally(() => {
+                                    query.type.dispatchEvent(readOperation);
+                                    if (readOperation.propagationPromise) {
+                                        readOperation.propagationPromise.finally(() => {
+                                            self.unregisterReadOperation(readOperation);
+                                        });
+                                    } else {
                                         self.unregisterReadOperation(readOperation);
-                                    });
-                                } else {
-                                    self.unregisterReadOperation(readOperation);
+                                    }
+                                }).catch((error) => {
+                                    stream.dataError(error);
+                                })
+                            } else {
+                                try {
+                                    var readOperation = self.makeReadOperationForStream(stream);
+
+                                    self.registerReadOperation(readOperation);
+
+                                    query.type.dispatchEvent(readOperation);
+                                    if (readOperation.propagationPromise) {
+                                        readOperation.propagationPromise.finally(() => {
+                                            self.unregisterReadOperation(readOperation);
+                                        });
+                                    } else {
+                                        self.unregisterReadOperation(readOperation);
+                                    }
+                                } catch (e) {
+                                    stream.dataError(e);
                                 }
-                            } catch (e) {
-                                stream.dataError(e);
                             }
+                            
 
                             // try {
                             //     self._fetchDataWithOperation(query, stream);
