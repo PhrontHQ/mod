@@ -1,8 +1,7 @@
 const DataEvent = require("./data-event").DataEvent,
     Date = require("core/extras/date").Date,
     Montage = require("core/core").Montage,
-    Target = require("core/target").Target,
-    application = require("core/application").application;
+    Target = require("core/target").Target;
 
 /**
  * @class DataObject
@@ -379,20 +378,6 @@ exports.DataObject = class DataObject extends Target {
     static prepareToHandleDataEvents(event) {
         event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.create, this, false);
         event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
-        event.dataService.objectDescriptorForType(this).addEventListener(DataEvent.willSave, this, false);
-    }
-
-    /**
-     * Handles a DataEvent.create event. DataObject Class listens to itself so it's part of the composedPath of every subclass, 
-     * for which it needs to do the following
-     * 
-     * @listens DataEvent.create
-     * @param {DataEvent} event - The DataEvent event carrying a created data object.
-     * @returns {void}
-     */
-    static handleCreate(createEvent) {
-        createEvent.dataObject.creationDate = createEvent.dataObject.modificationDate = new Date();
-        createEvent.dataObject.creationIdentity = createEvent.identity;
     }
 
     /**
