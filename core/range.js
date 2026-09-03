@@ -179,6 +179,9 @@ Range.prototype.contains = function(value) {
     }
 }
 
+/*
+    Needed during serialization for MontageVisitor's getTypeOf() to return MontageObject
+*/
 Range.getInfoForObject = function(object) {
     return Montage.getInfoForObject(object);
 };
