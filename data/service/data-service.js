@@ -3180,13 +3180,12 @@ DataService.addClassProperties(
             value: function (type) {
                 if (this.isRootService) {
                     var service = this.childServiceForType(type),
-                        descriptor = this.objectDescriptorForType(type),
                         //Gives a chance to raw data service to provide a primary key for clien-side creation/
                         //Especially useful for systems that use uuid as primary keys.
                         //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
                         object = this._createDataObject(
                             type,
-                            service.dataIdentifierForNewObjectWithObjectDescriptor(descriptor)
+                            service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
                     
                     this.registerCreatedDataObject(object);
