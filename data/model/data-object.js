@@ -1,7 +1,7 @@
-const DataEvent = require("./data-event").DataEvent;
-const Date = require("core/extras/date").Date;
-const Montage = require("core/core").Montage;
-const Target = require("core/target").Target;
+const DataEvent = require("./data-event").DataEvent,
+    Date = require("core/extras/date").Date,
+    Montage = require("core/core").Montage,
+    Target = require("core/target").Target;
 
 /**
  * @class DataObject
