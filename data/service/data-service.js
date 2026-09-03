@@ -8,6 +8,7 @@ const Object = global.Object, //Cache for scope traversal performance
     AuthenticationPolicy = require("./authentication-policy").AuthenticationPolicy,
     IdentityManager = require("./identity-manager").IdentityManager,
     DataObjectDescriptor = require("../model/data-object-descriptor").DataObjectDescriptor,
+    DataObjectDescriptorInstance = require("../model/data-object.mjson").montageObject,
     Criteria = require("core/criteria").Criteria,
     DataQuery = require("../model/data-query").DataQuery,
     DataStream = require("./data-stream").DataStream,
@@ -31,8 +32,9 @@ const Object = global.Object, //Cache for scope traversal performance
     TransactionDescriptor = require("../model/transaction.mjson").montageObject,
     TransactionEvent = require("../model/transaction-event").TransactionEvent,
     ObjectStoreDescriptor = require("../model/object-store.mjson").montageObject,
-    ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject
-    isArray = Array.isArray;
+    ObjectPropertyStoreDescriptor = require("../model/object-property-store.mjson").montageObject,
+    isArray = Array.isArray,
+    PromiseIs = Promise.is;
 
 require("core/extras/string");
 require("core/extras/date");
@@ -648,7 +650,7 @@ DataService.addClassProperties(
                         // for(j=0, countJ = types.length;(j<countJ);j++ ) {
                         //     jType = types[j];
                         //     jResult = this._makePrototypeForType(iChild, jType);
-                        //     if(Promise.is(jResult)) {
+                        //     if(PromiseIs(jResult)) {
                         //         (typesPromises || (typesPromises = [])).push(jResult);
                         //     }
                         // }
@@ -931,7 +933,7 @@ DataService.addClassProperties(
                     jResult = this._registerObjectDescriptor(jObjectDescriptor, map);
 
                     // jResult = this._makePrototypeForType(service, jObjectDescriptor);
-                    if (jResult && Promise.is(jResult)) {
+                    if (jResult && PromiseIs(jResult)) {
                         (typesPromises || (typesPromises = [])).push(jResult);
                     }
                 }
@@ -1466,17 +1468,24 @@ DataService.addClassProperties(
                                         iDescendantServicesForType
                                     );
                                 }
-                                descendantServicesForType.push(iChildService);
+
+                                if (iChildService.handlesType(type)) {
+                                    descendantServicesForType.push(iChildService);
+                                }
                             }
                             i++;
                         } while (i < countI);
-                    } else if (this.handlesType(type)) {
-                        descendantServicesForType = this;
-                    } else {
+                    } 
+                    // else if (this.handlesType(type)) {
+                    //     descendantServicesForType = [this];
+                    // } 
+                    else {
                         descendantServicesForType = null;
                     }
 
                     this._descendantServicesByType.set(type, descendantServicesForType);
+
+                    //console.debug("###### "+this.name+" descendantServicesForType "+type.name+" are: "+descendantServicesForType?.map((value) => value.name));
                 }
 
                 return descendantServicesForType;
@@ -2344,8 +2353,13 @@ DataService.addClassProperties(
                 if (promise) {
                     return promise.then(function () {
                         var result = null;
-                        if (propertiesToRequest.length && object[propertyName]) {
-                            result = self._getPropertiesOnPath(object[propertyName], propertiesToRequest);
+                        if (propertiesToRequest.length) {
+                            if(object[propertyName]) {
+                                result = self._getPropertiesOnPath(object[propertyName], propertiesToRequest);
+                            }
+                        } else {
+                            //We're at the end of propertiesToRequest:
+                            result = object[propertyName];
                         }
                         return result;
                     });
@@ -2617,7 +2631,7 @@ DataService.addClassProperties(
                             mappingResult;
 
                         mappingResult = this.mapObjectToRawData(object, data);
-                        if (Promise.is(mappingResult)) {
+                        if (PromiseIs(mappingResult)) {
                             snapshotPromise = mappingResult;
                         } else {
                             snapshotPromise = Promise.resolve(mappingResult);
@@ -3023,13 +3037,26 @@ DataService.addClassProperties(
             },
         },
         _eventPoolFactoryForEventType: {
-            value: function () {
-                return new DataEvent();
+            value: function (eventType) {
+                let event = new DataEvent();
+                event.type = eventType;
+                return event;
             },
         },
 
         __dataEventPoolByEventType: {
             value: null,
+        },
+        _resetDataEvent: {
+            value: function(dataEvent) {
+                //The rest is overriden every time
+                //For willSave...
+                delete dataEvent["_composedPath"];
+
+                //For change event... Needs a different reset function per type...
+                delete dataEvent["transaction"];
+
+            }
         },
         _dataEventPoolForEventType: {
             value: function (eventType) {
@@ -3039,7 +3066,7 @@ DataService.addClassProperties(
                 if (!pool) {
                     this.__dataEventPoolByEventType.set(
                         eventType,
-                        (pool = new ObjectPool(this._eventPoolFactoryForEventType))
+                        (pool = new ObjectPool(() => { return this._eventPoolFactoryForEventType(eventType);}, this._resetDataEvent))
                     );
                 }
                 return pool;
@@ -3057,51 +3084,84 @@ DataService.addClassProperties(
             },
         },
 
-        prepareConstructorToHandleDataEvents: {
+        prepareConstructorToHandleDataEventsIfNeeded: {
             value: function (objectConstructor, event) {
-                if (typeof objectConstructor.prepareToHandleDataEvents === "function") {
-                    objectConstructor.prepareToHandleDataEvents(event);
+                if(objectConstructor && !this.isConstructorPreparedToHandleDataEvents(objectConstructor)) {
+                    if (typeof objectConstructor.prepareToHandleDataEvents === "function") {
+                        objectConstructor.prepareToHandleDataEvents(event);
+                    }
+                    //prepareToHandleDataEvent or prepareToHandleCreateEvent
+                    this.__preparedConstructorsForDataEvents.add(objectConstructor);
+
+                    //Now check up the chain, our parent:
+                    let objectConstructorSuperClass = Object.getPrototypeOf(objectConstructor);
+                    this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructorSuperClass, event);
                 }
-                //prepareToHandleDataEvent or prepareToHandleCreateEvent
-                this.__preparedConstructorsForDataEvents.add(objectConstructor);
             },
         },
 
+        _dataEventForType: {
+            value: function(eventType) {
+                return this._dataEventPoolForEventType(eventType).checkout();
+            }
+        },
+
         dispatchDataEventTypeForObject: {
-            value: function (eventType, object, detail) {
+            value: function (eventType, object, detail, composedPath) {
                 /*
                 This needs to be made more generic in EventManager, which has "prepareForActivationEvent,
                 but it's very specialized for components. Having all prototypes of DO register as eventListeners upfront
                 would be damaging performance wise. We should do it as things happen.
             */
                 if (object.dispatchEvent) {
-                    var eventPool = this._dataEventPoolForEventType(eventType),
+                    var /*eventPool = this._dataEventPoolForEventType(eventType),*/
                         objectDescriptor = this.objectDescriptorForObject(object),
                         objectConstructor = object.constructor,
-                        dataEvent = eventPool.checkout();
+                        //dataEvent = eventPool.checkout();
+                        dataEvent = this._dataEventForType(eventType);
 
                     dataEvent.type = eventType;
-                    dataEvent.target = objectDescriptor;
+                    dataEvent.target = object;
+                    dataEvent.identity = this.application.identity;
                     dataEvent.dataService = this;
                     dataEvent.dataObject = object;
                     dataEvent.detail = detail;
-
-                    if (!this.isConstructorPreparedToHandleDataEvents(objectConstructor)) {
-                        this.prepareConstructorToHandleDataEvents(objectConstructor, dataEvent);
+                    if(composedPath && dataEvent.setComposedPath) {
+                        dataEvent.setComposedPath(composedPath);
                     }
 
-                    object.dispatchEvent(dataEvent);
+                    this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
 
-                    var propagationPromise = dataEvent.propagationPromise;
-                    if (Promise.is(propagationPromise)) {
-                        return propagationPromise.then(function () {
-                            eventPool.checkin(dataEvent);
-                        });
-                    } else {
-                        eventPool.checkin(dataEvent);
-                    }
+                    this.dispatchDataEvent(dataEvent);
+
+                    // object.dispatchEvent(dataEvent);
+
+                    // var propagationPromise = dataEvent.propagationPromise;
+                    // if (PromiseIs(propagationPromise)) {
+                    //     return propagationPromise.then(function () {
+                    //         eventPool.checkin(dataEvent);
+                    //     });
+                    // } else {
+                    //     eventPool.checkin(dataEvent);
+                    // }
                 }
             },
+        },
+
+        dispatchDataEvent: {
+            value: function (dataEvent) {
+                dataEvent.target.dispatchEvent(dataEvent);
+
+                let propagationPromise = dataEvent.propagationPromises;
+
+                if (PromiseIs(propagationPromise)) {
+                    return propagationPromise.then(() => {
+                        this._dataEventPoolForEventType(dataEvent.type).checkin(dataEvent);
+                    });
+                } else {
+                    this._dataEventPoolForEventType(dataEvent.type).checkin(dataEvent);
+                }
+            }
         },
 
         /**
@@ -3120,15 +3180,14 @@ DataService.addClassProperties(
             value: function (type) {
                 if (this.isRootService) {
                     var service = this.childServiceForType(type),
-                        descriptor = this.objectDescriptorForType(type),
                         //Gives a chance to raw data service to provide a primary key for clien-side creation/
                         //Especially useful for systems that use uuid as primary keys.
                         //object = this._createDataObject(type, service.dataIdentifierForNewObjectWithObjectDescriptor(type))
                         object = this._createDataObject(
                             type,
-                            service.dataIdentifierForNewObjectWithObjectDescriptor(descriptor)
+                            service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
-                    
+
                     this.registerCreatedDataObject(object);
 
                     return object;
@@ -3620,7 +3679,29 @@ DataService.addClassProperties(
                         One unusual thing is that Identity extends Montage and not DataObject, relevant?
                     */
                         if (service) {
-                            let dataIdentifier = service.dataIdentifierForObject(dataObject);
+
+                            /*
+                                This isn't great because we're going to "expect" an id property on objects.
+                                We should either associate a dataIdentifier or, but we need to make this work as is first
+                                to make sure that an object sent by the client with an id is stored using that same id, and not a new one.
+
+                                If we do dataIdentifier = service.dataIdentifierForObject(dataObject); first, it will create a new one.
+                            */
+                           let dataIdentifier;
+                           if(dataObject.id) {
+
+                                dataIdentifier = service.dataIdentifierForTypePrimaryKey(objectDescriptor, dataObject.id);
+                                console.debug(`#### Used ${objectDescriptor.name} instance id ${dataObject.id} for dataIdentifier: ${dataIdentifier}`);
+
+                                service.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                                this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                                this.recordDataIdentifierForObject(dataIdentifier, dataObject);
+
+                           } 
+                           else {
+                                dataIdentifier = service.dataIdentifierForObject(dataObject);
+                           }
+
                             // this is mainService here
                             // this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
                             // this.recordDataIdentifierForObject(dataIdentifier, dataObject);
@@ -3707,15 +3788,15 @@ DataService.addClassProperties(
                     promises = _promises;
                 }
 
-                if (!_mergingDataObjects) {
-                    _mergingDataObjects = new Set();
-                }
+                // if (!_mergingDataObjects) {
+                //     _mergingDataObjects = new Set();
+                // }
 
-                if (_mergingDataObjects.has(dataObject)) {
-                    return isRoot ? Promise.resolve(dataObject) : dataObject;
-                } else {
-                    _mergingDataObjects.add(dataObject);
-                }
+                // if (_mergingDataObjects.has(dataObject)) {
+                //     return isRoot ? Promise.resolve(dataObject) : dataObject;
+                // } else {
+                //     _mergingDataObjects.add(dataObject);
+                // }
 
                 if (dataObject === null || dataObject === undefined) {
                     //return (delegate && isRoot)? Promise.resolve(dataObject) : dataObject;
@@ -3723,17 +3804,31 @@ DataService.addClassProperties(
                 }
 
                 let objectDescriptor = this.objectDescriptorForObject(dataObject);
-                let childServicesForType = this.childServicesForType(objectDescriptor);
+                // let childServicesForType = this.childServicesForType(objectDescriptor);
+                let childServicesForType = this.descendantServicesForType(objectDescriptor);
+                
 
+                /*
+                    FIXME: When DataWorker attempts to mergeDataObject for the WebSocketSession, it fails here as this.handlesType(objectDescriptor) is false
+                    so !this.handlesType(objectDescriptor) is true and it just bails out in that if.
+
+                    And saveChanges does nothing since merge has not happened....
+
+                */
+                // if (
+                //     !objectDescriptor ||
+                //     (objectDescriptor &&
+                //         (!this.handlesType(objectDescriptor) ||
+                //             !childServicesForType ||
+                //             (childServicesForType &&
+                //                 childServicesForType?.filter((value) => value.handlesType(objectDescriptor))?.length ==
+                //                     0)))
+                // ) 
                 if (
                     !objectDescriptor ||
-                    (objectDescriptor &&
-                        (!this.handlesType(objectDescriptor) ||
-                            !childServicesForType ||
-                            (childServicesForType &&
-                                childServicesForType?.filter((value) => value.handlesType(objectDescriptor))?.length ==
-                                    0)))
-                ) {
+                    (objectDescriptor && !this.descendantServicesForType(objectDescriptor).length)
+                )
+                {
                     //return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
                     return isRoot ? Promise.resolve(dataObject) : dataObject;
                 }
@@ -3748,6 +3843,18 @@ DataService.addClassProperties(
                     return isRoot ? Promise.resolve(dataObject) : dataObject;
                 } else {
                     let rootPromise;
+
+                    //Only if we're going to merge it makes sense to do this
+                    if (!_mergingDataObjects) {
+                        _mergingDataObjects = new Set();
+                    }
+
+                    if (_mergingDataObjects.has(dataObject)) {
+                        return isRoot ? Promise.resolve(dataObject) : dataObject;
+                    } else {
+                        _mergingDataObjects.add(dataObject);
+                    }
+
 
                     if (delegate) {
                         return this._invokeDelegateWillMergeDataObject(
@@ -3944,26 +4051,27 @@ DataService.addClassProperties(
             },
         },
         registerChangedDataObject: {
-            value: function (dataObject) {
+            value: function (dataObject, _changedDataObjects, _objectDescriptorsWithChanges) {
                 var objectDescriptor = this.objectDescriptorForObject(dataObject),
                     changedDataObjects,
                     value;
 
                 if (this.isObjectCreated(dataObject)) {
-                    console.warn(
-                        `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
-                    );
+                    // console.warn(
+                    //     `DataService can't register a new object (${objectDescriptor.name}) in changedDataObjects`
+                    // );
                     return;
                 }
 
-                changedDataObjects = this.changedDataObjects;
+                changedDataObjects = _changedDataObjects ? _changedDataObjects : this.changedDataObjects;
                 value = changedDataObjects.get(objectDescriptor);
 
                 if (!value) {
                     changedDataObjects.set(objectDescriptor, (value = new Set()));
                 }
                 value.add(dataObject);
-                this.objectDescriptorsWithChanges.add(objectDescriptor);
+
+                (_objectDescriptorsWithChanges ? _objectDescriptorsWithChanges : this.objectDescriptorsWithChanges).add(objectDescriptor);
             },
         },
 
@@ -3973,6 +4081,10 @@ DataService.addClassProperties(
             },
         },
 
+        /* 
+            This isn't used right now, but when we start using the undo manager
+            we probably will need to invoke it
+        */
         unregisterChangedDataObject: {
             value: function (dataObject) {
                 var objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4500,7 +4612,7 @@ DataService.addClassProperties(
         },
 
         registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, shouldTrackChangesWhileBeingMapped) {
+            value: function (changeEvent, shouldTrackChangesWhileBeingMapped = false) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
                     objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4585,15 +4697,17 @@ DataService.addClassProperties(
                 shouldTrackChangesWhileBeingMapped
             ) {
                 var dataObject = changeEvent.target,
+                    transaction = changeEvent.transaction,
                     isCreatedObject = this.isObjectCreated(dataObject),
                     key = changeEvent.key,
                     keyValue = changeEvent.keyValue,
                     addedValues = changeEvent.addedValues,
                     removedValues = changeEvent.removedValues,
+
                     /*
-                        We check first if dataObject i being mapped.
+                        We check first if dataObject is being mapped.
                         But if dataObject is actually the value initially fetched
-                        and this is the system updating the grap, the inverse property
+                        and this is the system updating the graph, the inverse property
                         then the value side would be what was flagged as being mapped.
 
                         In either case, it tells us we're in the context of fetching and those
@@ -4608,11 +4722,15 @@ DataService.addClassProperties(
                                     ? this._objectsBeingMapped.has(removedValues[0])
                                     : false
                     ),
-                    changesForDataObject = this.changesForDataObject(dataObject),
+                    changesForDataObject = transaction ? transaction.changesForDataObject(dataObject): this.changesForDataObject(dataObject),
+                    _shouldTrackChangesWhileBeingMapped = transaction ? true : shouldTrackChangesWhileBeingMapped,
+                    //registersDataObjectChanges = (!isCreatedObject && (!isDataObjectBeingMapped || _shouldTrackChangesWhileBeingMapped)),
+                    registersDataObjectChanges = (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
                     self = this;
 
+                
                 /*
                 Benoit refactoring saveChanges: shouldn't we be able to know that if there are no changesForDataObject, as we create on, it would ve the only time we'd have to call:
 
@@ -4625,9 +4743,16 @@ DataService.addClassProperties(
                 //     debugger;
                 // }
 
-                if (!isCreatedObject && (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped)) {
+                if (registersDataObjectChanges) {
+
+                    if(!changesForDataObject) {
+                        changesForDataObject = (transaction ? transaction._buildChangesForDataObject(dataObject) : this._buildChangesForDataObject(dataObject));
+                    }
+
                     //this.changedDataObjects.add(dataObject);
-                    this.registerChangedDataObject(dataObject);
+                    changeEvent.transaction 
+                        ? this.registerChangedDataObject(dataObject, changesForDataObject, transaction.objectDescriptors)
+                        : this.registerChangedDataObject(dataObject);
                 }
 
                 //Now handled in changesForDataObject
@@ -4670,9 +4795,10 @@ DataService.addClassProperties(
                     changeEvent.key &&
                     typeof changeEvent.keyValue !== "undefined" &&
                     key !== "length" &&
-                    /* new for blocking re-entrant */ changesForDataObject.get(key) !== keyValue
+                    /* new for blocking re-entrant */ changesForDataObject?.get(key) !== keyValue
                 ) {
-                    if (!isDataObjectBeingMapped || shouldTrackChangesWhileBeingMapped) {
+                    //If an object is created, it already has the values on itself, no need to do anything
+                    if (registersDataObjectChanges) {
                         changesForDataObject.set(key, keyValue);
                     }
 
@@ -4718,7 +4844,7 @@ DataService.addClassProperties(
                     //For key that can have add/remove the value of they key is an object
                     //that itself has two keys: addedValues and removedValues
                     //which value will be a set;
-                    var manyChanges = changesForDataObject.get(key),
+                    var manyChanges = changesForDataObject?.get(key),
                         isManyChangesArray = manyChanges && isArray(manyChanges),
                         i,
                         countI;
@@ -4735,10 +4861,10 @@ DataService.addClassProperties(
                     // The index captured in dataObjectChanges is the one from the first change event, so 2. 
                     // The indices at which to make the 2nd and 3rd changes are lost. 
 
-                    if (!manyChanges) {
-                        manyChanges = new CollectionChanges();
-                        changesForDataObject.set(key, manyChanges);
-                    } 
+                    // if (!manyChanges) {
+                    //     manyChanges = new CollectionChanges();
+                    //     changesForDataObject.set(key, manyChanges);
+                    // } 
                     
 
                     if (isManyChangesArray && (isCreatedObject || isDataObjectBeingMapped)) {
@@ -4761,6 +4887,15 @@ DataService.addClassProperties(
                             );
                         }
                     } else {
+
+                        if (!manyChanges) {
+                            manyChanges = new CollectionChanges();
+                            if(!changesForDataObject) {
+                                changesForDataObject = (transaction ? transaction._buildChangesForDataObject(dataObject) : this._buildChangesForDataObject(dataObject));
+                            }
+                            changesForDataObject.set(key, manyChanges);
+                        } 
+
 
                         if (addedValues && isManyChangesArray && manyChanges.equals(addedValues)) {
                             manyChanges = new CollectionChanges();
@@ -5098,7 +5233,7 @@ DataService.addClassProperties(
 
                     iObjectDescriptor.dispatchEvent(iTransactionEvent);
                     propagationPromise = dataEvent.propagationPromise;
-                    if (Promise.is(propagationPromise)) {
+                    if (PromiseIs(propagationPromise)) {
                         (propagationPromises || (propagationPromises = [])).push(propagationPromise);
                         propagationPromise.then(function () {
                             eventPool.checkin(dataEvent);
@@ -5346,85 +5481,34 @@ DataService.addClassProperties(
 
         saveChanges: {
             value: function () {
-                //If nothing to do, we bail out as early as possible.
-                if (
-                    this.createdDataObjects.size === 0 &&
-                    this.changedDataObjects.size === 0 &&
-                    this.deletedDataObjects.size === 0
-                ) {
-                    /*
-                    If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separation of changes,
-                    best we can do is return a promise encompasing all pending.
-
-                    If anothe saveChanges were to be called, it may not use that same promise
-                */
-                    if (this.hasPendingTransaction) {
-                        let pendingTransactionPromises = this.pendingTransactionPromises;
-                        return pendingTransactionPromises.length === 1
-                            ? pendingTransactionPromises[0]
-                            : Promise.all(this.pendingTransactionPromises);
-                    } else {
-                        var noOpOperation = new DataOperation();
-                        noOpOperation.type = DataOperation.Type.NoOp;
-                        return Promise.resolve(noOpOperation);
-                    }
-                }
-
-                var transaction = new Transaction(),
-                    self = this,
-                    //Ideally, this should be saved in IndexedDB/PGLite so if something happen
-                    //we can at least try to recover.
-                    createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
-                    changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
-                    deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
-                    dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)), //Map
-                    objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
-                        this.objectDescriptorsWithChanges
-                    ));
-
-                ObjectDescriptor.prepareToDispatchDataOperation(TransactionDescriptor);
-
-                //console.log("saveChanges: transaction-"+this.identifier, transaction);
-                console.log(
-                    "saveChanges: createdDataObjects [" + createdDataObjects.length + "]: ",
-                    createdDataObjects,
-                    "changedDataObjects [" + changedDataObjects.length + "]: ",
-                    changedDataObjects,
-                    "deletedDataObjects [" + deletedDataObjects.length + "]: ",
-                    deletedDataObjects
-                );
-
-                // move to _saveChangesForTransaction()
-                //this.addPendingTransaction(transaction);
-
-                //We've made copies, so we clear right away to make room for a new cycle:
-                this.discardChanges();
-                // this.createdDataObjects.clear();
-                // this.changedDataObjects.clear();
-                // this.deletedDataObjects.clear();
-                // this.dataObjectChanges.clear();
-                // this.objectDescriptorsWithChanges.clear();
-
-                return this._saveChangesForTransaction(transaction);
-            },
+                return this.saveChangesWithIdentity(this.application.identity);
+            }
         },
 
-        dispatchSaveEventTypeForTransaction: {
-            value: function(eventType, aTransaction) {
-                let transactionObjectDescriptors = aTransaction.objectDescriptors,
+        dispatchSaveEventTypeWithIdentity: {
+            value: function(eventType, identity) {
+                /*
+                    Internally, DataService's organized per type of operations: 
+
+                */
+                let transactionObjectDescriptors = this.objectDescriptorsWithChanges,
                     uniquePromise,
                     promises;
 
                 for (const iObjectDescriptor of transactionObjectDescriptors) {
+                    let iComposedPath = iObjectDescriptor.composedPath;
+
+                    /*
+                        We need to make aTransaction part of the composedPath.
+                    */
+                    iComposedPath = iComposedPath.slice();
+                    iComposedPath.splice(iComposedPath.indexOf(this), 0, aTransaction, this);
+
                     let iPromise = this.dispatchDataEventTypeForObject(
                             eventType,
                             iObjectDescriptor,
-                            {
-                                transaction: aTransaction,
-                                createdDataObjects: aTransaction.createdDataObjects.get(iObjectDescriptor),
-                                updatedDataObjects: aTransaction.updatedDataObjects.get(iObjectDescriptor),
-                                deletedDataObjects: aTransaction.deletedDataObjects.get(iObjectDescriptor)
-                            }
+                            aTransaction,
+                            iComposedPath
                         );
                     
                     if(iPromise) {
@@ -5450,9 +5534,226 @@ DataService.addClassProperties(
             }
         },
 
+
+        dispatchWillSaveWithIdentity: {
+            value: function (identity) {
+                return this.dispatchSaveEventTypeWithIdentity(DataEvent.willSave, identity);
+            }
+        },
+
+        saveChangesWithIdentity: {
+            value: function (identity) {
+                console.debug(`#### saveChangesWithIdentity: `,identity);
+
+                //If nothing to do, we bail out as early as possible.
+                if (
+                    this.createdDataObjects.size === 0 &&
+                    this.changedDataObjects.size === 0 &&
+                    this.deletedDataObjects.size === 0
+                ) {
+                    /*
+                    If we have pending transation(s), then it means some logical saves got combined, so until we offer an API for intentional separation of changes,
+                    best we can do is return a promise encompasing all pending.
+
+                    If anothe saveChanges were to be called, it may not use that same promise
+                */
+                    if (this.hasPendingTransaction) {
+                        let pendingTransactionPromises = this.pendingTransactionPromises;
+                        return pendingTransactionPromises.length === 1
+                            ? pendingTransactionPromises[0]
+                            : Promise.all(this.pendingTransactionPromises);
+                    } else {
+                        var noOpOperation = new DataOperation();
+                        noOpOperation.type = DataOperation.Type.NoOp;
+                        return Promise.resolve(noOpOperation);
+                    }
+                } else {
+                    if(this._pendingTransactions?.length > 1) {
+                        console.debug(new Date().toLocaleTimeString([],{ hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 3 }) + ">>>>>>>>> saveChangesWithIdentity called:  #WARNING WITH _pendingTransactions!  !!!!");
+                    }
+                }
+
+                // let dispatchWillSavePromise;
+                // //todo: declare
+                // if(this.dispatchWillSavePromise) {
+                //     dispatchWillSavePromise = this.dispatchWillSavePromise.then(() => this.dispatchWillSaveWithIdentity(identity));
+                // } else {
+                //     this.dispatchWillSavePromise = dispatchWillSavePromise = this.dispatchWillSaveWithIdentity(identity);
+                // }
+
+                // return dispatchWillSavePromise.then(() => {
+
+
+                var transaction = new Transaction(),
+                    self = this,
+                    //Ideally, this should be saved in IndexedDB/PGLite so if something happen
+                    //we can at least try to recover.
+                    createdDataObjects = (transaction.createdDataObjects = new Map(this.createdDataObjects)), //Map
+                    changedDataObjects = (transaction.updatedDataObjects = new Map(this.changedDataObjects)), //Map
+                    deletedDataObjects = (transaction.deletedDataObjects = new Map(this.deletedDataObjects)), //Map
+                    dataObjectChanges = (transaction.dataObjectChanges = new Map(this.dataObjectChanges)); //Map
+                    // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
+                    //     this.objectDescriptorsWithChanges
+                    // ));
+                    transaction.objectDescriptors = new Set(this.objectDescriptorsWithChanges);
+
+                // return dispatchWillSavePromise.then(() => {
+
+
+                console.log(
+                    "saveChanges: createdDataObjects [" + createdDataObjects.length + "]: ",
+                    createdDataObjects,
+                    "changedDataObjects [" + changedDataObjects.length + "]: ",
+                    changedDataObjects,
+                    "deletedDataObjects [" + deletedDataObjects.length + "]: ",
+                    deletedDataObjects
+                );
+
+                /*
+                    Properly set the transaction's identity property.
+                    This could allow to implement an "super user" feature. Adding the ability for someone else
+                    to authenticate, creating a second session with a different identity, to do something the current user
+                    wouldn't be allowed to for example.
+                */
+                transaction.identity = identity;
+
+                ObjectDescriptor.prepareToDispatchDataOperation(TransactionDescriptor);
+
+                //console.log("saveChanges: transaction-"+this.identifier, transaction);
+                console.log(
+                    "saveChanges: createdDataObjects [" + createdDataObjects.length + "]: ",
+                    createdDataObjects,
+                    "changedDataObjects [" + changedDataObjects.length + "]: ",
+                    changedDataObjects,
+                    "deletedDataObjects [" + deletedDataObjects.length + "]: ",
+                    deletedDataObjects
+                );
+
+                /*  
+                    DEBUG LOG:
+                */
+                // for (const [objectDescriptor, instances] of createdDataObjects) {
+                //     if(objectDescriptor.name === "WebSocketSession") {
+                //         console.debug(`#### saveChangesWithIdentity: ${objectDescriptor.name} instances are:`, Array.from(instances));
+                //     }
+                // }
+
+
+
+                //console.log("saveChanges: transaction-"+this.identifier, transaction);
+                // console.log(
+                //     "saveChangesWithIdentity: createdDataObjects [" + createdDataObjects.length + "]: ",
+                //     createdDataObjects,
+                //     "changedDataObjects [" + changedDataObjects.length + "]: ",
+                //     changedDataObjects,
+                //     "deletedDataObjects [" + deletedDataObjects.length + "]: ",
+                //     deletedDataObjects
+                // );
+
+                // move to _saveChangesForTransaction()
+                //this.addPendingTransaction(transaction);
+
+                //We've made copies, so we clear right away to make room for a new cycle:
+                this.discardChanges();
+                // this.createdDataObjects.clear();
+                // this.changedDataObjects.clear();
+                // this.deletedDataObjects.clear();
+                // this.dataObjectChanges.clear();
+                // this.objectDescriptorsWithChanges.clear();
+
+                if(this.pendingTransactionPromise) {
+                        console.debug("!!!!!!!!!!!!!! Pending transaction holding transaction "+transaction.identifier);
+                        this.pendingTransactionPromise = this.pendingTransactionPromise.then(() => {
+                            console.debug("+++++++++++++++ Pending transaction holding transaction "+transaction.identifier+ " NO MORE!!!");
+                            
+                            let currentPendingTransactionPromise = this._saveChangesForTransaction(transaction);
+                            return currentPendingTransactionPromise
+                            .finally(() => {
+                                if( this.pendingTransactionPromise === currentPendingTransactionPromise) {
+                                    this.pendingTransactionPromise = null;
+                                }
+                            });
+                        });
+                        return this.pendingTransactionPromise;
+                } else {
+                    console.debug("NO pending transaction holding transaction "+transaction.identifier);
+                    this.pendingTransactionPromise = this._saveChangesForTransaction(transaction);
+                    return this.pendingTransactionPromise;
+                }
+            // });
+
+            },
+        },
+
+        dispatchSaveEventTypeForTransaction: {
+            value: function(eventType, aTransaction) {
+                let transactionObjectDescriptors = aTransaction?.objectDescriptors,
+                    uniquePromise,
+                    promises;
+
+                if(aTransaction) {
+                    for (const iObjectDescriptor of transactionObjectDescriptors) {
+                        let iComposedPath = iObjectDescriptor.composedPath;
+
+                        /*
+                            We need to make aTransaction part of the composedPath, so it gets invoke handleChange() as it's set to listens for it in dispatchWillSaveForTransaction()
+
+                            Though, should we do. that for didSave as well? not sure...
+                        */
+                        iComposedPath = iComposedPath.slice();
+                        iComposedPath.splice(iComposedPath.indexOf(this), 0, aTransaction, this);
+
+                        let iPromise = this.dispatchDataEventTypeForObject(
+                                eventType,
+                                iObjectDescriptor,
+                                aTransaction,
+                                iComposedPath
+                            );
+                        
+                        if(iPromise) {
+                            if(!promises) {
+                                if(!uniquePromise) {
+                                    uniquePromise = iPromise;
+                                } else {
+                                    promises = [uniquePromise, iPromise];
+                                    uniquePromise = null; //not really needed
+                                }
+                            } else {
+                                promises.push(iPromise)
+                            }
+                        }
+                    }
+                }
+
+                return promises
+                    ? Promise.all(promises)
+                    : uniquePromise
+                        ? uniquePromise
+                        : Promise.resolveUndefined;
+
+            }
+        },
+
+        __dispatchedWillSaveTransactions: {
+            value: null
+        },
+        _dispatchedWillSaveTransactions: {
+            get: function() {
+                return this.__dispatchedWillSaveTransactions || (this.__dispatchedWillSaveTransactions = new Set());
+            }
+        },
+
         dispatchWillSaveForTransaction: {
             value: function(aTransaction) {
+                this._dispatchedWillSaveTransactions.add(aTransaction);
+                DataObjectDescriptorInstance.addEventListener("change", aTransaction, false);
+
                 return this.dispatchSaveEventTypeForTransaction(DataEvent.willSave, aTransaction)
+                .then((value) => {
+                    DataObjectDescriptorInstance.removeEventListener("change", aTransaction, false);
+                    this._dispatchedWillSaveTransactions.delete(aTransaction);
+                    return value;
+                });
             }
         },
 
@@ -5460,9 +5761,10 @@ DataService.addClassProperties(
             value: function(transaction) {
                 let self = this;
                 
-                this.addPendingTransaction(transaction);
 
                 let pendingTransactionPromise = new Promise(function (resolve, reject) {
+                    self.addPendingTransaction(transaction);
+
                     try {
                         var deletedDataObjectsIterator,
                             operation,
@@ -5492,6 +5794,7 @@ DataService.addClassProperties(
                             operation.type = DataOperation.Type.NoOp;
                             // console.log("saveChanges: transaction-"+this.identifier+" <- NoOp", transaction);
                             resolve(operation);
+                            self.removePendingTransaction(transaction);
                         }
 
                         self.dispatchWillSaveForTransaction(transaction)
@@ -5544,7 +5847,9 @@ DataService.addClassProperties(
                                 validateFailedOperation.data = aggregatedValidationErrors;
 
                                 // Stop the transaction and resolve with the failure operation
+                                self.removePendingTransaction(transaction);
                                 resolve(validateFailedOperation);
+                                // self.pendingTransactionPromise = null;
 
                                 // TODO: @benoit should we not stop/reject the inner promise ?
                                 return null;
@@ -5751,12 +6056,14 @@ DataService.addClassProperties(
                             */
 
                             //console.log("saveChanges: done! transaction-"+this.identifier, transaction);
-                            self.removePendingTransaction(transaction);
+                            // self.removePendingTransaction(transaction);
                             self.unregisterPendingTransactionPromise(transaction);
 
                             self.dispatchDidSaveForTransaction(transaction)
                             .then(() => {
+                                self.removePendingTransaction(transaction);
                                 resolve(transaction);
+                                // self.pendingTransactionPromise = null;
                             });
                         })
                         .catch(function (error) {
@@ -5871,15 +6178,20 @@ DataService.addClassProperties(
                 transactionRollbackEvent.transaction = transaction;
                 TransactionDescriptor.dispatchEvent(transactionRollbackEvent);
 
+                const self = this;
                 return (transactionRollbackEvent.propagationPromise || Promise.resolve())
                     .then(function () {
                         TransactionEvent.checkin(transactionRollbackEvent);
                         return transaction.completionPromise;
                     })
                     .then(function () {
+                        // self.pendingTransactionPromise = null;
+                        self.removePendingTransaction(transaction);
                         rejectFunction(cancelError);
                     })
                     .catch(function (error) {
+                        // self.pendingTransactionPromise = null;
+                        self.removePendingTransaction(transaction);
                         rejectFunction(error);
                     })
                     .finally(() => {
@@ -7076,7 +7388,7 @@ DataService.addClassProperties(
                     var rawDataService = this._dataServiceByDataStream.get(dataStream),
                         self = this;
 
-                    if (Promise.is(rawDataService)) {
+                    if (PromiseIs(rawDataService)) {
                         rawDataService.then(function (service) {
                             self._cancelServiceDataStream(service, dataStream, reason);
                         });
@@ -8892,7 +9204,7 @@ DataService.addClassProperties(
                     self = this;
 
                 if (cachedValue !== undefined) {
-                    return Promise.is(cachedValue) ? cachedValue : Promise.resolve(cachedValue);
+                    return PromiseIs(cachedValue) ? cachedValue : Promise.resolve(cachedValue);
                 } else {
                     var query = DataQuery.withTypeAndCriteria(objectDescriptor),
                         queryPromise;

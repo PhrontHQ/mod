@@ -154,7 +154,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
         if (!this._trackedTypes || !this._trackedTypes.size) {
             console.log.apply(console, logArgs);
-        } else if (this._trackedTypes.has(objectDescriptor.name)) {
+        } else if (objectDescriptor && this._trackedTypes.has(objectDescriptor.name)) {
             console.log.apply(console, logArgs);
         }
     }

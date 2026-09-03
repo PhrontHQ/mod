@@ -27,16 +27,12 @@
     "DataIdentifier": {
         "object": "./data-identifier"
     },
-    "DataServiceDescriptor": {
-        "object": "data/service/data-service.mjson"
-    },
     "dataService": {
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "dataService",
             "valueType": "object",
-            "cardinality": 1,
-            "valueDescriptor": {"@": "DataServiceDescriptor"}
+            "cardinality": 1
        }
     },
     "ObjectDescriptorDescriptor": {
