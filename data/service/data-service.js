@@ -3187,7 +3187,7 @@ DataService.addClassProperties(
                             type,
                             service.dataIdentifierForNewObjectWithObjectDescriptor(this.objectDescriptorForType(type))
                         );
-                    
+
                     this.registerCreatedDataObject(object);
 
                     return object;
@@ -4707,7 +4707,7 @@ DataService.addClassProperties(
                     /*
                         We check first if dataObject i being mapped.
                         But if dataObject is actually the value initially fetched
-                        and this is the system updating the grap, the inverse property
+                        and this is the system updating the graph, the inverse property
                         then the value side would be what was flagged as being mapped.
 
                         In either case, it tells us we're in the context of fetching and those
