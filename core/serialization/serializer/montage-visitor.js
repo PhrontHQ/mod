@@ -45,7 +45,13 @@ var MontageVisitor = Montage.specialize({
                 return "Module";
             } else if (object instanceof Alias) {
                 return "Alias";
-            } else if ("getInfoForObject" in object || "getInfoForObject" in object.constructor) {
+            } 
+            
+            /*
+                instances don't have a getInfoForObject method, they have a metadata getter.
+                TODO: replace "getInfoForObject" in object with using metadata getter instead ?
+            */ 
+            else if ("getInfoForObject" in object || "getInfoForObject" in object.constructor) {
                 return "MontageObject";
             } else if (object.thisIsAReferenceCreatedByMontageSerializer) {
                 return "MontageReference";
