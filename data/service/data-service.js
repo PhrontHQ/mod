@@ -3132,8 +3132,6 @@ DataService.addClassProperties(
 
                     this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
 
-                    this.prepareConstructorToHandleDataEventsIfNeeded(objectConstructor, dataEvent);
-
                     this.dispatchDataEvent(dataEvent);
 
                     // object.dispatchEvent(dataEvent);
