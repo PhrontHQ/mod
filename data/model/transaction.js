@@ -62,9 +62,6 @@ const Transaction = exports.Transaction = class Transaction extends Target {
                     }
 
                     return resultSet;
-                    
-                    return new Set(...this.createdDataObjects.keysArray(), ...this.updatedDataObjects.keysArray(), ...this.deletedDataObjects.keysArray())
-                    // return this._objectDescriptors;
                 },
                 set: function(value) {
                     console.warn("Transaction.objectDescriptors is now computed on-demand from the content of this.createdDataObjects/updatedDataObjects/deletedDataObjects and not cached")
