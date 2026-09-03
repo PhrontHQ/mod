@@ -4705,7 +4705,7 @@ DataService.addClassProperties(
                     removedValues = changeEvent.removedValues,
 
                     /*
-                        We check first if dataObject i being mapped.
+                        We check first if dataObject is being mapped.
                         But if dataObject is actually the value initially fetched
                         and this is the system updating the graph, the inverse property
                         then the value side would be what was flagged as being mapped.
