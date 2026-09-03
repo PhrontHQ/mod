@@ -74,8 +74,102 @@ class LocalizedString extends String {
     //ES2019
     //#localization = "blue";
 
+    static {
+        Montage.defineProperties(LocalizedString, {
+            _defaultLocale: { value: undefined },
+            defaultLocale: {
+                set: function(value) {
+                    this._defaultLocale = value;
+                },
+                get: function() {
+                    return this._defaultLocale || Locale.systemLocale;
+                }
+            },
+            locale: {
+                set: function(value) {
+                    this.prototype._locale = value;
+                },
+                get: function() {
+                    return this.prototype._locale || this.defaultLocale;
+                }
+            },
+            /*
+                Needed for MontageVisitor's getTypeOf() to return MontageObject
+            */
+            getInfoForObject: {
+                value: function(object) {
+                    return Montage.getInfoForObject(object);
+                }
+            }
+        
+        });
+
+        const valueOf_toString = function() {
+            if(this._localization) {
+                return this._localization[this.locale.language][this.locale.region];
+            } else {
+                return this;
+            }
+        };
+
+        Montage.defineProperties(this.prototype, {
+            /**
+             *  This changes the locale of all LocalizedString
+             *  that haven't been set directly a locale that would
+             *  override the prototype's default value
+             *
+             * @property {Application} value
+             * @default null
+             */
+            localization: {
+                set: function(value) {
+                    this._localization = value;
+                },
+                get: function() {
+                    return this._localization;
+                }
+            },
+            locale: {
+                set: function(value) {
+                    this._locale = value;
+                },
+                get: function() {
+                    return this._locale || LocalizedString.defaultLocale;
+                }
+            },
+            valueOf: {
+                value: valueOf_toString
+            },
+            toString: {
+                value: valueOf_toString
+            },
+            serializeSelf: {
+                value: function (serializer) {
+                    if(this._localization) {
+                        serializer.setProperty("localization", this._localization);
+                    }
+                }
+            },
+            deserializeSelf: {
+                value: function (deserializer) {
+                    var value;
+                    value = deserializer.getProperty("localization");
+                    if (value !== void 0) {
+                        if(typeof value === "object") {
+                            this.localization = value;
+                        } else {
+                            console.warn(`LocalizedString deserializeSelf(): ignoring deserialized value for localization that is not an object:`, value);
+                        }
+                    }
+                }
+            },
+
+        });
+    }
+
+
     constructor(thing) {
-        super(thing);
+        super(thing||"");
 
         /*
             As soon as an instance's property value is set, even when that very property has been defined as non enumerable, on it's prototype, it's considered enumerable on that instance.
@@ -95,59 +189,11 @@ class LocalizedString extends String {
 };
 
 /*
-
-configurable: true
-enumerable: false
-value: undefined
-writable: true
-
-*/
-Montage.defineProperty(LocalizedString, "_defaultLocale", {
+    configurable: true
+    enumerable: false
     value: undefined
-});
-
-Montage.defineProperty(LocalizedString, "defaultLocale", {
-    set: function(value) {
-        this._defaultLocale = value;
-    },
-    get: function() {
-        return this._defaultLocale || Locale.systenLocale;
-    }
-});
-
-/*
-    This changes the locale of all LocalizedString
-    that haven't been set directly a locale that would
-    override the prototype's default value
+    writable: true
 */
-
-Montage.defineProperty(LocalizedString.prototype, "localization", {
-    set: function(value) {
-        this._localization = value;
-    },
-    get: function() {
-        return this._localization;
-    }
-});
-
-Montage.defineProperty(LocalizedString, "locale", {
-    set: function(value) {
-        this.prototype._locale = value;
-    },
-    get: function() {
-        return this.prototype._locale || this.defaultLocale;
-    }
-});
-
-
-Montage.defineProperty(LocalizedString.prototype, "locale", {
-    set: function(value) {
-        this._locale = value;
-    },
-    get: function() {
-        return this._locale || LocalizedString.defaultLocale;
-    }
-});
 
 
 
