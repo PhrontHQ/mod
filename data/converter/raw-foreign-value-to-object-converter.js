@@ -347,6 +347,19 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         fetchPromise.resolve = fetchPromiseResolve;
                         fetchPromise.reject = fetchPromiseReject;
 
+                        /*
+                            In _combineFetchDataMicrotaskFunctionForTypeQueryParts, 
+                            fetchPromise.result is built with what is fetched.
+                            So we start putting in what we already found in memory.
+
+                            WIP:    More work to make sure that if there's an expected order, 
+                                    the end result is identical to what it would have been
+                                    if everything was fetched
+                        */
+                        if(localResult?.length > 0) {
+                            fetchPromise.result = localResult;
+                        }
+
                         self._registerFetchPromiseForObjectDescriptorCriteria(fetchPromise, typeToFetch, criteria);
 
                         /*
