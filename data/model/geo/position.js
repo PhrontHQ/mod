@@ -4,6 +4,7 @@ var HALF_PI = Math.PI / 180.0,
     DASH_REG_EX = /-/g,
     IDENTIFIER_PREFIX = "P";
 
+const Montage = require("core/core").Montage;
 
 /**
  *
@@ -21,6 +22,12 @@ var HALF_PI = Math.PI / 180.0,
 Position = exports.Position = function Position() {
 };
 
+/*
+    Needed during serialization for MontageVisitor's getTypeOf() to return MontageObject
+*/
+Position.getInfoForObject = function(object) {
+    return Montage.getInfoForObject(object);
+};
 
 Position.precision = 5;
 

@@ -2,6 +2,8 @@ var IDENTIFIER_PREFIX = "R",
     DASH_REG_EX = /-/g,
     Uuid = require("core/uuid").Uuid;
 
+const Montage = require("core/core").Montage;
+
 /**
  *
  * A Rect object represents a rectangle on a two dimensional plane.
@@ -11,6 +13,13 @@ var IDENTIFIER_PREFIX = "R",
  */
 
 var Rect = exports.Rect = function Rect() {
+};
+
+/*
+    Needed during serialization for MontageVisitor's getTypeOf() to return MontageObject
+*/
+Rect.getInfoForObject = function(object) {
+    return Montage.getInfoForObject(object);
 };
 
 exports.Rect.prototype = Object.create({}, /** @lends Rect.prototype */ {

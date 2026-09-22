@@ -2,6 +2,8 @@ var IDENTIFIER_PREFIX = "S",
     DASH_REG_EX = /-/g,
     Uuid = require("core/uuid").Uuid;
 
+const Montage = require("core/core").Montage;
+
 /**
  *
  * A Size object represents a structure that has a height and a width.
@@ -12,6 +14,14 @@ var IDENTIFIER_PREFIX = "S",
 
 var Size = exports.Size = function Size() {
 };
+
+/*
+    Needed during serialization for MontageVisitor's getTypeOf() to return MontageObject
+*/
+Size.getInfoForObject = function(object) {
+    return Montage.getInfoForObject(object);
+};
+
 
 var Defaults = {
     height: 0,
