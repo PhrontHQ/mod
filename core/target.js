@@ -12,53 +12,8 @@ var Montage = require("./core").Montage,
  */
 exports.Target = class Target extends Montage {
     static {
-        // const p = this.prototype;
 
-        // /**
-        //  * Provides a reference to the Montage event manager used in the
-        //  * application.
-        //  *
-        //  * @property {EventManager} value
-        //  * @default defaultEventManager
-        //  */
-        // p.eventManager = defaultEventManager;
-
-        // /**
-        //  * Whether or not this target can accept user focus and become the
-        //  * activeTarget This matches up with the `document.activeElement` property
-        //  * purpose-wise; Events from components that should be dispatched as
-        //  * logically occurring at the point of user focus should be dispatched at
-        //  * the activeTarget
-        //  *
-        //  * By default a target does not accept this responsibility.
-        //  *
-        //  * @type {boolean}
-        //  * @default false
-        //  */
-        // p.acceptsActiveTarget = false;
-
-        // /**
-        //  * Called prior to this target becoming the activeTarget
-        //  * @function
-        //  * @param {Target} oldTarget the current activeTarget
-        //  */
-        // p.willBecomeActiveTarget = Function.noop;
-
-        // /**
-        //  * Called after to this target became the activeTarget
-        //  * @function
-        //  */
-        // p.didBecomeActiveTarget = Function.noop;
-
-        // /**
-        //  * Which target to distribute an event after this when distributing events
-        //  * throughout a graph of targets.
-        //  * @property {boolean} serializable
-        //  * @property {Target} value
-        //  */
-        // p.nextTarget = null;
-
-        Montage.defineProperties(this.prototype, {
+        let targetProperties = {
             /**
              * Provides a reference to the Montage event manager used in the
              * application.
@@ -110,449 +65,260 @@ exports.Target = class Target extends Montage {
              * @property {Array<Target>}
              */
             composedPath: { value: undefined },
-            
-        });
-    }
 
-    /**
-     * Whether or not this is the activeTarget
-     *
-     * This is a getter and is not bindable. Bind to
-     * `defaultEventManager.activeTarget == this`.
-     *
-     * @type {boolean}
-     * @readonly
-     */
-    get isActiveTarget() {
-        return this === defaultEventManager.activeTarget;
-    }
+            /**
+             * Whether or not this is the activeTarget
+             *
+             * This is a getter and is not bindable. Bind to
+             * `defaultEventManager.activeTarget == this`.
+             *
+             * @type {boolean}
+             * @readonly
+            */
+            isActiveTarget: {
+                get: function isActiveTarget() {
+                    return this === defaultEventManager.activeTarget;
+                }
+            },
 
-    /**
-     * Ask this target to surrender its activeTarget status.
-     * @function
-     * @param {Target} newTarget the Target that is about to become the
-     * `activeTarget`
-     * @returns {boolean} Whether or not to surrender activeTarget status
-     */
-    surrendersActiveTarget(newTarget) {
-        return true;
-    }
+            /**
+             * Ask this target to surrender its activeTarget status.
+             * @function
+             * @param {Target} newTarget the Target that is about to become the
+             * `activeTarget`
+             * @returns {boolean} Whether or not to surrender activeTarget status
+             */
+            surrendersActiveTarget: {
+                value: function surrendersActiveTarget(newTarget) {
+                    return true;
+                }
+            },
 
-    /**
-     * Dispatches the specified event with this target
-     * as the event's proximal target
-     * @function
-     * @param {Event} event The event object to dispatch
-     */
-    dispatchEvent(event) {
-        if (!event) return;
-        var targettedEvent = event instanceof MutableEvent ? event : MutableEvent.fromEvent(event);
-        targettedEvent.target = this;
-        defaultEventManager.handleEvent(targettedEvent);
-        return !event.defaultPrevented;
-    }
+            /**
+             * Dispatches the specified event with this target
+             * as the event's proximal target
+             * @function
+             * @param {Event} event The event object to dispatch
+             */
+            dispatchEvent: {
+                value: function dispatchEvent(event) {
+                    if (!event) return;
+                    var targettedEvent = event instanceof MutableEvent ? event : MutableEvent.fromEvent(event);
+                    targettedEvent.target = this;
+                    defaultEventManager.handleEvent(targettedEvent);
+                    return !event.defaultPrevented;
+                }
+            },
 
-    /**
-     * Creates and dispatches an event with the specified properties with this
-     * target as the event's proximal target
-     * @function
-     * @param {string} type The type of the event to dispatch
-     * @param {boolean} canBubble Whether or not the event can bubble
-     * @param {boolean} cancelable Whether or not the event can be cancelled
-     * @param {Object} detail The optional detail object of the event
-     */
-    dispatchEventNamed(type, canBubble, cancelable, detail) {
-        var event = MutableEvent.fromType(type, canBubble, cancelable, detail);
-        event.target = this;
-        defaultEventManager.handleEvent(event);
+            /**
+             * Creates and dispatches an event with the specified properties with this
+             * target as the event's proximal target
+             * @function
+             * @param {string} type The type of the event to dispatch
+             * @param {boolean} canBubble Whether or not the event can bubble
+             * @param {boolean} cancelable Whether or not the event can be cancelled
+             * @param {Object} detail The optional detail object of the event
+             */            
+            dispatchEventNamed: {
+                value: function dispatchEventNamed(type, canBubble, cancelable, detail) {
+                    var event = MutableEvent.fromType(type, canBubble, cancelable, detail);
+                    event.target = this;
+                    defaultEventManager.handleEvent(event);
 
-        return !event.defaultPrevented;
-    }
+                    return !event.defaultPrevented;
+                }
+            },
 
-    /**
-     * Adds an event listener to the object.
-     * @function
-     * @param {string} type The event type to listen for.
-     * @param {object | function} listener The listener object or function.
-     * @param {object | boolean} useCapture Specifies whether to listen for the event during the bubble or capture phases.
-     */
-    addEventListener(type, listener, optionsOrUseCapture) {
-        if (listener) {
-            defaultEventManager.registerTargetEventListener(this, type, listener, optionsOrUseCapture);
-        }
-    }
-
-    /**
-     * Removes an event listener from the object.
-     * @function
-     * @param {string} type The event type.
-     * @param {object | function} listener The listener object or function.
-     * @param {object | boolean} useCapture The phase of the event listener.
-     */
-    removeEventListener(type, listener, optionsOrUseCapture) {
-        if (listener) {
-            defaultEventManager.unregisterTargetEventListener(this, type, listener, optionsOrUseCapture);
-        }
-    }
-
-    /**
-     * Load a Composer
-     * @function
-     * @param {Composer} composer
-     */
-    loadComposer(composer) {
-        if (composer && !composer._isLoaded) {
-            composer._resolveDefaults();
-            composer.load();
-            composer._isLoaded = true;
-        }
-    }
-
-    /**
-     * Unload a Composer
-     * @function
-     * @param {Composer} composer
-     */
-    unloadComposer(composer) {
-        if (composer && composer._isLoaded) {
-            composer.unload();
-            composer._isLoaded = false;
-        }
-    }
-
-    /**
-     * Return composed path for the target. 
-     * 
-     * 
-     * @param {Event} [event] - The event for which this path will be followed
-     * @returns {Function}
-     */
-    composedPathForEvent(event) {
-        return undefined
-    }
-
-    _composedPathForType(event) {
-        
-    }
-
-    /**
-     * Debounce function
-     * @param {Function} func - function to debounce
-     * @param {Number} [delay] - delay in milliseconds
-     * @param {Object} [options] - options object
-     * @param {Boolean} [options.leading] - execute on leading edge
-     * @param {Boolean} [options.trailing] - execute on trailing edge (default: true)
-     * @returns {Function}
-     */
-    // TODO: this is a beta feature, needs a more robust implementation.
-    debounce(func, delay = 100, options = {}) {
-        const { leading = false, trailing = true } = options;
-        let timeoutId;
-        let lastCallTime = 0;
-
-        return function (...args) {
-            const now = Date.now();
-            const isFirstCall = lastCallTime === 0;
-
-            // Clear the previous timer
-            if (timeoutId) clearTimeout(timeoutId);
-
-            // Execute on leading edge if enabled and it's the first call
-            if (leading && isFirstCall) {
-                func.apply(this, args);
-                lastCallTime = now;
-            }
-
-            // Set up trailing execution if enabled
-            if (trailing) {
-                timeoutId = setTimeout(() => {
-                    func.apply(this, args);
-                    lastCallTime = 0;
-                    timeoutId = null;
-                }, delay);
-            } else {
-                // Reset after delay even if not calling
-                timeoutId = setTimeout(() => {
-                    lastCallTime = 0;
-                    timeoutId = null;
-                }, delay);
-            }
-
-            lastCallTime = now;
-        };
-    }
-
-    /**
-     * Throttle function
-     * @param {Function} func - function to throttle
-     * @param {Number} [limit] - limit in milliseconds
-     * @param {Object} [options] - options object
-     * @param {Boolean} [options.leading] - execute on leading edge (default: true)
-     * @param {Boolean} [options.trailing] - execute on trailing edge
-     * @returns {Function}
-     */
-    // TODO: this is a beta feature, needs a more robust implementation.
-    throttle(func, limit = 100, options = {}) {
-        const { leading = true, trailing = false } = options;
-        let inThrottle;
-        let lastArgs;
-        let lastContext;
-
-        return function (...args) {
-            if (!inThrottle) {
-                // Execute on leading edge if enabled
-                if (leading) func.apply(this, args);
-
-                inThrottle = true;
-
-                // Set up timer
-                setTimeout(() => {
-                    inThrottle = false;
-
-                    // Execute on trailing edge if enabled and there were queued calls
-                    if (trailing && lastArgs) {
-                        func.apply(lastContext, lastArgs);
-                        lastArgs = null;
-                        lastContext = null;
+            /**
+             * Adds an event listener to the object.
+             * @function
+             * @param {string} type The event type to listen for.
+             * @param {object | function} listener The listener object or function.
+             * @param {object | boolean} useCapture Specifies whether to listen for the event during the bubble or capture phases.
+             */
+            addEventListener: {
+                value: function addEventListener(type, listener, optionsOrUseCapture) {
+                    if (listener) {
+                        defaultEventManager.registerTargetEventListener(this, type, listener, optionsOrUseCapture);
                     }
-                }, limit);
-            } else if (trailing) {
-                // Store the latest call for trailing execution
-                lastArgs = args;
-                lastContext = this;
+                }
+            },
+
+            /**
+             * Removes an event listener from the object.
+             * @function
+             * @param {string} type The event type.
+             * @param {object | function} listener The listener object or function.
+             * @param {object | boolean} useCapture The phase of the event listener.
+             */
+            removeEventListener: {
+                value: function removeEventListener(type, listener, optionsOrUseCapture) {
+                    if (listener) {
+                        defaultEventManager.unregisterTargetEventListener(this, type, listener, optionsOrUseCapture);
+                    }
+                }
+            },
+
+            /**
+             * Load a Composer
+             * @function
+             * @param {Composer} composer
+             */
+            loadComposer: {
+                value: function loadComposer(composer) {
+                    if (composer && !composer._isLoaded) {
+                        composer._resolveDefaults();
+                        composer.load();
+                        composer._isLoaded = true;
+                    }
+                }
+            },
+
+            /**
+             * Unload a Composer
+             * @function
+             * @param {Composer} composer
+             */
+            unloadComposer: {
+                value: function unloadComposer(composer) {
+                    if (composer && composer._isLoaded) {
+                        composer.unload();
+                        composer._isLoaded = false;
+                    }
+                }
+            },
+
+            /**
+             * Return composed path for the target. 
+             * 
+             * @param {Event} [event] - The event for which this path will be followed
+             * @returns {Function}
+             */
+            composedPathForEvent: {
+                value: function composedPathForEvent(event) {
+                    return undefined
+                }
+            },
+
+            _composedPathForType: {
+                value: function _composedPathForType(event) {
+                }
+            },
+
+            /**
+             * Debounce function
+             * @param {Function} func - function to debounce
+             * @param {Number} [delay] - delay in milliseconds
+             * @param {Object} [options] - options object
+             * @param {Boolean} [options.leading] - execute on leading edge
+             * @param {Boolean} [options.trailing] - execute on trailing edge (default: true)
+             * @returns {Function}
+             */
+            // TODO: this is a beta feature, needs a more robust implementation.
+            debounce: {
+                value: function debounce(func, delay = 100, options = {}) {
+                    const { leading = false, trailing = true } = options;
+                    let timeoutId;
+                    let lastCallTime = 0;
+
+                    return function (...args) {
+                        const now = Date.now();
+                        const isFirstCall = lastCallTime === 0;
+
+                        // Clear the previous timer
+                        if (timeoutId) clearTimeout(timeoutId);
+
+                        // Execute on leading edge if enabled and it's the first call
+                        if (leading && isFirstCall) {
+                            func.apply(this, args);
+                            lastCallTime = now;
+                        }
+
+                        // Set up trailing execution if enabled
+                        if (trailing) {
+                            timeoutId = setTimeout(() => {
+                                func.apply(this, args);
+                                lastCallTime = 0;
+                                timeoutId = null;
+                            }, delay);
+                        } else {
+                            // Reset after delay even if not calling
+                            timeoutId = setTimeout(() => {
+                                lastCallTime = 0;
+                                timeoutId = null;
+                            }, delay);
+                        }
+
+                        lastCallTime = now;
+                    };
+                }
+            },
+
+            /**
+             * Throttle function
+             * @param {Function} func - function to throttle
+             * @param {Number} [limit] - limit in milliseconds
+             * @param {Object} [options] - options object
+             * @param {Boolean} [options.leading] - execute on leading edge (default: true)
+             * @param {Boolean} [options.trailing] - execute on trailing edge
+             * @returns {Function}
+             */
+            // TODO: this is a beta feature, needs a more robust implementation.
+            throttle: {
+                    value: function throttle(func, limit = 100, options = {}) {
+                        const { leading = true, trailing = false } = options;
+                        let inThrottle;
+                        let lastArgs;
+                        let lastContext;
+
+                        return function (...args) {
+                            if (!inThrottle) {
+                                // Execute on leading edge if enabled
+                                if (leading) func.apply(this, args);
+
+                                inThrottle = true;
+
+                                // Set up timer
+                                setTimeout(() => {
+                                    inThrottle = false;
+
+                                    // Execute on trailing edge if enabled and there were queued calls
+                                    if (trailing && lastArgs) {
+                                        func.apply(lastContext, lastArgs);
+                                        lastArgs = null;
+                                        lastContext = null;
+                                    }
+                                }, limit);
+                            } else if (trailing) {
+                                // Store the latest call for trailing execution
+                                lastArgs = args;
+                                lastContext = this;
+                            }
+                        };
+                    }
             }
         };
+
+        Montage.defineProperties(this.prototype, targetProperties);
+        Montage.defineProperties(this, targetProperties);
     }
+
+
+  
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
 };
-
-// var prototype = exports.Target.prototype;
-// Montage.defineProperties(exports.Target.prototype, {
-//     /**
-//      * Provides a reference to the Montage event manager used in the
-//      * application.
-//      *
-//      * @property {EventManager} value
-//      * @default defaultEventManager
-//      */
-//     eventManager: {
-//         value: defaultEventManager
-//     },
-
-//      /**
-//      * Whether or not this target can accept user focus and become the
-//      * activeTarget This matches up with the `document.activeElement` property
-//      * purpose-wise; Events from components that should be dispatched as
-//      * logically occurring at the point of user focus should be dispatched at
-//      * the activeTarget
-//      *
-//      * By default a target does not accept this responsibility.
-//      *
-//      * @type {boolean}
-//      * @default false
-//      */
-//      acceptsActiveTarget: {
-//         value: false
-//     },
-
-//     /**
-//      * Which target to distribute an event after this when distributing events
-//      * throughout a graph of targets.
-//      * @property {boolean} serializable
-//      * @property {Target} value
-//      */
-//     nextTarget: {
-//         value: null
-//     }
-// });
-
-// prototype.eventManager = defaultEventManager;
-// prototype.acceptsActiveTarget = false;
-// prototype.willBecomeActiveTarget = Function.noop;
-// prototype.didBecomeActiveTarget = Function.noop;
-// prototype.nextTarget = null;
-
-// // exports.Target = Montage.specialize( /** @lends Target.prototype */
-// Object.defineProperties(exports.Target.prototype,
-
-// {
-
-//     /**
-//      * Provides a reference to the Montage event manager used in the
-//      * application.
-//      *
-//      * @property {EventManager} value
-//      * @default defaultEventManager
-//      */
-
-//     eventManager: {
-//         value: defaultEventManager,
-//         serializable: false
-//     },
-//     /**
-//      * Whether or not this target can accept user focus and become the
-//      * activeTarget This matches up with the `document.activeElement` property
-//      * purpose-wise; Events from components that should be dispatched as
-//      * logically occurring at the point of user focus should be dispatched at
-//      * the activeTarget
-//      *
-//      * By default a target does not accept this responsibility.
-//      *
-//      * @type {boolean}
-//      * @default false
-//      */
-//     acceptsActiveTarget: {
-//         serializable: false,
-//         value: false
-//     },
-
-//     /**
-//      * Whether or not this is the activeTarget
-//      *
-//      * This is a getter and is not bindable. Bind to
-//      * `defaultEventManager.activeTarget == this`.
-//      *
-//      * @type {boolean}
-//      * @readonly
-//      */
-//     isActiveTarget: {
-//         get: function () {
-//             return this === defaultEventManager.activeTarget;
-//         }
-//     },
-
-//     /**
-//      * Called prior to this target becoming the activeTarget
-//      * @function
-//      * @param {Target} oldTarget the current activeTarget
-//      */
-//     willBecomeActiveTarget: {
-//         value: Function.noop
-//     },
-
-//     /**
-//      * Called after to this target became the activeTarget
-//      * @function
-//      */
-//     didBecomeActiveTarget: {
-//         value: Function.noop
-//     },
-
-//     /**
-//      * Ask this target to surrender its activeTarget status.
-//      * @function
-//      * @param {Target} newTarget the Target that is about to become the
-//      * `activeTarget`
-//      * @returns {boolean} Whether or not to surrender activeTarget status
-//      */
-//     surrendersActiveTarget: {
-//         value: function (newTarget) {
-//             return true;
-//         }
-//     },
-
-//     /**
-//      * Which target to distribute an event after this when distributing events
-//      * throughout a graph of targets.
-//      * @property {boolean} serializable
-//      * @property {Target} value
-//      */
-//     nextTarget: {
-//         serializable: false,
-//         value: null
-//     },
-
-//     /**
-//      * Dispatches the specified event with this target
-//      * as the event's proximal target
-//      * @function
-//      * @param {Event} event The event object to dispatch
-//      */
-//     dispatchEvent: {
-//         value: function dispatchEvent(event) {
-//             if(!event) return;
-//             var targettedEvent = (event instanceof MutableEvent) ? event : MutableEvent.fromEvent(event);
-//             targettedEvent.target = this;
-//             defaultEventManager.handleEvent(targettedEvent);
-//             return !event.defaultPrevented;
-//         }
-//     },
-
-//     /**
-//      * Creates and dispatches an event with the specified properties with this
-//      * target as the event's proximal target
-//      * @function
-//      * @param {string} type The type of the event to dispatch
-//      * @param {boolean} canBubble Whether or not the event can bubble
-//      * @param {boolean} cancelable Whether or not the event can be cancelled
-//      * @param {Object} detail The optional detail object of the event
-//      */
-//     dispatchEventNamed: {
-//         value: function (type, canBubble, cancelable, detail) {
-//             var event = MutableEvent.fromType(type, canBubble, cancelable, detail);
-//             event.target = this;
-//             defaultEventManager.handleEvent(event);
-
-//             return !event.defaultPrevented;
-//         }
-//     },
-
-//     /**
-//      * Adds an event listener to the object.
-//      * @function
-//      * @param {string} type The event type to listen for.
-//      * @param {object | function} listener The listener object or function.
-//      * @param {object | boolean} useCapture Specifies whether to listen for the event during the bubble or capture phases.
-//      */
-//     addEventListener: {
-//         value: function addEventListener(type, listener, optionsOrUseCapture) {
-//             if (listener) {
-//                 defaultEventManager.registerTargetEventListener(this, type, listener, optionsOrUseCapture);
-//             }
-//         }
-//     },
-
-//     /**
-//      * Removes an event listener from the object.
-//      * @function
-//      * @param {string} type The event type.
-//      * @param {object | function} listener The listener object or function.
-//      * @param {object | boolean} useCapture The phase of the event listener.
-//      */
-//     removeEventListener: {
-//         value: function removeEventListener(type, listener, optionsOrUseCapture) {
-//             if (listener) {
-//                 defaultEventManager.unregisterTargetEventListener(this, type, listener, optionsOrUseCapture);
-//             }
-//         }
-//     },
-
-//     /**
-//      * Load a Composer
-//      * @function
-//      * @param {Composer} composer
-//      */
-//     loadComposer: {
-//         value: function (composer) {
-//             if (composer && !composer._isLoaded) {
-//                 composer._resolveDefaults();
-//                 composer.load();
-//                 composer._isLoaded = true;
-//             }
-//         }
-//     },
-
-//     /**
-//      * Unload a Composer
-//      * @function
-//      * @param {Composer} composer
-//      */
-//     unloadComposer: {
-//         value: function (composer) {
-//             if (composer && composer._isLoaded) {
-//                 composer.unload();
-//                 composer._isLoaded = false;
-//             }
-//         }
-//     }
-
-// });

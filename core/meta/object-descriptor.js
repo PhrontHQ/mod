@@ -2165,8 +2165,6 @@ ObjectDescriptor.addClassProperties(
     }
 );
 
-Montage.defineProperties(ObjectDescriptor, Object.getOwnPropertyDescriptors(Target.prototype));
-
 exports.UnknownObjectDescriptor = Object.freeze(new ObjectDescriptor().initWithName("Unknown"));
 exports.UnknownPropertyDescriptor = Object.freeze(
     new PropertyDescriptor().initWithNameObjectDescriptorAndCardinality("Unknown", null, 1)
