@@ -1249,12 +1249,16 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
         }
     },
 
+    /**
+     * supporting handleWheel_wip_from_flow_translate_composer
+     */
     _linearScrollingVector: {
         value: [-300, 0]
     },
 
     /**
      * A constant 2d vector used to transform a drag vector into a scroll vector
+     * supporting handleWheel_wip_from_flow_translate_composer
      */
     linearScrollingVector: {
         get: function () {
