@@ -1401,6 +1401,7 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
 
     // TODO doc
     /**
+     *  supporting handleWheel_wip_from_flow_translate_composer
      */
     _updateScroll: {
         value: function () {
@@ -1408,6 +1409,9 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
         }
     },
 
+    /**
+     *  supporting handleWheel_wip_from_flow_translate_composer
+     */
     _linearScrollRatio: {
         get: function() {
             return 1;
@@ -1416,6 +1420,7 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
 
     // TODO doc
     /**
+     *  supporting handleWheel_wip_from_flow_translate_composer
      */
     _updateLinearScroll: {
         value: function () {
