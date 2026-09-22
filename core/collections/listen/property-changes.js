@@ -156,8 +156,11 @@ PropertyChanges.prototype.removeOwnPropertyChangeListener = function removeOwnPr
             if(listeners._current === listener) {
                 listeners._current = null;
             }
-            else {
-
+            /*
+                Just because we don't have a single listener that is the listener passed in, it doesn't mean we have an array. 
+                It could be another single listener as well. So we add a check before assuming
+            */
+            else if (Array.isArray(listeners._current)) {
                 var index = listeners._current.lastIndexOf(listener);
                 if (index === -1) {
                     //throw new Error("Can't remove property change listener: does not exist: property name" + JSON.stringify(key));
