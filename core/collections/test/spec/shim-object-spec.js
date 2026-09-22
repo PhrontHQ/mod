@@ -395,19 +395,22 @@ describe("ObjectShim-spec", function () {
             });
         });
 
-        var a = {
-                "a": "a",
-                "b": "b",
-                "c": "c",
-                "d": "d"
-            },
-            b = {
-                "d": "d",
-                "c": "c",
-                "b": "b",
-                "a": "a"
-            };
-        expect(Object.equals(a, b)).toBe(true);
+        it("a object equals b object", function() {
+            var a = {
+                    "a": "a",
+                    "b": "b",
+                    "c": "c",
+                    "d": "d"
+                },
+                b = {
+                    "d": "d",
+                    "c": "c",
+                    "b": "b",
+                    "a": "a"
+                };
+            expect(Object.equals(a, b)).toBe(true);
+
+        })
 
 
     });

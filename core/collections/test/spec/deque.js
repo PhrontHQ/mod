@@ -87,33 +87,45 @@ function describeDeque(Deque) {
     });
 
     describe("slice", function () {
-        if (!Deque.prototype.slice)
-            return;
+        var collection = Deque([1, 2, 3, 4]),
+            shouldSkipSliceTesting;
 
-        var collection = Deque([1, 2, 3, 4]);
+        beforeEach(function () {
+            if (!Deque.prototype.slice) {
+                shouldSkipSliceTesting = true;
+                // This safely skips all remaining it() blocks in this describe block
+                pending('Skipping slice tests because Deque missing slice implementation');
+            }
+        });
 
         it("should slice all values with no arguments", function () {
-            expect(collection.slice()).toEqual([1, 2, 3, 4]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice()).toEqual([1, 2, 3, 4]);
         });
 
         it("should slice all after an index", function () {
-            expect(collection.slice(2)).toEqual([3, 4]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice(2)).toEqual([3, 4]);
         });
 
         it("should slice from the middle by indexed positions", function () {
-            expect(collection.slice(1, 3)).toEqual([2, 3]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice(1, 3)).toEqual([2, 3]);
         });
 
         it("should slice from a negative index", function () {
-            expect(collection.slice(-2)).toEqual([3, 4]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice(-2)).toEqual([3, 4]);
         });
 
         it("should slice from a negative index to a positive", function () {
-            expect(collection.slice(-2, 3)).toEqual([3]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice(-2, 3)).toEqual([3]);
         });
 
         it("should slice from a negative index to a negative", function () {
-            expect(collection.slice(-2, -1)).toEqual([3]);
+            if(!shouldSkipSliceTesting) 
+                expect(collection.slice(-2, -1)).toEqual([3]);
         });
 
         // TODO
