@@ -61,7 +61,7 @@
             "name": "personParty",
             "valueType": "object",
             "cardinality": 1,
-            "valueDescriptor": {"@": "OrganizationDescriptor"}
+            "valueDescriptor": {"@": "PersonDescriptor"}
         }
     },
     "PersonDescriptor": {
