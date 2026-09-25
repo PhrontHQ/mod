@@ -682,8 +682,11 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
             MSPointerUp: {bubbles: true, cancelable: true}, //MSPointerEvent
             MSPointerOver: {bubbles: true, cancelable: true}, //MSPointerEvent
             MSPointerOut: {bubbles: true, cancelable: true}, //MSPointerEvent
-            MSPointerHover: {bubbles: true, cancelable: true}//MSPointerEvent
-
+            MSPointerHover: {bubbles: true, cancelable: true},//MSPointerEvent
+            transitionrun: {bubbles: true, cancelable: false},
+            transitionstart: {bubbles: true, cancelable: false},
+            transitionend: {bubbles: true, cancelable: false},
+            transitioncancel: {bubbles: true, cancelable: false}
         }
     },
 
@@ -1917,8 +1920,14 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
                 
                 if(typeof listenerOptions === "object" && eventDefinition) {
                     Object.setPrototypeOf(listenerOptions, eventDefinition);
+                    eventOpts = listenerOptions;
+                } else {
+                    eventOpts = this.isPassiveEventType(eventType)
+                        ? {passive: true}
+                        : eventDefinition
+                            ? eventDefinition.bubbles
+                            : true; //by default
                 }
-                eventOpts = listenerOptions;
                 
 
                 // eventOpts = this.isPassiveEventType(eventType)
