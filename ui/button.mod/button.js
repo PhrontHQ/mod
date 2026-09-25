@@ -152,33 +152,9 @@ const Button = (exports.Button = class Button extends ActionTarget {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
 
-            const lastChild = this.element.lastChild;
-
-            // Ensure that the last child is a text node
-            // Any whitespace (including indentation) in the template will create a #text node
-            // But just in case (compressed version) we still check if the last child is a text node
-            if (!lastChild || lastChild.nodeType !== Node.TEXT_NODE) {
-                // Create a text node if the last child is not a text node
-                this.element.appendChild(document.createTextNode(""));
-            }
-
-            this._labelNode = this.element.lastChild;
-
-            // Apply Button styles
+          
             this._applyVisualPositionStyles();
             this._applyVisualOrientationStyles();
-        }
-    }
-
-    /**
-     * Draws the component.
-     * @override
-     */
-    draw() {
-        super.draw();
-
-        if (this._labelNode) {
-            this._labelNode.data = this.label;
         }
     }
 
