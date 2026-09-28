@@ -14,6 +14,20 @@ describe("test/ui/button-spec", function () {
             aButton.holdThreshold = 10;
             expect(aButton._pressComposer.longPressThreshold).toEqual(10);
         });
+        describe("action properties", function () {
+            it("should default to null", function () {
+                expect(aButton.actionType).toBeNull();
+                expect(aButton.actionTarget).toBeNull();
+            });
+
+            it("should be writable", function () {
+                var target = {};
+                aButton.actionType = "submit";
+                aButton.actionTarget = target;
+                expect(aButton.actionType).toEqual("submit");
+                expect(aButton.actionTarget).toBe(target);
+            });
+        });
         describe("label", function () {
             it("is writable", function () {
                 aButton.label = "hello";

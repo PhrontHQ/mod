@@ -63,9 +63,24 @@ const Button = (exports.Button = class Button extends ActionTarget {
             hasTemplate: { value: true},
             converter: { value: null},
             _label: { value: null},
-            defaultLabel: { value: "Button", enumerable: false }
+            defaultLabel: { value: "Button", enumerable: false },
+
+            /**
+             * The type of action associated with the button.
+             * @type {string}
+             * @default null
+             */
+            actionType: { value: null },
+
+            /**
+             * The target associated with the button's action.
+             * @type {object}
+             * @default null
+             */
+            actionTarget: { value: null }
         });
     }
+
 
     get visualPosition() {
         return this._visualPosition;
