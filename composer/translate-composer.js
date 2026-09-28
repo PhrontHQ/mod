@@ -1289,7 +1289,6 @@ var TranslateComposer = exports.TranslateComposer = Composer.specialize(/** @len
                 if (this.axis !== "vertical") {
                     //this.translateX = this._translateX - ((event.wheelDeltaX || -event.deltaX || 0)* 20) / 120;
                     this.translateX = this._translateX - ((event.deltaX || 0));
-                    console.debug("handleWheel: this.translateX = "+this.translateX);
                 }
 
                 if (this.axis !== "horizontal") {
