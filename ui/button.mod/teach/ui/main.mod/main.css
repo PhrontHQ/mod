@@ -48,7 +48,7 @@ header {
 }
 
 .button.mod--pending {
-    background:red;
+    --visual-style-raised-surface-fill: red;
 }
 
 .infoText {
