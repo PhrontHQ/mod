@@ -1,8 +1,9 @@
 /*global require, exports*/
 
-const { VisualOrientation } = require("core/enums/visual-orientation");
-const { VisualPosition } = require("core/enums/visual-position");
-const { ActionTarget } = require("ui/action-target.mod/action-target");
+const Montage = require("core/core").Montage;
+const VisualOrientation = require("core/enums/visual-orientation").VisualOrientation;
+const VisualPosition = require("core/enums/visual-position").VisualPosition;
+const ActionTarget = require("ui/action-target.mod/action-target").ActionTarget;
 
 // TODO: migrate away from using undefinedGet and undefinedSet
 
@@ -53,8 +54,18 @@ const Button = (exports.Button = class Button extends ActionTarget {
     static VisualPosition = VisualPosition;
 
     // <---- Properties ---->
-
-    _visualPosition = VisualPosition.start;
+    static {
+        Montage.defineProperties(this.prototype, {
+            _visualPosition: { value: VisualPosition.start },
+            _visualOrientation: { value: VisualOrientation.horizontal},
+            drawsFocusOnPointerActivation: { value: true},
+            standardElementTagName: { value: "BUTTON"},
+            hasTemplate: { value: true},
+            converter: { value: null},
+            _label: { value: null},
+            defaultLabel: { value: "Button", enumerable: false }
+        });
+    }
 
     get visualPosition() {
         return this._visualPosition;
@@ -77,7 +88,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
     }
 
-    _visualOrientation = VisualOrientation.horizontal;
 
     get visualOrientation() {
         return this._visualOrientation;
@@ -100,11 +110,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
     }
 
-    drawsFocusOnPointerActivation = true;
-
-    standardElementTagName = "BUTTON";
-
-    hasTemplate = true;
 
     /**
      * A Mod converter object used to convert or format the label displayed by
@@ -114,12 +119,14 @@ const Button = (exports.Button = class Button extends ActionTarget {
      * @type {Property}
      * @default null
      */
-    converter = null;
-
-    _label = null;
 
     get label() {
-        return this._label;
+        /* 
+            if there are no visual, we have no risk of showing a default value that would screw up a visual only configuration.
+            However, we should be able to have a value for both visual and label parameters, and still choose to only show one of them
+            TODO: we don't currently have that high level option  
+        */
+        return this._label || (!this.hasArgumentForTemplateParameter("visual") ? this.defaultLabel : null);
     }
 
     set label(value) {
@@ -139,7 +146,13 @@ const Button = (exports.Button = class Button extends ActionTarget {
                 }
             }
 
-            this._label = isDefined && value !== null ? String(value) : null;
+            // if(!this.hasArgumentForTemplateParameter("visual")) {
+            //     //Now using the default label
+            //     this._label = isDefined && value !== null ? String(value) : this.defaultLabel
+            // } else {
+                this._label = isDefined && value !== null ? String(value) : null;
+            //}
+            
             this.needsDraw = true;
         }
     }
