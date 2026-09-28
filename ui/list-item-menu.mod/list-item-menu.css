@@ -25,7 +25,7 @@
 .ListItemMenu .hot-corners::after {
     content: "";
     animation-name: none;
-    animation-timing-function: linear;
+    animation-timing-function: ease-out;
     animation-fill-mode: forwards;
     border-style: solid;
     border-color: #e9e9e9 transparent;
@@ -48,14 +48,14 @@
 .ListItemMenu.has-options-left.fold-left .hot-corners::before,
 .ListItemMenu.has-options-right.fold-right .hot-corners::after {
     box-shadow: -1px -1px 3px #c8c7cc;
-    animation-duration: 0.3s;
+    animation-duration: 0.03s;
 }
 
 .ListItemMenu.has-options-left.fold-left .ListItemMenu-zone.left,
 .ListItemMenu.has-options-right.fold-right .ListItemMenu-zone.right {
-    animation-timing-function: linear;
+    animation-timing-function: ease-in;
     animation-fill-mode: forwards;
-    animation-duration: 0.3s;
+    animation-duration: 0.03s;
 }
 
 .ListItemMenu.has-options-left.fold-left .hot-corners::before {
@@ -201,13 +201,12 @@
     padding: 0;
     margin: 0;
     border: none;
-    color: white !important;
+    color: white;
     outline: none;
     text-decoration: none;
     font-weight: bold;
     white-space: nowrap;
     justify-content: start;
-
 }
 
 .ListItemMenu .ListItemMenu-zone.right .ListItemMenu-options button {
@@ -216,9 +215,10 @@
 
 .ListItemMenu .ListItemMenu-zone.left .ListItemMenu-options button {
     text-align: right;
+    justify-content: end;
 }
 
-.ListItemMenu .ListItemMenu-options button > span { 
+.ListItemMenu .ListItemMenu-options button .ModButton-label > span { 
     transform: translate3d(0, 0, 0);
     position: relative;
     display: inline-block;

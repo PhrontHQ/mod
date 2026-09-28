@@ -663,12 +663,17 @@ var ListItemMenu = exports.ListItemMenu = Component.specialize(/** @lends ListIt
         }
     },
 
+    _startTimestamp: {
+        value: 0
+    },
+
     handleTranslateStart: {
         value: function (event) {
             this._startPositionX = this.__translateComposer.translateX;
             this._isTranslating = false;
             this.__shouldClose = false;
             this.__shouldOpen = false;
+            this._shouldFoldItem = false;
             this._direction = null;
             this._startTimestamp = event.timeStamp;
             this.application.addEventListener('translateEnd', this);
@@ -1073,14 +1078,32 @@ var ListItemMenu = exports.ListItemMenu = Component.specialize(/** @lends ListIt
                         this._overPositionX <= this._hotCornersElementRect.left + threshold
                     ) {
                         this._foldSide = ListItemMenu.DIRECTION.LEFT;
-                        this._shouldFoldItem = true;
+                        /*
+                            If we start swiping, to reveal the buttons, this._startTimestamp won't be null
+                            which tells us we don't want to show the corner anymore.
+                            this._shouldOpen when we handle the event, 
+                            but this.isOpened is only true at the end of the transision
+                            so we need to consider both. Would be worth simplifying
+                        */
+                        if(this._startTimestamp === 0 && !this._shouldOpen && !this.isOpened) {
+                            this._shouldFoldItem = true;
+                        }
                     } else if (
                         this._rightButtons.length &&
                         this._overPositionX >= this._hotCornersElementRect.right - threshold &&
                         this._overPositionX <= this._hotCornersElementRect.right
                     ) {
-                        this._shouldFoldItem = true;
                         this._foldSide = ListItemMenu.DIRECTION.RIGHT;
+                        /*
+                            If we start swiping, to reveal the buttons, this._startTimestamp won't be null
+                            which tells us we don't want to show the corner anymore
+                            this._shouldOpen when we handle the event, 
+                            but this.isOpened is only true at the end of the transision
+                            so we need to consider both. Would be worth simplifying
+                        */
+                        if(this._startTimestamp === 0 && !this._shouldOpen && !this.isOpened) {
+                            this._shouldFoldItem = true;
+                        }
                     } else {
                         if (this._shouldFoldItem) {
                             this._shouldUnfoldItem = true;
@@ -1158,7 +1181,7 @@ var ListItemMenu = exports.ListItemMenu = Component.specialize(/** @lends ListIt
         },
 
         DEFAULT_TRANSITION: {
-            value: 'transform .3s cubic-bezier(0, 0, 0.58, 1)'
+            value: 'transform .25s cubic-bezier(0, 0, 0.58, 1)'
         }
     }
 );
