@@ -30,14 +30,23 @@ header {
     width: 300px;
 }
 
-.ListItemMenu.gray .ListItemMenu-options button {
+.ListItemMenu.gray .ListItemMenu-options {
+    background-color: rgb(239, 239, 239);
+}
+
+.ListItemMenu.gray .ListItemMenu-options button * {
     font-size: 14px;
     white-space: nowrap;
     color: rgb(100, 100, 100);
 }
 
-.ListItemMenu.gray .ListItemMenu-options button .dot {
-    background-color: rgb(100, 100, 100);
+.ListItemMenu.gray .ListItemMenu-options button span.dot {
+    color: rgb(100, 100, 100);
+    --visual-style-text-fill: rgb(100, 100, 100);
+}
+
+.ListItemMenu.gray .ListItemMenu-options button span.dot::before {
+    content: "\22EF"; /* Unicode for horizontal ellipsis */
 }
 
 .ListItemMenu.gray.is-opened.right-side .ListItemMenu-content {
@@ -60,13 +69,22 @@ header {
     background-color: #9E9D9B !important;
 }
 
-.ListItemMenu .dot {
-    height: 5px;
-    width: 5px;
-    background-color: white !important;
-    border-radius: 50%;
+.ListItemMenu .dot::before {
+    content: "\22EF"; /* Unicode for Midline Horizontal Ellipsis */
     display: inline-block;
+    line-height: 1;
+    font-weight: 900;
+    font-size: 21px;
+    /* height: 5px;
+    width: 5px;
+    background-color: white;
+    border-radius: 50%;
+    display: inline-block; */
 }
+
+/* .ListItemMenu.gray .dot {
+    background-color: white;
+} */
 
 .ListItemMenu .move {
     background-color: #5659C9 !important;
