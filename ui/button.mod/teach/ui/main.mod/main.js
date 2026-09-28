@@ -16,7 +16,7 @@ exports.Main = class Main extends Component {
         this.message = `${event.target.identifier} button has been clicked (debounced)`;
     }
 
-    async handlePromiseButtonAction(_) {
+    async handlePromiseButtonAction(event) {
         this.message = "First Promise is pending resolution. Wait 2 seconds...";
 
         this.promise = Promise.delay(2_000);
@@ -27,12 +27,11 @@ exports.Main = class Main extends Component {
         await this.promise;
         this.message = "Second Promise resolved! Wait 2 seconds for the third Promise to be rejected...";
 
-        this.promise = Promise.delay(2_000).then(() => {
-            throw new Error("Promise rejected");
-        });
 
         try {
+            this.promise = Promise.delay(2_000);
             await this.promise;
+            throw new Error("Promise rejected");
             this.message = "Third Promise resolved! This should not happen.";
         } catch (error) {
             this.message = `Third Promise rejected! Wait 2.5s before the fourth Promise begins...`;
