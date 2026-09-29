@@ -6,14 +6,15 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "owner"}
+                        "element": {"#": "owner"},
+                        "_didOwnerProvideVisualTemplateArgument": {"<-": "@owner.templateArgumentByParameter.visual.defined()"}
                     }
                 },
                 "defaultLabel": {
                     "prototype": "ui/text.mod",
                     "values": {
                         "element": {"#": "default-label"},
-                        "value": {"<-": "@owner.label"}
+                        "value": {"<-": "@owner.label || (@owner._didOwnerProvideVisualTemplateArgument ? null : @owner.defaultLabel)"}
                     }
                 }
             }
