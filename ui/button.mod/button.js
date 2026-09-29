@@ -66,18 +66,18 @@ const Button = (exports.Button = class Button extends ActionTarget {
             defaultLabel: { value: "Button", enumerable: false },
 
             /**
-             * The type of action associated with the button.
+             * The type of event dispatched by this button.
              * @type {string}
              * @default null
              */
-            actionType: { value: null },
+            actionEventType: { value: null },
 
             /**
-             * The target associated with the button's action.
+             * The target that will be assigned to the events dispatched by this button
              * @type {object}
              * @default null
              */
-            actionTarget: { value: null }
+            actionEventTarget: { value: null }
         });
     }
 
@@ -141,7 +141,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
             However, we should be able to have a value for both visual and label parameters, and still choose to only show one of them
             TODO: we don't currently have that high level option  
         */
-        return this._label || (!this.hasArgumentForTemplateParameter("visual") ? this.defaultLabel : null);
+        return this._label;
     }
 
     set label(value) {
@@ -166,7 +166,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
             //     this._label = isDefined && value !== null ? String(value) : this.defaultLabel
             // } else {
                 this._label = isDefined && value !== null ? String(value) : null;
-            //}
+            // }
             
             this.needsDraw = true;
         }
