@@ -8,6 +8,13 @@
                     "values": {
                         "element": {"#": "owner"}
                     }
+                },
+                "defaultLabel": {
+                    "prototype": "ui/text.mod",
+                    "values": {
+                        "element": {"#": "default-label"},
+                        "value": {"<-": "@owner.label"}
+                    }
                 }
             }
         </script>
@@ -15,6 +22,9 @@
     <body>
         <button data-mod-id="owner" class="ModButton">
             <div data-param="visual" class="ModButton-visual"></div>
+            <div data-param="label" class="ModButton-label">
+                <span data-mod-id="default-label">Button</span>
+            </div>
         </button>
     </body>
 </html>

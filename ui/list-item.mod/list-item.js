@@ -140,6 +140,12 @@ exports.ListItem = Component.specialize({
         value: null
     },
 
+    /**
+     * @public
+     * @type {Object}
+     * @default null
+     * @description Represents the list item menu data
+     */
     data: {
         get: function () {
             return this._data;

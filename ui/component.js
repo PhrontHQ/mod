@@ -2894,6 +2894,19 @@ Component.addClassProperties({
         },
     },
 
+    /**
+     * Allows to know if a component received an argument for the passed template parameter 
+     * @param {String} templateParameter - A component's template parameter name
+     * @return {Boolean}
+     */
+    hasArgumentForTemplateParameter: {
+        value: function(templateParameter) {
+            return this.templateArgumentByParameter
+                ? !!this.templateArgumentByParameter[templateParameter]
+                : false;
+        }
+    },
+
     _validateTemplateArguments: {
         value: function (templateArguments, templateParameters) {
             var parameterNames = templateParameters ? Object.keys(templateParameters) : void 0,
