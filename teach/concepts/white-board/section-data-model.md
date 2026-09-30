@@ -105,3 +105,12 @@ https://developer.mozilla.org/en-US/docs/Web/API/Navigation
  - a data structure that is the current state that is rendered and mutable, the “current navigation” that here would alternately has one or 2 entries.
 
 Entering a Modal state means another succession branching out from where the modal started
+
+
+## Styling
+
+Sections should be able to have their own user interface descriptors to control what component gets used for the data
+And an optional Visual Style, that could be shared among all user interface descriptors'components used within that section
+
+
+
