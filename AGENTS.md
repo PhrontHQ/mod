@@ -9,3 +9,9 @@
 - Browser tests use `karma.conf.js`, load source and serialized resources directly, and default to Chrome; CI's Chrome launcher adds `--no-sandbox`.
 - FRB parser sources have generated output: use `npm run build-frb-parser` or `npm run peggy-build-frb-parser` only when intentionally regenerating the parser.
 - Follow the repository formatting settings: four spaces, LF line endings, no trailing whitespace, and a final newline (`.editorconfig`); JSHint is configured for ES6-era code with required semicolons and four-space indentation.
+
+
+## Development Best Practices
+
+- In ES6 classes, properties without a getter and setter are added in the static block of the class by calling Montage.addProperties(this.prototype, props)
+  
