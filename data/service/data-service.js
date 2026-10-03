@@ -1034,12 +1034,19 @@ DataService.addClassProperties(
                     ),
                     mainService = this.rootService;
 
+                
                 Object.defineProperty(prototype, "dataIdentifier", {
                     enumerable: true,
                     get: function () {
-                        return mainService.dataIdentifierForObject(this);
+                        return this._dataIdentifier || mainService.dataIdentifierForObject(this);
                     },
+                    set: function (value) {
+                        if (value) {
+                            this._dataIdentifier = value;
+                        }
+                    }
                 });
+
                 Object.defineProperty(prototype, "snapshot", {
                     enumerable: true,
                     get: function () {
