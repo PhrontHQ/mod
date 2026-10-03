@@ -214,6 +214,24 @@ ObjectDescriptor.addClassProperties(
             },
         },
 
+        registerKnownInstanceWithName: {
+            value: function (instance, name) {
+                this._knownInstancesByName[name] = instance;
+            }
+        },
+
+        knownInstanceWithName: {
+            value: function (name) {
+                return this.__knownInstancesByName ? this.__knownInstancesByName[name] : undefined;
+            }
+        },
+
+        _knownInstancesByName: {
+            get: function () {
+                return this.__knownInstancesByName || (this.__knownInstancesByName = {});
+            }
+        },
+
         _setPropertyWithDefaults: {
             value: function (serializer, propertyName, value) {
                 if (value !== Defaults[propertyName]) {

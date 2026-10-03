@@ -216,6 +216,10 @@ exports.DataObject = class DataObject extends Target {
         return Date.date;
     }
 
+    deserializedFromSerialization(label) {
+        this.objectDescriptor.registerKnownInstanceWithName(this, label);
+    }
+
     deserializeSelf(deserializer) {
         if (super.deserializeSelf) {
             super.deserializeSelf(deserializer);

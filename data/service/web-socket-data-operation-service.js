@@ -1041,7 +1041,9 @@ WebSocketDataOperationService.addClassProperties({
                 // }
 
                 this._socket.send(serializedOperation);
-            });
+            }).catch((e) => {
+                console.error(e);
+            })
         }
     },
 

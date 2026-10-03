@@ -247,9 +247,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
         let mappingPromises;
-        rawData.identifier = object.identifier;
+        rawData.identifier = object.dataIdentifier ? object.dataIdentifier.primaryKey : object.identifier;
 
         this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
+            if (propertyKey === "dataIdentifier") {
+                return;
+            }
             if (this._isAsync(propertyDescriptor.valueDescriptor)) {
                 (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then(() => {
                     try {
@@ -270,6 +273,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if (mappingPromises && mappingPromises.length) {
             return Promise.all(mappingPromises).then(() => {
+                object;
                 return rawData;
             });
         }
@@ -291,9 +295,22 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
 
+    _dataIdentifierForObject(object) {
+        if (object.dataIdentifier && !object.dataIdentifier.dataService) {
+            object.dataIdentifier.dataService = this;
+            object.dataIdentifier.isFromSerialization = true;
+            this.registerDataIdentifierForTypePrimaryKey(object.dataIdentifier, object.objectDescriptor, object.dataIdentifier.primaryKey);
+        }
+        return this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier);
+    }
+
+    get connection() {
+        return undefined;
+    }
+
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
-        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+        let iDataInstanceIdentifier = this._dataIdentifierForObject(object),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
         if(!iRawData) {
@@ -399,16 +416,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property),
             dataOperation = context instanceof DataOperation ? context : null;
 
-        let trackMapping = object.objectDescriptor.name === "IncorporatedOrganization" || object.objectDescriptor.name === "Organization" || object.objectDescriptor.name === "JobRole";
-
-        if (trackMapping) {
-            window.incOrgProperties = window.incOrgProperties || new Map();
-            // debugger
-            if (!window.incOrgProperties.has(object)) {
-                window.incOrgProperties.set(object, new Set());
-            }
-            window.incOrgProperties.get(object).add(property);
-        }
         if(iPropertyDescriptor.cardinality === 1) {
                     let iPropertyValue = object[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
@@ -416,17 +423,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                         return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                                 
                                 object[property] = iObjectValue
                             })
         
                     } else {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                         object[property] = record[property];
                     }
                 } else {
@@ -455,9 +456,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 );
                             }
                             return Promise.all(mappingPromises).then((values) => {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                                 object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                                 return;
                             });
@@ -466,9 +464,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
                         }
                     } else {
-                        if (trackMapping) {
-                            window.incOrgProperties.get(object).delete(property);
-                        }
                         object[property] = iPropertyValues;
                     }
                 }
