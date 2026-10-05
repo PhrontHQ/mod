@@ -251,6 +251,37 @@ if(typeof String.prototype.stringByRemovingPathExtension !== "function") {
     });
 }
 
+if(typeof String.prototype.prefixDelimitedBy !== "function") {
+    Object.defineProperty(String.prototype, 'prefixDelimitedBy', {
+        value: function(delimiter) {
+            // 1. Edge-case safety: ensure a delimiter was actually passed
+            if (delimiter === undefined || delimiter === null) return "";
+
+            // 2. Perform the high-speed extraction
+            const index = this.indexOf(delimiter);
+            return index === -1 ? "" : this.slice(0, index);
+        },
+        writable: true,
+        enumerable: false,
+        configurable: true
+    });
+}
+
+if(typeof String.prototype.hasPrefixDelimitedBy !== "function") {
+    Object.defineProperty(String.prototype, 'hasPrefixDelimitedBy', {
+        value: function(delimiter) {
+            // 1. Edge-case safety: ensure a delimiter was actually passed
+            if (delimiter === undefined || delimiter === null) return false;
+
+            // 2. Returns true only if the delimiter exists AND isn't the very first character
+            return this.indexOf(delimiter) > 0;        
+        },
+        writable: true,
+        enumerable: false,
+        configurable: true
+    });
+}
+
 if(typeof String.prototype.stringByRemovingPrefix !== "function") {
     Object.defineProperty(String.prototype, 'stringByRemovingPrefix', {
         value: function stringByRemovingPrefix (prefix) {
