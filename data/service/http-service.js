@@ -391,7 +391,16 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
 
                                 let iMapping = this.mappingForObjectDescriptor(iReadOperation.target);
                                 if (typeof iMapping.mapDataOperationToFetchRequests === "function") {
-                                    iMapping.mapDataOperationToFetchRequests(iReadOperation, fetchRequests);
+                                    
+                                    try {
+                                        iMapping.mapDataOperationToFetchRequests(iReadOperation, fetchRequests);
+                                    }
+                                    catch (error) {
+                                        console.error("mapDataOperationToFetchRequests failed with message:", error.message); // "Failed to fetch user data."
+                                        console.error("mapDataOperationToFetchRequests failed with details:", error.cause);   // { status: 404, type: "API_ERROR", route: "/users" }
+                                        console.error("mapDataOperationToFetchRequests failed with stack:", error.stack);     // Complete stack trace
+                                    }
+
 
                                     if (fetchRequests.length > 0) {
 
