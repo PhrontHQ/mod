@@ -217,7 +217,9 @@ exports.DataObject = class DataObject extends Target {
     }
 
     deserializedFromSerialization(label) {
-        this.objectDescriptor.registerKnownInstanceWithName(this, label);
+        if (this.objectDescriptor) {
+            this.objectDescriptor.registerKnownInstanceWithName(this, label);
+        }
     }
 
     deserializeSelf(deserializer) {
@@ -277,6 +279,11 @@ exports.DataObject = class DataObject extends Target {
             value = deserializer.getProperty("publicationDate");
             if (value !== void 0) {
                 this.publicationDate = value;
+            }
+
+            value = deserializer.getProperty("dataIdentifier");
+            if (value !== void 0) {
+                this.dataIdentifier = value;
             }
         }
     }
