@@ -131,9 +131,9 @@ var Environment = exports.Environment = Montage.specialize({
         get: function() {
             if(this._isLocalModding === undefined) {
                 if(this.isBrowser && global.location) {
-                    this._isLocalModding = (this.stage === "mod" || global.location.hostname === "127.0.0.1" || global.location.hostname === "localhost" || global.location.hostname.endsWith(".local") )
+                    this._isLocalModding = (this.deploymentStage === "mod" || global.location.hostname === "127.0.0.1" || global.location.hostname === "localhost" || global.location.hostname.endsWith(".local") )
                 } else if(this.isNode) {
-                    this._isLocalModding = this.stage.includes("local") || /--debug|--inspect/.test(process.execArgv.join(' ')) || this.stage.includes("mod");
+                    this._isLocalModding = this.deploymentStage.includes("local") || /--debug|--inspect/.test(process.execArgv.join(' ')) || this.deploymentStage.includes("mod");
                 }
             }
             return this._isLocalModding;

@@ -23,8 +23,8 @@ var DataService = require("./data-service").DataService,
     WebSocketSessionConnection = require("../model/app/web-socket-session-connection").WebSocketSessionConnection,
     sizeof = require('object-sizeof'),
     currentEnvironment = require("core/environment").currentEnvironment,
-    isMod = ((currentEnvironment.stage === "mod" ||
-    currentEnvironment.stage === "local"));
+    isMod = ((currentEnvironment.deploymentStage === "mod" ||
+    currentEnvironment.deploymentStage === "local"));
 
 
 var Identity = require("../../data/model/identity").Identity;
@@ -187,7 +187,7 @@ WebSocketDataOperationService.addClassProperties({
     connection: {
         get: function() {
             if(!this._connection) {
-                var stage = currentEnvironment.stage || "live",
+                var stage = currentEnvironment.deploymentStage || "live",
                     connection = this.connectionForIdentifier(stage),
                         websocketURL;
 

@@ -579,16 +579,16 @@ RawDataService.addClassProperties({
                     this.connection = this.connectionForIdentifier(this.connectionIdentifer);
                 }
                 else if(!this.currentEnvironment.isCloud) {
-                    let connection = this.connectionForIdentifier(`local-${this.currentEnvironment.stage}`);
+                    let connection = this.connectionForIdentifier(`local-${this.currentEnvironment.deploymentStage}`);
 
                     //If we can't find a local specific one, we'll look for the one for this.currentEnvironment.stage
                     if(!connection) {
-                        connection = this.connectionForIdentifier(this.currentEnvironment.stage);
+                        connection = this.connectionForIdentifier(this.currentEnvironment.deploymentStage);
                     }
                     this.connection = connection;
                     
                 } else {
-                    this.connection = this.connectionForIdentifier(this.currentEnvironment.stage);
+                    this.connection = this.connectionForIdentifier(this.currentEnvironment.deploymentStage);
                 }
 
                 if(!this._connection) {
@@ -596,7 +596,7 @@ RawDataService.addClassProperties({
                     if(this.connectionDescriptor) {
                         this.connection = this.connectionDescriptor;
                     } else {
-                        throw "RawDataService "+ (this.name || this.identifier) + " could not find a connection for "+this.currentEnvironment.stage+" environment";
+                        throw "RawDataService "+ (this.name || this.identifier) + " could not find a connection for "+this.currentEnvironment.deploymentStage+" environment";
                     }
                 }
 
