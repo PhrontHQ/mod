@@ -1,4 +1,5 @@
-var Montage = require("./core").Montage;
+const Montage = require("./core").Montage,
+    deprecate = require("./deprecate");
 
 var TRIDENT = "trident",
     MSIE = "msie",
@@ -62,12 +63,12 @@ var Environment = exports.Environment = Montage.specialize({
      *
      * @property {string}
      */
-    _stage: {
+    _deploymentStage: {
         value: undefined
     },
-    stage: {
+    deploymentStage: {
         get: function() {
-            if(this._stage === undefined) {
+            if(this._deploymentStage === undefined) {
                 //Check if we have an argument:
                 let stageArgument,
                     applicationURL;
@@ -75,27 +76,53 @@ var Environment = exports.Environment = Montage.specialize({
                     stageArgument = process.argv[process.argv.indexOf("-s")+1] || process.argv[process.argv.indexOf("--stage")+1]
                 } else {
                     applicationURL = this.application.url;
-                    stageArgument = applicationURL && applicationURL.searchParams.get("stage");
+
+                    //First try to find one in applicationURL.hostname
+                    stageArgument = applicationURL.hostname.prefixDelimitedBy("-") || applicationURL.hostname.prefixDelimitedBy(".");
+                    if(!this.constructor.DeploymentStages.has(stageArgument)) {
+                        stageArgument = applicationURL && applicationURL.searchParams.get("deploymentStage");
+                        //Backward compatibility
+                        if(!stageArgument) {
+                            stageArgument = applicationURL && applicationURL.searchParams.get("stage");
+                        }
+
+                        //If it's not a known one, it doesn't mean anything
+                        if(!this.constructor.DeploymentStages.has(stageArgument)) {
+                            stageArgument = null;
+                        }
+                    }
                 }
 
                 if(stageArgument) {
-                    this._stage = stageArgument;
+                    this._deploymentStage = stageArgument;
                 } else if(applicationURL && (applicationURL.hostname === "127.0.0.1" || applicationURL.hostname === "localhost" || applicationURL.hostname.endsWith(".local")) ) {
-                    this._stage = "mod";
+                    this._deploymentStage = "mod";
                 } else {
                     /*
-                        This means we're live:
+                        No stage specified, then this means we're live, in use!
                     */
-                   this._stage = "live";
+                   this._deploymentStage = "use";
                 }
             }
 
-            return this._stage;
+            return this._deploymentStage;
         },
         set: function(value) {
-            this._stage = value;
+            this._deploymentStage = value;
         }
     },
+
+    stage: {
+        get: deprecate.deprecateMethod(void 0, function () {
+                return this.deploymentStage;
+            }, ".stage", ".deploymentStage", true),
+        set: deprecate.deprecateMethod(void 0, function (value) {
+                this.deploymentStage = value;
+            }, ".stage = ", ".deploymentStage = ", true)
+    },
+                
+
+
     _isLocalModding: {
         value: undefined
     },
@@ -468,6 +495,17 @@ var Environment = exports.Environment = Montage.specialize({
     }
 
 }, {
+    /**
+     * These names represent the flow of work from modding locally to live use by intended audience.
+     * 
+     * Except for mod, which is
+     *
+     * @property {Array}
+     */
+
+    DeploymentStages: {
+        value: ["mod", "browse", "preview", "probe", "review", "use"]
+    },
 
     Device: {
         value: {
