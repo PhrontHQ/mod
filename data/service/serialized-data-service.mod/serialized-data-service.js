@@ -187,7 +187,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
 
     fetchRawObjectProperty(object, propertyName) {
-        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+        // let iDataInstanceIdentifier = object.dataIdentifier ? object.dataIdentifier : this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+        let iDataInstanceIdentifier = object.dataIdentifier,
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
 
@@ -208,9 +209,10 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     
         // debugger;
         if(propertyDescriptor.cardinality === 1) {
-            let value =  object[objectKey];
-            if(value?.hasOwnProperty("identifier")) {
-                rawData[propertyDescriptor.name] = object[objectKey].identifier;
+            let value =  object[objectKey],
+                primaryKey;
+            if (value?.hasOwnProperty("dataIdentifier")) {
+                rawData[propertyDescriptor.name] = object[objectKey].dataIdentifier && object[objectKey].dataIdentifier.primaryKey;
             } else {
                 rawData[objectKey] = object[objectKey];
             }
@@ -226,10 +228,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 if(!oneValue) {
                     rawData[objectKey] = value;
                 } else if(Array.isArray(value)) {
-                    let rawDataValues = [];
+                    let rawDataValues = [],
+                        primaryKey;
 
                     for(let countI = value.length, i=0; (i < countI); i++) {
-                        rawDataValues.push(value[i].identifier);
+                        primaryKey = value[i].dataIdentifier.primaryKey;
+                        rawDataValues.push(primaryKey);
                     }
 
                     rawData[objectKey] = rawDataValues;
@@ -247,9 +251,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
         let mappingPromises;
-        rawData.identifier = object.identifier;
+        rawData.identifier = object.dataIdentifier.primaryKey;
 
         this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
+            if (propertyKey === "dataIdentifier") {
+                return;
+            }
             if (this._isAsync(propertyDescriptor.valueDescriptor)) {
                 (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then(() => {
                     try {
@@ -270,6 +277,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if (mappingPromises && mappingPromises.length) {
             return Promise.all(mappingPromises).then(() => {
+                object;
                 return rawData;
             });
         }
@@ -291,9 +299,26 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
 
+    _dataIdentifierForObject(object) {
+        let pk;
+        if (object.dataIdentifier && !object.dataIdentifier.dataService) {
+            object.dataIdentifier.dataService = this;
+            object.dataIdentifier.isFromSerialization = true;
+            this.registerDataIdentifierForTypePrimaryKey(object.dataIdentifier, object.objectDescriptor, object.dataIdentifier.primaryKey);
+            pk = object.dataIdentifier.primaryKey;
+        } else {
+            pk = object.identifier;
+        }
+        return this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, pk);
+    }
+
+    get connection() {
+        return undefined;
+    }
+
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
-        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, object.identifier),
+        let iDataInstanceIdentifier = this._dataIdentifierForObject(object),
             iRawData = this.snapshotForDataIdentifier(iDataInstanceIdentifier);
 
         if(!iRawData) {
@@ -399,16 +424,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(property),
             dataOperation = context instanceof DataOperation ? context : null;
 
-        let trackMapping = object.objectDescriptor.name === "IncorporatedOrganization" || object.objectDescriptor.name === "Organization" || object.objectDescriptor.name === "JobRole";
-
-        if (trackMapping) {
-            window.incOrgProperties = window.incOrgProperties || new Map();
-            // debugger
-            if (!window.incOrgProperties.has(object)) {
-                window.incOrgProperties.set(object, new Set());
-            }
-            window.incOrgProperties.get(object).add(property);
-        }
         if(iPropertyDescriptor.cardinality === 1) {
                     let iPropertyValue = object[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
@@ -416,17 +431,11 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                         return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                                 
                                 object[property] = iObjectValue
                             })
         
                     } else {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                         object[property] = record[property];
                     }
                 } else {
@@ -455,9 +464,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                                 );
                             }
                             return Promise.all(mappingPromises).then((values) => {
-                                if (trackMapping) {
-                                    window.incOrgProperties.get(object).delete(property);
-                                }
                                 object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                                 return;
                             });
@@ -466,19 +472,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             throw "mapObjectToRawData for a property that is Map needs to be implemented";
                         }
                     } else {
-                        if (trackMapping) {
-                            window.incOrgProperties.get(object).delete(property);
-                        }
                         object[property] = iPropertyValues;
                     }
                 }
     }
 
     mapRawDataToObject (record, object, context, readExpressions, registerMappedPropertiesAsChanged = false) {
-        let iDataInstanceIdentifier = this.dataIdentifierForTypePrimaryKey(object.objectDescriptor, record.identifier),
-            mainService = this.mainService;
-
-        let recordKeys = Object.keys(record),
+        let mainService = this.mainService,
+            recordKeys = Object.keys(record),
             mappingPromises = [];
 
 
@@ -497,7 +498,18 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
     shouldOverrideCriteria(criteria) {
-        return criteria && criteria.expression && (criteria.expression.equals("id == $") || criteria.expression.equals("id == id$") || criteria.expression.equals("id == $id"));
+        return criteria && criteria.expression && 
+        ((criteria.expression.equals("id == $") || criteria.expression.equals("id == id$") || criteria.expression.equals("id == $id")) || 
+        (criteria.expression.equals("identifier == $") || criteria.expression.equals("identifier == identifier$") || criteria.expression.equals("identifier == $identifier")));
+    }
+    _mapCriteria(criteria) {
+        let parameters = criteria.parameters;
+        if (parameters.id) {
+            parameters = parameters.id;
+        } else if (parameters.identifier) {
+            parameters = parameters.identifier;
+        }
+       return Criteria.withExpression("dataIdentifier.primaryKey == $", parameters);
     }
     handleReadOperation(readOperation) {
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming
@@ -524,22 +536,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 return this.dataInstancesPromiseForObjectDescriptor(readOperation.target)
                 .then((dataInstances) => {
                         criteria = readOperation.criteria;
-                            let predicateFunction = criteria?.predicateFunction;
-
-                        // if (readOperation.criteria.parameters && readOperation.criteria.parameters === "FORD MOTOR COMPANY" || readOperation.criteria.parameters.name === "FORD MOTOR COMPANY") {
-
-                        // }
+                            let predicateFunction = criteria?.predicateFunction,
+                                parameters;
 
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
-                            let parameters = criteria.parameters;
-                            if (parameters.id) {
-                                parameters = parameters.id;
-                            } else if (parameters.identifier) {
-                                parameters = parameters.identifier;
-                            }
-                            criteria = Criteria.withExpression("identifier == $", parameters);
+                            criteria = this._mapCriteria(criteria);
                             predicateFunction = criteria?.predicateFunction;
-                        }
+                        } 
                         let rawDataForObjectPromises = [];
 
 

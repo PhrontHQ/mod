@@ -1,5 +1,3 @@
-const { ExpressionValidationRule } = require("./expression-validation-rule");
-
 var Montage = require("../core").Montage,
     Target = require("../target").Target,
     DerivedDescriptor = require("./derived-descriptor").DerivedDescriptor,
@@ -212,6 +210,37 @@ ObjectDescriptor.addClassProperties(
                         : (this.userInterfaceDescriptorModules = value);
                 }
             },
+        },
+
+        registerKnownInstanceWithName: {
+            value: function (instance, name) {
+                this._knownInstancesByName[name] = instance;
+            }
+        },
+
+        /*******
+         * TODO: ObjectDescriptor.knownInstancesByName provides an enum-like lookup 
+         * of instances of a class. Currently the lookup is populated 
+         * in DataObject.deserializedFromSerialization. 
+         * 
+         * Moving forward, the goal is to allow it to be populated 
+         * lazily. 
+         * 
+         * 1. Caller calls FooDescriptor.knownInstanceWithName
+         * 2. FooDescriptor checks the local lookup 
+         * 3. If object is not found, it sends a query with criteria like $name == 'Foo'
+         */
+
+        knownInstanceWithName: {
+            value: function (name) {
+                return this.__knownInstancesByName ? this.__knownInstancesByName[name] : undefined;
+            }
+        },
+
+        _knownInstancesByName: {
+            get: function () {
+                return this.__knownInstancesByName || (this.__knownInstancesByName = {});
+            }
         },
 
         _setPropertyWithDefaults: {

@@ -1,8 +1,9 @@
 /*global require, exports*/
 
-const { VisualOrientation } = require("core/enums/visual-orientation");
-const { VisualPosition } = require("core/enums/visual-position");
-const { ActionTarget } = require("ui/action-target.mod/action-target");
+const Montage = require("core/core").Montage;
+const VisualOrientation = require("core/enums/visual-orientation").VisualOrientation;
+const VisualPosition = require("core/enums/visual-position").VisualPosition;
+const ActionTarget = require("ui/action-target.mod/action-target").ActionTarget;
 
 // TODO: migrate away from using undefinedGet and undefinedSet
 
@@ -53,8 +54,33 @@ const Button = (exports.Button = class Button extends ActionTarget {
     static VisualPosition = VisualPosition;
 
     // <---- Properties ---->
+    static {
+        Montage.defineProperties(this.prototype, {
+            _visualPosition: { value: VisualPosition.start },
+            _visualOrientation: { value: VisualOrientation.horizontal},
+            drawsFocusOnPointerActivation: { value: true},
+            standardElementTagName: { value: "BUTTON"},
+            hasTemplate: { value: true},
+            converter: { value: null},
+            _label: { value: null},
+            defaultLabel: { value: "Button", enumerable: false },
 
-    _visualPosition = VisualPosition.start;
+            /**
+             * The type of event dispatched by this button.
+             * @type {string}
+             * @default null
+             */
+            actionEventType: { value: null },
+
+            /**
+             * The target that will be assigned to the events dispatched by this button
+             * @type {object}
+             * @default null
+             */
+            actionEventTarget: { value: null }
+        });
+    }
+
 
     get visualPosition() {
         return this._visualPosition;
@@ -77,7 +103,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
     }
 
-    _visualOrientation = VisualOrientation.horizontal;
 
     get visualOrientation() {
         return this._visualOrientation;
@@ -100,11 +125,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
     }
 
-    drawsFocusOnPointerActivation = true;
-
-    standardElementTagName = "BUTTON";
-
-    hasTemplate = true;
 
     /**
      * A Mod converter object used to convert or format the label displayed by
@@ -114,11 +134,13 @@ const Button = (exports.Button = class Button extends ActionTarget {
      * @type {Property}
      * @default null
      */
-    converter = null;
-
-    _label = null;
 
     get label() {
+        /* 
+            if there are no visual, we have no risk of showing a default value that would screw up a visual only configuration.
+            However, we should be able to have a value for both visual and label parameters, and still choose to only show one of them
+            TODO: we don't currently have that high level option  
+        */
         return this._label;
     }
 
@@ -139,7 +161,13 @@ const Button = (exports.Button = class Button extends ActionTarget {
                 }
             }
 
-            this._label = isDefined && value !== null ? String(value) : null;
+            // if(!this.hasArgumentForTemplateParameter("visual")) {
+            //     //Now using the default label
+            //     this._label = isDefined && value !== null ? String(value) : this.defaultLabel
+            // } else {
+                this._label = isDefined && value !== null ? String(value) : null;
+            // }
+            
             this.needsDraw = true;
         }
     }
@@ -152,33 +180,9 @@ const Button = (exports.Button = class Button extends ActionTarget {
         if (firstDraw) {
             this.element.setAttribute("role", "button");
 
-            const lastChild = this.element.lastChild;
-
-            // Ensure that the last child is a text node
-            // Any whitespace (including indentation) in the template will create a #text node
-            // But just in case (compressed version) we still check if the last child is a text node
-            if (!lastChild || lastChild.nodeType !== Node.TEXT_NODE) {
-                // Create a text node if the last child is not a text node
-                this.element.appendChild(document.createTextNode(""));
-            }
-
-            this._labelNode = this.element.lastChild;
-
-            // Apply Button styles
+          
             this._applyVisualPositionStyles();
             this._applyVisualOrientationStyles();
-        }
-    }
-
-    /**
-     * Draws the component.
-     * @override
-     */
-    draw() {
-        super.draw();
-
-        if (this._labelNode) {
-            this._labelNode.data = this.label;
         }
     }
 

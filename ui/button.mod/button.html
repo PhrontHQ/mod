@@ -6,7 +6,15 @@
             {
                 "owner": {
                     "values": {
-                        "element": {"#": "owner"}
+                        "element": {"#": "owner"},
+                        "_didOwnerProvideVisualTemplateArgument": {"<-": "@owner.templateArgumentByParameter.visual.defined()"}
+                    }
+                },
+                "defaultLabel": {
+                    "prototype": "ui/text.mod",
+                    "values": {
+                        "element": {"#": "default-label"},
+                        "value": {"<-": "@owner.label || (@owner._didOwnerProvideVisualTemplateArgument ? null : @owner.defaultLabel)"}
                     }
                 }
             }
@@ -15,6 +23,9 @@
     <body>
         <button data-mod-id="owner" class="ModButton">
             <div data-param="visual" class="ModButton-visual"></div>
+            <div data-param="label" class="ModButton-label">
+                <span data-mod-id="default-label">Button</span>
+            </div>
         </button>
     </body>
 </html>
