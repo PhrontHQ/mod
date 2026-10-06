@@ -115,10 +115,10 @@ var Environment = exports.Environment = Montage.specialize({
     stage: {
         get: deprecate.deprecateMethod(void 0, function () {
                 return this.deploymentStage;
-            }, ".stage", ".deploymentStage", true),
+            }, ".stage", ".deploymentStage", false),
         set: deprecate.deprecateMethod(void 0, function (value) {
                 this.deploymentStage = value;
-            }, ".stage = ", ".deploymentStage = ", true)
+            }, ".stage = ", ".deploymentStage = ", false)
     },
                 
 
