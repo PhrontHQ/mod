@@ -1683,6 +1683,19 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             //     return undefined;
             // }
 
+            //The desired behavior when fetching with a parameter array (and no orderingRule exists) is to return the results 
+            // in the same order as they appear in the parameter array. The loop below creates a reverse index from the primaryKey 
+            // to the index in the array, which allows the rule + converter to ensure the results are in the correct order.
+            // e.g. rawData.children = ["a", "b", "c"], we build rawData.children.indexByEntry{a: 0, b: 1, c: 2}
+            if (isRelationship && data[rule.sourcePath] && Array.isArray(data[rule.sourcePath]) && !data[rule.sourcePath].indexByEntry) {
+                let array = data[rule.sourcePath], i, n;
+                for (i = 0, n = array.length; i < n; i++) {
+                    array.indexByEntry = array.indexByEntry || {};
+                    array.indexByEntry[array[i]] = i;
+                }
+            }
+
+
 
             // Check if property is included in the DataService.debugProperties collection. Intended for debugging.
             if (debug) {

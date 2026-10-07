@@ -457,6 +457,28 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
         }
     },
 
+    _insertIntoResultBasedOnPositionInCriteria: {
+        value: function (value, result, criteria, service) {
+            let index = criteria.parameters.indexByEntry[service.dataIdentifierForObject(value).primaryKey],
+                left = 0, right = result.length,
+                mid, comp;
+                
+            
+            while (left < right) {
+                mid = Math.floor((right + left) / 2);
+                comp = result[mid];
+                compIndex = criteria.parameters.indexByEntry[service.dataIdentifierForObject(comp).primaryKey];
+                if (compIndex < index) {
+                    left = mid + 1;
+                } else if (compIndex > index) {
+                    right = mid;
+                }
+            }
+            
+            result.splice(left, 0, value);
+        }
+    },
+
     _pendingCriteriaByTypeToCombine: {
         value: new Map()
     },
@@ -535,7 +557,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 //console.log("_combineFetchDataMicrotaskFunctionForTypeQueryParts results:",combinedFetchedValues, " query:",query);
 
                 var i, countI, iCriteria, criteria = queryParts.criteria, combinedFetchedValuesSnapshots, iFetchPromise,
-                    j, countJ = combinedFetchedValues.length, jValue, jSnapshot, jFetchPromise;
+                    j, countJ = combinedFetchedValues.length, jValue, jSnapshot;
 
                     for(i=0, countI = criteria.length; (i<countI); i++) {
                         iCriteria = criteria[i];
@@ -562,12 +584,30 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                             if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
                                 //console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
-                                (iFetchPromise.result || (iFetchPromise.result = [])).push(jValue);
+                                if (iCriteria.parameters.indexByEntry && iFetchPromise.result) {
+                                    /***
+                                     * The desired behavior when fetching with a parameter array (e.g. [a, b, c].has(id))
+                                     * is to return the results in the same order as the parameters. When doing a combined fetch, 
+                                     * PostGreSQLService can only check that a row *exists* in the parameter array. It cannot ensure 
+                                     * the order.
+                                     * 
+                                     * E.g. say the parameters array is ["aaa", "bbb", "ccc"]. PostgreSQL may return 
+                                     * [{id: "bbb"}, {id: "ccc"}, {id: "aaa"}]. 
+                                     * 
+                                     * The method below utilizes rawData.<sourcePropertyName>.indexByEntry to correct the order
+                                     */
+                                    self._insertIntoResultBasedOnPositionInCriteria(jValue, iFetchPromise.result, iCriteria, service);
+                                } else {
+                                    (iFetchPromise.result || (iFetchPromise.result = [])).push(jValue);
+                                }
+                                
 
                             }
                         }
 
-                        if(countJ == 0) {
+
+
+                        if (countJ == 0) {
                             if(iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)) {
                                 iFetchPromise.resolve(i === 0 ? combinedFetchedValues : combinedFetchedValues.slice());
                             } else {

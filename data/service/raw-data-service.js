@@ -869,6 +869,9 @@ RawDataService.addClassProperties({
                      * 
                      * TODO: Incororpate ordered and sparse arrays into the model. 
                      * 
+                     * Logic to accomplish the same goal is in RawForeignValueToObjectConverter._insertIntoResultBasedOnPositionInCriteria
+                     * These should be merged
+                     * 
                      * The logic below is necessary 
                      * because the query generated in postgres fails to do 2 things. 
                      * 1. Include null values of a sparse array
