@@ -113,9 +113,17 @@ exports.FetchResourceDataMapping = class FetchResourceDataMapping extends Expres
     _mapDataOperationToFetchRequestWithMappingRulesWithScope(dataOperation, fetchRequests, fetchRequestMappingRules, dataOperationScope) {
         let j, jRule, jRuleEvaluationResult, iUrl, options, iRequest;
 
+        console.debug(">>> A: _mapDataOperationToFetchRequestWithMappingRulesWithScope: fetchRequestMappingRules are ", fetchRequestMappingRules);
+        console.debug(">>> B: _mapDataOperationToFetchRequestWithMappingRulesWithScope: dataOperationScope is ", dataOperationScope);
+
         for(j=0;(jRule = fetchRequestMappingRules[j]); j++) {
 
+            console.debug(">>> C: _mapDataOperationToFetchRequestWithMappingRulesWithScope: jRule is ", jRule);
+
             jRuleEvaluationResult = jRule.evaluate(dataOperationScope);
+
+            console.debug(">>> D: _mapDataOperationToFetchRequestWithMappingRulesWithScope: jRuleEvaluationResult is ", jRuleEvaluationResult);
+
             if(jRule.targetPath === "url") {
                 iUrl = jRuleEvaluationResult;
             } else {
