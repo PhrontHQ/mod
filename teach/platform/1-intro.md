@@ -82,11 +82,15 @@ platform/
 │   ├── provision/
 │   ├── release/
 │   └── test/
-├── sign-off
+├── review
 │   ├── provision/
 │   ├── release/
 │   └── test/
 └── use/
+│   ├── provision/
+│   ├── release/
+│   └── test/
+└── wayback/  # Concept: would offer an archive of all release ever made on use
     ├── provision/
     ├── release/
     └── test/
