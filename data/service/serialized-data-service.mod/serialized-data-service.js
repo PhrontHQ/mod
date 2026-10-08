@@ -253,10 +253,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let mappingPromises;
         rawData.identifier = object.dataIdentifier?.primaryKey;
 
-        //Backward compatibility for objects serialized with the identifer property holding the promary key:
-        if(!rawData.identifier) {
-            rawData.identifier = object.identifier;
-        }
 
         this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
             if (propertyKey === "dataIdentifier") {
