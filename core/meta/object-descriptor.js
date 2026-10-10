@@ -1,5 +1,8 @@
 var Montage = require("../core").Montage,
     Target = require("../target").Target,
+    Criteria = require("../criteria").Criteria,
+    DataIdentifier = require("../../data/model/data-identifier").DataIdentifier,
+    DataQuery = require("../../data/model/data-query").DataQuery,
     DerivedDescriptor = require("./derived-descriptor").DerivedDescriptor,
     EventDescriptor = require("./event-descriptor").EventDescriptor,
     Map = require("../collections/map"),
@@ -240,6 +243,41 @@ ObjectDescriptor.addClassProperties(
         _knownInstancesByName: {
             get: function () {
                 return this.__knownInstancesByName || (this.__knownInstancesByName = {});
+            }
+        },
+
+        _mainService: {
+            get: function () {
+                return this.eventManager.application.mainService;
+            }
+        },
+
+        _knownInstancePromisesByIdentifier: {
+            get: function () {
+                return this.__knownInstancePromisesByIdentifier || (this.__knownInstancePromisesByIdentifier = {});
+            }
+        },
+
+        knownInstanceIdentifiedBy: {
+            value: function(anIdentifier) {
+                //This should be replaced by the dispatch of a read operation once that is supported
+                if (!this._knownInstancePromisesByIdentifier[anIdentifier]) {
+                    let identifierString, criteria, query;
+                    if (typeof anIdentifier === "string") {
+                        identifierString = anIdentifier;
+                        criteria = new Criteria().initWithExpression("identifier == $", anIdentifier);
+                    } else if (anIdentifier instanceof DataIdentifier) {
+                        identifierString = anIdentifier.primaryKey;
+                        criteria = new Criteria().initWithExpression("dataIdentifier == $", anIdentifier);
+                    } else {
+                        return Promise.resolve(null);
+                    }
+                    query = DataQuery.withTypeAndCriteria(this, criteria);
+                    this._knownInstancePromisesByIdentifier[identifierString] = this._mainService.fetchData(query).then((data) => {
+                        return data[0];
+                    });
+                }
+                return this._knownInstancePromisesByIdentifier[anIdentifier];
             }
         },
 
@@ -674,8 +712,8 @@ ObjectDescriptor.addClassProperties(
                     this._nextTarget ||
                     (this._nextTarget =
                         this.parent ||
-                        this.eventManager.application.mainService.childServiceForType(this) ||
-                        this.eventManager.application.mainService)
+                        this._mainService.childServiceForType(this) ||
+                        this._mainService)
                 );
             },
         },

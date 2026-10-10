@@ -217,8 +217,13 @@ exports.DataObject = class DataObject extends Target {
     }
 
     deserializedFromSerialization(label) {
-        if (this.objectDescriptor) {
-            this.objectDescriptor.registerKnownInstanceWithName(this, label);
+        /****
+         * identifier is serialied on montage.mjson so this assignment belongs in the Montage class. However, 
+         * that causes an issue that is documented in the core/core Montage class. Leaving here until that issue is resolved. 
+         */
+        // if (this.identifier === undefined) {
+        if (!this.identifier) {
+            this.identifier = label;
         }
     }
 

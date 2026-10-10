@@ -1690,8 +1690,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
             if (isRelationship && data[rule.sourcePath] && Array.isArray(data[rule.sourcePath]) && !data[rule.sourcePath].indexByEntry) {
                 let array = data[rule.sourcePath], i, n;
                 for (i = 0, n = array.length; i < n; i++) {
-                    array.indexByEntry = array.indexByEntry || {};
-                    array.indexByEntry[array[i]] = i;
+                    // (array.indexByEntry || (array.indexByEntry = {}));
+                    (array.indexByEntry || (array.indexByEntry = {}))[array[i]] = i;
                 }
             }
 

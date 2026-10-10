@@ -459,7 +459,8 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
     _insertIntoResultBasedOnPositionInCriteria: {
         value: function (value, result, criteria, service) {
-            let index = criteria.parameters.indexByEntry[service.dataIdentifierForObject(value).primaryKey],
+            let indexByEntry = criteria.parameters.indexByEntry,
+                index = indexByEntry[service.dataIdentifierForObject(value).primaryKey],
                 left = 0, right = result.length,
                 mid, comp;
                 
@@ -467,7 +468,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
             while (left < right) {
                 mid = Math.floor((right + left) / 2);
                 comp = result[mid];
-                compIndex = criteria.parameters.indexByEntry[service.dataIdentifierForObject(comp).primaryKey];
+                compIndex = indexByEntry[service.dataIdentifierForObject(comp).primaryKey];
                 if (compIndex < index) {
                     left = mid + 1;
                 } else if (compIndex > index) {

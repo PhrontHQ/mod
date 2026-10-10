@@ -350,6 +350,15 @@ var Montage = exports.Montage = class Montage {
         this.specialize = specialize;
         this.addClassProperties = addClassProperties;
     }
+
+    //Adding this here produces an error that this.owner is null when calling the getter for propertyDescriptor.identifier
+    //Uncomment when that issue is resolved 
+    // deserializedFromSerialization(label) {
+    //     console.log("Core.deserializedFromSerialization", label);
+    //     if (this.identifier === undefined) {
+    //         this.identifier = label;
+    //     }
+    // }
 };
 
 

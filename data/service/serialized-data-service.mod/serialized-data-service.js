@@ -251,8 +251,6 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
         let mappingPromises;
-        rawData.identifier = object.dataIdentifier?.primaryKey;
-
 
         this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
             if (propertyKey === "dataIdentifier") {
