@@ -47,6 +47,7 @@ var Application = exports.Application = class Application extends Target {
              * @default null
              */
             parentApplication: { value: null},
+            packageDescription: { value: null},
             name: { value: null},
             _isFirstLoad: { value: null}
         });
@@ -68,6 +69,7 @@ var Application = exports.Application = class Application extends Target {
         var rootComponent,
             self = this;
 
+        this.packageDescription = applicationRequire.packageDescription;
         this.name = applicationRequire.packageDescription.name;
         this._loadApplicationContext();
 
