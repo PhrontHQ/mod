@@ -70,7 +70,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
     primaryKeyForTypeRawData(type, rawData, dataOperation) {
-        return rawData.identifier;
+        let dataIdentifier = this._snapshotToDataIdentifier.get(rawData);
+        return dataIdentifier ? dataIdentifier.primaryKey : rawData.identifier;
     }
     /**
      * Returns the correct subtype for rawData if found, using rawDataTypeIdentificationCriteria.
@@ -289,7 +290,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
     _forEachObjectProperty(object, callback) {
         let objectKeys = Object.keys(object),
-            objectDescriptor = object.objectDescriptor;
+            objectDescriptor = object.objectDescriptor || object.dataIdentifier.objectDescriptor;
         for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
             if(iPropertyDescriptor) {
@@ -304,6 +305,8 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             object.dataIdentifier.dataService = this;
             object.dataIdentifier.isFromSerialization = true;
             this.registerDataIdentifierForTypePrimaryKey(object.dataIdentifier, object.objectDescriptor, object.dataIdentifier.primaryKey);
+            this.mainService.registerUniqueObjectWithDataIdentifier(object, object.dataIdentifier);
+            this.mainService.recordDataIdentifierForObject(object.dataIdentifier, object);
             pk = object.dataIdentifier.primaryKey;
         } else {
             pk = object.identifier;
@@ -315,6 +318,15 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return undefined;
     }
 
+    get _snapshotToDataIdentifier() {
+        return this.__snapshotToDataIdentifier || (this.__snapshotToDataIdentifier = new Map());
+    }
+
+    recordSnapshot(dataIdentifier, snapshot) {
+        super.recordSnapshot(dataIdentifier, snapshot)
+        this._snapshotToDataIdentifier.set(snapshot, dataIdentifier);
+    }
+
     _rawDataForObject(object, context) {
         //We need to include it in the results, as rawData. So now we check of if have a rawData for it already
         let iDataInstanceIdentifier = this._dataIdentifierForObject(object),
@@ -322,6 +334,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if(!iRawData) {
             iRawData = {};
+            this.recordSnapshot(iDataInstanceIdentifier, iRawData);
             return this.mapObjectToRawData(object, iRawData, context)
             .then((rawData) => {
                 object.originDataSnapshot = rawData;
@@ -424,15 +437,24 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             dataOperation = context instanceof DataOperation ? context : null;
 
         if(iPropertyDescriptor.cardinality === 1) {
-                    let iPropertyValue = object[property];
+                    let iPropertyValue = record[property];
                     if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
-                        let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record.identifier);
-
-                        return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+                        if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
+                            return iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
+                                let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(valueDescriptor, record[property]);
+                                return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+                                    .then((iObjectValue) => {
+                                        object[property] = iObjectValue
+                                    })
+                            });
+                        } else {
+                            let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record[property]);
+                            return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
                                 
                                 object[property] = iObjectValue
                             })
+                        }
         
                     } else {
                         object[property] = record[property];
@@ -508,7 +530,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         } else if (parameters.identifier) {
             parameters = parameters.identifier;
         }
-       return Criteria.withExpression("dataIdentifier.primaryKey == $", parameters);
+       return Criteria.withExpression("dataIdentifier.primaryKey == $ || identifier == $", parameters);
     }
     handleReadOperation(readOperation) {
         // TODO: Temporary workaround — until RawDataService can lazily subscribe to incoming

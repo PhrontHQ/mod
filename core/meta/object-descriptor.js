@@ -273,6 +273,7 @@ ObjectDescriptor.addClassProperties(
                         return Promise.resolve(null);
                     }
                     query = DataQuery.withTypeAndCriteria(this, criteria);
+                    criteria.isFromObjectDescriptor = true;
                     this._knownInstancePromisesByIdentifier[identifierString] = this._mainService.fetchData(query).then((data) => {
                         return data[0];
                     });
