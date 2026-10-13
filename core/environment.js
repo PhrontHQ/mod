@@ -504,7 +504,7 @@ var Environment = exports.Environment = Montage.specialize({
      */
 
     DeploymentStages: {
-        value: ["mod", "browse", "preview", "probe", "review", "use"]
+        value: ["mod", "poke", "preview", "probe", "review", "use"]
     },
 
     Device: {
