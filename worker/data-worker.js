@@ -168,7 +168,7 @@ exports.DataWorker = Worker.specialize( /** @lends DataWorker.prototype */{
                 console.warn("eventHeaderUserIp is "+eventHeaderUserIp+" and userIp is "+userIp);
             }
 
-            currentEnvironment.stage = stage;
+            currentEnvironment.deploymentStage = stage;
             currentEnvironment.userAgent = userAgent;
             if(languages) {
                 currentEnvironment.languages = languages;
