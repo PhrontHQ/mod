@@ -101,7 +101,7 @@
         "prototype": "core/meta/property-descriptor",
         "values": {
             "name": "secureLocationExpirationDate",
-            "valueType": "Date"
+            "valueType": "date"
         }
     }
 
