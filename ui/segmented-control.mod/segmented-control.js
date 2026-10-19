@@ -1,4 +1,5 @@
 const Component = require("ui/component").Component;
+const Control = require("ui/control").Control;
 const Montage = require("montage").Montage;
 
 /**
@@ -8,7 +9,7 @@ const Montage = require("montage").Montage;
  * @class SegmentedControl
  * @extends Component
  */
-const SegmentedControl = (exports.SegmentedControl = class SegmentedControl extends Component {
+const SegmentedControl = (exports.SegmentedControl = class SegmentedControl extends Control {
     static {
         Montage.defineProperties(this.prototype, {
             // FIXME: @Benoit workaround: until `removeRangeAtPathChangeListener` is implemented
