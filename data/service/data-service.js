@@ -4618,6 +4618,15 @@ DataService.addClassProperties(
             value: queueMicrotask.debounceWithDelay(500),
         },
 
+        scheduleAutoSave: {
+            value: function () {
+                this.debouncedQueueMicrotaskWithDelay(() => {
+                    this.isAutosaveScheduled = false;
+                    this.saveChanges();
+                });
+            },
+        },
+
         registerDataObjectChangesFromEvent: {
             value: function (changeEvent, shouldTrackChangesWhileBeingMapped = false) {
                 var dataObject = changeEvent.target,
@@ -4633,10 +4642,7 @@ DataService.addClassProperties(
 
                 if (!isDataObjectBeingMapped && this.autosaves /* && !this.isAutosaveScheduled*/) {
                     //this.isAutosaveScheduled = true;
-                    this.debouncedQueueMicrotaskWithDelay(() => {
-                        this.isAutosaveScheduled = false;
-                        this.saveChanges();
-                    });
+                    this.scheduleAutoSave();
                 }
 
                 // if (!isDataObjectBeingMapped && this.autosaves && !this.isAutosaveScheduled) {
@@ -7672,6 +7678,7 @@ DataService.addClassProperties(
             value: function (object) {
                 var saved = !this.isObjectCreated(object);
                 this.registerDeletedDataObject(object);
+                this.scheduleAutoSave();
                 return this._updateDataObject(object, saved && "deleteDataObject");
             },
         },

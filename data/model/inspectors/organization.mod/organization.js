@@ -60,4 +60,10 @@ exports.Organization = class Organization extends Component {
         // const { suborganizations = [] } = department;
         // return suborganizations.flatMap((suborg) => suborg.jobRoles || []);
     }
+
+
+    handleDeleteAction(event) {
+        event.stopPropagation();
+        this.dispatchEventNamed("deleteAction", true, true, {jobRole: event.target.object, organization: this.data});
+    }
 };
