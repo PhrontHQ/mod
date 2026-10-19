@@ -21,7 +21,7 @@
             "roleListController": {
                 "prototype": "../../../../core/range-controller",
                 "values": {
-                    "content": {"<-": "@owner.data.suborganizations.map{jobRoles}.flatten()"}
+                    "content": {"<-": "@owner.data.jobRoles"}
                 }
             },
             "roleListItem": {
@@ -37,8 +37,12 @@
                 "prototype": "../../../../ui/button.mod",
                 "values": {
                     "element": {"#": "delete"},
-                    "label": "Delete"
-                }
+                    "label": "Delete",
+                    "object": {"<-": "@roleList:iteration.object"}
+                },
+                "listeners": [
+                    {"type": "action", "listener": {"@": "owner"}}
+                ]
             }
         }
     </script>
