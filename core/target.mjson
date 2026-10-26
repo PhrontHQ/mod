@@ -21,11 +21,15 @@
             "objectDescriptorModule": { "%": "./target.mjson" },
             "exportName": "Target",
             "module": { "%": "./target" },
-            "object":{ "@": "Target" }
+            "object":{ "@": "Target" },
+            "parent":{"@": "MontageObjectDescriptor"}
         }
     },
     "Target": {
         "object": "./target"
+    },
+    "MontageObjectDescriptor": {
+        "object": "core/montage.mjson"
     },
     "eventManager": {
         "prototype": "./meta/property-descriptor",
