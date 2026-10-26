@@ -2151,9 +2151,20 @@ DataService.addClassProperties(
          */
         _getTriggersForObject: {
             value: function (object) {
-                var type = this._getObjectType(object),
+                /*
+                    Now that we don't flatten all inherited triggers at every node/class, 
+                    We lookup there
+                */
+                let triggers = object.__triggers__;
+
+                //Backward compatibility / old logic aroiund for now
+                if(!triggers) {
+                    let type = this._getObjectType(object);
+
                     triggers = type && this._dataObjectTriggers.get(type);
-                if (!triggers && this.handlesType(type)) {
+                    if (!triggers && this.handlesType(type)) {
+                        console.warn(`No triggers found for type `, type);
+                    }
                 }
                 return triggers;
             },
