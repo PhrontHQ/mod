@@ -313,6 +313,9 @@ exports.DataTrigger.prototype = Object.create(
                 // if(!this._service.rootService._objectsBeingMapped.has(object)
                 // ) {
                 if (
+                    //Make sure object is even known to this._service, 
+                    // important for new objects ending there via the identifier property for example:
+                    this._service.dataIdentifierForObject(object) && 
                     shouldFetch !== false &&
                     this._getValueStatus(object) !== null &&
                     (!this.propertyDescriptor.definition || !this.propertyDescriptor.isDerived) &&
