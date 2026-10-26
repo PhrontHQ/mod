@@ -920,6 +920,20 @@ exports.DataTrigger.prototype = Object.create(
                     this._setAndObserveValue(object, initialValue, currentValue);
                 }
 
+
+                /*
+                    10-25-2026. Because the following was done after dispatching the ChangeEvent, some code listening could access 
+                    the property currently being set by mapping, triggering the logic to go into fetching it... 
+                */
+                // Resolve any pending promise for this trigger's property value.
+                // if (status) {
+                //     // this._setValueStatus(object, null);
+                //     status.resolve(currentValue);
+                // }
+                this._setValueStatus(object, null);
+
+
+
                 // addRangeChangeListener
 
                 // If we're not in the middle of a mapping...:
@@ -953,12 +967,12 @@ exports.DataTrigger.prototype = Object.create(
                     
                 }
 
-                // Resolve any pending promise for this trigger's property value.
+                // // Resolve any pending promise for this trigger's property value.
                 if (status) {
                     // this._setValueStatus(object, null);
                     status.resolve(currentValue);
                 }
-                this._setValueStatus(object, null);
+                // this._setValueStatus(object, null);
 
             },
         },
