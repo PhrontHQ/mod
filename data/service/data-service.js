@@ -2945,11 +2945,18 @@ DataService.addClassProperties(
                 if (!dataIdentifier && this !== this.mainService) {
                     dataIdentifier = this.mainService.dataIdentifierForObject(object);
                     if (!dataIdentifier) {
+                        //We don't already have a dataIdentifier for that object, but the object may have a dataIdentifier of its own:
+                        dataIdentifier = object.dataIdentifier;
+
+                        if (!dataIdentifier) {
+                            //We exhausted all avenues, now we really need to create one:
+
                         // throw "No dataIdentifier found for data object: "+object;
                         dataIdentifier = this.createDataIdentifierForObject(object);
                         if (this.parentService === this.mainService) {
                             this.mainService.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
                             this.mainService.recordDataIdentifierForObject(dataIdentifier, object);
+                            }
                         }
                     }
                     this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
@@ -3153,7 +3160,7 @@ DataService.addClassProperties(
                     dataEvent.dataService = this;
                     dataEvent.dataObject = object;
                     dataEvent.detail = detail;
-                    if(composedPath && dataEvent.setComposedPath) {
+                    if (composedPath && dataEvent.setComposedPath) {
                         dataEvent.setComposedPath(composedPath);
                     }
 
@@ -3715,18 +3722,23 @@ DataService.addClassProperties(
                                 If we do dataIdentifier = service.dataIdentifierForObject(dataObject); first, it will create a new one.
                             */
                            let dataIdentifier;
-                           if(dataObject.id) {
+                            if ((dataIdentifier = dataObject.dataIdentifier)) {
+                                this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                            }
+                            else if (dataObject.id) {
 
                                 dataIdentifier = service.dataIdentifierForTypePrimaryKey(objectDescriptor, dataObject.id);
                                 console.debug(`#### Used ${objectDescriptor.name} instance id ${dataObject.id} for dataIdentifier: ${dataIdentifier}`);
 
                                 service.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
                                 this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
-                                this.recordDataIdentifierForObject(dataIdentifier, dataObject);
+                                //This is done inside registerUniqueObjectWithDataIdentifier()
+                                // this.recordDataIdentifierForObject(dataIdentifier, dataObject);
 
                            } 
                            else {
                                 dataIdentifier = service.dataIdentifierForObject(dataObject);
+                                this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
                            }
 
                             // this is mainService here
@@ -3854,8 +3866,7 @@ DataService.addClassProperties(
                 if (
                     !objectDescriptor ||
                     (objectDescriptor && !this.descendantServicesForType(objectDescriptor).length)
-                )
-                {
+                ) {
                     //return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
                     return isRoot ? Promise.resolve(dataObject) : dataObject;
                 }
@@ -6186,8 +6197,8 @@ DataService.addClassProperties(
                             }
                         }
                     }
-                        if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
-                            if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                    if (!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                        if (firstPendingTransactionsCreatingChangedDataObjectsPromise) {
                                 return firstPendingTransactionsCreatingChangedDataObjectsPromise;
                             } else {
                                 return Promise.resolveUndefined;

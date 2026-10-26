@@ -226,6 +226,7 @@ WebSocketDataOperationService.addClassProperties({
 
 
             //Workaround for now:
+            //10-2026: Benoit: Now that we're usig and serializing dataIdentifiers, this isn't needed anymore
             // session.id = session.dataIdentifier.primaryKey;
 
             /*

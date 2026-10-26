@@ -830,6 +830,15 @@ RawDataService.addClassProperties({
                         if((objectSnapshot[requirements[i]] === null || objectSnapshot[requirements[i]]?.length === 0) && propertyDescriptor.cardinality > 1 && rule?.converter?.convertSyntax?.type === "has") {
                             return Promise.resolve(null);
                         }
+
+                        /* 
+                            FIXME
+                            It seems to happen that a value that was returned in the snapshot
+                            We need to check if the value of the property is already in the snapshot 
+                            and is a native type, or is embedded, so if it can be mapped to instance value without leaving the client
+                            We should do so here, and not issue a query for something so small
+                        */
+
                         hintSnapshot[requirements[i]] = objectSnapshot[requirements[i]];
                         if (Array.isArray(objectSnapshot[requirements[i]])) {
                             idOrder = objectSnapshot[requirements[i]];
@@ -858,7 +867,7 @@ RawDataService.addClassProperties({
                 propertyNameQuery.criteria.name = "rawDataPrimaryKeyCriteria";
                 propertyNameQuery.readExpressions = [propertyName];
 
-                //console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
+                console.log(objectDescriptor.name+": fetchObjectProperty "+ " -"+propertyName);
 
                 return DataService.mainService.fetchData(propertyNameQuery)
                 .then((fetchResult) => {
@@ -4921,6 +4930,8 @@ RawDataService.addClassProperties({
                     }
                     else {
                         operationData.id = dataIdentifier.primaryKey;
+                        //We add ourselve as the dataIdentifier's dataService since we're saving it
+                        dataIdentifier.dataService = this;
                     }
                 }
 
