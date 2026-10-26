@@ -1088,6 +1088,10 @@ DataService.addClassProperties(
                 this._dataObjectPrototypes.set(constructor, prototype);
                 this._dataObjectPrototypes.set(objectDescriptor, prototype);
                 this._dataObjectTriggers.set(objectDescriptor, dataTriggers);
+
+                //We're going to leverage the prototype chain.
+                prototype.__triggers__ = dataTriggers;
+
                 // this._constructorToObjectDescriptorMap.set(constructor, objectDescriptor);
                 return prototype;
             },
@@ -2050,6 +2054,22 @@ DataService.addClassProperties(
                 type = this.objectDescriptorForType(type);
                 prototype = this._dataObjectPrototypes.get(type);
                 if (type && !prototype) {
+                    
+                    //Make sure our parent is taken care of:
+                    if(type.parent) {
+                        var parentPrototype = this._getPrototypeForType(type.parent, _rawDataService);
+                    }
+
+                    //Move the type.object's (constructor) prototype to parentPrototype, if there's a new one
+                    if(parentPrototype) {
+                        //parentPrototype is the object's off which instances of type.parent.object will be instanciated
+                        //So we need to make that parentPrototype the prototype of type.object.prototype: That exposes the triggers add on parentPrototype to type.object.prototype
+                        //and all descendants from there
+                        Object.setPrototypeOf(type.object.prototype, parentPrototype);
+                        type.object.prototype.__triggers__ = Object.create(parentPrototype.__triggers__);
+                    }
+
+                    //Now do it fo ourselves
                     return this.__makePrototypeForType(
                         _rawDataService || this.childServiceForType(type),
                         type,
