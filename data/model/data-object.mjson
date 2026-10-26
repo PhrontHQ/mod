@@ -37,12 +37,17 @@
             "module": {
                 "%": "./data-object"
             },
-            "parent":{"@": "MontageObjectDescriptor"}
+            "object":{ "@": "DataObject" },
+            "parent":{"@": "TargetObjectDescriptor"}
         }
     },
 
-    "MontageObjectDescriptor": {
-        "object": "core/montage.mjson"
+    "DataObject": {
+        "object": "./data-object"
+    },
+
+    "TargetObjectDescriptor": {
+        "object": "core/target.mjson"
     },
 
     "fullModuleId": {
