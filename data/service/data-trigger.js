@@ -1249,8 +1249,10 @@ Object.defineProperties(
 
         _addTriggers: {
             value: function (service, objectDescriptor, prototype, requisitePropertyDescriptors) {
-                var triggers = {},
-                    propertyDescriptors = objectDescriptor.propertyDescriptors;
+                var triggers = prototype.__triggers__ || {},
+                    // propertyDescriptors = objectDescriptor.propertyDescriptors;
+                    propertyDescriptors = objectDescriptor.ownPropertyDescriptors;
+                    
 
                 if (propertyDescriptors) {
                     for (
