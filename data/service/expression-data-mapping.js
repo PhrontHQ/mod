@@ -1253,7 +1253,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                       
             var rawDataProperties = data ? Object.keys(data) : null,
                 result,
-                rawDataPropertyIteration = 0, rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
+                rawDataPropertyIteration = 0, 
+                rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
                 dataMatchingRules,
                 requisitePropertyNames = this.requisitePropertyNames,
                 hasSnapshot = this.service.hasSnapshotForObject(object),
