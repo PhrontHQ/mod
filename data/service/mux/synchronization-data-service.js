@@ -6,7 +6,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     uuid = require("core/uuid"),
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
-    { DataObject } = require("../../model/data-object"),
+    { DataObject } = require("data/model/data-object"),
     DataOperation = require("../data-operation").DataOperation,
     currentEnvironment = require("core/environment").currentEnvironment;
 
@@ -363,7 +363,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 }
         } else {
             if (propertyDescriptor._valueDescriptorReference) {
-                this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject NOT SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject NOT SYNCING", dataObject?.dataIdentifier?.url, changeEvent.key, changeEvent);
             }
         }
     }
