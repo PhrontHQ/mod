@@ -6680,8 +6680,7 @@ DataService.addClassProperties(
             value: function (dataQuery) {
                 return typeof (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters === "string"
                     ? dataQuery.readExpressions
-                        ? `${JSON.stringify(dataQuery.readExpressions)}-${
-                              (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
+                        ? `${JSON.stringify(dataQuery.readExpressions)}-${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
                           }`
                         : (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
                     : dataQuery.readExpressions
