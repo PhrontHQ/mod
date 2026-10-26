@@ -123,6 +123,7 @@
             "name": "date",
             "valueDescriptor": {"@": "DateDescriptor"},
             "isSerializable": false,
+            "readOnly": true,
             "description": "The current date at all time, potentially time-shifted globally at the app level. Returns Date.date"
         }
     },
