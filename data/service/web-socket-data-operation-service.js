@@ -226,7 +226,7 @@ WebSocketDataOperationService.addClassProperties({
 
 
             //Workaround for now:
-            session.id = session.dataIdentifier.primaryKey;
+            // session.id = session.dataIdentifier.primaryKey;
 
             /*
                 TEMPORARY FIXME
