@@ -1057,7 +1057,7 @@ DataService.addClassProperties(
 
                         So we might want to keep an eye on this, even though all should be in-sync if they handle the same properties.
                     */
-                        return this.dataIdentifier.dataService.snapshotForObject(this);
+                        return this.dataIdentifier?.dataService?.snapshotForObject(this);
                         // return mainService._getChildServiceForObject(this)?.snapshotForObject(this);
                     },
                 });
