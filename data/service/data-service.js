@@ -4914,8 +4914,10 @@ DataService.addClassProperties(
                             manyChanges = new CollectionChanges();
                             changesForDataObject.set(key, manyChanges);
                         }
-                        manyChanges.trackChangeEvent(changeEvent);
-
+                        if (!isDataObjectBeingMapped) {
+                            manyChanges.trackChangeEvent(changeEvent);
+                        }
+                    
                         if (removedValues) {
                             registeredRemovedValues = manyChanges.removedValues;
 
