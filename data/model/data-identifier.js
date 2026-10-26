@@ -1,4 +1,5 @@
-var Montage = require("../../core/core").Montage;
+const Montage = require("../../core/core").Montage;
+
 
 /**
  * A DataIdentifier represents a universal identifier for an object managed by
@@ -37,120 +38,173 @@ var Montage = require("../../core/core").Montage;
  * @class
  * @extends external:Montage
  */
-exports.DataIdentifier = Montage.specialize(/** @lends DataIdentifier.prototype */ {
+exports.DataIdentifier = class DataIdentifier extends Montage {
+    static {
+        Montage.defineProperties(this.prototype, {
 
-    /**
-     * The DataService that created this DataIdentifier
-     *
-     * @type {DataService}
-     */
-    dataService: {
-        value: undefined
-    },
+            /**
+             * The DataService that created this DataIdentifier
+             *
+             * @type {DataService}
+             */
+            dataService: {
+                value: undefined
+            },
+
+            /**
+             * The ObjectDescriptor associated with a dataIdentifier if available
+             * TODO: Rename to typeDescriptor
+             *
+             * @type {ObjectDescriptor}
+             */
+            objectDescriptor: {
+                value: undefined
+            },
+
+            /**
+             * The primaryKey of the object the dataIdentifier represents
+             *
+             * @type {Object}
+             */
+            primaryKey: {
+                value: undefined
+            },
+
+            /**
+             * The primaryKey of the object the dataIdentifier represents
+             *
+             * @type {String}
+             */
+            _typeName:{
+                value: undefined
+            },
+            typeName: {
+                get: function() {
+                    return this._typeName || (this._typeName = this.objectDescriptor ? this.objectDescriptor.name : "MISSING_TYPE_NAME");
+                },
+                set: function(value) {
+                    this._typeName = value;
+                }
+            },
+
+            /**
+             * Whether a DataIdentifier is persistent/final vs temporary when created
+             * client side.
+             *
+             * @type {boolean}
+             */
+            isPersistent: {
+                value: false
+            },
+
+            _identifier: {
+                get: function() {
+                    return this.url;
+                }
+            },
+
+            identifier: {
+                get: function() {
+                    return this.url;
+                }
+            },
+
+            toString: {
+                value: function() {
+                    return this.url;
+                }
+            },
+
+            valueOf: {
+                value: function() {
+                    return this.url;
+                }
+            },
+
+            _url: {
+                value: undefined
+            },
+
+            /**
+             * The url representation of a dataIdentifier
+             *
+             * @type {string}
+             */
+            url: {
+                get: function () {
+                    if(!this._url) {
+                        var _url = "mod-data://";
+                        // _url += this.dataService.identifier;
+                        // _url += "/";
+                        // _url += this.dataService.connection
+                        //             ? this.dataService.connection.identifier
+                        //                 ? this.dataService.connection.identifier
+                        //                 : this.dataService.connection.name
+                        //                     ? this.dataService.connection.name
+                        //                     : name
+                        //             : "default";
+                        // _url += currentEnvironment.deploymentStage;
+                        // _url += "/";
+                        _url += this.objectDescriptor.name;
+                        _url += "/";
+                        _url += this.primaryKey;
+                        this._url = _url;
+                    }
+                    return this._url;
+                },
+                set: function (value) {
+                    return (this._url = value);
+                }
+            }
+
+        });
+    }
 
     /**
      * The ObjectDescriptor associated with a dataIdentifier if available
-     * TODO: Rename to typeDescriptor
+     * @method
+     * @argument key {string}   If key is a string, it the name of the property the receiver is nested under within another object.
+     *                          If not, it means the receiver is the root object.
      *
-     * @type {ObjectDescriptor}
+     * @returns {Object} - The JSON representation
      */
-    objectDescriptor: {
-        value: undefined
-    },
-
-    /**
-     * The primaryKey of the object the dataIdentifier represents
-     *
-     * @type {Object}
-     */
-    primaryKey: {
-        value: undefined
-    },
-
-    /**
-     * The primaryKey of the object the dataIdentifier represents
-     *
-     * @type {String}
-     */
-    _typeName:{
-        value: undefined
-    },
-    typeName: {
-        get: function() {
-            return this._typeName || (this._typeName = this.objectDescriptor ? this.objectDescriptor.name : "MISSING_TYPE_NAME");
-        },
-        set: function(value) {
-            this._typeName = value;
-        }
-    },
-
-    /**
-     * Whether a DataIdentifier is persistent/final vs temporary when created
-     * client side.
-     *
-     * @type {boolean}
-     */
-    isPersistent: {
-        value: false
-    },
-
-    _identifier: {
-        get: function() {
-            return this.url;
-        }
-    },
-
-    identifier: {
-        get: function() {
-            return this.url;
-        }
-    },
-
-    toString: {
-        value: function() {
-            return this.url;
-        }
-    },
-
-    valueOf: {
-        value: function() {
-            return this.url;
-        }
-    },
-
-    _url: {
-        value: undefined
-    },
-
-    /**
-     * The url representation of a dataIdentifier
-     *
-     * @type {string}
-     */
-    url: {
-        get: function () {
-            if(!this._url) {
-                var _url = "mod-data://";
-                _url += this.dataService.identifier;
-                _url += "/";
-                _url += this.dataService.connection
-                            ? this.dataService.connection.identifier
-                                ? this.dataService.connection.identifier
-                                : this.dataService.connection.name
-                                    ? this.dataService.connection.name
-                                    : name
-                            : "default";
-                _url += "/";
-                _url += this.objectDescriptor.name;
-                _url += "/";
-                _url += this.primaryKey;
-                this._url = _url;
-            }
-            return this._url;
-        },
-        set: function (value) {
-            return (this._url = value);
-        }
+    toJSON(key) {
+        return {objectDescriptor: this.objectDescriptor.name, primaryKey: this.primaryKey};
     }
 
-});
+    deserializeSelf(deserializer) {
+        if (super.deserializeSelf) {
+            super.deserializeSelf(deserializer);
+        }
+
+        /*
+            * Backward compatibility, only run if we don't have an objectDescriptor
+            */
+        var value;
+        value = deserializer.getProperty("objectDescriptor");
+        if (value !== void 0) {
+            this.objectDescriptor = value;
+        }
+        value = deserializer.getProperty("primaryKey");
+        if (value !== void 0) {
+            this.primaryKey = value;
+        }
+
+    }
+
+    serializeSelf(serializer) {
+        if (super.serializeSelf) {
+            super.serializeSelf(serializer);
+        }
+
+        if (this.objectDescriptor) {
+            serializer.setProperty("objectDescriptor", this.objectDescriptor);
+        }
+        if (this.primaryKey) {
+            serializer.setProperty("primaryKey", this.primaryKey);
+        }
+
+    
+    }
+
+}
