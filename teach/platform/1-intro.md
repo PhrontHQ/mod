@@ -56,40 +56,54 @@ In modern "Infrastructure as Code" (IaC) workflows, these files define the actua
 The chosen environment workflow names perfectly align in alphabetical order while mapping to the pipeline sequence. By prioritizing alphabetical order, this creates a completely self-sorting pipeline that naturally organizes itself in files, configuration dropdowns, etc... 
 
 How those Terms Map to the Industry Standards:
-- Mod (Sandbox / Local Dev)The Role: Where code is actively modified, experimented on, and broken in isolation.
-- Preview (Develop / Integration)The Role: The first time separate "mods" are merged together to look at the combined product.
-- Probe (QA / Testing)The Role: Deep-diving, poking, and prober-testing for bugs, security gaps, and edge cases.
-- Sign-off (Staging / Pre-Prod)The Role: The final gate where stakeholders review the polished package and approve the launch.
-- Use (Production / Live)The Role: The actual end-state where customers interact with and derive utility from the application.
+- Mod (Local Dev on your own computer) The Role: Where code is actively modified, experimented on, and broken in isolation.
+- Poke (fka Sandbox / Local Dev) The Role: Where code is published so others can look and poke at it, so they can experience it and provide feedback to the auth
+- Preview (fka Develop / Integration) The Role: The first time separate "mods" are merged together to look at the combined product.
+- Probe (fka QA / Testing) The Role: Deep-diving, poking, and prober-testing for bugs, security gaps, and edge cases.
+- Sign-off (fka Staging / Pre-Prod) The Role: The final gate where stakeholders review the polished package and approve the launch.
+- Use (fka Prod / Live) The Role: The actual end-state where customers interact with and derive utility from the application.
+- Wayback (new) The Role: The place where previously used version go when replaced, as a live history, and possible fallback if needed
 
 The Major Advantage of this approach: In standard DevOps, systems usually sort environments alphabetically by default, which turns standard names into a chaotic mess (Development, Production, QA, Staging). This forces teams to prefix names with numbers (e.g., 1-dev, 2-qa), while this system completely solves this UI annoyance naturally.
 
 
 platform/
-├── common/             # Shared resources common to all environments: Terraform modules, shared scripts, base Docker images
+│
+├── common/             # Shared resources common to all environments: Terraform modules, shared scripts, base Docker images, etc...
 │   ├── provision/      # Create infrastructure
 │   ├── release/        # build source code into production-ready artefacts that are then distributed onto the infrastructure provisioned
 │   └── test/           # tests to ensure that everythig went as planned
+│
 ├── mod/
 │   ├── provision/      # in a local context, this would mean create locally the infrastruture that match production's one as closely as possible 
 │   ├── release/        # in a local context, this could mean release for local debugging
 │   └── test/
+│
+├── poke/
+│   ├── provision/
+│   ├── release/
+│   └── test/
+│
 ├── preview/
 │   ├── provision/
 │   ├── release/
 │   └── test/
+│
 ├── probe/
 │   ├── provision/
 │   ├── release/
 │   └── test/
+│
 ├── review
 │   ├── provision/
 │   ├── release/
 │   └── test/
+│
 └── use/
 │   ├── provision/
 │   ├── release/
 │   └── test/
+│
 └── wayback/  # Concept: would offer an archive of all release ever made on use
     ├── provision/
     ├── release/
