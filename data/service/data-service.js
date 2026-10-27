@@ -4780,7 +4780,7 @@ DataService.addClassProperties(
                     changesForDataObject = transaction ? transaction.changesForDataObject(dataObject): this.changesForDataObject(dataObject),
                     _shouldTrackChangesWhileBeingMapped = transaction ? true : shouldTrackChangesWhileBeingMapped,
                     //registersDataObjectChanges = (!isCreatedObject && (!isDataObjectBeingMapped || _shouldTrackChangesWhileBeingMapped)),
-                    registersDataObjectChanges = (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
+                    registersDataObjectChanges = this.dataIdentifierForObject(dataObject) && (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
                     self = this;
