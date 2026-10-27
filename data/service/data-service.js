@@ -2490,7 +2490,7 @@ DataService.addClassProperties(
          * in object.
          */
         fetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated, isUpdate) {
+            value: function fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate) {
                 var childServices = this.childServicesForType(object.objectDescriptor),
                     isHandler =
                         /*(this.parentService && this.parentService._getChildServiceForObject(object) === this)*/ this.handlesType(

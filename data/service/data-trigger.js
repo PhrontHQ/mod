@@ -302,7 +302,7 @@ exports.DataTrigger.prototype = Object.create(
         _getValue: {
             configurable: true,
             writable: true,
-            value: function (object, shouldFetch, _initialValue) {
+            value: function _getValue(object, shouldFetch, _initialValue) {
                 // if(shouldFetch === undefined && this._service.rootService._objectsBeingMapped.has(object) && !object.snapshot) {
                 //     shouldFetch = false;
                 // }
@@ -779,7 +779,7 @@ exports.DataTrigger.prototype = Object.create(
         _setValue: {
             configurable: true,
             writable: true,
-            value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
+            value: function _setValue(object, value, _dispatchChange, _initialValue, _currentValue) {
                 //let objectPropertyValue = this._getValue(object, /*shouldFetch*/false, /*_initialValue*/value);
                 let objectPropertyValue = (arguments.length >= 5) ? _currentValue : this._getValue(object,  /*shouldFetch*/false, /*_initialValue*/value);
                 //if (object[this._privatePropertyName] === value) return;
@@ -1013,7 +1013,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         getObjectProperty: {
-            value: function (object) {
+            value: function getObjectProperty(object) {
                 /**
                  * If the object is not created and not saved, we fetch the value
                  *
@@ -1064,7 +1064,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         updateObjectProperty: {
-            value: function (object, isUpdate = false) {
+            value: function updateObjectProperty(object, isUpdate = false) {
                 var self = this,
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
@@ -1087,7 +1087,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         _fetchObjectProperty: {
-            value: function (object, isUpdate) {
+            value: function _fetchObjectProperty(object, isUpdate) {
                 var self = this;
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
                 this._service
