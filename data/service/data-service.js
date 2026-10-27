@@ -4670,7 +4670,7 @@ DataService.addClassProperties(
         },
 
         registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, shouldTrackChangesWhileBeingMapped = false) {
+            value: function registerDataObjectChangesFromEvent(changeEvent, shouldTrackChangesWhileBeingMapped = false) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
                     objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4745,7 +4745,7 @@ DataService.addClassProperties(
         },
 
         _registerDataObjectChangesFromEvent: {
-            value: function (
+            value: function _registerDataObjectChangesFromEvent(
                 changeEvent,
                 propertyDescriptor,
                 inversePropertyDescriptor,
@@ -7658,7 +7658,7 @@ DataService.addClassProperties(
          *
          */
         handleChange: {
-            value: function (changeEvent) {
+            value: function handleChange(changeEvent) {
                 //Adding check to avoid changes from property-fetching
                 let trigger = this._triggerForObjectProperty(changeEvent.target, changeEvent.key),
                     triggerValueStatus = trigger._getValueStatus(changeEvent.target);
