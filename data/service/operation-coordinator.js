@@ -119,8 +119,7 @@ exports.OperationCoordinator = Target.specialize(/** @lends OperationCoordinator
             return (previousPromise || Promise.resolve(true))
                     .then(() => {
                         try {
-
-                            return postToConnectionPromise = this.worker.postToConnection({
+                            return this.worker.postToConnection({
                                 ConnectionId: clientId,
                                 Data: data
                             });

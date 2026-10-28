@@ -1057,7 +1057,7 @@ DataService.addClassProperties(
 
                         So we might want to keep an eye on this, even though all should be in-sync if they handle the same properties.
                     */
-                        return this.dataIdentifier.dataService.snapshotForObject(this);
+                        return this.dataIdentifier?.dataService?.snapshotForObject(this);
                         // return mainService._getChildServiceForObject(this)?.snapshotForObject(this);
                     },
                 });
@@ -1088,6 +1088,10 @@ DataService.addClassProperties(
                 this._dataObjectPrototypes.set(constructor, prototype);
                 this._dataObjectPrototypes.set(objectDescriptor, prototype);
                 this._dataObjectTriggers.set(objectDescriptor, dataTriggers);
+
+                //We're going to leverage the prototype chain.
+                prototype.__triggers__ = dataTriggers;
+
                 // this._constructorToObjectDescriptorMap.set(constructor, objectDescriptor);
                 return prototype;
             },
@@ -2050,6 +2054,22 @@ DataService.addClassProperties(
                 type = this.objectDescriptorForType(type);
                 prototype = this._dataObjectPrototypes.get(type);
                 if (type && !prototype) {
+                    
+                    //Make sure our parent is taken care of:
+                    if(type.parent) {
+                        var parentPrototype = this._getPrototypeForType(type.parent, _rawDataService);
+                    }
+
+                    //Move the type.object's (constructor) prototype to parentPrototype, if there's a new one
+                    if(parentPrototype) {
+                        //parentPrototype is the object's off which instances of type.parent.object will be instanciated
+                        //So we need to make that parentPrototype the prototype of type.object.prototype: That exposes the triggers add on parentPrototype to type.object.prototype
+                        //and all descendants from there
+                        Object.setPrototypeOf(type.object.prototype, parentPrototype);
+                        type.object.prototype.__triggers__ = Object.create(parentPrototype.__triggers__);
+                    }
+
+                    //Now do it fo ourselves
                     return this.__makePrototypeForType(
                         _rawDataService || this.childServiceForType(type),
                         type,
@@ -2131,9 +2151,20 @@ DataService.addClassProperties(
          */
         _getTriggersForObject: {
             value: function (object) {
-                var type = this._getObjectType(object),
+                /*
+                    Now that we don't flatten all inherited triggers at every node/class, 
+                    We lookup there
+                */
+                let triggers = object.__triggers__;
+
+                //Backward compatibility / old logic aroiund for now
+                if(!triggers) {
+                    let type = this._getObjectType(object);
+
                     triggers = type && this._dataObjectTriggers.get(type);
-                if (!triggers && this.handlesType(type)) {
+                    if (!triggers && this.handlesType(type)) {
+                        console.warn(`No triggers found for type `, type);
+                    }
                 }
                 return triggers;
             },
@@ -2459,7 +2490,7 @@ DataService.addClassProperties(
          * in object.
          */
         fetchObjectProperty: {
-            value: function (object, propertyName, isObjectCreated, isUpdate) {
+            value: function fetchObjectProperty(object, propertyName, isObjectCreated, isUpdate) {
                 var childServices = this.childServicesForType(object.objectDescriptor),
                     isHandler =
                         /*(this.parentService && this.parentService._getChildServiceForObject(object) === this)*/ this.handlesType(
@@ -2925,11 +2956,18 @@ DataService.addClassProperties(
                 if (!dataIdentifier && this !== this.mainService) {
                     dataIdentifier = this.mainService.dataIdentifierForObject(object);
                     if (!dataIdentifier) {
+                        //We don't already have a dataIdentifier for that object, but the object may have a dataIdentifier of its own:
+                        dataIdentifier = object.dataIdentifier;
+
+                        if (!dataIdentifier) {
+                            //We exhausted all avenues, now we really need to create one:
+
                         // throw "No dataIdentifier found for data object: "+object;
                         dataIdentifier = this.createDataIdentifierForObject(object);
                         if (this.parentService === this.mainService) {
                             this.mainService.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
                             this.mainService.recordDataIdentifierForObject(dataIdentifier, object);
+                            }
                         }
                     }
                     this.registerUniqueObjectWithDataIdentifier(object, dataIdentifier);
@@ -3133,7 +3171,7 @@ DataService.addClassProperties(
                     dataEvent.dataService = this;
                     dataEvent.dataObject = object;
                     dataEvent.detail = detail;
-                    if(composedPath && dataEvent.setComposedPath) {
+                    if (composedPath && dataEvent.setComposedPath) {
                         dataEvent.setComposedPath(composedPath);
                     }
 
@@ -3695,18 +3733,23 @@ DataService.addClassProperties(
                                 If we do dataIdentifier = service.dataIdentifierForObject(dataObject); first, it will create a new one.
                             */
                            let dataIdentifier;
-                           if(dataObject.id) {
+                            if ((dataIdentifier = dataObject.dataIdentifier)) {
+                                this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
+                            }
+                            else if (dataObject.id) {
 
                                 dataIdentifier = service.dataIdentifierForTypePrimaryKey(objectDescriptor, dataObject.id);
                                 console.debug(`#### Used ${objectDescriptor.name} instance id ${dataObject.id} for dataIdentifier: ${dataIdentifier}`);
 
                                 service.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
                                 this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
-                                this.recordDataIdentifierForObject(dataIdentifier, dataObject);
+                                //This is done inside registerUniqueObjectWithDataIdentifier()
+                                // this.recordDataIdentifierForObject(dataIdentifier, dataObject);
 
                            } 
                            else {
                                 dataIdentifier = service.dataIdentifierForObject(dataObject);
+                                this.registerUniqueObjectWithDataIdentifier(dataObject, dataIdentifier);
                            }
 
                             // this is mainService here
@@ -3834,8 +3877,7 @@ DataService.addClassProperties(
                 if (
                     !objectDescriptor ||
                     (objectDescriptor && !this.descendantServicesForType(objectDescriptor).length)
-                )
-                {
+                ) {
                     //return  (delegate && isRoot) ? Promise.resolve(dataObject) : dataObject;
                     return isRoot ? Promise.resolve(dataObject) : dataObject;
                 }
@@ -4628,7 +4670,7 @@ DataService.addClassProperties(
         },
 
         registerDataObjectChangesFromEvent: {
-            value: function (changeEvent, shouldTrackChangesWhileBeingMapped = false) {
+            value: function registerDataObjectChangesFromEvent(changeEvent, shouldTrackChangesWhileBeingMapped = false) {
                 var dataObject = changeEvent.target,
                     key = changeEvent.key,
                     objectDescriptor = this.objectDescriptorForObject(dataObject),
@@ -4703,7 +4745,7 @@ DataService.addClassProperties(
         },
 
         _registerDataObjectChangesFromEvent: {
-            value: function (
+            value: function _registerDataObjectChangesFromEvent(
                 changeEvent,
                 propertyDescriptor,
                 inversePropertyDescriptor,
@@ -4738,7 +4780,13 @@ DataService.addClassProperties(
                     changesForDataObject = transaction ? transaction.changesForDataObject(dataObject): this.changesForDataObject(dataObject),
                     _shouldTrackChangesWhileBeingMapped = transaction ? true : shouldTrackChangesWhileBeingMapped,
                     //registersDataObjectChanges = (!isCreatedObject && (!isDataObjectBeingMapped || _shouldTrackChangesWhileBeingMapped)),
-                    registersDataObjectChanges = (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
+                    
+                    /*
+                        Coding Notes: Adding this.dataIdentifierForObject(dataObject) &&  in front of the condition bellow for registersDataObjectChanges
+                        allows to not triggering the setting of identifier during deserilization to end up here
+                        and have it treated as an update.
+                    */ 
+                    registersDataObjectChanges = this.dataIdentifierForObject(dataObject) && (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
                     self = this;
@@ -6166,8 +6214,8 @@ DataService.addClassProperties(
                             }
                         }
                     }
-                        if(!pendingTransactionsCreatingChangedDataObjectsPromises) {
-                            if(firstPendingTransactionsCreatingChangedDataObjectsPromise) {
+                    if (!pendingTransactionsCreatingChangedDataObjectsPromises) {
+                        if (firstPendingTransactionsCreatingChangedDataObjectsPromise) {
                                 return firstPendingTransactionsCreatingChangedDataObjectsPromise;
                             } else {
                                 return Promise.resolveUndefined;
@@ -6660,8 +6708,7 @@ DataService.addClassProperties(
             value: function (dataQuery) {
                 return typeof (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters === "string"
                     ? dataQuery.readExpressions
-                        ? `${JSON.stringify(dataQuery.readExpressions)}-${
-                              (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
+                        ? `${JSON.stringify(dataQuery.readExpressions)}-${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
                           }`
                         : (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
                     : dataQuery.readExpressions
@@ -7617,7 +7664,7 @@ DataService.addClassProperties(
          *
          */
         handleChange: {
-            value: function (changeEvent) {
+            value: function handleChange(changeEvent) {
                 //Adding check to avoid changes from property-fetching
                 let trigger = this._triggerForObjectProperty(changeEvent.target, changeEvent.key),
                     triggerValueStatus = trigger._getValueStatus(changeEvent.target);

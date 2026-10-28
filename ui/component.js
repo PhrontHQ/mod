@@ -2231,7 +2231,16 @@ Component.addClassProperties({
             Montage.getInfoForObject(this).label = label;
             this._ownerDocumentPart = documentPart;
 
-            if (!this.hasOwnProperty("identifier")) {
+            /*
+                This is to provide a default value, so we're checking if one was set
+                this used to be:
+                if (!this.hasOwnProperty("identifier")) {..}
+                Which is presuming that identifier is a "value" property
+                and fails if it's redefined as a getter/setter for example.
+
+                So we need to stick to the public API and assess the value
+            */
+            if (this.identifier === undefined || this.identifier === null) {
                 this.identifier = label;
             }
 

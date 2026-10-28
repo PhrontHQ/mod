@@ -6,7 +6,7 @@ const MuxDataService = require("./mux-data-service").MuxDataService,
     uuid = require("core/uuid"),
     SyntaxInOrderIterator = require("core/frb/syntax-iterator").SyntaxInOrderIterator,
     { DataQuery } = require("data/model/data-query"),
-    { DataObject } = require("../../model/data-object"),
+    { DataObject } = require("data/model/data-object"),
     DataOperation = require("../data-operation").DataOperation,
     currentEnvironment = require("core/environment").currentEnvironment;
 
@@ -363,7 +363,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
                 }
         } else {
             if (propertyDescriptor._valueDescriptorReference) {
-                this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject NOT SYNCING", dataObject.dataIdentifier.dataService.name, dataObject.dataIdentifier.primaryKey, dataObject.objectDescriptor.name, changeEvent.key, changeEvent);
+                this._logTypeEvent(dataObject.objectDescriptor, "registerChangedObject NOT SYNCING", dataObject?.dataIdentifier?.url, changeEvent.key, changeEvent);
             }
         }
     }
@@ -840,6 +840,13 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
 
         return rawDataService.mapRawDataToObject(rawData, dataObject, readCompletedOperation, readExpressions, registerMappedPropertiesAsChanged)
         .then((value) => {
+
+
+            //Now that the object is fully mapped, we need to do something we're doing in _mergeDataObject:
+            //There's more similarities with what _mergeDataObject already does, so we should explore
+            //how this might reuse _mergeDataObject() directly
+            // this.dispatchDataEventTypeForObject(DataEvent.create, dataObject);
+
 
             this._logTypeEvent(dataObject.objectDescriptor, `Mapped ${dataObject.objectDescriptor.name} with rawData: `, rawData, dataObject);
             //cleanup:

@@ -302,7 +302,7 @@ exports.DataTrigger.prototype = Object.create(
         _getValue: {
             configurable: true,
             writable: true,
-            value: function (object, shouldFetch, _initialValue) {
+            value: function _getValue(object, shouldFetch, _initialValue) {
                 // if(shouldFetch === undefined && this._service.rootService._objectsBeingMapped.has(object) && !object.snapshot) {
                 //     shouldFetch = false;
                 // }
@@ -313,6 +313,9 @@ exports.DataTrigger.prototype = Object.create(
                 // if(!this._service.rootService._objectsBeingMapped.has(object)
                 // ) {
                 if (
+                    //Make sure object is even known to this._service, 
+                    // important for new objects ending there via the identifier property for example:
+                    this._service.dataIdentifierForObject(object) && 
                     shouldFetch !== false &&
                     this._getValueStatus(object) !== null &&
                     (!this.propertyDescriptor.definition || !this.propertyDescriptor.isDerived) &&
@@ -776,7 +779,7 @@ exports.DataTrigger.prototype = Object.create(
         _setValue: {
             configurable: true,
             writable: true,
-            value: function (object, value, _dispatchChange, _initialValue, _currentValue) {
+            value: function _setValue(object, value, _dispatchChange, _initialValue, _currentValue) {
                 //let objectPropertyValue = this._getValue(object, /*shouldFetch*/false, /*_initialValue*/value);
                 let objectPropertyValue = (arguments.length >= 5) ? _currentValue : this._getValue(object,  /*shouldFetch*/false, /*_initialValue*/value);
                 //if (object[this._privatePropertyName] === value) return;
@@ -917,6 +920,20 @@ exports.DataTrigger.prototype = Object.create(
                     this._setAndObserveValue(object, initialValue, currentValue);
                 }
 
+
+                /*
+                    10-25-2026. Because the following was done after dispatching the ChangeEvent, some code listening could access 
+                    the property currently being set by mapping, triggering the logic to go into fetching it... 
+                */
+                // Resolve any pending promise for this trigger's property value.
+                // if (status) {
+                //     // this._setValueStatus(object, null);
+                //     status.resolve(currentValue);
+                // }
+                this._setValueStatus(object, null);
+
+
+
                 // addRangeChangeListener
 
                 // If we're not in the middle of a mapping...:
@@ -950,12 +967,12 @@ exports.DataTrigger.prototype = Object.create(
                     
                 }
 
-                // Resolve any pending promise for this trigger's property value.
+                // // Resolve any pending promise for this trigger's property value.
                 if (status) {
                     // this._setValueStatus(object, null);
-                    status.resolve(currentValue);
+                    //status.resolve(currentValue);
                 }
-                this._setValueStatus(object, null);
+                // this._setValueStatus(object, null);
 
             },
         },
@@ -996,7 +1013,7 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         getObjectProperty: {
-            value: function (object) {
+            value: function getObjectProperty(object) {
                 /**
                  * If the object is not created and not saved, we fetch the value
                  *
@@ -1047,21 +1064,39 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         updateObjectProperty: {
-            value: function (object, isUpdate = false) {
+            value: function updateObjectProperty(object, isUpdate = false) {
                 var self = this,
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
                     //this._setValueStatus(object, status);
-                    status.promise = new Promise(function (resolve, reject) {
-                        status.resolve = resolve;
-                        status.reject = reject;
-                    });
-                    self._fetchObjectProperty(object, isUpdate);
+                    // status.promise = new Promise(function (resolve, reject) {
+                    //     status.resolve = resolve;
+                    //     status.reject = reject;
+                    // });
+                    status.promise = self._fetchObjectProperty(object, isUpdate);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
             },
         },
+
+        /**
+         * Tenporary optionality for testing
+         * WARNING NEEDS https://github.com/PhrontHQ/mod/pull/140 to be integrated 
+         * before _useFetchData can be set to true as that PR brings 
+         * 
+         * DataService.prototype.fetchInstanceValueForPropertyDescriptor()
+         * 
+         * and the complete implementation that reconciliates promises from fetches created
+         * by DataTrigger and Mapping logic
+         * 
+         * @private 
+         * @proeprty
+         */
+        _useFetchData: {
+            value: false
+        },
+
 
         /**
          * @private
@@ -1070,11 +1105,19 @@ exports.DataTrigger.prototype = Object.create(
          * @returns {external:Promise}
          */
         _fetchObjectProperty: {
-            value: function (object, isUpdate) {
-                var self = this;
+            value: function _fetchObjectProperty(object, isUpdate) {
+                var self = this,
+                    fetchPromise;
+
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
-                this._service
-                    .fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate)
+                if(this._useFetchData) {
+                    //To be pulled from branch uplevel-criteria-1. It's not implemented here but this._useFetchData defaults to false
+                    fetchPromise = this._service.fetchInstanceValueForPropertyDescriptor(object, this.propertyDescriptor);
+                } else {
+                    fetchPromise = this._service.fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate);
+                }
+
+                return fetchPromise
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 
@@ -1170,12 +1213,12 @@ exports.DataTrigger.prototype = Object.create(
             value: function (object, error, propertyValue) {
                 var status = this._getValueStatus(object);
                 this._setValueStatus(object, null);
-                if (status && !error) {
-                    status.resolve(propertyValue);
-                } else if (status && error) {
-                    console.error(error);
-                    status.reject(error);
-                }
+                // if (status && !error) {
+                //     status.resolve(propertyValue);
+                // } else if (status && error) {
+                //     console.error(error);
+                //     status.reject(error);
+                // }
                 return null;
             },
         },
@@ -1232,8 +1275,10 @@ Object.defineProperties(
 
         _addTriggers: {
             value: function (service, objectDescriptor, prototype, requisitePropertyDescriptors) {
-                var triggers = {},
-                    propertyDescriptors = objectDescriptor.propertyDescriptors;
+                var triggers = prototype.__triggers__ || {},
+                    // propertyDescriptors = objectDescriptor.propertyDescriptors;
+                    propertyDescriptors = objectDescriptor.ownPropertyDescriptors;
+                    
 
                 if (propertyDescriptors) {
                     for (

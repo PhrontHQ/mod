@@ -114,7 +114,7 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
         }
 
         // if(readOperation.target.name === "Person" || ) {
-            console.log(this.name+" handleReadOperation(): read operation "+readOperation.id);
+            console.log(`${this.name} handleReadOperation(): read ${readOperation.target.name} operation, id: ${readOperation.id}`);
         // }
 
         /*

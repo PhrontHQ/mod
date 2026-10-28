@@ -152,9 +152,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
     }
 
     _validateRawDataForType(rawData, objectDescriptor) {
-        rawData.forEach((rawObject) => {
+        for(rawObject of rawData) {
             this._validateRawDataObjectForType(rawObject, objectDescriptor);
-        });
+        }
+        // rawData.forEach((rawObject) => {
+        //     this._validateRawDataObjectForType(rawObject, objectDescriptor);
+        // });
     }
 
     _validateRawDataObjectForType(rawData, objectDescriptor) {
@@ -293,6 +296,22 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             objectDescriptor = object.objectDescriptor || object.dataIdentifier.objectDescriptor;
         for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
+
+            /*
+                Now that some serialized properties are handled by Triggers' getters and setters,
+                some properties won't be on the object as their public contract, but as a private name 
+                under the convention _propertyName.
+
+                The clener alternative would be to loop on all propertyDescriptors, and lookup the value for the public contract,
+                but that means looping through all the propertyDescriptors without knowing what was set on the object.
+
+                Now, there should be a better way: recording via the deserialization the list of properties set there
+                which would be the ones we should loop on and not have any issue at all, assuming only public variables
+                are serialized
+            */
+            if(!iPropertyDescriptor && objectKeys[i].startsWith("_")) {
+                iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i].stringByRemovingPrefix("_"));
+            }
             if(iPropertyDescriptor) {
                 callback(object[objectKeys[i]], objectKeys[i], iPropertyDescriptor, object);
             }
@@ -301,12 +320,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
     _dataIdentifierForObject(object) {
         let pk;
-        if (object.dataIdentifier && !object.dataIdentifier.dataService) {
-            object.dataIdentifier.dataService = this;
-            object.dataIdentifier.isFromSerialization = true;
-            this.registerDataIdentifierForTypePrimaryKey(object.dataIdentifier, object.objectDescriptor, object.dataIdentifier.primaryKey);
-            this.mainService.registerUniqueObjectWithDataIdentifier(object, object.dataIdentifier);
-            this.mainService.recordDataIdentifierForObject(object.dataIdentifier, object);
+        if (object.dataIdentifier) {
+            if(!object.dataIdentifier.dataService) {
+                object.dataIdentifier.dataService = this;
+                object.dataIdentifier.isFromSerialization = true;
+                this.registerDataIdentifierForTypePrimaryKey(object.dataIdentifier, object.objectDescriptor, object.dataIdentifier.primaryKey);
+                this.mainService.registerUniqueObjectWithDataIdentifier(object, object.dataIdentifier);
+                this.mainService.recordDataIdentifierForObject(object.dataIdentifier, object);
+            }
             pk = object.dataIdentifier.primaryKey;
         } else {
             pk = object.identifier;
@@ -375,7 +396,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
         if(!iObjectValue) {
             
-            let criteria = new Criteria().initWithExpression("identifier == $", aDataIdentifier.primaryKey),
+            let criteria = new Criteria().initWithExpression("dataIdentifier == $", aDataIdentifier),
                 iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
 
 
@@ -387,7 +408,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             return mainService.fetchData(iObjectValueQuery).catch((e) => {
                     //FIXME: This should not be necessary. SynchronizationDataService should be able to 
                     //understand that fetching by identifier here means fetching by id in PostgreSQL
-                    criteria = new Criteria().initWithExpression("id == $", aDataIdentifier.primaryKey),
+                    criteria = new Criteria().initWithExpression("dataIdentifier == $", aDataIdentifier),
                     iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
                     return mainService.fetchData(iObjectValueQuery)
                 })
@@ -437,65 +458,65 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             dataOperation = context instanceof DataOperation ? context : null;
 
         if(iPropertyDescriptor.cardinality === 1) {
-                    let iPropertyValue = record[property];
-                    if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
-                        if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
-                            return iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
-                                let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(valueDescriptor, record[property]);
-                                return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
-                                    .then((iObjectValue) => {
-                                        object[property] = iObjectValue
-                                    })
-                            });
-                        } else {
-                            let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record[property]);
-                            return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+            let iPropertyValue = record[property];
+            if(typeof iPropertyValue === "string" /* would sure be handy to actually have a uuid tye right now...*/) {
+                if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
+                    return iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
+                        let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(valueDescriptor, record[property]);
+                        return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
-                                
                                 object[property] = iObjectValue
                             })
-                        }
-        
-                    } else {
-                        object[property] = record[property];
-                    }
+                    });
                 } else {
-                    let iPropertyValues =  record[property],
-                        oneValue;
-
-                    if(iPropertyValues) {
-                        //iPropertyValues is a collection, so we're going to use .one() to get a sample.
-                        oneValue = iPropertyValues.one();
-
-                        //The collection is empty, we can carry it over
-                        if(!oneValue) {
-                            object[property] = iPropertyValues;
-                        } else if(Array.isArray(iPropertyValues)) {
-                            let values = [],
-                                objectDescriptor = valueDescriptor,
-                                mappingPromises = [];
-
-                            object[property] = values;
-
-                            for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
-                                let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
-
-                                mappingPromises.push(
-                                    this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
-                                );
-                            }
-                            return Promise.all(mappingPromises).then((values) => {
-                                object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
-                                return;
-                            });
-
-                        } else if(iPropertyValues instanceof Map) {
-                            throw "mapObjectToRawData for a property that is Map needs to be implemented";
-                        }
-                    } else {
-                        object[property] = iPropertyValues;
-                    }
+                    let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(iPropertyDescriptor.valueDescriptor, record[property]);
+                    return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+                    .then((iObjectValue) => {
+                        
+                        object[property] = iObjectValue
+                    })
                 }
+
+            } else {
+                object[property] = record[property];
+            }
+        } else {
+            let iPropertyValues =  record[property],
+                oneValue;
+
+            if(iPropertyValues) {
+                //iPropertyValues is a collection, so we're going to use .one() to get a sample.
+                oneValue = iPropertyValues.one();
+
+                //The collection is empty, we can carry it over
+                if(!oneValue) {
+                    object[property] = iPropertyValues;
+                } else if(Array.isArray(iPropertyValues)) {
+                    let values = [],
+                        objectDescriptor = valueDescriptor,
+                        mappingPromises = [];
+
+                    object[property] = values;
+
+                    for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
+                        let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
+
+                        mappingPromises.push(
+                            this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+                        );
+                    }
+                    return Promise.all(mappingPromises).then((values) => {
+                        object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
+                        return;
+                    });
+
+                } else if(iPropertyValues instanceof Map) {
+                    throw "mapObjectToRawData for a property that is Map needs to be implemented";
+                }
+            } else {
+                object[property] = iPropertyValues;
+            }
+        }
     }
 
     mapRawDataToObject (record, object, context, readExpressions, registerMappedPropertiesAsChanged = false) {
@@ -560,6 +581,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                             let predicateFunction = criteria?.predicateFunction,
                                 parameters;
 
+
+                        /*
+                            TODO: We should be a little smarter and realize that if the criteria can only match one object
+                            then we could break out of the loop bellow the moment we have a match
+
+                        */
                         if (criteria && this.shouldOverrideCriteria(criteria)) {
                             criteria = this._mapCriteria(criteria);
                             predicateFunction = criteria?.predicateFunction;
@@ -567,10 +594,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         let rawDataForObjectPromises = [];
 
 
-                        for(let countI = dataInstances.length, i = 0, iDataInstance, iDataInstanceIdentifier, iRawData; (i < countI); i++) {
-                            if(!criteria || (criteria && predicateFunction(dataInstances[i]))) {
+                        for(let countI = dataInstances.length, i = 0, iDataInstance; (i < countI); i++) {
+                            iDataInstance = dataInstances[i];
+                            if(iDataInstance.dataIdentifier && !iDataInstance.dataIdentifier.dataService) {
+                                iDataInstance.dataIdentifier.dataService = this;
+                            }
+                            if(!criteria || (criteria && predicateFunction(iDataInstance))) {
                                 rawDataForObjectPromises.push(
-                                    this._rawDataForObject(dataInstances[i], readOperation)
+                                    this._rawDataForObject(iDataInstance, readOperation)
                                     .then((iDataInstanceRawData) => {
                                         return iDataInstanceRawData;
                                     })

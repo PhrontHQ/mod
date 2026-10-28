@@ -934,7 +934,7 @@ ObjectDescriptor.addClassProperties(
                         i,
                         n;
 
-                    for (i = 0, n = ownDescriptors.length; i < n && isReady; ++i) {
+                    for (i = 0, n = ownDescriptors?.length || 0; i < n && isReady; ++i) {
                         descriptor = ownDescriptors[i];
                         isReady = !!(descriptor && descriptor.name);
                     }

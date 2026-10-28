@@ -26,13 +26,13 @@ exports.DataObject = class DataObject extends Target {
              */
             fullModuleId: { value: undefined },
 
-            // /**
-            //  * an instance's dataIdentifier
-            //  *
-            //  * @property {DataIdentifier}
-            //  * @default null
-            //  */
-            // dataIdentifier: { value: undefined },
+            /**
+             * an instance's dataIdentifier
+             *
+             * @property {DataIdentifier}
+             * @default null
+             */
+            dataIdentifier: { value: undefined },
 
             /**
              * Stores the latest known data snapshot from an origin service it was imported from.
@@ -102,6 +102,23 @@ exports.DataObject = class DataObject extends Target {
              * @default undefined
              */
             template: { value: false },
+
+            /**
+             * A name to be used when an instance is created to be a template for others
+             * providing default values
+             *
+             * @property {Object}
+             * @default undefined
+             */
+            templateName: { value: false },
+
+            /**
+             * Explanations of the role, context, added value... a template has for others
+             *
+             * @property {Object}
+             * @default undefined
+             */
+            templateDescription: { value: false },
 
             /**
              * All instances of that class that have the same type and that are not used as type, meaning the value of their property 'isType' is false

@@ -1253,7 +1253,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                       
             var rawDataProperties = data ? Object.keys(data) : null,
                 result,
-                rawDataPropertyIteration = 0, rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
+                rawDataPropertyIteration = 0, 
+                rawDataPropertyIterationCount = (rawDataProperties?.length || 0),
                 dataMatchingRules,
                 requisitePropertyNames = this.requisitePropertyNames,
                 hasSnapshot = this.service.hasSnapshotForObject(object),
@@ -1282,6 +1283,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
             }
             else {
+                let identifierIndex;
+                if((identifierIndex = rawDataProperties.indexOf("identifier")) !== -1) {
+                    rawDataProperties.splice(identifierIndex, 1);
+                    rawDataProperties.unshift("identifier");
+                }
                 /*
                     We have a rawData object to work with, we proceed to mapping properties it holds
                 */
@@ -1707,7 +1713,9 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
 
             //Try to pass on the locales context to prepare the rule:
             if(context instanceof DataOperation) {
-                var referrerOperation = this.service.referrerForDataOperation(context);
+                //With more dynamic handling of DataOperations by something like the SynchronizationDataService,
+                //it's possible that the service may not be as aware as it should (to be investigated) about tracking context's referrer.
+                var referrerOperation = context.referrer || this.service.referrerForDataOperation(context);
 
                 if(referrerOperation && referrerOperation.criteria && referrerOperation.criteria.parameters) {
                     locales = referrerOperation.criteria.parameters.DataServiceUserLocales;
@@ -2856,7 +2864,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                     Benoit: adding  && value to the condition as we don't want arrays with null in it
                 */
                 //We call the getter passing shouldFetch = false flag stating that it's an internal call and we don't want to trigger a fetch
-                let getter = Object.getPropertyDescriptor(object,propertyName).get;
+                let getter = Object.getPropertyDescriptor(object,propertyName)?.get;
 
                 var objectPropertyValue = getter ? getter.call(object, /*shouldFetch*/false) : object[propertyName];
                 if(isToMany && value) {

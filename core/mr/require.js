@@ -1898,6 +1898,14 @@ function locationByRemovingLastURLComponentKeepingSlash(location) {
                                     /*isInstance*/(typeof object !== "function")
                             ))
                         });
+                        if(object.prototype) {
+                            //Add it to the prototype automatically, once and for all
+                            Object.defineProperty(object.prototype, "_montage_metadata", {
+                                enumerable: false,
+                                writable: true,
+                                value: object._montage_metadata
+                            });
+                        }
 
                     }
                 }

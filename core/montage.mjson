@@ -12,8 +12,13 @@
             "exportName": "Montage",
             "module": {
                 "%": "./core[Montage]"
-            }
+            },
+            "object":{ "@": "Montage" }
         }
+    },
+
+    "Montage": {
+        "object": "./core[Montage]"
     },
 
     "identifier": {
