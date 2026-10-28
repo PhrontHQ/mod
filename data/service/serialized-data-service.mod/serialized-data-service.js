@@ -296,6 +296,22 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             objectDescriptor = object.objectDescriptor || object.dataIdentifier.objectDescriptor;
         for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
             iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i]);
+
+            /*
+                Now that some serialized properties are handled by Triggers' getters and setters,
+                some properties won't be on the object as their public contract, but as a private name 
+                under the convention _propertyName.
+
+                The clener alternative would be to loop on all propertyDescriptors, and lookup the value for the public contract,
+                but that means looping through all the propertyDescriptors without knowing what was set on the object.
+
+                Now, there should be a better way: recording via the deserialization the list of properties set there
+                which would be the ones we should loop on and not have any issue at all, assuming only public variables
+                are serialized
+            */
+            if(!iPropertyDescriptor && objectKeys[i].startsWith("_")) {
+                iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i].stringByRemovingPrefix("_"));
+            }
             if(iPropertyDescriptor) {
                 callback(object[objectKeys[i]], objectKeys[i], iPropertyDescriptor, object);
             }
