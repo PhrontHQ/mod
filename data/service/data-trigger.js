@@ -970,7 +970,7 @@ exports.DataTrigger.prototype = Object.create(
                 // // Resolve any pending promise for this trigger's property value.
                 if (status) {
                     // this._setValueStatus(object, null);
-                    status.resolve(currentValue);
+                    //status.resolve(currentValue);
                 }
                 // this._setValueStatus(object, null);
 
@@ -1069,16 +1069,34 @@ exports.DataTrigger.prototype = Object.create(
                     status = this._getValueStatus(object) || this._setValueStatus(object, {});
                 if (!status.promise) {
                     //this._setValueStatus(object, status);
-                    status.promise = new Promise(function (resolve, reject) {
-                        status.resolve = resolve;
-                        status.reject = reject;
-                    });
-                    self._fetchObjectProperty(object, isUpdate);
+                    // status.promise = new Promise(function (resolve, reject) {
+                    //     status.resolve = resolve;
+                    //     status.reject = reject;
+                    // });
+                    status.promise = self._fetchObjectProperty(object, isUpdate);
                 }
                 // Return the existing or just created promise for this data.
                 return status.promise;
             },
         },
+
+        /**
+         * Tenporary optionality for testing
+         * WARNING NEEDS https://github.com/PhrontHQ/mod/pull/140 to be integrated 
+         * before _useFetchData can be set to true as that PR brings 
+         * 
+         * DataService.prototype.fetchInstanceValueForPropertyDescriptor()
+         * 
+         * and the complete implementation that reconciliates promises from fetches created
+         * by DataTrigger and Mapping logic
+         * 
+         * @private 
+         * @proeprty
+         */
+        _useFetchData: {
+            value: false
+        },
+
 
         /**
          * @private
@@ -1088,10 +1106,18 @@ exports.DataTrigger.prototype = Object.create(
          */
         _fetchObjectProperty: {
             value: function _fetchObjectProperty(object, isUpdate) {
-                var self = this;
+                var self = this,
+                    fetchPromise;
+
                 //console.log("data-trigger: _fetchObjectProperty "+this._propertyName,object );
-                this._service
-                    .fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate)
+                if(this._useFetchData) {
+                    //To be pulled from branch uplevel-criteria-1. It's not implemented here but this._useFetchData defaults to false
+                    fetchPromise = this._service.fetchInstanceValueForPropertyDescriptor(object, this.propertyDescriptor);
+                } else {
+                    fetchPromise = this._service.fetchObjectProperty(object, this._propertyName, /*isObjectCreated*/ this._service.isObjectCreated(object), isUpdate);
+                }
+
+                return fetchPromise
                     .then((propertyValue) => {
                         this._service._objectsBeingMapped.add(object);
 
@@ -1187,12 +1213,12 @@ exports.DataTrigger.prototype = Object.create(
             value: function (object, error, propertyValue) {
                 var status = this._getValueStatus(object);
                 this._setValueStatus(object, null);
-                if (status && !error) {
-                    status.resolve(propertyValue);
-                } else if (status && error) {
-                    console.error(error);
-                    status.reject(error);
-                }
+                // if (status && !error) {
+                //     status.resolve(propertyValue);
+                // } else if (status && error) {
+                //     console.error(error);
+                //     status.reject(error);
+                // }
                 return null;
             },
         },
