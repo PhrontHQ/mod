@@ -4780,6 +4780,12 @@ DataService.addClassProperties(
                     changesForDataObject = transaction ? transaction.changesForDataObject(dataObject): this.changesForDataObject(dataObject),
                     _shouldTrackChangesWhileBeingMapped = transaction ? true : shouldTrackChangesWhileBeingMapped,
                     //registersDataObjectChanges = (!isCreatedObject && (!isDataObjectBeingMapped || _shouldTrackChangesWhileBeingMapped)),
+                    
+                    /*
+                        Coding Notes: Adding this.dataIdentifierForObject(dataObject) &&  in front of the condition bellow for registersDataObjectChanges
+                        allows to not triggering the setting of identifier during deserilization to end up here
+                        and have it treated as an update.
+                    */ 
                     registersDataObjectChanges = this.dataIdentifierForObject(dataObject) && (isCreatedObject || (!isCreatedObject && !isDataObjectBeingMapped || (isDataObjectBeingMapped && _shouldTrackChangesWhileBeingMapped))),
                     //WARNING TEST: THIS WAS REDEFINING THE PASSED ARGUMENT
                     //inversePropertyDescriptor,
