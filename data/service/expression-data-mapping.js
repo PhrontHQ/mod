@@ -1283,6 +1283,11 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 }
             }
             else {
+                let identifierIndex;
+                if((identifierIndex = rawDataProperties.indexOf("identifier")) !== -1) {
+                    rawDataProperties.splice(identifierIndex, 1);
+                    rawDataProperties.unshift("identifier");
+                }
                 /*
                     We have a rawData object to work with, we proceed to mapping properties it holds
                 */
