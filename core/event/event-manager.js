@@ -3370,13 +3370,8 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
     _trackedTargets: {
         get: function () {
-            if (!this.__trackedTargets) {
-                let isLocalModding = currentEnvironment.isLocalModding;
-                this.__trackedTargets = this._parseUrlTrackedTypes() || (isLocalModding ? 
-                //Default tracked targets
-                new Set(
-                    ["Person", "EmploymentPosition"]
-                 ) : null);
+            if (this.__trackedTargets === undefined) {
+                this.__trackedTargets = this._parseUrlTrackedTypes() || null;
             }
             return this.__trackedTargets;
         }
@@ -3385,9 +3380,9 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     _shouldTrackEvent: {
         value: function (event) {
             let trackingEnabled = this._trackedTargets !== null,
-                targetName = event.target.name;
+                targetIdentifier = trackingEnabled && event.target.identifier;
 
-            return trackingEnabled && this._trackedTargets.has(targetName);
+            return trackingEnabled && this._trackedTargets.has(targetIdentifier);
         }
     },
 
