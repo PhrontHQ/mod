@@ -3368,6 +3368,8 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
     },
 
 
+    //Consider moving this to localStorage and adding listening of some kind
+    //This will allow us to adjust the tracked types mid-session
     _trackedTargets: {
         get: function () {
             if (this.__trackedTargets === undefined) {
