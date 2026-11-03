@@ -3417,7 +3417,6 @@ var EventManager = exports.EventManager = Montage.specialize(/** @lends EventMan
 
     _hasActiveReferrer: {
         value: function (event) {
-            let referrer;
             if (event.referrer) {
                 return this._isActive(event.referrer) || this._hasActiveReferrer(event.referrer);
             } else if (event.referrers) {

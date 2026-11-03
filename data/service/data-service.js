@@ -4664,7 +4664,7 @@ DataService.addClassProperties(
             value: function () {
                 this.debouncedQueueMicrotaskWithDelay(() => {
                     this.isAutosaveScheduled = false;
-                    this.saveChanges();
+                    this.saveChanges("AutoSave");
                 });
             },
         },
@@ -5541,6 +5541,7 @@ DataService.addClassProperties(
         isAutosaveScheduled: {
             value: false,
         },
+
 
         saveChanges: {
             value: function () {
@@ -6690,17 +6691,45 @@ DataService.addClassProperties(
 
         _criteriaParametersReplacer: {
             value: function (key, value) {
-                return typeof value === "object"
-                    ? key === ""
-                        ? JSON.stringify(value, this._criteriaParametersReplacer)
-                        : value?.dataIdentifier
-                        ? value.dataIdentifier
-                        : !!value
-                        ? value.toString()
-                        : null
-                    : isArray(value)
-                    ? value.map(this._criteriaParametersReplacer)
-                    : value;
+
+                //DEBUG CODE
+                //The odd structure here was added to allow stepping through 
+                //the replacer code to determine why/how parameters were created
+                //in the way that they were. There were 2 issues. 
+                //1. DataIdentifier parameters were returned as '[Object object]'. This is commented 
+                //   on further in DataIdentifier.toJSON
+                //2. The previous ternary had an isArray() check on values whose type =! object which is impossible
+                
+                if (typeof value !== "object") {
+                    return isArray(value) ? value.map(this._criteriaParametersReplacer) : value;
+                }
+
+                if (key === "") {
+                    return JSON.stringify(value, this._criteriaParametersReplacer)
+                }
+
+                if (value?.dataIdentifier) {
+                    return value.dataIdentifier;
+                }
+
+                if (!value) {
+                    return null;
+                } else if (isArray(value)) {
+                    return value.map(this._criteriaParametersReplacer);
+                } else {
+                    return value.toString();
+                }
+
+
+                
+                // return typeof value === "object" ? 
+                //             key === "" ? 
+                //                 JSON.stringify(value, this._criteriaParametersReplacer) : 
+                //                 value?.dataIdentifier ?
+                //                      value.dataIdentifier : 
+                //                 !!value ? value.toString() : null
+                    
+                //         : isArray(value) ? value.map(this._criteriaParametersReplacer) : value;
             },
         },
 
@@ -6727,9 +6756,20 @@ DataService.addClassProperties(
             value: function (dataQuery) {
                 var objectDescriptor = dataQuery.type,
                     criteria = dataQuery.criteria || Criteria.thatEvaluatesToTrue,
-                    criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor, criteria);
+                    criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor, criteria),
+                    expressionMapKey, match;
 
-                return criteriaExpressionMap.get(this._criteriaExpressionMapKeyForDataQuery(dataQuery));
+                    //DEBUG CODE. The odd break here allows you to step through and see the 
+                    //content of the key and whether it matches an existing key before you exit 
+                    //the function.
+
+                    expressionMapKey = this._criteriaExpressionMapKeyForDataQuery(dataQuery);
+                    match = criteriaExpressionMap.get(expressionMapKey);
+
+
+
+                return match;
+                // return criteriaExpressionMap.get(this._criteriaExpressionMapKeyForDataQuery(dataQuery));
             },
         },
 
@@ -6924,6 +6964,7 @@ DataService.addClassProperties(
                 //     console.log("DataService.fetchData", query.type.name, referred);
                 // }
 
+
                 if (this.supportsDataOperation) {
                     //Check if we already have a DataStream pending for that same query:
                     if ((stream = this.registeredDataStreamMapForDataQuery(query))) {
@@ -6931,6 +6972,8 @@ DataService.addClassProperties(
                         return stream;
                     }
                 }
+
+
 
                 // Set up the stream.
                 stream = stream || new DataStream();
@@ -7005,6 +7048,7 @@ DataService.addClassProperties(
                                 } else if (self.identity) {
                                     readOperation.identity = self.identity;
                                 }
+
 
                                 //Need to add a check to see if criteria may have more spefific instructions for "locale".
                                 /*

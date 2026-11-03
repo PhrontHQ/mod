@@ -169,7 +169,18 @@ exports.DataIdentifier = class DataIdentifier extends Montage {
      * @returns {Object} - The JSON representation
      */
     toJSON(key) {
-        return {objectDescriptor: this.objectDescriptor.name, primaryKey: this.primaryKey};
+        let json = {objectDescriptor: this.objectDescriptor.name, primaryKey: this.primaryKey};
+        // The object returned here is used create the cache key 
+        // for in-flight data streams. DataService._criteriaExpressionMapKeyForDataQuery
+        // calls json.toString() on this object and without the custom toString(), that 
+        // returns '[Object object]'. The below retains the type and primaryKey 
+        // information. The real fix for this is likely an improved implementation
+        // in DataService
+        json.toString = function () {
+            return JSON.stringify(json);
+        }
+        
+        return json;
     }
 
     deserializeSelf(deserializer) {
