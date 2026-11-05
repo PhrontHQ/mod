@@ -135,7 +135,8 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         if (!this.__trackedTypes) {
             let isLocalModding = currentEnvironment.isLocalModding;
             this.__trackedTypes = this._parseUrlTrackedTypes() || (isLocalModding ? new Set([
-                "Person", "EmploymentPosition"
+                // "Person", "EmploymentPosition"
+                "EMPTY"
             ]) : null);
         }
         return this.__trackedTypes;
@@ -154,7 +155,7 @@ exports.SynchronizationDataService = class SynchronizationDataService extends Mu
         }
         if (!this._trackedTypes || !this._trackedTypes.size) {
             console.log.apply(console, logArgs);
-        } else if (objectDescriptor && this._trackedTypes.has(objectDescriptor.name)) {
+        } else if (objectDescriptor && this._trackedTypes.has(objectDescriptor.identifier)) {
             console.log.apply(console, logArgs);
         }
     }

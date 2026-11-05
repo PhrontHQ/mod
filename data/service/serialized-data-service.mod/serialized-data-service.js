@@ -405,14 +405,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             }
 
 
-            return mainService.fetchData(iObjectValueQuery).catch((e) => {
-                    //FIXME: This should not be necessary. SynchronizationDataService should be able to 
-                    //understand that fetching by identifier here means fetching by id in PostgreSQL
-                    criteria = new Criteria().initWithExpression("dataIdentifier == $", aDataIdentifier),
-                    iObjectValueQuery = DataQuery.withTypeAndCriteria(aDataIdentifier.objectDescriptor, criteria);
-                    return mainService.fetchData(iObjectValueQuery)
-                })
-                .then((fetchDataResult) => {
+            return mainService.fetchData(iObjectValueQuery).then((fetchDataResult) => {
                     return fetchDataResult[0];
                 }).catch((e) => {
                     console.error("Serialized DataService failed to fetch objectPromise", e);
@@ -423,6 +416,78 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             return Promise.resolve(iObjectValue);
         }
 
+    }
+
+
+
+    _objectsPromisesForDataIdentifiers(dataIdentifiers, objectDescriptor, mainService, dataOperation) {
+        let indices = new Map(), values, criteria, i, n, iObjectValue;
+
+        //Loop identifiers. If we already have an object for it, grab it. If we don't, 
+        //create a criteria so we can fetch that object.
+        for (i = 0, n = dataIdentifiers.length; i < n; i++) {
+            iObjectValue = mainService.objectForDataIdentifier(dataIdentifiers[i]);
+            indices.set(dataIdentifiers[i], i);
+            if (iObjectValue) {
+                if (!values) {
+                    values = [];
+                }
+                values.push(iObjectValue);
+            } else {
+                if (!criteria) {
+                    criteria = [];
+                }
+                criteria.push(this._criteriaForDataIdentifier(dataIdentifiers[i]));
+            }
+        }
+        
+
+        if (criteria) {
+
+            //If single criteria, no need to concatenate.
+            if (criteria.length === 1) {
+                criteria = criteria[0];
+            } else {
+                //Concatenate criteria to produce "dataIdentifier == $p1 || datIdentifier == p$ || ......."
+                criteria = Criteria.or(criteria);
+            }
+            let iObjectValueQuery = DataQuery.withTypeAndCriteria(objectDescriptor, criteria);
+
+
+            if (dataOperation) {
+                iObjectValueQuery.hints = {referrerOperation: dataOperation};
+            }
+
+            return mainService.fetchData(iObjectValueQuery).then((results) => {
+                
+                // If you have mixed local + fetched results, combine them in the order
+                // they were asked for in the criteria
+                if (values) {
+                    let ordered = [], i, n;
+                    ordered.length = results.length + values.length;
+                    for (i = 0, n = results.length; i < n; i++) {
+                        ordered[indices.get(results[i].dataIdentifier)] = results[i];
+                    }
+                    for (i = 0, n = values.length; i < n; i++) {
+                        ordered[indices.get(values[i].dataIdentifier)] = values[i];
+                    }
+                    return ordered;
+                } else {
+                    return results;
+                }
+            }).catch((e) => {
+                console.error("Serialized DataService failed to fetch objects", e);
+                return null;
+            })
+        } else if (values) {
+            return Promise.resolve(values);
+        } else {
+            return this.nullPromise;
+        }
+    }
+
+    _criteriaForDataIdentifier(dataIdentifier) {
+        return new Criteria().initWithExpression("dataIdentifier == $", dataIdentifier);
     }
 
     /* adds a promise resolving to the value to mappingPromises passed in*/
@@ -494,18 +559,23 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 } else if(Array.isArray(iPropertyValues)) {
                     let values = [],
                         objectDescriptor = valueDescriptor,
-                        mappingPromises = [];
+                        dataIdentifiers = [];
 
                     object[property] = values;
 
-                    for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
-                        let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
 
-                        mappingPromises.push(
-                            this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
-                        );
+                    for(let countI = iPropertyValues.length, i=0; (i < countI); i++) {
+
+                        dataIdentifiers.push(this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]));
+                        // dataIdentifiers.push(this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]));
+                        // aDataIdentifier = this.dataIdentifierForTypePrimaryKey(objectDescriptor, iPropertyValues[i]);
+
+                        // mappingPromises.push(
+                        //     this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
+                        // );
                     }
-                    return Promise.all(mappingPromises).then((values) => {
+                    // return Promise.all(mappingPromises).then((values) => {
+                    return this._objectsPromisesForDataIdentifiers(dataIdentifiers, valueDescriptor, mainService, dataOperation).then((values) => {
                         object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
                         return;
                     });
@@ -593,12 +663,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         } 
                         let rawDataForObjectPromises = [];
 
-
                         for(let countI = dataInstances.length, i = 0, iDataInstance; (i < countI); i++) {
                             iDataInstance = dataInstances[i];
                             if(iDataInstance.dataIdentifier && !iDataInstance.dataIdentifier.dataService) {
                                 iDataInstance.dataIdentifier.dataService = this;
                             }
+
                             if(!criteria || (criteria && predicateFunction(iDataInstance))) {
                                 rawDataForObjectPromises.push(
                                     this._rawDataForObject(iDataInstance, readOperation)
