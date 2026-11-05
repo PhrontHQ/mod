@@ -998,13 +998,28 @@ var Criteria = (exports.Criteria = Montage.specialize(
         _circularJSONReplacer: {
             get: function _circularJSONReplacer() {
                 const seen = new WeakSet(); 
+                let isInitial = true;
                 return (key, value) => {
-                    if (typeof value === "object" && value !== null) {
-                    if (seen.has(value)) {
-                        // Circular reference found, discard key
-                        return; 
+
+                    if (isInitial) {
+                        isInitial = false;
+                        if (value.dataIdentifier) {
+                            return value.dataIdentifier;
+                        } 
+                        return value;
                     }
-                    seen.add(value);
+                    if (typeof value === "object" && value !== null) {
+                        if (seen.has(value)) {
+                            // Circular reference found, discard key
+                            return; 
+                        }
+
+                        seen.add(value);
+                        if (value.dataIdentifier) {
+                            return value.dataIdentifier;
+                        } else {
+                            return value.toString();
+                        }
                     }
                     return value;
                 };

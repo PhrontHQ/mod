@@ -6669,57 +6669,11 @@ DataService.addClassProperties(
             },
         },
 
-        makeCriteriaParametersReplacer: {
-            value: function () {
-                let isInitial = true;
-
-                return (key, value) => {
-                    if (isInitial) {
-                        isInitial = false;
-                        return value;
-                    }
-                    if (key === "") {
-                        // Omit all properties with name "" (except the initial object)
-                        return undefined;
-                    }
-
-                    return this._criteriaParametersReplacer(key, value);
-                };
-            },
-        },
-
-        _criteriaParametersReplacer: {
-            value: function (key, value) {
-                return typeof value === "object"
-                    ? key === ""
-                        ? JSON.stringify(value, this._criteriaParametersReplacer)
-                        : value?.dataIdentifier
-                        ? value.dataIdentifier
-                        : !!value
-                        ? value.toString()
-                        : null
-                    : isArray(value)
-                    ? value.map(this._criteriaParametersReplacer)
-                    : value;
-            },
-        },
-
         _criteriaExpressionMapKeyForDataQuery: {
             value: function (dataQuery) {
-                return typeof (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters === "string"
-                    ? dataQuery.readExpressions
-                        ? `${JSON.stringify(dataQuery.readExpressions)}-${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
-                          }`
-                        : (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters
-                    : dataQuery.readExpressions
-                    ? `${JSON.stringify(dataQuery.readExpressions)}-${JSON.stringify(
-                          (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters,
-                          this.makeCriteriaParametersReplacer()
-                      )}`
-                    : JSON.stringify(
-                          (dataQuery.criteria || Criteria.thatEvaluatesToTrue).parameters,
-                          this.makeCriteriaParametersReplacer()
-                      );
+                return dataQuery.readExpressions 
+                ? `${JSON.stringify(dataQuery.readExpressions)}-${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).toString()}`
+                : `${(dataQuery.criteria || Criteria.thatEvaluatesToTrue).toString()}`;
             },
         },
 
