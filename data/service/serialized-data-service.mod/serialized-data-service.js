@@ -215,7 +215,13 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         if(propertyDescriptor.cardinality === 1) {
             let value =  object[objectKey],
                 primaryKey;
-            if (value?.hasOwnProperty("dataIdentifier")) {
+
+            /*
+                Now that dataIdentifier is behind a trigger, it's stored as _dataIdentifier,
+                so if (value?.hasOwnProperty("dataIdentifier"))  fails
+            */
+            //if (value?.hasOwnProperty("dataIdentifier")) {
+            if (value?.dataIdentifier) {
                 rawData[propertyDescriptor.name] = object[objectKey].dataIdentifier && object[objectKey].dataIdentifier.primaryKey;
             } else {
                 rawData[objectKey] = object[objectKey];
