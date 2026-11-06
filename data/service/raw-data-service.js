@@ -3291,21 +3291,49 @@ RawDataService.addClassProperties({
            if(this.areCriteriaSyntaxPropertiesRawDataPrimaryKeys(typeToFetch, criteria)) {
 
                 if(typeof criteria.parameters === "string") {
-                        dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch,criteria.parameters);
+                        dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch, criteria.parameters);
                         existingObject = this.rootService.objectForDataIdentifier(dataIdentifier);
                 } else if(Array.isArray(criteria.parameters)) {
                     var rootService = this.rootService,
                         array = criteria.parameters, i=0, iObject,
+                        parametersIndexByEntry = array.indexByEntry,
                         firstLocalObjectIndex = -1,
-                        parametersToFetch;
+                        parametersToFetch,
+                        shouldBuildParametersIndexByEntry = false,
+                        parametersToFetchCount = 0;
+
+                    /*
+                        This is currently done in ExpressionDataMapping.mapRawDataToObjectProperty()
+                        But it adds a loop. Here we have to loop anyway, so adding logic to build it here
+                        so we can eventually remove it there.
+                    */
+                    if(!parametersIndexByEntry) {
+                        shouldBuildParametersIndexByEntry = true;
+                        parametersIndexByEntry = array.indexByEntry = {};
+                    }
 
                     while( i < array.length ) {
-                        dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch,array[i]);
+                        let iForeignKey = array[i];
+                        dataIdentifier = this.dataIdentifierForTypePrimaryKey(typeToFetch, iForeignKey);
+                        
+                        if(shouldBuildParametersIndexByEntry) {
+                            parametersIndexByEntry[iForeignKey] = i;
+                        }
+
                         iObject = rootService.objectForDataIdentifier(dataIdentifier);
                         if(iObject) {
-                            //Add to result
-                            (existingObject || (existingObject = [])).push(iObject);
-                            //remove from criteria since found
+
+                            if(parametersIndexByEntry[iForeignKey] !== undefined) {
+                                //splice iObject to result in the right spot
+                                //(existingObject || (existingObject = [])).splice(parametersIndexByEntry[iForeignKey], 0, iObject);
+                                //splice doesn't create holes, and I don't think at this stage we need mutation to be observed, 
+                                //so we're going to set it straight. If we need mutation, we're going to need to create a different method to do so 
+                                (existingObject || (existingObject = []))[parametersIndexByEntry[iForeignKey]] = iObject;
+                            } else {
+                                //Add to result
+                                (existingObject || (existingObject = [])).push(iObject);
+                            }
+                            //remove from criteria since found?
                             // array.splice(i,1);
                             /*
                                 The first time we find a local object, we need to fork the arrays as we'll fullfill some from local, and the rest from the network.
@@ -3313,19 +3341,33 @@ RawDataService.addClassProperties({
                             if(firstLocalObjectIndex == -1) {
                                 firstLocalObjectIndex = i;
                             }
-                        } else if(firstLocalObjectIndex !== -1) {
+                        } else {
+                            /*
+                                We're now inserting the found object at the rigtht index, so if it happens to be the last one in existingObject array,
+                                then if(existingObject && existingObject.length === array.length) bellow would lead us to believe that we have all values,
+                                because an array with no value in a slot still counts in its .length
 
-                            if(!parametersToFetch) {
-                                parametersToFetch = array.slice(0, firstLocalObjectIndex);
+                                So we're counting the ones to fetch, which amounts to the number of "holes" / empty slots in existingObject array
+                            */
+                            parametersToFetchCount++;
+
+                            if(firstLocalObjectIndex !== -1) {
+
+                                if(!parametersToFetch) {
+                                    parametersToFetch = array.slice(0, firstLocalObjectIndex);
+                                }
+                                parametersToFetch.push(iForeignKey);
                             }
-                            parametersToFetch.push(array[i]);
                         }
                         i++;
                     }
 
                     if(parametersToFetch) {
+                        //Because we're changing the criteria.parameters to parametersToFetch that only contains the foreign keys of what we don't have in memory yet
+                        //we need to carry the indexByEntry proeprty over as it's expected later on (in _insertIntoResultBasedOnPositionInCriteria) to put the converted values at the right index
+                        parametersToFetch.indexByEntry = array.indexByEntry;
                         criteria.parameters = parametersToFetch;
-                    } else if(existingObject && existingObject.length === array.length) {
+                    } else if(existingObject && existingObject.length === array.length && parametersToFetchCount === 0) {
                         /*
                             Looks like we found everything locally
                         */

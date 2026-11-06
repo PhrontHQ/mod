@@ -332,7 +332,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     }
                 } else {
 
-                    //console.log("_fetchConvertedDataForObjectDescriptorCriteria()",typeToFetch, criteria, currentRule);
+                    //console.log("_fetchConvertedDataForObjectDescriptorCriteria(typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged)",typeToFetch, criteria, currentRule, registerMappedPropertiesAsChanged);
 
                     /*
                         If there wasn't one registered for this already, we still need an individual promise that will resolve to the value for (typeToFetch, criteria) once we filter the combined fetched values to dispatch back to the caller of convert().
@@ -347,18 +347,6 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         fetchPromise.resolve = fetchPromiseResolve;
                         fetchPromise.reject = fetchPromiseReject;
 
-                        /*
-                            In _combineFetchDataMicrotaskFunctionForTypeQueryParts, 
-                            fetchPromise.result is built with what is fetched.
-                            So we start putting in what we already found in memory.
-
-                            WIP:    More work to make sure that if there's an expected order, 
-                                    the end result is identical to what it would have been
-                                    if everything was fetched
-                        */
-                        if(localResult?.length > 0) {
-                            fetchPromise.result = localResult;
-                        }
 
                         self._registerFetchPromiseForObjectDescriptorCriteria(fetchPromise, typeToFetch, criteria);
 
@@ -450,6 +438,24 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                 }
 
+                /*
+                    In _combineFetchDataMicrotaskFunctionForTypeQueryParts, 
+                    fetchPromise.result is built with what is fetched.
+                    So we start putting in what we already found in memory.
+
+                    WIP:    More work to make sure that if there's an expected order, 
+                            the end result is identical to what it would have been
+                            if everything was fetched
+                */
+                if(localResult?.length > 0) {
+                    fetchPromise.result = localResult;
+                    fetchPromise = fetchPromise.then((value) => {
+                        console.log("fetchPromise is ", fetchPromise);
+                        console.log("value is ", value);
+                        return value;
+                    })
+                }
+
 
                 return fetchPromise;
             }) : null;
@@ -460,23 +466,17 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     _insertIntoResultBasedOnPositionInCriteria: {
         value: function (value, result, criteria, service) {
             let indexByEntry = criteria.parameters.indexByEntry,
-                index = indexByEntry[service.dataIdentifierForObject(value).primaryKey],
-                left = 0, right = result.length,
-                mid, comp;
-                
-            
-            while (left < right) {
-                mid = Math.floor((right + left) / 2);
-                comp = result[mid];
-                compIndex = indexByEntry[service.dataIdentifierForObject(comp).primaryKey];
-                if (compIndex < index) {
-                    left = mid + 1;
-                } else if (compIndex > index) {
-                    right = mid;
-                }
+                index = indexByEntry[service.dataIdentifierForObject(value).primaryKey];
+
+
+            /*
+                result is ordered or empty, and index tells us where it needs to go
+                If value is already in result at the right index, nothing to do
+            */
+            if(result[index] !== value) {
+                result[index] = value;
             }
             
-            result.splice(left, 0, value);
         }
     },
 
@@ -585,7 +585,10 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                             if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
                                 //console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
-                                if (iCriteria.parameters.indexByEntry && iFetchPromise.result) {
+                            if (iCriteria.parameters.indexByEntry) {
+                                if(!iFetchPromise.result) {
+                                    iFetchPromise.result = [];
+                                }
                                     /***
                                      * The desired behavior when fetching with a parameter array (e.g. [a, b, c].has(id))
                                      * is to return the results in the same order as the parameters. When doing a combined fetch, 
@@ -605,8 +608,6 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
 
                             }
                         }
-
-
 
                         if (countJ == 0) {
                             if(iFetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(type,iCriteria)) {
@@ -661,7 +662,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
     _combineFetchDataMicrotask: {
         value: function(service, registerMappedPropertiesAsChanged) {
 
-            //console.log("_combineFetchDataMicrotask("+this._pendingCriteriaByTypeToCombine.size+")");
+            //console.log("_combineFetchDataMicrotask("+this._pendingCriteriaByTypeToCombine.size+"), registerMappedPropertiesAsChanged is "+registerMappedPropertiesAsChanged);
             var mapIterator = this._pendingCriteriaByTypeToCombine.entries(),
                 mapIterationEntry,
                 mapIterationType,
