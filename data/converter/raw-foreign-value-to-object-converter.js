@@ -172,7 +172,34 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                     criteria.parameters.serviceIdentifier = this.serviceIdentifier;
                 }
 
+                /******
+                 * There is a caching issue here. Queries that have the same type and criteria are 
+                 * considered equal (which is reasonable). Because they are equal, we send a single query 
+                 * and return the same array in memory to all callers. This is a problem when the initial 
+                 * queries were sent by different source objects. 
+                 * For example... say we have a Person.friends relationship. One person making a 
+                 * new friend does not necessarily mean another person makes that same friend. 
+                 * 
+                 * The issue we have is that if 2 people start with the same friends, this cacheing returns the same 
+                 * array in memory so we have...
+                 * 
+                 *    aPerson.friends = anotherPerson.friends = [fred, barney];
+                 * 
+                 * The consequence is that if aPerson makes a new friend, that new friend is 
+                 * also added to anotherPersons.friends. 
+                 * 
+                 * Instead of... 
+                 * 
+                 *    aPerson.friends = [fred, barney, wilma]
+                 *    anotherPerson.friends = [fred, barney];
+                 * 
+                 * You have 
+                 * 
+                 * aPerson.friends = anotherPerson.friends = [fred, barney, wilma];
+                 * 
+                 */
                 var fetchPromise = self._registeredFetchPromiseMapForObjectDescriptorCriteria(typeToFetch,criteria);
+
 
                 if(!self.combinesFetchData) {
                     //console.log("_fetchConvertedDataForObjectDescriptorCriteria()",typeToFetch, criteria, currentRule);
@@ -409,20 +436,20 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                         }
 
                     }
-                    // else {
-                    //     fetchPromise = fetchPromise.then(function(value) {
-                    //         /*
-                    //             #WARNING here we're piggy-backing on an existing promise. Upper layers (expression data mapping) typically directly assign this returned array to the object's property it belongs to, assuming it's unique because fetched.
+                    else {
+                        fetchPromise = fetchPromise.then(function(value) {
+                            /*
+                                #WARNING here we're piggy-backing on an existing promise. Upper layers (expression data mapping) typically directly assign this returned array to the object's property it belongs to, assuming it's unique because fetched.
 
-                    //             So to truly behave like a fetch that would return results in a new unique array, we're going to return a clone of it. Because if returned directly, the same array could end up being used by different objects, creating changes in the other objects listeners (in DataTrigger) which leads to bugs.
+                                So to truly behave like a fetch that would return results in a new unique array, we're going to return a clone of it. Because if returned directly, the same array could end up being used by different objects, creating changes in the other objects listeners (in DataTrigger) which leads to bugs.
 
-                    //             While Array.from() is the fastest on WebKit, Array.slice() is the overal fastest choice.
-                    //             DO NOT REMOVE THIS .slice() !! SEE EXPLAINATION ABOVE
-                    //         */
+                                While Array.from() is the fastest on WebKit, Array.slice() is the overal fastest choice.
+                                DO NOT REMOVE THIS .slice() !! SEE EXPLAINATION ABOVE
+                            */
 
-                    //         return Array.isArray(value) ? value.slice() : value;
-                    //     });
-                    // }
+                            return Array.isArray(value) ? value.slice() : value;
+                        });
+                    }
 
 
                     /*
