@@ -490,6 +490,20 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         }
     },
 
+    _ownObjectPropertyNames: {
+        value: undefined
+    },
+    ownObjectPropertyNames: {
+        get: function() {
+            if(!this._ownObjectPropertyNames) {
+
+                //We want to capture all keys, owned + inherited
+                this._ownObjectPropertyNames = Object.getOwnPropertyNames(this.objectMappingRules);
+            }
+            return this._ownObjectPropertyNames;
+        }
+    },
+
     _objectPropertyNames: {
         value: undefined
     },
@@ -543,8 +557,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                             iDescendant = objectDescriptorDescendants[i];
                             iDescendantMapping = service.mappingForType(iDescendant);
                             //We only want to add those that are actualy stored in the same objectStore
-                            if(iDescendantMapping.isObjectStoreShared && iDescendantMapping.rawDataTypeName === objectStoreName && iDescendantMapping.objectPropertyNames) {
-                                descendantObjectPropertyNames.push(...iDescendantMapping.objectPropertyNames);
+                            if(iDescendantMapping.isObjectStoreShared && iDescendantMapping.rawDataTypeName === objectStoreName && iDescendantMapping.ownObjectPropertyNames) {
+                                descendantObjectPropertyNames.push(...iDescendantMapping.ownObjectPropertyNames);
                             }
                         }    
                     }
@@ -3229,7 +3243,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         get: function () {
             if (!this._hasGeneratedObjectMappingRules) {
                 if (!this._objectMappingRules) {
-                    this._objectMappingRules = {};
+                    //this._objectMappingRules = {};
+                    this._objectMappingRules = Object.create(null);
                     this._initializeRules();
                 }
                 //console.debug("this.objectDescriptor.name is "+this.objectDescriptor.name);
@@ -3265,7 +3280,8 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
         get: function () {
             if (!this._hasGeneratedRawDataMappingRules) {
                 if (!this._rawDataMappingRules) {
-                    this._rawDataMappingRules = {};
+                    //this._rawDataMappingRules = {};
+                    this._rawDataMappingRules = Object.create(null);
                     this._initializeRules();
                 }
                 if (this.parent && Object.getPrototypeOf(this._rawDataMappingRules) !== this.parent.rawDataMappingRules) {
