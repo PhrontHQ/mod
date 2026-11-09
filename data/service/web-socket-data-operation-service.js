@@ -460,7 +460,8 @@ WebSocketDataOperationService.addClassProperties({
 
                         operation.propagationPromise.then(() => {
                             let referrerCompletionPromiseResolve = this.referrerCompletionPromiseResolveForDataOperation(operation);
-                            if(referrerCompletionPromiseResolve && this.promisesReadCompletionOperation) {
+                            //if(referrerCompletionPromiseResolve && this.promisesReadCompletionOperation) {
+                            if(referrerCompletionPromiseResolve) {
                                 referrerCompletionPromiseResolve(operation);
                             }
                         });
@@ -901,7 +902,8 @@ WebSocketDataOperationService.addClassProperties({
                     which is the right place to do it.
                 */
                 //operation.rawDataService = this;
-                let completionPromise = this.registerPendingDataOperationWithContext(operation, operation.dataStream, this.promisesReadCompletionOperation);
+                //let completionPromise = this.registerPendingDataOperationWithContext(operation, operation.dataStream, this.promisesReadCompletionOperation);
+                let completionPromise = this.registerPendingDataOperationWithContext(operation, operation.dataStream, true);
 
 
                 this._readOperationQueue.push(operation);
