@@ -56,7 +56,8 @@
         "prototype": "./meta/property-descriptor",
         "values": {
             "name": "isActiveTarget",
-            "valueType": "boolean"
+            "valueType": "boolean",
+            "isSerializable": false
         }
     },
     "nextTargetDescriptor": {
