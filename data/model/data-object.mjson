@@ -68,6 +68,7 @@
         "values": {
             "name": "dataIdentifier",
             "valueDescriptor": {"@": "DataIdentifierDescriptor"},
+            "isSerializable": false,
             "description": "The data identifier unique to that object"
         }
     },
