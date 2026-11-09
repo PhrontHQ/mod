@@ -2061,12 +2061,12 @@ DataService.addClassProperties(
                     }
 
                     //Move the type.object's (constructor) prototype to parentPrototype, if there's a new one
-                    if(parentPrototype) {
+                    if(parentPrototype && type.object?.prototype) {
                         //parentPrototype is the object's off which instances of type.parent.object will be instanciated
                         //So we need to make that parentPrototype the prototype of type.object.prototype: That exposes the triggers add on parentPrototype to type.object.prototype
                         //and all descendants from there
-                        Object.setPrototypeOf(type.object.prototype, parentPrototype);
-                        type.object.prototype.__triggers__ = Object.create(parentPrototype.__triggers__);
+                        Object.setPrototypeOf(type.object?.prototype, parentPrototype);
+                        type.object.prototype.__triggers__ = Object.create(parentPrototype.__triggers__ || null);
                     }
 
                     //Now do it fo ourselves
@@ -6687,6 +6687,19 @@ DataService.addClassProperties(
             },
         },
 
+        registeredDataStreamMapForTypeAndCriteria: {
+            value: function (type, criteria) {
+                var objectDescriptor = type,
+                    criteriaExpressionMap;
+
+                    criteria = criteria || Criteria.thatEvaluatesToTrue;
+
+                criteriaExpressionMap = this._dataStreamMapForObjectDescriptorCriteria(objectDescriptor, criteria);
+
+                return criteriaExpressionMap.get(this._criteriaExpressionMapKeyForDataQuery(dataQuery));
+            }
+        },
+
         registerDataStream: {
             value: function (dataStream) {
                 var objectDescriptor = dataStream.query.type,
@@ -6871,12 +6884,6 @@ DataService.addClassProperties(
                 // make sure type is an object descriptor or a data object descriptor.
                 query.type = this.objectDescriptorForType(query.type);
 
-                // if (query.type.name === "EmploymentPosition" || query.type.name === "EmploymentPositionStaffing" || query.type.name === "Organization") {
-                //     let referred = query.hints.referrerOperations ? query.hints.referrerOperations.map(function (operation) {
-                //         return operation.id
-                //     }).join(",") : query.hints.referrerOperation ? query.hints.referrerOperation.id : "";
-                //     console.log("DataService.fetchData", query.type.name, referred);
-                // }
 
                 if (this.supportsDataOperation) {
                     //Check if we already have a DataStream pending for that same query:
@@ -6886,7 +6893,219 @@ DataService.addClassProperties(
                     }
                 }
 
-                // Set up the stream.
+                stream = stream || new DataStream();
+                stream.query = query;
+                stream.dataExpression = query.selectExpression;
+
+                this.registerDataStream(stream);
+
+                if (this._combinesFetchData && query.criteria?.name !== "RawForeignValueToObjectConverterCombinedCriteria") {
+                    var queryParts = this._pendingCriteriaByTypeToCombine.get(query.type);
+                        if(!queryParts) {
+                            queryParts = {
+                                criteria: [],
+                                streams: [],
+                                readExpressions: [],
+                                referrerOperations: []/*,
+                                hints: {}*/
+                            };
+                            this._pendingCriteriaByTypeToCombine.set(query.type, queryParts);
+                        }
+
+                        queryParts.streams.push(stream);
+
+                        if (query.hints && query.hints.referrerOperation) {
+                            queryParts.referrerOperations.push(query.hints.referrerOperation)
+                        }
+                        if (query.hints && query.hints.referrerOperations) {
+                            queryParts.referrerOperations.push.apply(queryParts.referrerOperations, query.hints.referrerOperations);
+                        }
+                        //TODO -- How do we handle this? Should this just be a disqualifier for a match? 
+                        //If one query includes childObjectDescriptors and another doesn't, can they be combined?
+                        // if (!query.includesChildObjectDescriptors) {
+                        //     readOperation.data.includesChildObjectDescriptors =
+                        //         query.includesChildObjectDescriptors;
+                        // }
+
+                        if (query.criteria) {
+                            queryParts.criteria.push(query.criteria)
+                        }
+                        if (query.readExpressions) {
+                            queryParts.readExpressions.push.apply(query.readExpressions);
+                        }
+
+                        if (!this._isCombineFetchDataMicrotaskQueued) {
+                            this._isCombineFetchDataMicrotaskQueued = true;
+                            queueMicrotask(function () {
+                                self._fetchCombinedDataMicrotask();
+                            });
+                        }  
+                        return stream;
+                } else {
+                    
+                    return this._fetchData(query, criteria, stream);
+                }
+            }
+        },
+
+        _pendingCriteriaByTypeToCombine: {
+            get: function () {
+                return this.__pendingCriteriaByTypeToCombine || (this.__pendingCriteriaByTypeToCombine = new Map());
+            }
+        },
+
+        _combinesFetchData: {
+            value: true
+        },
+
+        _fetchCombinedDataMicrotask: {
+            value: function () {
+            var mapIterator = this._pendingCriteriaByTypeToCombine.entries(),
+                mapIterationEntry,
+                mapIterationType,
+                mapIterationQueryParts;
+
+                while ((mapIterationEntry = mapIterator.next().value)) {
+                    mapIterationType = mapIterationEntry[0];
+                    mapIterationQueryParts = mapIterationEntry[1];
+
+                    this._fetchCombinedDataMicrotaskFunctionForTypeQueryParts(mapIterationType, mapIterationQueryParts);
+                }
+
+                this._isCombineFetchDataMicrotaskQueued = false;
+                this._pendingCriteriaByTypeToCombine.clear();
+            }
+        },
+
+        _fetchCombinedDataMicrotaskFunctionForTypeQueryParts: {
+            value: function (type, queryParts) {
+                var self = this,
+                    combinedCriteria = queryParts.criteria.length > 1 ? Criteria.or(queryParts.criteria) : queryParts.criteria[0],
+                    //query = DataQuery.withTypeAndCriteria(type, combinedCriteria),
+                    query,
+                    mapIterationFetchPromise;
+
+                if (queryParts.criteria.length > 1) {
+                    combinedCriteria.name = "DataServiceCombinedCriteria";
+                }
+
+
+                query = DataQuery.withTypeAndCriteria(type, combinedCriteria);
+
+                query.hints = {};
+
+                if(queryParts.readExpressions && queryParts.readExpressions.length > 0) {
+                    query.readExpressions = queryParts.readExpressions;
+                }
+
+                if (queryParts.referrerOperations) {
+                    query.hints.referrerOperations = queryParts.referrerOperations;
+                }
+
+                this._fetchData(query).then(function (combinedFetchedValues) {
+                    var i, countI, iStream, streams = queryParts.streams, combinedFetchedValuesSnapshots, iFetchPromise,
+                        j, countJ = combinedFetchedValues.length, jValue, jSnapshot;
+
+                    for(i=0, countI = streams.length; (i<countI); i++) {
+                        iStream = streams[i];
+                        iCriteria = iStream.query.criteria || Criteria.thatEvaluatesToTrue;
+
+                        /*
+                            We lazily get the iFetchPromise if a criteria finds a match
+                        */
+                        iFetchPromise = null;
+
+                        for(j=0; (j < countJ); j++) {
+                            jValue = combinedFetchedValues[j];
+                            jSnapshot = combinedFetchedValuesSnapshots && combinedFetchedValuesSnapshots[j];
+                            if(!jSnapshot) {
+                                //Now in a multi-origin world, we have to use where the current object actually came from:
+                                // jSnapshot = service.snapshotForObject(jValue);
+                                //From bugfix/data branch
+                                jSnapshot = self.dataIdentifierForObject(jValue).dataService.snapshotForObject(jValue);
+                                //commented line bellow from main
+                                //jSnapshot = jValue.dataIdentifier.dataService.snapshotForObject(jValue);
+                                (combinedFetchedValuesSnapshots || (combinedFetchedValuesSnapshots = []))[j] = jSnapshot;
+                            }
+
+                            // iFetchPromise = stream;
+
+                            if((jSnapshot && iCriteria.evaluate(jSnapshot)) || (countI === 1 && combinedFetchedValues.length === 1)) {
+                                //console.debug("!!! MATCH "+ JSON.stringify(jSnapshot)+" FOUND for criteria "+iCriteria);
+                            if (iCriteria.parameters && iCriteria.parameters.indexByEntry) {
+
+                                    /***
+                                     * The desired behavior when fetching with a parameter array (e.g. [a, b, c].has(id))
+                                     * is to return the results in the same order as the parameters. When doing a combined fetch, 
+                                     * PostGreSQLService can only check that a row *exists* in the parameter array. It cannot ensure 
+                                     * the order.
+                                     * 
+                                     * E.g. say the parameters array is ["aaa", "bbb", "ccc"]. PostgreSQL may return 
+                                     * [{id: "bbb"}, {id: "ccc"}, {id: "aaa"}]. 
+                                     * 
+                                     * The method below utilizes rawData.<sourcePropertyName>.indexByEntry to correct the order
+                                     */
+                                    self._insertIntoResultBasedOnPositionInCriteria(jValue, stream.data, iCriteria, service);
+                                } else {
+                                    iStream.addData(jValue);
+                                }
+                                
+
+                            }
+                        }
+
+
+                        //We can ignore the work done to set fetchPromise.result. The streams
+                        //all have their own arrays
+                        iStream.dataDone();;
+                        
+
+                        self.unregisterDataStream(iStream);
+
+                    }
+                });
+
+            }
+        },
+
+        _insertIntoResultBasedOnPositionInCriteria: {
+            value: function (value, result, criteria, service) {
+                let indexByEntry = criteria.parameters.indexByEntry,
+                    index = indexByEntry[service.dataIdentifierForObject(value).primaryKey];
+
+
+                /*
+                    result is ordered or empty, and index tells us where it needs to go
+                    If value is already in result at the right index, nothing to do
+                */
+                if(result[index] !== value) {
+                    result[index] = value;
+                }
+                
+            }
+        },
+
+        _fetchData: {
+            value: function (query, criteria, stream) {
+
+                var self = this;
+
+                // if (query.type.name === "EmploymentPosition" || query.type.name === "EmploymentPositionStaffing" || query.type.name === "Organization") {
+                //     let referred = query.hints.referrerOperations ? query.hints.referrerOperations.map(function (operation) {
+                //         return operation.id
+                //     }).join(",") : query.hints.referrerOperation ? query.hints.referrerOperation.id : "";
+                //     console.log("DataService.fetchData", query.type.name, referred);
+                // }
+
+                // if (this.supportsDataOperation) {
+                //     //Check if we already have a DataStream pending for that same query:
+                //     if ((stream = this.registeredDataStreamMapForDataQuery(query))) {
+                //         //console.debug("registeredDataStreamMapForDataQuery found for "+query.type.name+", criteria:",query.criteria);
+                //         return stream;
+                //     }
+                // }
+
+                // // Set up the stream.
                 stream = stream || new DataStream();
                 stream.query = query;
                 stream.dataExpression = query.selectExpression;
@@ -6908,7 +7127,6 @@ DataService.addClassProperties(
                 }
 
                 //Register it for possible reuse by other callers needing the same data:
-                this.registerDataStream(stream);
 
                 this._dataServiceByDataStream.set(
                     stream,
@@ -7152,6 +7370,7 @@ DataService.addClassProperties(
                 return stream;
             },
         },
+
 
         _fetchRawData: {
             value: function (stream) {
