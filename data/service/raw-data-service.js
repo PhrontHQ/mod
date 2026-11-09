@@ -1605,6 +1605,9 @@ RawDataService.addClassProperties({
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
 
+            if (this._snapshot.get(dataIdentifier)) {
+                return Promise.resolve(object);
+            }
             //Record snapshot before mapping
             this.recordSnapshot(dataIdentifier, rawData);
 
