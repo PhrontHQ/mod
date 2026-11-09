@@ -393,9 +393,24 @@ WebSocketDataOperationService.addClassProperties({
 
     handleMessage: {
         value: function (event) {
-            var serializedOperation;
-            //console.log("received socket message ",event);
-                serializedOperation = event.data;
+            var data = event.data;
+
+
+                 // If the server sent a Buffer, it arrives as a Blob in the browser
+                if (data instanceof Blob) {
+                    data.text() // Converts the binary Blob back to your exact string
+                    .then((serializedOperation) => this._handleSerializedOperation(serializedOperation));
+                } else if (data instanceof ArrayBuffer) {
+                    // serializedOperation = new TextDecoder().decode(data);
+                    this._handleSerializedOperation(new TextDecoder().decode(data));
+                } else {
+                    this._handleSerializedOperation(data);
+                }
+            }
+    },
+
+    _handleSerializedOperation: {
+        value: function (serializedOperation) {
 
             //console.log("handleMessage: ",serializedOperation);
 
