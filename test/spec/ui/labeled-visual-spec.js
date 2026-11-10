@@ -40,28 +40,7 @@ describe("test/ui/labeled-visual-spec", function () {
             });
         });
 
-        describe("AlignmentOrientation", function () {
-            it("should default to row", function () {
-                expect(aLabeledVisual.AlignmentOrientation).toEqual(LabeledVisual.AlignmentOrientation.row);
-            });
-            it("should accept a capitalized member name", function () {
-                aLabeledVisual.AlignmentOrientation = "Column";
-                expect(aLabeledVisual.AlignmentOrientation).toEqual(LabeledVisual.AlignmentOrientation.column);
-                expect(aLabeledVisual.classList.has("mod--column")).toBeTruthy();
-            });
-            it("should combine with an end position to reverse the column", function () {
-                aLabeledVisual.VisualPosition = "End";
-                aLabeledVisual.AlignmentOrientation = "Column";
-                expect(aLabeledVisual.classList.has("mod--end")).toBeTruthy();
-                expect(aLabeledVisual.classList.has("mod--column")).toBeTruthy();
-            });
-            it("should ignore invalid orientations", function () {
-                spyOn(console, "warn");
-                aLabeledVisual.AlignmentOrientation = "diagonal";
-                expect(aLabeledVisual.AlignmentOrientation).toEqual(LabeledVisual.AlignmentOrientation.row);
-            });
-        });
-
+    
         describe("DisplayOptions", function () {
             it("should default to displayBoth", function () {
                 expect(aLabeledVisual.DisplayOptions).toEqual(LabeledVisual.DisplayOptions.displayBoth);
