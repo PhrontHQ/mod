@@ -1,0 +1,40 @@
+html, body, .Main {
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    font-family: "Helvetica Neue Light", "Lucida Grande", "Calibri", "Arial", sans-serif;
+}
+
+.Main {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+header {
+    margin-top: 20px;
+    font-size: 42px;
+    font-weight: bold;
+    color: #333;
+}
+
+.labeled-visuals {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+}
+
+.labeled-visual {
+    height: 120px;
+    width: 120px;
+    font-size: 15px;
+    box-sizing: border-box;
+    padding: 0;
+    border: 1px solid #AAA;
+    color: #666;
+    background: white;
+    border-radius: 4px;
+    user-select: none;
+}
