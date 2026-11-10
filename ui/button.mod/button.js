@@ -56,8 +56,8 @@ const Button = (exports.Button = class Button extends ActionTarget {
     // <---- Properties ---->
     static {
         Montage.defineProperties(this.prototype, {
-            _visualPosition: { value: VisualPosition.start },
-            _visualOrientation: { value: VisualOrientation.horizontal},
+            _visualPosition: { value: VisualPosition.members[0] },
+            _visualOrientation: { value: VisualOrientation.members[0]},
             drawsFocusOnPointerActivation: { value: true},
             standardElementTagName: { value: "BUTTON"},
             hasTemplate: { value: true},
@@ -87,7 +87,8 @@ const Button = (exports.Button = class Button extends ActionTarget {
     }
 
     /**
-     * The position of the image
+     * The position of the image. The value is forwarded to the labeled-visual
+     * composed by the button.
      * @type {VisualPosition}
      * @param {VisualPosition} position - The position of the image
      */
@@ -98,8 +99,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
 
         if (position !== this._visualPosition) {
-            this._visualPosition = VisualPosition[position];
-            this._applyVisualPositionStyles();
+            this._visualPosition = position;
         }
     }
 
@@ -109,7 +109,8 @@ const Button = (exports.Button = class Button extends ActionTarget {
     }
 
     /**
-     * The orientation of the button
+     * The orientation of the button. The value is forwarded to the labeled-visual
+     * composed by the button.
      * @type {VisualOrientation}
      * @param {VisualOrientation} orientation - The orientation of the button
      */
@@ -120,8 +121,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
 
         if (orientation !== this._visualOrientation) {
-            this._visualOrientation = VisualOrientation[orientation];
-            this._applyVisualOrientationStyles();
+            this._visualOrientation = orientation;
         }
     }
 
@@ -179,34 +179,25 @@ const Button = (exports.Button = class Button extends ActionTarget {
 
         if (firstDraw) {
             this.element.setAttribute("role", "button");
-
-          
-            this._applyVisualPositionStyles();
-            this._applyVisualOrientationStyles();
         }
     }
 
     // <---- Private ---->
 
-   
     /**
-     * Applies the current image position's styling by updating CSS classes
+     * The visual argument provided to the button by its owner is marked again
+     * as a DOM argument so that the labeled-visual composed by the button can
+     * claim it as its own visual template argument.
      * @private
-     * @see VisualPosition
      */
-    _applyVisualPositionStyles() {
-        this.classList.deleteEach(...Object.values(VisualPosition));
-        this.classList.add(this.visualPosition);
-    }
+    _initDomArguments() {
+        super._initDomArguments();
 
-    /**
-     * Applies the current orientation's styling by updating CSS classes
-     * @private
-     * @see VisualOrientation
-     */
-    _applyVisualOrientationStyles() {
-        this.classList.deleteEach(...Object.values(VisualOrientation));
-        this.classList.add(this.visualOrientation);
+        const visualArgument = this._domArguments && this._domArguments.visual;
+
+        if (visualArgument) {
+            visualArgument.setAttribute(this.DOM_ARG_ATTRIBUTE, "visual");
+        }
     }
 });
 
