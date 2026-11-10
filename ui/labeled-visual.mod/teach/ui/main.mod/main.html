@@ -22,7 +22,7 @@
                         "element": {"#": "endColumn"},
                         "label": "End Column",
                         "VisualPosition": "End",
-                        "AlignmentOrientation": "Column"
+                        "VisualOrientation": "vertical"
                     }
                 },
                 "visualOnly": {
@@ -39,6 +39,14 @@
                         "element": {"#": "labelOnly"},
                         "label": "Label Only",
                         "DisplayOptions": "LabelOnly"
+                    }
+                },
+                "serializedVisual": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "serializedVisual"},
+                        "label": "Serialized Visual",
+                        "visual": "./ui/main.mod/assets/star.svg"
                     }
                 }
             }
@@ -60,6 +68,7 @@
                 <div data-mod-id="labelOnly" class="labeled-visual">
                     <div data-arg="visual">✦</div>
                 </div>
+                <div data-mod-id="serializedVisual" class="labeled-visual"></div>
             </section>
         </div>
     </body>

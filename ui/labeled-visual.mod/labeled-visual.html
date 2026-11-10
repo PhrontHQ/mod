@@ -16,13 +16,20 @@
                         "element": {"#": "default-label"},
                         "value": {"<-": "@owner.label || (@owner._didOwnerProvideVisualTemplateArgument ? null : @owner.defaultLabel)"}
                     }
+                },
+                "defaultVisual": {
+                    "prototype": "ui/image.mod",
+                    "values": {
+                        "element": {"#": "default-visual"},
+                        "src": {"<-": "@owner.visual"}
+                    }
                 }
             }
         </script>
     </head>
     <body>
         <div data-mod-id="owner" class="ModLabeledVisual">
-            <div data-param="visual" class="ModLabeledVisual-visual"></div>
+            <div data-param="visual" class="ModLabeledVisual-visual" data-mod-id="default-visual"></div>
             <div class="ModLabeledVisual-label">
                 <span data-mod-id="default-label"></span>
             </div>

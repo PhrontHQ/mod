@@ -8,21 +8,21 @@
 
     /* AlignmentOrientation */
 
-    &.mod--row {
+    &.mod--horizontal {
         flex-direction: row;
     }
 
-    &.mod--column {
+    &.mod--vertical {
         flex-direction: column;
     }
 
     /* VisualPosition at the end of the main axis */
 
-    &.mod--row.mod--end {
+    &.mod--horizontal.mod--end {
         flex-direction: row-reverse;
     }
 
-    &.mod--column.mod--end {
+    &.mod--vertical.mod--end {
         flex-direction: column-reverse;
     }
 
