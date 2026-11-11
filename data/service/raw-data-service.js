@@ -1602,10 +1602,6 @@ RawDataService.addClassProperties({
                 return Promise.resolveNull;
             }
 
-            if (type.name === "EmploymentPositionStaffing") {
-                console.log("RawDataService.resolveObjectForTypeRawData", type.name, rawData, context);
-            }
-
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
 
@@ -1626,9 +1622,6 @@ RawDataService.addClassProperties({
 
             if (Promise.is(result)) {
                 return result.then(function () {
-                    if (type.name === "EmploymentPositionStaffing") {
-                        console.log("RawDataService.resolveObjectForTypeRawData DONE", type.name, rawData, context);
-                    }
                     return object;
                 });
             } else {
