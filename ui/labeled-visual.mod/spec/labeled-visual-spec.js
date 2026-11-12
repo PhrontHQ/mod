@@ -12,54 +12,73 @@ describe("test/ui/labeled-visual-spec", function () {
 
         describe("VisualPosition", function () {
             it("should default to start", function () {
-                expect(aLabeledVisual.VisualPosition).toEqual(LabeledVisual.VisualPosition.start);
+                expect(aLabeledVisual.visualPosition).toEqual(LabeledVisual.VisualPosition.start);
             });
             it("should accept a member name", function () {
-                aLabeledVisual.VisualPosition = "end";
-                expect(aLabeledVisual.VisualPosition).toEqual(LabeledVisual.VisualPosition.end);
+                aLabeledVisual.visualPosition = "end";
+                expect(aLabeledVisual.visualPosition).toEqual(LabeledVisual.VisualPosition.end);
                 expect(aLabeledVisual.classList.has("mod--end")).toBeTruthy();
             });
-            it("should accept a capitalized member name", function () {
-                aLabeledVisual.VisualPosition = "End";
-                expect(aLabeledVisual.classList.has("mod--end")).toBeTruthy();
+            it("should reject a member name with incorrect case", function () {
+                spyOn(console, "warn");
+                aLabeledVisual.visualPosition = "End";
+                expect(aLabeledVisual.visualPosition).toEqual(LabeledVisual.VisualPosition.start);
             });
-            it("should accept a serialized enum value", function () {
-                aLabeledVisual.VisualPosition = "mod--end";
-                expect(aLabeledVisual.classList.has("mod--end")).toBeTruthy();
+            it("should reject a serialized enum value", function () {
+                spyOn(console, "warn");
+                aLabeledVisual.visualPosition = "mod--end";
+                expect(aLabeledVisual.visualPosition).toEqual(LabeledVisual.VisualPosition.start);
             });
             it("should swap the class when the position changes", function () {
-                aLabeledVisual.VisualPosition = "end";
-                aLabeledVisual.VisualPosition = "start";
+                aLabeledVisual.visualPosition = "end";
+                aLabeledVisual.visualPosition = "start";
                 expect(aLabeledVisual.classList.has("mod--end")).toBeFalsy();
                 expect(aLabeledVisual.classList.has("mod--start")).toBeTruthy();
             });
             it("should ignore invalid positions", function () {
                 spyOn(console, "warn");
-                aLabeledVisual.VisualPosition = "middle";
-                expect(aLabeledVisual.VisualPosition).toEqual(LabeledVisual.VisualPosition.start);
+                aLabeledVisual.visualPosition = "middle";
+                expect(aLabeledVisual.visualPosition).toEqual(LabeledVisual.VisualPosition.start);
             });
         });
 
-    
+        describe("visualOrientation", function () {
+            it("should accept an exact member name", function () {
+                aLabeledVisual.visualOrientation = "vertical";
+                expect(aLabeledVisual.visualOrientation).toEqual(LabeledVisual.VisualOrientation.vertical);
+                expect(aLabeledVisual.classList.has("mod--vertical")).toBeTruthy();
+            });
+            it("should reject a member name with incorrect case", function () {
+                spyOn(console, "warn");
+                aLabeledVisual.visualOrientation = "Vertical";
+                expect(aLabeledVisual.visualOrientation).toEqual(LabeledVisual.VisualOrientation.horizontal);
+            });
+        });
+
         describe("DisplayOptions", function () {
             it("should default to displayBoth", function () {
-                expect(aLabeledVisual.DisplayOptions).toEqual(LabeledVisual.DisplayOptions.displayBoth);
+                expect(aLabeledVisual.displayOptions).toEqual(LabeledVisual.DisplayOption.displayBoth);
             });
-            it("should accept a capitalized member name", function () {
-                aLabeledVisual.DisplayOptions = "VisualOnly";
-                expect(aLabeledVisual.DisplayOptions).toEqual(LabeledVisual.DisplayOptions.visualOnly);
+            it("should accept an exact member name", function () {
+                aLabeledVisual.displayOptions = "visualOnly";
+                expect(aLabeledVisual.displayOptions).toEqual(LabeledVisual.DisplayOption.visualOnly);
                 expect(aLabeledVisual.classList.has("mod--visual-only")).toBeTruthy();
             });
+            it("should reject a member name with incorrect case", function () {
+                spyOn(console, "warn");
+                aLabeledVisual.displayOptions = "VisualOnly";
+                expect(aLabeledVisual.displayOptions).toEqual(LabeledVisual.DisplayOption.displayBoth);
+            });
             it("should swap the class when the display options change", function () {
-                aLabeledVisual.DisplayOptions = "VisualOnly";
-                aLabeledVisual.DisplayOptions = "LabelOnly";
+                aLabeledVisual.displayOptions = "visualOnly";
+                aLabeledVisual.displayOptions = "labelOnly";
                 expect(aLabeledVisual.classList.has("mod--visual-only")).toBeFalsy();
                 expect(aLabeledVisual.classList.has("mod--label-only")).toBeTruthy();
             });
             it("should ignore invalid display options", function () {
                 spyOn(console, "warn");
-                aLabeledVisual.DisplayOptions = "Nothing";
-                expect(aLabeledVisual.DisplayOptions).toEqual(LabeledVisual.DisplayOptions.displayBoth);
+                aLabeledVisual.displayOptions = "nothing";
+                expect(aLabeledVisual.displayOptions).toEqual(LabeledVisual.DisplayOption.displayBoth);
             });
         });
 

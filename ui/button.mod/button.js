@@ -56,8 +56,8 @@ const Button = (exports.Button = class Button extends ActionTarget {
     // <---- Properties ---->
     static {
         Montage.defineProperties(this.prototype, {
-            _visualPosition: { value: VisualPosition.members[0] },
-            _visualOrientation: { value: VisualOrientation.members[0]},
+            _visualPosition: { value: VisualPosition.start },
+            _visualOrientation: { value: VisualOrientation.horizontal},
             drawsFocusOnPointerActivation: { value: true},
             standardElementTagName: { value: "BUTTON"},
             hasTemplate: { value: true},
@@ -99,7 +99,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
 
         if (position !== this._visualPosition) {
-            this._visualPosition = position;
+            this._visualPosition = VisualPosition[position];
         }
     }
 
@@ -121,7 +121,7 @@ const Button = (exports.Button = class Button extends ActionTarget {
         }
 
         if (orientation !== this._visualOrientation) {
-            this._visualOrientation = orientation;
+            this._visualOrientation = VisualOrientation[orientation];
         }
     }
 
