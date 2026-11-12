@@ -3,7 +3,7 @@
 const Montage = require("core/core").Montage;
 const VisualPosition = require("core/enums/visual-position").VisualPosition;
 const VisualOrientation = require("core/enums/visual-orientation").VisualOrientation;
-const DisplayOptions = require("core/enums/display-options").DisplayOptions;
+const DisplayOption = require("./enums/display-option").DisplayOption;
 const Component = require("ui/component").Component;
 
 const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Component {
@@ -15,14 +15,14 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
 
     static VisualOrientation = VisualOrientation;
 
-    static DisplayOptions = DisplayOptions;
+    static DisplayOption = DisplayOption;
 
     // <---- Properties ---->
     static {
         Montage.defineProperties(this.prototype, {
             _visualPosition: { value: VisualPosition.start },
             _visualOrientation: { value: VisualOrientation.horizontal },
-            _displayOptions: { value: DisplayOptions.displayBoth },
+            _displayOptions: { value: DisplayOption.displayBoth },
             hasTemplate: { value: true },
             converter: { value: null },
             _label: { value: null },
@@ -30,32 +30,31 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
         });
     }
 
-    get VisualPosition() {
+    get visualPosition() {
         return this._visualPosition;
     }
 
     /**
      * The position of the visual relative to the label.
      * @type {VisualPosition}
-     * @param {VisualPosition} position - The position of the visual: "Start" or "End".
+     * @param {VisualPosition} position - The position of the visual: "start" or "end".
      */
-    set VisualPosition(position) {
-        const member = this._resolveEnumMember(VisualPosition, position);
-
-        if (member === null) {
+    set visualPosition(position) {
+        if (typeof position !== "string" || VisualPosition.intValueForMember(position) === undefined) {
             console.warn('Invalid visual position: "' + position + '"');
             return;
         }
 
-        const value = VisualPosition[member];
+        const value = VisualPosition[position];
 
         if (value !== this._visualPosition) {
+            this.classList.delete(this._visualPosition);
             this._visualPosition = value;
-            this._applyVisualPositionStyles();
+            this.classList.add(value);
         }
     }
 
-    get VisualOrientation() {
+    get visualOrientation() {
         return this._visualOrientation;
     }
 
@@ -64,44 +63,48 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
      * @type {VisualOrientation}
      * @param {VisualOrientation} orientation - The visual orientation: "horizontal" or "vertical".
      */
-    set VisualOrientation(orientation) {
-        const member = this._resolveEnumMember(VisualOrientation, orientation);
-
-        if (member === null) {
+    set visualOrientation(orientation) {
+        if (
+            typeof orientation !== "string" ||
+            VisualOrientation.intValueForMember(orientation) === undefined
+        ) {
             console.warn('Invalid visual orientation: "' + orientation + '"');
             return;
         }
 
-        const value = VisualOrientation[member];
+        const value = VisualOrientation[orientation];
 
         if (value !== this._visualOrientation) {
+            this.classList.delete(this._visualOrientation);
             this._visualOrientation = value;
-            this._applyVisualOrientationStyles();
+            this.classList.add(value);
         }
     }
 
-    get DisplayOptions() {
+    get displayOptions() {
         return this._displayOptions;
     }
 
     /**
      * What parts of the component are displayed.
-     * @type {DisplayOptions}
-     * @param {DisplayOptions} displayOptions - "DisplayBoth", "VisualOnly" or "LabelOnly".
+     * @type {DisplayOption}
+     * @param {DisplayOption} displayOptions - "displayBoth", "visualOnly" or "labelOnly".
      */
-    set DisplayOptions(displayOptions) {
-        const member = this._resolveEnumMember(DisplayOptions, displayOptions);
-
-        if (member === null) {
+    set displayOptions(displayOptions) {
+        if (
+            typeof displayOptions !== "string" ||
+            DisplayOption.intValueForMember(displayOptions) === undefined
+        ) {
             console.warn('Invalid display options: "' + displayOptions + '"');
             return;
         }
 
-        const value = DisplayOptions[member];
+        const value = DisplayOption[displayOptions];
 
         if (value !== this._displayOptions) {
+            this.classList.delete(this._displayOptions);
             this._displayOptions = value;
-            this._applyDisplayOptionsStyles();
+            this.classList.add(value);
         }
     }
 
@@ -152,78 +155,12 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
         super.enterDocument?.call(this, firstDraw);
 
         if (firstDraw) {
-            this._applyVisualPositionStyles();
-            this._applyVisualOrientationStyles();
-            this._applyDisplayOptionsStyles();
+            this.classList.add(this._visualPosition);
+            this.classList.add(this._visualOrientation);
+            this.classList.add(this._displayOptions);
         }
     }
 
     // <---- Private ---->
 
-    /**
-     * Resolves an input intended for an enum property into one of the enum's
-     * member names. Member names are matched case-insensitively, and enum
-     * values (such as the CSS classes they carry) are accepted as well.
-     * @private
-     * @returns {string|null} a member name of the enum, or null if no member matches.
-     */
-    _resolveEnumMember(anEnum, value) {
-        if (typeof value === "string") {
-            const lowerCaseValue = value.toLowerCase();
-
-            for (const member of anEnum.members) {
-                if (
-                    member.toLowerCase() === lowerCaseValue ||
-                    String(anEnum[member]).toLowerCase() === lowerCaseValue
-                ) {
-                    return member;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Removes the CSS classes carried by the given enum from the classList,
-     * so a single member's class can be applied.
-     * @private
-     */
-    _deleteEnumStyles(anEnum) {
-        for (const value of Object.values(anEnum)) {
-            if (typeof value === "string") {
-                this.classList.delete(value);
-            }
-        }
-    }
-
-    /**
-     * Applies the current visual position's styling by updating CSS classes
-     * @private
-     * @see VisualPosition
-     */
-    _applyVisualPositionStyles() {
-        this._deleteEnumStyles(VisualPosition);
-        this.classList.add(this.VisualPosition);
-    }
-
-    /**
-     * Applies the current visual orientation's styling by updating CSS classes
-     * @private
-     * @see VisualOrientation
-     */
-    _applyVisualOrientationStyles() {
-        this._deleteEnumStyles(VisualOrientation);
-        this.classList.add(this.VisualOrientation);
-    }
-
-    /**
-     * Applies the current display options' styling by updating CSS classes
-     * @private
-     * @see DisplayOptions
-     */
-    _applyDisplayOptionsStyles() {
-        this._deleteEnumStyles(DisplayOptions);
-        this.classList.add(this.DisplayOptions);
-    }
 });
