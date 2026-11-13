@@ -56,8 +56,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
     // <---- Properties ---->
     static {
         Montage.defineProperties(this.prototype, {
-            _visualPosition: { value: VisualPosition.start },
-            _visualOrientation: { value: VisualOrientation.horizontal},
             drawsFocusOnPointerActivation: { value: true},
             standardElementTagName: { value: "BUTTON"},
             hasTemplate: { value: true},
@@ -80,51 +78,6 @@ const Button = (exports.Button = class Button extends ActionTarget {
             actionEventTarget: { value: null }
         });
     }
-
-
-    get visualPosition() {
-        return this._visualPosition;
-    }
-
-    /**
-     * The position of the image. The value is forwarded to the labeled-visual
-     * composed by the button.
-     * @type {VisualPosition}
-     * @param {VisualPosition} position - The position of the image
-     */
-    set visualPosition(position) {
-        if (!VisualPosition[position]) {
-            console.warn('Invalid image position: "' + position + '"');
-            return;
-        }
-
-        if (position !== this._visualPosition) {
-            this._visualPosition = VisualPosition[position];
-        }
-    }
-
-
-    get visualOrientation() {
-        return this._visualOrientation;
-    }
-
-    /**
-     * The orientation of the button. The value is forwarded to the labeled-visual
-     * composed by the button.
-     * @type {VisualOrientation}
-     * @param {VisualOrientation} orientation - The orientation of the button
-     */
-    set visualOrientation(orientation) {
-        if (!VisualOrientation[orientation]) {
-            console.warn('Invalid orientation: "' + orientation + '"');
-            return;
-        }
-
-        if (orientation !== this._visualOrientation) {
-            this._visualOrientation = VisualOrientation[orientation];
-        }
-    }
-
 
     /**
      * A Mod converter object used to convert or format the label displayed by
