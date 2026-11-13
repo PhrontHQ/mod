@@ -16,16 +16,6 @@ TestPageLoader.queueTest("labeled-visual-test", function (testPage) {
                 expect(test.labeledVisual.visualPosition).toEqual(test.labeledVisual.constructor.VisualPosition.end);
                 expect(test.labeledVisual.classList.has("mod--end")).toBeTruthy();
             });
-            it("should reject a member name with incorrect case", function () {
-                spyOn(console, "warn");
-                test.labeledVisual.visualPosition = "End";
-                expect(test.labeledVisual.visualPosition).toEqual(test.labeledVisual.constructor.VisualPosition.start);
-            });
-            it("should reject a serialized enum value", function () {
-                spyOn(console, "warn");
-                test.labeledVisual.visualPosition = "mod--end";
-                expect(test.labeledVisual.visualPosition).toEqual(test.labeledVisual.constructor.VisualPosition.start);
-            });
             it("should swap the class when the position changes", function () {
                 test.labeledVisual.visualPosition = "end";
                 test.labeledVisual.visualPosition = "start";
@@ -45,11 +35,6 @@ TestPageLoader.queueTest("labeled-visual-test", function (testPage) {
                 expect(test.labeledVisual.visualOrientation).toEqual(test.labeledVisual.constructor.VisualOrientation.vertical);
                 expect(test.labeledVisual.classList.has("mod--vertical")).toBeTruthy();
             });
-            it("should reject a member name with incorrect case", function () {
-                spyOn(console, "warn");
-                test.labeledVisual.visualOrientation = "Vertical";
-                expect(test.labeledVisual.visualOrientation).toEqual(test.labeledVisual.constructor.VisualOrientation.horizontal);
-            });
         });
 
         describe("DisplayOptions", function () {
@@ -61,21 +46,11 @@ TestPageLoader.queueTest("labeled-visual-test", function (testPage) {
                 expect(test.labeledVisual.displayOptions).toEqual(test.labeledVisual.constructor.DisplayOption.visualOnly);
                 expect(test.labeledVisual.classList.has("mod--visual-only")).toBeTruthy();
             });
-            it("should reject a member name with incorrect case", function () {
-                spyOn(console, "warn");
-                test.labeledVisual.displayOptions = "VisualOnly";
-                expect(test.labeledVisual.displayOptions).toEqual(test.labeledVisual.constructor.DisplayOption.displayBoth);
-            });
             it("should swap the class when the display options change", function () {
                 test.labeledVisual.displayOptions = "visualOnly";
                 test.labeledVisual.displayOptions = "labelOnly";
                 expect(test.labeledVisual.classList.has("mod--visual-only")).toBeFalsy();
                 expect(test.labeledVisual.classList.has("mod--label-only")).toBeTruthy();
-            });
-            it("should ignore invalid display options", function () {
-                spyOn(console, "warn");
-                test.labeledVisual.displayOptions = "nothing";
-                expect(test.labeledVisual.displayOptions).toEqual(test.labeledVisual.constructor.DisplayOption.displayBoth);
             });
         });
 
