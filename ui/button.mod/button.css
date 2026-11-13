@@ -2,7 +2,6 @@
     /* FIXME: Temporary arbitrary values, waiting for Button Themes */
     transition: background-color 0.2s ease-in-out;
     border-style: solid;
-    gap: 6px;
 
     border-width: var(--visual-style-control-border-width);
     border-color: var(--visual-style-control-border-fill);
@@ -29,44 +28,6 @@
     &:active {
         /* Mix the background with 15% of the text color */
         background-color: color-mix(in srgb, var(--visual-style-control-active-fill), currentColor 15%);
-    }
-
-    /* Main Orientation */
-
-    &.mod--vertical {
-        flex-direction: column;
-    }
-
-    &.mod--horizontal {
-        flex-direction: row;
-    }
-
-    /* Main Axis Direction */
-
-    &.mod--horizontal.mod--end {
-        flex-direction: row-reverse;
-    }
-
-    &.mod--vertical.mod--end {
-        flex-direction: column-reverse;
-    }
-
-    /**
-     * FIXME: Hide temporally empty elements wait for this pr to be merged:
-     * https://github.com/PhrontHQ/mod/pull/37
-     */
-    > div:empty {
-        display: none;
-    }
-
-    /* Visual Specifications */
-
-    > .ModButton-visual {
-        position: relative;
-    }
-
-    > svg.ModButton-visual {
-        fill: currentColor;
     }
 
     /* States */

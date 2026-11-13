@@ -1,0 +1,56 @@
+.ModLabeledVisual {
+    gap: 6px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+
+    /* AlignmentOrientation */
+
+    &.mod--horizontal {
+        flex-direction: row;
+    }
+
+    &.mod--vertical {
+        flex-direction: column;
+    }
+
+    /* VisualPosition at the end of the main axis */
+
+    &.mod--horizontal.mod--end {
+        flex-direction: row-reverse;
+    }
+
+    &.mod--vertical.mod--end {
+        flex-direction: column-reverse;
+    }
+
+    /* DisplayOptions */
+
+    &.mod--visual-only > .ModLabeledVisual-label {
+        display: none;
+    }
+
+    &.mod--label-only > .ModLabeledVisual-visual {
+        display: none;
+    }
+
+    /**
+     * FIXME: Hide temporally empty elements wait for this pr to be merged:
+     * https://github.com/PhrontHQ/mod/pull/37
+     */
+    > div:empty {
+        display: none;
+    }
+
+    /* Visual Specifications */
+
+    > .ModLabeledVisual-visual {
+        position: relative;
+    }
+
+    > svg.ModLabeledVisual-visual {
+        fill: currentColor;
+    }
+}

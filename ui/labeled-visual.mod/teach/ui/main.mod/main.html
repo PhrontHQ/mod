@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="main.css" />
+        <script type="text/mod-serialization">
+            {
+                "owner": {
+                    "values": {
+                        "element": {"#": "main"}
+                    }
+                },
+                "startRow": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "startRow"},
+                        "label": {"<-": "@owner.boundLabel"}
+                    }
+                },
+                "endColumn": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "endColumn"},
+                        "label": "End Column",
+                        "visualPosition": "end",
+                        "visualOrientation": "vertical"
+                    }
+                },
+                "visualOnly": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "visualOnly"},
+                        "label": "Visual Only",
+                        "displayOptions": "visualOnly"
+                    }
+                },
+                "labelOnly": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "labelOnly"},
+                        "label": "Label Only",
+                        "displayOptions": "labelOnly"
+                    }
+                },
+                "serializedVisual": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "serializedVisual"},
+                        "label": "Serialized Visual",
+                        "visual": "./ui/main.mod/assets/star.svg"
+                    }
+                }
+            }
+        </script>
+    </head>
+    <body>
+        <div data-mod-id="main" class="Main">
+            <header>Teach Labeled Visual Mod</header>
+            <section class="labeled-visuals">
+                <div data-mod-id="startRow" class="labeled-visual">
+                    <div data-arg="visual">▶</div>
+                </div>
+                <div data-mod-id="endColumn" class="labeled-visual">
+                    <div data-arg="visual">▼</div>
+                </div>
+                <div data-mod-id="visualOnly" class="labeled-visual">
+                    <div data-arg="visual">✦</div>
+                </div>
+                <div data-mod-id="labelOnly" class="labeled-visual">
+                    <div data-arg="visual">✦</div>
+                </div>
+                <div data-mod-id="serializedVisual" class="labeled-visual"></div>
+            </section>
+        </div>
+    </body>
+</html>
