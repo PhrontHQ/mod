@@ -97,7 +97,7 @@ module.exports = require("mod/testing/run")
         { name: "spec/ui/checkbox-spec", node: false },
         { name: "spec/ui/condition-spec", node: false },
         { name: "spec/ui/button-spec", node: false },
-        { name: "ui/labeled-visual.mod/spec/labeled-visual-spec", node: false },
+        { name: "spec/ui/labeled-visual/labeled-visual-spec", node: false },
         { name: "spec/ui/control-spec", node: false },
         { name: "spec/ui/firstdraw-spec", node: false },
         { name: "spec/ui/loader-spec", node: false },
