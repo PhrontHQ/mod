@@ -347,6 +347,12 @@ DataService.addClassProperties(
                     this.autosaves = value;
                 }
 
+                value = Number(deserializer.getProperty("fetchDataTimeout"));
+                if (value !== undefined && Number.isFinite(value)) {
+                    this.fetchDataTimeout = value;
+                }
+
+
                 return this;
             },
         },
@@ -6805,6 +6811,16 @@ DataService.addClassProperties(
         },
 
         /**
+         * A timeout (in ms) that will be used to cancel a fetch data with a query.
+         * If a query has a specific timeout set, it will be used instead.
+         * 
+         * @property {Number}
+         */
+        fetchDataTimeout: {
+            value: undefined
+        },
+
+        /**
          * Fetch data from the service using its child services.
          *
          * This method accept [types]{@link DataObjectDescriptor} as alternatives to
@@ -7149,7 +7165,33 @@ DataService.addClassProperties(
                 });
 
                 // Return the passed in or created stream.
+                // Passed a timeout, we assess if the stream has data. If it doesn't have any, then we give up
+                // return stream.timeout(stream.query.timeout ?? this.fetchDataTimeout)
+                //     // .then((value) => {
+                //     //     return value;
+                //     // })
+                //     .catch((e) => {
+                //     if(stream.data.length === 0) {
+                //         console.warn("Fetching data timed out for query ", stream.query);
+                //         stream.dataDone();
+                //     }
+                //     return stream;
+                // });
+
+                if(!isNaN(this.fetchDataTimeout)) {
+                    return Promise.timeout(stream, stream.query.timeout ?? this.fetchDataTimeout)
+                        .catch((e) => {
+                            if(stream.data.length === 0) {
+                                console.warn("Fetching data timed out for "+ stream.query.type.name +" with criteria:", stream.query.criteria);
+                            }
+                            stream.dataDone();
+                            // return stream;
+                            return stream.data;
+                    });
+
+                } else {
                 return stream;
+                }
             },
         },
 

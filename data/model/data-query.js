@@ -69,7 +69,10 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
                 this.hints = value;
             }
             
-
+            value = Number(deserializer.getProperty("timeout"));
+            if (value !== undefined && Number.isFinite(value)) {
+                this.timeout = value;
+            }
 
             return result ? Promise.resolve(this) : this;
         }
@@ -101,6 +104,9 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
             }
             if(this.hints) {
                 serializer.setProperty("hints", this.hints);
+            }
+            if(this.timeout) {
+                serializer.setProperty("timeout", this.timeout);
             }
 
             // if (this.typeModule || (this.type && this.type.objectDescriptorInstanceModule)) {
@@ -341,6 +347,16 @@ exports.DataQuery = ObjectSpecification.specialize(/** @lends DataQuery.prototyp
      */
     refreshesRefetchedInstances: {
         value: false
+    },
+
+    /**
+     * A timeout Mod will use to cancel a fetch data with a query if it is set to a positive number.
+     * 
+     * 
+     * @property {Number}
+     */
+    timeout: {
+        value: undefined
     },
 
 
