@@ -1026,31 +1026,36 @@ DataService.addClassProperties(
 
         __makePrototypeForType: {
             value: function (childService, objectDescriptor, constructor) {
+                let prototype,
+                    requisitePropertyNames;
                 /* to handle things like native types passing by */
                 if (!childService) {
-                    return constructor
+                    prototype = constructor
                         ? constructor.prototype
                         : objectDescriptor?.object
                         ? objectDescriptor.object.prototype
                         : typeof objectDescriptor === "function"
                         ? objectDescriptor
                         : null;
-                }
-
-                var prototype = Object.create(
+                    requisitePropertyNames = null;
+                } else {
+                    prototype = Object.create(
                         constructor?.prototype
                             ? constructor.prototype
                             : typeof objectDescriptor === "function"
                             ? objectDescriptor
                             : Object
-                    ),
-                    mapping = childService.mappingForType(objectDescriptor),
+                    );
+                    let mapping = childService.mappingForType(objectDescriptor);
                     /*
                 FIXME
                 we're "lucky" here as when this is called, the current DataService hasn't registered yet the mappings, so we end up creating triggers for all property descriptors.
             */
-                    requisitePropertyNames = (mapping && mapping.requisitePropertyNames) || new Set(),
-                    dataTriggers = this.DataTrigger.addTriggers(
+                    requisitePropertyNames = (mapping && mapping.requisitePropertyNames) || new Set();
+
+                }
+
+                let dataTriggers = this.DataTrigger.addTriggers(
                         this,
                         objectDescriptor,
                         prototype,
