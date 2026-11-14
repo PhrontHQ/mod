@@ -1850,7 +1850,13 @@ DataService.addClassProperties(
                 var objectDescriptor = this._objectDescriptorForObjectCache.get(object);
 
                 if (!objectDescriptor) {
+                    //try the object:
+                    objectDescriptor = object.objectDescriptor;
+
+                    //try the class:
+                if (!objectDescriptor) {
                     objectDescriptor = this.objectDescriptorForType(object?.constructor);
+                    }
                 }
 
                 if (!objectDescriptor) {
