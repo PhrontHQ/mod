@@ -5612,7 +5612,7 @@ DataService.addClassProperties(
 
         saveChangesWithIdentity: {
             value: function (identity) {
-                console.debug(`#### saveChangesWithIdentity: `,identity);
+                // console.debug(`#### saveChangesWithIdentity: `,identity);
 
                 //If nothing to do, we bail out as early as possible.
                 if (
@@ -5731,9 +5731,9 @@ DataService.addClassProperties(
                 // this.objectDescriptorsWithChanges.clear();
 
                 if(this.pendingTransactionPromise) {
-                        console.debug("!!!!!!!!!!!!!! Pending transaction holding transaction "+transaction.identifier);
+                        //console.debug("!!!!!!!!!!!!!! Pending transaction holding transaction "+transaction.identifier);
                         this.pendingTransactionPromise = this.pendingTransactionPromise.then(() => {
-                            console.debug("+++++++++++++++ Pending transaction holding transaction "+transaction.identifier+ " NO MORE!!!");
+                            //console.debug("+++++++++++++++ Pending transaction holding transaction "+transaction.identifier+ " NO MORE!!!");
                             
                             let currentPendingTransactionPromise = this._saveChangesForTransaction(transaction);
                             return currentPendingTransactionPromise
