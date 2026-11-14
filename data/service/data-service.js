@@ -737,24 +737,42 @@ DataService.addClassProperties(
                 // `null` type, and add each of the new child's types to the array
                 // of child types if they're not already there.
 
+                let childServicesByType = this._childServicesByType,
+                    childServiceTypes = this._childServiceTypes;
                 for (i = 0, n = (types && types.length) || nIfEmpty; i < n; i += 1) {
                     type = (types && types.length && types[i]) || null;
-                    children = this._childServicesByType.get(type) || [];
+
+                    this._registerChildServiceForType(child, type, childServicesByType, childServiceTypes);
+                }
+                // Set the new child service's parent.
+                child._parentService = child.nextTarget = this;
+            },
+        },
+
+        _registerChildServiceForType: {
+            value: function(child, type, _childServicesByType, _childServiceTypes) {
+
+                let childServicesByType = _childServicesByType ?? this._childServicesByType,
+                    childServiceTypes = _childServiceTypes ?? this._childServiceTypes,
+                    children = childServicesByType.get(type) || [];
 
                     //Checking in case this is called multiple times
                     if (children.indexOf(child) === -1) {
                         children.push(child);
                         if (children.length === 1) {
-                            this._childServicesByType.set(type, children);
+                        childServicesByType.set(type, children);
                             if (type) {
-                                this._childServiceTypes.push(type);
+                            childServiceTypes.push(type);
                             }
                         }
+
+                    if(type) {
+                        //New service to handle that type, we reset its propagationPath so it's rebuilt to include us now
+                        type.composedPath = null;
                     }
                 }
-                // Set the new child service's parent.
-                child._parentService = child.nextTarget = this;
-            },
+
+            }
         },
 
         __childServiceRegistrationPromise: {
