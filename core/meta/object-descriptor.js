@@ -733,6 +733,8 @@ ObjectDescriptor.addClassProperties(
 
         /**
          * An ObjectDescriptor's composedPath cached
+         * A setter allows to reset it to null, which will force a this._computeComposedPath() to re-evaluate it
+         * WARNING A specific composedPath could also be set, the caller better know what she's doing!
          * @property {Array} _composedPath
          */
         _composedPath: {
@@ -744,6 +746,11 @@ ObjectDescriptor.addClassProperties(
                     this._composedPath = this._computeComposedPath();
                 }
                 return this._composedPath;
+            },
+            set:  function (value) {
+                if(value !== this._composedPath) {
+                    this._composedPath = value;
+                }
             }
         },
         _computeComposedPath: {
