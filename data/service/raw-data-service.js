@@ -2231,10 +2231,8 @@ RawDataService.addClassProperties({
             //console.log("rawDataDone for "+stream.query.type.name);
 
             dataReadyPromise.then(function (results) {
-                // console.log("dataReadyPromise for "+stream.query.type.name);
                 return dataToPersist ? self.writeOfflineData(dataToPersist, stream.query, context) : null;
             }).then(function () {
-                // console.log("stream.dataDone() for "+stream.query.type.name);
                 if (stream.query?.orderings && self.shouldSortDataStream(stream)) {
                     self.sortDataStream(stream);
                 }
@@ -3887,14 +3885,15 @@ RawDataService.addClassProperties({
 
                 }
             }
-            else {
-                /*
-                    FIXME - we should only register to receive ReadUpdateOperation when we ourselves dispatched a  DataOperation.Type.ReadOperation.
+            // else {
+            //     console.log("HERE");
+            //     /*
+            //         FIXME - we should only register to receive ReadUpdateOperation when we ourselves dispatched a  DataOperation.Type.ReadOperation.
 
-                    The tricky part is that we need to track that we have ones in-flight. So maybe addEventListener/removeEventListener should keep track of a count.
-                */
-                // console.error(this," -handleReadUpdateOperation type: "+operation.type+" for target '"+objectDescriptor.name+", but can't find a matching stream for referrerId "+referrer);
-            }
+            //         The tricky part is that we need to track that we have ones in-flight. So maybe addEventListener/removeEventListener should keep track of a count.
+            //     */
+            //     // console.error(this," -handleReadUpdateOperation type: "+operation.type+" for target '"+objectDescriptor.name+", but can't find a matching stream for referrerId "+referrer);
+            // }
         }
     },
 
@@ -3915,10 +3914,11 @@ RawDataService.addClassProperties({
                 // var stream = this.referrerContextForDataOperation(operation);
                 var stream = this.contextForPendingDataOperation(operation);
                 if (stream) {
-                    this.rawDataDone(stream);
+                    this.rawDataDone(stream, operation);
                     //this._thenableByOperationId.delete(operation.referrerId);
                     this.unregisterDataOperationPendingReferrer(operation);
                 } else {
+                    console.debug("!!!!!!!!!!! handleReadCompletedOperation " + operation.id + " "+ operation.target.name + ", readOperation is: ", operation);
                     this.unregisterDataOperationPendingReferrer(operation);
                 }
                 // else {
