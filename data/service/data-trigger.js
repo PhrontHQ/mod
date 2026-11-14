@@ -250,7 +250,7 @@ exports.DataTrigger.prototype = Object.create(
                 while (prototype) {
                     descriptor = Object.getOwnPropertyDescriptor(prototype, propertyName);
                     getter = descriptor && descriptor.get;
-                    prototype = !getter && Object.getPrototypeOf(prototype);
+                    prototype = (!getter || (getter.name === "triggerGetter")) && Object.getPrototypeOf(prototype);
                 }
 
                 if (!getter) getter = null;
@@ -489,7 +489,7 @@ exports.DataTrigger.prototype = Object.create(
                     getter = descriptor && descriptor.get;
                     setter = getter && descriptor.set;
                     writable = !descriptor || setter || descriptor.writable;
-                    prototype = writable && !setter && Object.getPrototypeOf(prototype);
+                    prototype = writable && (!setter  || (setter.name === "triggerSetter")) && Object.getPrototypeOf(prototype);
                 }
                 if (!setter) setter = null;
 
@@ -1459,7 +1459,7 @@ Object.defineProperties(
                         Montage.defineProperty(prototype, descriptor.name, propertyDescriptor);
                     } else {
                         Montage.defineProperty(prototype, descriptor.name, {
-                            get: function (shouldFetch) {
+                            get: function triggerGetter(shouldFetch) {
                                 // if(trigger._privatePropertyName === "origin") {
                                 //     debugger;
                                 //     console.log("here");
@@ -1467,7 +1467,7 @@ Object.defineProperties(
                                 return trigger._getValue(this, shouldFetch);
                                 // return (trigger||(trigger = DataTrigger._createTrigger(service, objectDescriptor, prototype, name,descriptor)))._getValue(this);
                             },
-                            set: function (value, _dispatchChange, _initialValue, _currentValue) {
+                            set: function triggerSetter(value, _dispatchChange, _initialValue, _currentValue) {
                                 arguments.length === 1
                                     //Called via regular setter
                                     ? trigger._setValue(this, value)
