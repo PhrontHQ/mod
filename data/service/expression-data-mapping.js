@@ -2720,7 +2720,7 @@ exports.ExpressionDataMapping = DataMapping.specialize(/** @lends ExpressionData
                 requiredObjectProperties = (rule && this.rawDataPrimaryKeys) ? rule.requirements : null,
                 result, self;
 
-            if(!ignoreRequiredObjectProperties && requiredObjectProperties) {
+            if(!ignoreRequiredObjectProperties && requiredObjectProperties && object[propertyName] === undefined) {
                 result = this.service.rootService.getObjectPropertyExpressions(object, requiredObjectProperties);
             }
 
