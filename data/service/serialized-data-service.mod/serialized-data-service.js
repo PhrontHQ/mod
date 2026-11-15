@@ -1,5 +1,5 @@
 const RawDataService = require("../raw-data-service").RawDataService,
-    
+    Montage = require("core/core").Montage,
     DataObject = require("../../model/data-object").DataObject,
     DataOperation = require("../data-operation").DataOperation,
     DataQuery = require("../../model/data-query").DataQuery,
@@ -19,13 +19,22 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         this._typeToLocation = new Map();
         this._typeToManagedSubtypes = new Map();
         this._dataInstancesPromiseByObjectDescriptor = new Map();
-        this.needsRawDataTypeIdentificationCriteria = true;
-
-        // Checks that the serialized instances include objects  
-        // when the propertyDescriptor has a valueDescriptor. Validation is 
-        // expensive so this should only be enabled in development
-        this._isModelValidationEnabled = false;
     }
+
+    static {
+        Montage.defineProperties(this.prototype, {
+            needsRawDataTypeIdentificationCriteria: { value: true },
+            // Checks that the serialized instances include objects  
+            // when the propertyDescriptor has a valueDescriptor. Validation is 
+            // expensive so this should only be enabled in development
+            _isModelValidationEnabled: { value: false },
+            defaultFetchDataTimeout: { value: undefined },
+            _fetchDataTimeout: { value: undefined },
+            _discoveredInstancesByType: { value: undefined },
+            
+        });
+    }
+
 
     deserializedFromSerialization(label) {
         RawDataService.prototype.deserializedFromSerialization.call(this, label);
@@ -40,20 +49,26 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             let typeSet = new Set(this.types);
 
             this.types.forEach((type) => {
-                if (!type.descendantDescriptors) {
-                    return;
-                }
-                type.descendantDescriptors.forEach((descendant) => {
-                    if (!typeSet.has(descendant)) {
-                        return
-                    }
-                    if (!this._typeToManagedSubtypes.has(type)) {
-                        this._typeToManagedSubtypes.set(type, []);
-                    }
-                    this._typeToManagedSubtypes.get(type).push(descendant);
-                });
+                this._populateTypeToSubtypesMapForType(type, typeSet);
             });
         }
+    }
+
+    _populateTypeToSubtypesMapForType(type, typeSet) {
+        if (!type.descendantDescriptors) {
+            return;
+        }
+
+        let _typeSet = typeSet ?? new Set(this.types);
+        type.descendantDescriptors.forEach((descendant) => {
+            if (!_typeSet.has(descendant)) {
+                return
+            }
+            if (!this._typeToManagedSubtypes.has(type)) {
+                this._typeToManagedSubtypes.set(type, []);
+            }
+            this._typeToManagedSubtypes.get(type).push(descendant);
+        });
     }
 
     registerTypeForInstancesLocation(dataType, location) {
@@ -108,46 +123,108 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return dataInstancesPromiseForObjectDescriptor;
     }
 
-    _dataInstancesPromiseForObjectDescriptor(objectDescriptor) {
-        let location, _require;
+    get discoveredInstancesByType() {
+        return this._discoveredInstancesByType || (this._discoveredInstancesByType = new Map());
+    }
 
-        if (this._typeToLocation.has(objectDescriptor)) {
-            location = this._typeToLocation.get(objectDescriptor);
+    /* return a Set */
+    discoveredInstancesForType(anObjectDescriptor) {
+        return this.discoveredInstancesByType.get(anObjectDescriptor);
+    }
 
-            if (location.location) {
-                _require = location.require;
-                location = location.location;
+    registerDiscoveredInstancesForType(instances, anObjectDescriptor) {
+        let  discoveredInstances = this.discoveredInstancesByType.get(anObjectDescriptor);
+        if(!discoveredInstances) {
+            this.discoveredInstancesByType.set(anObjectDescriptor, (discoveredInstances = new Set()));
+        }
+
+        for (let instance of instances) {
+            this.registerDiscoveredInstanceForType(instance, anObjectDescriptor, discoveredInstances);
+        }
+        this._dataInstancesPromiseByObjectDescriptor.set(anObjectDescriptor, Promise.resolve(Array.from(discoveredInstances)));
+
+        return discoveredInstances;
+    }
+
+    /*
+        This method allows to gather objects part of the graphs but were not declared
+        using the instances property that associate a type/object descriptor with a moduleId of
+        a file containing serialized instances 
+    */
+
+    registerDiscoveredInstanceForType(instance, anObjectDescriptor, _discoveredInstances) {
+        let  discoveredInstances = _discoveredInstances ?? this.discoveredInstancesByType.get(anObjectDescriptor);
+
+        if(!discoveredInstances) {
+            this.discoveredInstancesByType.set(anObjectDescriptor, (discoveredInstances = new Set()));
+        }
+
+        if(!discoveredInstances.has(instance)) {
+            discoveredInstances.add(instance);
+
+            //Override the cache if it's a call not from the loop, otherwise registerDiscoveredInstancesForType() does it
+            if(!_discoveredInstances) {
+                this._dataInstancesPromiseByObjectDescriptor.set(anObjectDescriptor, Promise.resolve(Array.from(discoveredInstances)));
             }
+
+            //Clear the cache... but we need to clear the aggregates at parents as well...
         }
 
-        if (!_require) {
-            _require = global.require;
-        }
 
-        if (!location) {
-            location = `data/instance/${this._kebabTypeName(objectDescriptor.name)}/main.mjson`;
-        }
+    }
 
-        return _require
-            .async(location)
-            .then((module) => {
-                if (!module || !module.montageObject) {
-                    throw new Error("Module not found or invalid module format: " + location);
+    _dataInstancesPromiseForObjectDescriptor(objectDescriptor) {
+
+        let discoveredInstances = this.discoveredInstancesForType(objectDescriptor);
+
+        if(discoveredInstances) {
+            /*
+                Not ideal to create an Array every time here, but I think it's cached by dataInstancesPromiseForObjectDescriptor
+                which is also a problem as 
+            */
+            return Promise.resolve(Array.from(discoveredInstances));
+        } else {
+            let location, _require;
+
+            if (this._typeToLocation.has(objectDescriptor)) {
+                location = this._typeToLocation.get(objectDescriptor);
+
+                if (location.location) {
+                    _require = location.require;
+                    location = location.location;
                 }
+            }
 
-                let { montageObject: rawData } = module;
+            if (!_require) {
+                _require = global.require;
+            }
 
-                return rawData;
-            }).then((rawData) => {
-                if (this._isModelValidationEnabled) {
-                    this._validateRawDataForType(rawData, objectDescriptor);
-                }
-                return rawData;
-            })
-            .catch((error) => {
-                console.error("Error loading serialized data:", error);
-                throw error;
-            });
+            if (!location) {
+                location = `data/instance/${this._kebabTypeName(objectDescriptor.name)}/main.mjson`;
+            }
+
+            return _require
+                .async(location)
+                .then((module) => {
+                    if (!module || !module.montageObject) {
+                        throw new Error("Module not found or invalid module format: " + location);
+                    }
+
+                    let { montageObject: rawData } = module;
+
+                    return rawData;
+                }).then((rawData) => {
+                    if (this._isModelValidationEnabled) {
+                        this._validateRawDataForType(rawData, objectDescriptor);
+                    }
+                    return rawData;
+                })
+                .catch((error) => {
+                    console.error("Error loading serialized data:", error);
+                    throw error;
+                });
+
+        }
 
     }
 
@@ -209,13 +286,25 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return this.nullPromise;
     }
 
-    _mapObjectPropertyToRawData(object, objectKey, propertyDescriptor, rawData) {
+    _mapObjectPropertyToRawData(object, objectKey, propertyDescriptor, rawData, registerInstance = false) {
                     
         // debugger;
         if(propertyDescriptor.cardinality === 1) {
             let value =  object[objectKey],
                 primaryKey;
 
+
+             if(registerInstance) {
+                
+                /*
+                    Just realized that if value is an instance of DataIdentifier, then value.objectDescriptor is the type
+                    of object that instance of DataIdentifier identifies, and not DataIdentifier's ObjectDescriptor,
+                    which breaks the interface: we need to rename DataIdentifier.objectDescriptor to something else...
+                */
+                //this.registerDiscoveredInstanceForType(value, value.objectDescriptor);
+                //propertyDescriptor.valueDescriptor is a promise, propertyDescriptor._valueDescriptorReference is the resolved value
+                this.registerDiscoveredInstanceForType(value, propertyDescriptor._valueDescriptorReference);
+             }   
             /*
                 Now that dataIdentifier is behind a trigger, it's stored as _dataIdentifier,
                 so if (value?.hasOwnProperty("dataIdentifier"))  fails
@@ -260,16 +349,30 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
     mapObjectToRawData(object, rawData, context) {
         //Set the primary key:
-        let mappingPromises;
+        let mappingPromises = [];
 
-        this._forEachObjectProperty(object, (propertyValue, propertyKey, propertyDescriptor, object) => {
+        this._forEachObjectProperty(object, mappingPromises, (propertyValue, propertyKey, propertyDescriptor, object, mappingPromises) => {
             if (propertyKey === "dataIdentifier") {
                 return;
             }
             if (this._isAsync(propertyDescriptor.valueDescriptor)) {
-                (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then(() => {
+                (mappingPromises || (mappingPromises = [])).push(propertyDescriptor.valueDescriptor.then((propertyDescriptorValueDescriptor) => {
                     try {
-                        this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData);
+                        /*
+                            We now detect if the the value of object[propertyKey] is of a type we haven't been configured for
+                            In which case, we collect those instances by their type so we can deal with them the same way
+                            as those we loaded from the given .mjson files
+                        */
+                        if(object[propertyKey] && propertyDescriptorValueDescriptor && !this.handlesType(propertyDescriptorValueDescriptor)) {
+                            this.types.push(propertyDescriptorValueDescriptor);
+                            this._populateTypeToSubtypesMapForType(propertyDescriptorValueDescriptor);
+
+                            this.mainService._registerChildServiceForType(this, propertyDescriptorValueDescriptor);
+                            this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData, true/*registerInstance*/);
+                        } else {
+                            this._mapObjectPropertyToRawData(object, propertyKey, propertyDescriptor, rawData);
+                        }
+
                     } catch (e) {
                         console.error("SerializedDataService.mapObjectToRawData Error", object, propertyDescriptor, e);
                     }
@@ -297,7 +400,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         return object && object.then && typeof object.then === "function";
     }
 
-    _forEachObjectProperty(object, callback) {
+    _forEachObjectProperty(object, mappingPromises, callback) {
         let objectKeys = Object.keys(object),
             objectDescriptor = object.objectDescriptor || object.dataIdentifier.objectDescriptor;
         for(let countI = objectKeys.length, i = 0, iPropertyDescriptor; (i<countI); i++) {
@@ -319,7 +422,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 iPropertyDescriptor = objectDescriptor.propertyDescriptorNamed(objectKeys[i].stringByRemovingPrefix("_"));
             }
             if(iPropertyDescriptor) {
-                callback(object[objectKeys[i]], objectKeys[i], iPropertyDescriptor, object);
+                callback(object[objectKeys[i]], objectKeys[i], iPropertyDescriptor, object, mappingPromises);
             }
         }
     }
@@ -396,6 +499,17 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         }
     }
     
+    /**
+     * A timeout (in ms) that will be used to cancel a fetch for an object For a DataIdentifier.
+     * Based on this.mainService.fetchDataTimeout to make sure it's less than it
+     * Try 50%
+     * @property {Number}
+     */
+    get fetchDataTimeout() {
+        return this._fetchDataTimeout ?? (this._fetchDataTimeout = (this.mainService.fetchDataTimeout > 0) 
+                ? (this.mainService.fetchDataTimeout * 50 / 100)
+                : this.defaultFetchDataTimeout)
+    }
 
     _objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation) {
         let iObjectValue = mainService.objectForDataIdentifier(aDataIdentifier);
@@ -410,13 +524,30 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                 iObjectValueQuery.hints = {referrerOperation: dataOperation};
             }
 
+            /*
+                mainService.fetchData() internally does use a timeout() as well, 
+                and now if mainService.fetchData() times out before we do, the data
+                will never make it back because mapping is depth first...
+                
+            */
+           let fetchDataStream = mainService.fetchData(iObjectValueQuery);
 
-            return mainService.fetchData(iObjectValueQuery).then((fetchDataResult) => {
-                    return fetchDataResult[0];
-                }).catch((e) => {
-                    console.error("Serialized DataService failed to fetch objectPromise", e);
-                    return null;
-                })
+            if(!isNaN(this.fetchDataTimeout)) {
+
+                return fetchDataStream.timeout(this.fetchDataTimeout)
+                    .then((fetchDataResult) => {
+                        return fetchDataResult[0] || null;
+                    })
+                    .catch((e) => {
+                        console.error("Serialized DataService failed to fetch object for "+aDataIdentifier.url, e);
+                        return null;
+                    });
+            } else {
+                return fetchDataStream.then((fetchDataResult) => {
+                        return fetchDataResult[0] || null;
+                    });
+            }
+
             
         } else {
             return Promise.resolve(iObjectValue);
@@ -509,8 +640,28 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
             */
             if(iPropertyDescriptor.valueDescriptor) {
                 if (this._isAsync(iPropertyDescriptor.valueDescriptor)) {
+                    // if(object.objectDescriptor.name === 'RespondentQuestionnaire') {
+                    //  console.debug("Will map " + object.objectDescriptor.name + " "+record.identifier+" "+property);
+                    //}
                     mappingPromises.push(iPropertyDescriptor.valueDescriptor.then((valueDescriptor) => {
-                        return this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService, context);
+                        let mapResult = this.__mapRawDataPropertyToObject(record, property, valueDescriptor, object, mainService, context)
+                        
+                        if(this._isAsync(mapResult)) {
+                            mapResult = mapResult.then((value) => {
+                                //if(object.objectDescriptor.name === 'RespondentQuestionnaire') {
+                                //    console.debug("Did map  " + object.objectDescriptor.name + "  "+record.identifier+" "+property+" to: ", object[property]);
+                                //}
+                                return value;
+                            });
+
+                            return mapResult
+                        } else {
+                            //if(object.objectDescriptor.name === 'RespondentQuestionnaire') {
+                            //    console.debug("Did map  " + object.objectDescriptor.name + "  "+record.identifier+" "+property+" to: ", object[property]);
+                            //}
+                            return mapResult;
+                        }
+                        
                     }));
                 } else {
                     return this.__mapRawDataPropertyToObject(record, property, iPropertyDescriptor.valueDescriptor, object, mainService, context);
@@ -536,7 +687,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                         let aDataIdentifier = this.dataIdentifierForTypePrimaryKey(valueDescriptor, record[property]);
                         return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                             .then((iObjectValue) => {
-                                object[property] = iObjectValue
+                                return (object[property] = iObjectValue);
                             })
                     });
                 } else {
@@ -544,12 +695,12 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     return this._objectPromiseForDataIdentifier(aDataIdentifier, mainService, dataOperation)
                     .then((iObjectValue) => {
                         
-                        object[property] = iObjectValue
+                        return (object[property] = iObjectValue);
                     })
                 }
 
             } else {
-                object[property] = record[property];
+                return (object[property] = record[property]);
             }
         } else {
             let iPropertyValues =  record[property],
@@ -561,7 +712,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
 
                 //The collection is empty, we can carry it over
                 if(!oneValue) {
-                    object[property] = iPropertyValues;
+                    return (object[property] = iPropertyValues);
                 } else if(Array.isArray(iPropertyValues)) {
                     let values = [],
                         objectDescriptor = valueDescriptor,
@@ -583,14 +734,14 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
                     // return Promise.all(mappingPromises).then((values) => {
                     return this._objectsPromisesForDataIdentifiers(dataIdentifiers, valueDescriptor, mainService, dataOperation).then((values) => {
                         object[property].splice.apply(object[property], [0, Infinity].concat(values.filter((value) => !!value)));
-                        return;
+                        return object[property];
                     });
 
                 } else if(iPropertyValues instanceof Map) {
                     throw "mapObjectToRawData for a property that is Map needs to be implemented";
                 }
             } else {
-                object[property] = iPropertyValues;
+                return (object[property] = iPropertyValues);
             }
         }
     }
@@ -788,6 +939,7 @@ exports.SerializedDataService = class SerializedDataService extends RawDataServi
         let readOperationTarget = readOperation.target,
             readExpressions = readOperation.data && readOperation.data.readExpressions,
             responseOperationTarget;
+
 
         /*
             FIX ME: we end up here with rawData === [undefined] or [null], none of it is a valid response for a readCompletedOperation's data
