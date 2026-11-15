@@ -23,8 +23,12 @@
             "module": {
                 "%": "./party"
             },
+            "object":{"@": "Party"},
             "parent":{"@": "objectDescriptor"}
         }
+    },
+    "Party": {
+        "object": "./party"
     },
     "objectDescriptor": {
         "object": "../data-object.mjson"

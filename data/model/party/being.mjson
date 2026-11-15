@@ -13,10 +13,13 @@
             "module": {
                 "%": "./being"
             },
+            "object":{"@": "Being"},
             "parent":{"@": "PartyDescriptor"}
         }
     },
-
+    "Being": {
+        "object": "./being"
+    },
     "PartyDescriptor": {
         "object": "./party.mjson"
     }
