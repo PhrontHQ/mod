@@ -5693,7 +5693,9 @@ DataService.addClassProperties(
                     // objectDescriptorsWithChanges = (transaction.objectDescriptors = new Set(
                     //     this.objectDescriptorsWithChanges
                     // ));
-                    transaction.objectDescriptors = new Set(this.objectDescriptorsWithChanges);
+
+                    //It's dynamically calculated now
+                    //transaction.objectDescriptors = new Set(this.objectDescriptorsWithChanges);
 
                 // return dispatchWillSavePromise.then(() => {
 
@@ -7219,7 +7221,7 @@ DataService.addClassProperties(
                     });
 
                 } else {
-                return stream;
+                    return stream;
                 }
             },
         },
