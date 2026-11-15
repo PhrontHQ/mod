@@ -139,6 +139,11 @@ DataStream = exports.DataStream = DataProvider.specialize(/** @lends DataStream.
     /***************************************************************************
      * Promise behavior
      */
+    timeout: {
+        value: function(timeout) {
+            return this._promise.timeout(timeout);
+        }
+    },
 
     _resolve: {
         value: function (value) {
