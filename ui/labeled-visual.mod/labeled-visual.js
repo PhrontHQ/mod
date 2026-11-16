@@ -22,7 +22,7 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
         Montage.defineProperties(this.prototype, {
             _visualPosition: { value: VisualPosition.start },
             _visualOrientation: { value: VisualOrientation.horizontal },
-            _displayOptions: { value: DisplayOption.displayBoth },
+            _displayOption: { value: DisplayOption.displayBoth },
             hasTemplate: { value: true },
             converter: { value: null },
             _label: { value: null },
@@ -81,29 +81,29 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
         }
     }
 
-    get displayOptions() {
-        return this._displayOptions;
+    get displayOption() {
+        return this._displayOption;
     }
 
     /**
      * What parts of the component are displayed.
      * @type {DisplayOption}
-     * @param {DisplayOption} displayOptions - "displayBoth", "visualOnly" or "labelOnly".
+     * @param {DisplayOption} displayOption - "displayBoth", "visualOnly" or "labelOnly".
      */
-    set displayOptions(displayOptions) {
+    set displayOption(displayOption) {
         if (
-            typeof displayOptions !== "string" ||
-            DisplayOption.intValueForMember(displayOptions) === undefined
+            typeof displayOption !== "string" ||
+            DisplayOption.intValueForMember(displayOption) === undefined
         ) {
-            console.warn('Invalid display options: "' + displayOptions + '"');
+            console.warn('Invalid display option: "' + displayOption + '"');
             return;
         }
 
-        const value = DisplayOption[displayOptions];
+        const value = DisplayOption[displayOption];
 
-        if (value !== this._displayOptions) {
-            this.classList.delete(this._displayOptions);
-            this._displayOptions = value;
+        if (value !== this._displayOption) {
+            this.classList.delete(this._displayOption);
+            this._displayOption = value;
             this.classList.add(value);
         }
     }
@@ -157,7 +157,7 @@ const LabeledVisual = (exports.LabeledVisual = class LabeledVisual extends Compo
         if (firstDraw) {
             this.classList.add(this._visualPosition);
             this.classList.add(this._visualOrientation);
-            this.classList.add(this._displayOptions);
+            this.classList.add(this._displayOption);
         }
     }
 
