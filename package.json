@@ -1,7 +1,7 @@
 {
     "name": "mod",
-    "version": "25.7.6",
-    "description": "mod native-web, native-like apps your own.",
+    "version": "26.11.15",
+    "description": "mod native-web apps your own",
     "license": "BSD-3-Clause",
     "repository": {
         "type": "git",
