@@ -607,6 +607,10 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                             iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
                         }
 
+
+                        // This check prevents queries combined in DataService from being evaluated. 
+                        // We see no data issues commenting it so we are leaving it commented. 
+                        
                         // if (readExpressionsCount === 1) {
                             let mappingScope = mapping._scope.nest(dataOperation),
                                 originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier];

@@ -6947,11 +6947,6 @@ DataService.addClassProperties(
 
                 this.registerDataStream(stream);
 
-                // if (query.type.name === "Person" && (this._combinesFetchData && query.criteria?.name !== "RawForeignValueToObjectConverterCombinedCriteria")) {
-
-                // if (query.type.name === "UserIdentity" || query.type.name === "OAuthAccessToken" || query.type.name === "Person") {
-                //     return this._fetchData(query, criteria, stream);
-                // }
 
                 if (this._combinesFetchData && query.criteria?.name !== "RawForeignValueToObjectConverterCombinedCriteria") {
                     var queryParts = this._pendingCriteriaByTypeToCombine.get(query.type);
