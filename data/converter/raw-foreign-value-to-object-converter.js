@@ -568,7 +568,7 @@ exports.RawForeignValueToObjectConverter = RawValueToObjectConverter.specialize(
                 query.hints.registerMappedPropertiesAsChanged = registerMappedPropertiesAsChanged;
             }
 
-            if(queryParts.referrerOperations) {
+            if (queryParts.referrerOperations) {
                 query.hints.referrerOperations = queryParts.referrerOperations;
             }
 

@@ -607,7 +607,11 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                             iValueDescriptorReferenceMapping = iValueDescriptorReference && this.mappingForType(iValueDescriptorReference);
                         }
 
-                        if (readExpressionsCount === 1) {
+
+                        // This check prevents queries combined in DataService from being evaluated. 
+                        // We see no data issues commenting it so we are leaving it commented. 
+                        
+                        // if (readExpressionsCount === 1) {
                             let mappingScope = mapping._scope.nest(dataOperation),
                                 originDataSnapshot = dataOperation.hints?.originDataSnapshot?.[this.identifier];
 
@@ -628,16 +632,16 @@ var HttpService = exports.HttpService = class HttpService extends RawDataService
                                     But if it yields a result, this is the raw data we need as the response
                                 */
                                 mappingScope = mappingScope.nest(originDataSnapshot);
-                                let snapshpotValue = iObjectRule.expression(mappingScope);
-                                let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, snapshpotValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
+                                let snapshotValue = iObjectRule.expression(mappingScope);
+                                let responseOperation = this.responseOperationForReadOperation(dataOperation.referrer ? dataOperation.referrer : dataOperation, null, snapshotValue, false /*isNotLast*/, iValueDescriptorReference/*responseOperationTarget*/);
                                 rawDataOperations.push(responseOperation);
                             } else {
                                 console.log("can't fetch further");
                             }
 
-                        } else {
-                            throw "HTTPService mapDataOperationToRawDataOperations() is not implememnted yer to handle more than one expression"
-                        }
+                        // } else {
+                        //     throw "HTTPService mapDataOperationToRawDataOperations() is not implememnted yer to handle more than one expression"
+                        // }
 
                     }
                 } else if (iObjectRule && !rawDataOperations.has(dataOperation)) {
