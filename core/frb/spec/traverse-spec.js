@@ -416,7 +416,64 @@ describe("traverse", function () {
             expect(object.output).toEqual(["a", "a1", "b"]);
         });
 
-        it("should not be bindable from the target back to the source", function () {
+        it("should check or uncheck every descendant through two-way every{} and some{} bindings", function () {
+            tree.a.done = false;
+            tree.a1.done = false;
+            tree.b.done = true;
+            var checklist = Bindings.defineBindings({root: tree.root}, {
+                allDone: {"<->": "root.traverse{children}.every{done}"},
+                noneDone: {"<->": "!root.traverse{children}.some{done}"}
+            });
+            expect(checklist.allDone).toBe(false);
+            expect(checklist.noneDone).toBe(false);
+
+            // reaches the grandchild a1 too, but not the start node
+            checklist.allDone = true;
+            expect([tree.a.done, tree.a1.done, tree.b.done]).toEqual([true, true, true]);
+            expect(tree.root.done).toBe(undefined);
+            expect(checklist.noneDone).toBe(false);
+
+            // as with every{} on an array, setting false cancels rather than unchecks
+            checklist.allDone = false;
+            expect([tree.a.done, tree.a1.done, tree.b.done]).toEqual([true, true, true]);
+
+            checklist.noneDone = true;
+            expect([tree.a.done, tree.a1.done, tree.b.done]).toEqual([false, false, false]);
+            expect(checklist.allDone).toBe(false);
+
+            // the source side stays live: changes anywhere in the tree flow back
+            tree.a1.done = true;
+            expect(checklist.noneDone).toBe(false);
+            tree.a.done = tree.b.done = true;
+            expect(checklist.allDone).toBe(true);
+        });
+
+        it("should write to a property of a node it reaches through a two-way binding", function () {
+            var object = Bindings.defineBindings({node: chain.a1}, {
+                rootName: {"<->": "node.traverse{parent}.last().name"}
+            });
+            expect(object.rootName).toBe("root");
+
+            object.rootName = "ROOT";
+            expect(chain.root.name).toBe("ROOT");
+
+            chain.root.name = "Root";
+            expect(object.rootName).toBe("Root");
+
+            // the hierarchy changes: a becomes the root, and the binding follows it
+            chain.a.parent = null;
+            expect(object.rootName).toBe("a");
+            expect(chain.a.name).toBe("a");
+
+            object.rootName = "A";
+            expect(chain.a.name).toBe("A");
+            expect(chain.root.name).toBe("Root");
+        });
+
+        it("should not accept the traversal itself as the target of a binding", function () {
+            // Two-way bindings through a traversal work (see the two specs
+            // above); what can't be bound is the traversal's own array, since
+            // no single change to the graph would produce a given array.
             expect(function () {
                 Bindings.defineBindings({root: tree.root}, {
                     nodes: {"<->": "root.traverse{children}"}

@@ -823,6 +823,261 @@ expect(object.flat).toEqual([10, 20, 30]);
 
 The underlying mechanism is equivalent to `[[head], tail].flatten()`.
 
+### Traverse
+
+A `traverse` block follows a relationship transitively: from a starting
+object, it evaluates the block on that object, then on each object the
+block produced, and so on.  It produces every object reached, in order.
+Typical uses are all the ancestors of a node or all of its descendants.
+
+```javascript
+var company = {name: "company", parent: null};
+var division = {name: "division", parent: company};
+var team = {name: "team", parent: division};
+
+var object = Bindings.defineBindings({node: team}, {
+    ancestors: {"<-": "node.traverse{parent}.map{name}"},
+    rootName: {"<-": "node.traverse{parent}.last().name"}
+});
+expect(object.ancestors).toEqual(["division", "company"]);
+expect(object.rootName).toBe("company");
+```
+
+The block is the *step*.  It is evaluated with each object as `this`.  The
+step can produce a single object, like `parent`, or a collection, like
+`children`, which is how the same block goes up or down a hierarchy.  A
+collection is followed into, one element at a time.  `null` or
+`undefined` ends that branch, and `null` or `undefined` elements of a
+collection are skipped.
+
+```javascript
+// root
+// ├── a
+// │   └── a1
+// └── b
+var a1 = {name: "a1", children: []};
+var a = {name: "a", children: [a1]};
+var b = {name: "b", children: []};
+var root = {name: "root", children: [a, b]};
+
+var outline = Bindings.defineBindings({root: root}, {
+    descendants: {"<-": "root.traverse{children}.map{name}"}
+});
+expect(outline.descendants).toEqual(["a", "a1", "b"]);
+```
+
+Objects are produced depth-first, in pre-order: each object comes before
+its own descendants, and siblings keep the order of the collection the
+step produced.  For ancestors, that means nearest first.  The starting
+object itself is not included.
+
+#### Depth
+
+`traverse` optionally accepts a maximum depth, or a minimum and a maximum
+depth, in parentheses before the block.  Depth 0 is the starting object,
+depth 1 its direct parent or children, and so on.  By default, the
+minimum depth is 1 and there is no maximum.
+
+| Expression | Produces |
+| --- | --- |
+| `traverse{children}` | All descendants |
+| `traverse(1){children}` | Direct children only |
+| `traverse(3){children}` | Down to great-grandchildren |
+| `traverse(2, 2){children}` | Grandchildren only |
+| `traverse(0, 1){children}` | The starting object and its children |
+| `traverse($depth){children}` | Down to `$depth` levels |
+
+```javascript
+var evaluate = require("core/frb/evaluate");
+expect(evaluate("traverse(1){children}.map{name}", root)).toEqual(["a", "b"]);
+expect(evaluate("traverse(2, 2){children}.map{name}", root)).toEqual(["a1"]);
+expect(evaluate("traverse(0, 1){children}.map{name}", root)).toEqual(["root", "a", "b"]);
+```
+
+Unlike the block, depth arguments are evaluated in the scope enclosing the
+traversal, not on each object, so they can be properties of the source or
+parameters.  A depth must be a non-negative integer, a string of one, or
+`Infinity`.  Anything else, including a parameter that is not set yet,
+makes an evaluated traversal `undefined` and an observed one empty.  An
+unset depth never means "unbounded", so it can't trigger a walk of a
+whole hierarchy.
+
+```javascript
+expect(evaluate("traverse($depth){children}.map{name}", root, {depth: 1}))
+    .toEqual(["a", "b"]);
+expect(evaluate("traverse($depth){children}", root, {depth: undefined}))
+    .toBe(undefined);
+```
+
+Only `traverse` accepts arguments before a block, and at most two.  Any
+other `name(...){...}` is a parse error.
+
+#### Composing
+
+`traverse` produces an array, so the other operators and blocks apply to
+its result.
+
+| Use | Expression |
+| --- | --- |
+| Root | `traverse{parent}.last()` |
+| Breadcrumb | `traverse{parent}.map{name}.reversed().join(' / ')` |
+| Depth of a node | `traverse{parent}.length` |
+| Whether a node is under another | `traverse{parent}.has($ancestor)` |
+| Whether any ancestor is archived | `traverse{parent}.some{archived}` |
+| Leaves | `traverse{children}.filter{!children.length}` |
+
+Where a condition sits matters.  Inside the step, it prunes: a node that
+fails is neither produced nor descended into.  After the step, it filters:
+every node is visited, and only those that pass are produced.
+
+```javascript
+// prune: b fails, so b1 is never reached
+"traverse{children.filter{active}}"
+// filter: b fails but b1 is still visited, and produced if active
+"traverse{children}.filter{active}"
+```
+
+Inside the step, `^` refers to the scope enclosing the traversal, whatever
+the depth, not to the previous object.
+
+```javascript
+var view = Bindings.defineBindings({expand: true, tree: root}, {
+    visible: {"<-": "tree.traverse{^expand ? children : null}.map{name}"}
+});
+expect(view.visible).toEqual(["a", "a1", "b"]);
+
+view.expand = false;
+expect(view.visible).toEqual([]);
+```
+
+When `some`, `every` or `has` is applied directly to a `traverse` block,
+evaluation stops as soon as the answer is known.
+`traverse{parent}.has($ancestor)` stops walking up at `$ancestor` instead
+of collecting every ancestor up to the root first.  Results are the same
+as without the shortcut.  `has` compares with `Object.equals`, like
+`Array#has`.
+
+#### Cycles
+
+Cycles are cut on each path: an object that already appears among its own
+ancestors in the walk is neither produced nor followed.  So a traversal
+always ends, even over cyclic data.
+
+```javascript
+var loop = {name: "loop"};
+loop.parent = loop;
+expect(evaluate("traverse{parent}", loop)).toEqual([]);
+```
+
+Because cycles are cut per path and not globally, an object reachable by
+two paths, in a hierarchy where a node can have several parents, is
+produced once per path.  This matches PostgreSQL's
+`CYCLE ... SET ... USING ...` clause for recursive queries, so traversals
+evaluated in memory and in SQL produce the same rows.
+
+```javascript
+var shared = {name: "shared", children: []};
+var x = {name: "x", children: [shared]};
+var y = {name: "y", children: [shared]};
+var graph = {name: "graph", children: [x, y]};
+expect(evaluate("traverse{children}.map{name}", graph))
+    .toEqual(["x", "shared", "y", "shared"]);
+```
+
+#### Live updates
+
+An observed traversal produces one array that is only ever spliced, never
+replaced, like `map` and `filter`.  When a step changes anywhere in the
+hierarchy, a `parent` is reassigned or a `children` array is spliced, only
+the affected subtree is spliced in or out.  Operators stacked on top,
+like `map{name}`, update incrementally too.
+
+```javascript
+// Continued from the descendants example above...
+b.children.push({name: "b1", children: []});
+expect(outline.descendants).toEqual(["a", "a1", "b", "b1"]);
+
+root.children.splice(0, 1);
+expect(outline.descendants).toEqual(["b", "b1"]);
+```
+
+Changing the starting object or a depth argument rebuilds the content of
+the same output array.  While the starting object is `null` or
+`undefined`, the output is empty.
+
+This works with relationships that are fetched on demand.  A step that is
+`undefined` because it hasn't been fetched yet ends its branch for now,
+but stays observed.  When the data arrives and is set, the new subtree is
+spliced into the output.  A fetched relationship with nothing in it should
+be `null` (single-valued) or `[]` (multi-valued).
+
+```javascript
+var node = {name: "node"}; // parent not fetched yet
+var object = Bindings.defineBindings({node: node}, {
+    ancestors: {"<-": "node.traverse{parent}.map{name}"}
+});
+expect(object.ancestors).toEqual([]);
+
+node.parent = {name: "fetched", parent: null}; // the fetch completes
+expect(object.ancestors).toEqual(["fetched"]);
+```
+
+No step is observed beyond the maximum depth, so with
+`traverse(1){children}`, the children of the children are never
+requested.  Increasing the depth starts observing, and so fetching, the
+next level.
+
+#### Two-way bindings
+
+A traversal can take part in two-way bindings.  Whatever the binding
+writes to lands on the objects the traversal reaches.  With `every` and
+`some`, a single checkbox can check or uncheck a whole subtree,
+grandchildren included.
+
+```javascript
+// project
+// ├── design
+// │   └── sketches
+// └── build
+var sketches = {name: "sketches", done: false, children: []};
+var design = {name: "design", done: false, children: [sketches]};
+var build = {name: "build", done: true, children: []};
+var project = {name: "project", children: [design, build]};
+
+var checklist = Bindings.defineBindings({project: project}, {
+    allDone: {"<->": "project.traverse{children}.every{done}"},
+    noneDone: {"<->": "!project.traverse{children}.some{done}"}
+});
+expect(checklist.allDone).toBe(false);
+
+checklist.allDone = true;
+expect(sketches.done).toBe(true); // reached through design
+expect(checklist.noneDone).toBe(false);
+
+checklist.noneDone = true;
+expect([design.done, sketches.done, build.done])
+    .toEqual([false, false, false]);
+```
+
+The caveat described for `every` blocks applies here too: setting `allDone`
+to `false` cancels the binding but doesn't uncheck anything.
+
+A property of an object the traversal reaches can be bound both ways too.
+If the hierarchy changes, the binding moves to the new object.
+
+```javascript
+// Continued from the ancestors example at the start of this section...
+var editor = Bindings.defineBindings({node: team}, {
+    rootName: {"<->": "node.traverse{parent}.last().name"}
+});
+editor.rootName = "holding";
+expect(company.name).toBe("holding");
+```
+
+The one thing that can't be bound is the traversal's own array.  No single
+change to the graph would produce a given array, so
+`{"<->": "root.traverse{children}"}` throws.
+
 ### Reversed
 
 You can bind the reversal of an array.
@@ -2282,8 +2537,8 @@ It must prove itself worthy before it can return.
     these values.  For example, a sum is updated by decreasing by the
     sum of the values removed, and increasing by the sum of the values
     added.  FRB can incrementally update `map`, `reversed`, `flatten`,
-    `sum`, and `average` observers.  It can also incrementally update
-    `has` bindings.
+    `traverse`, `sum`, and `average` observers.  It can also
+    incrementally update `has` bindings.
 -   **unwrapped**: Rather than wrap objects and arrays with observable
     containers, FRB modifies existing arrays and objects to make them
     dispatch property and content changes.  For objects, this involves
@@ -2673,6 +2928,19 @@ available.
     positions.
 -   A "concat" function call observes a source array and all of its
     argument arrays and effectively flattens all of these arrays.
+-   A "traverse" block observes a starting value and emits a target array
+    of every value transitively reached by evaluating the block
+    expression (the step) on the starting value, then on each value it
+    produces, depth-first in pre-order.  A step may produce a single
+    value or a collection, whose elements are each followed.  `null` and
+    `undefined` end a branch.  The starting value is excluded unless the
+    minimum depth is 0.  Optional depth arguments, `traverse(max){...}`
+    or `traverse(min, max){...}`, are observed in the enclosing scope and
+    bound which depths are produced and how deep steps are observed.  A
+    value already on its own ancestor path is neither produced nor
+    followed.  Within the step, `^` refers to the scope enclosing the
+    traversal.  The target array is emitted once and updated with range
+    changes as steps change at any depth.
 -   A "reversed" function call observes the source array and produces a
     target array that contains the elements of the source array in
     reverse order.  The target is incrementally updated.
@@ -2950,6 +3218,13 @@ nodes (or an "args" object for `record`).
     shared key of every value in the equivalence class.
 -   `groupMapBlock`: has the same input semantics as `groupBlock`, but
     the output is a `Map` instance instead of an array of entries.
+-   `traverseBlock`: the first argument is the starting value, the second
+    is the step, evaluated with each traversed value as the source.
+    Optional third and fourth arguments are depth bounds, evaluated in
+    the enclosing scope: `[start, step, maxDepth]` or
+    `[start, step, minDepth, maxDepth]`.  The arguments are kept as
+    written.  Defaults (minimum 1, no maximum) are applied by the
+    compilers, so stringifying round-trips.
 -   `tuple`: has any number of arguments, each an expression to observe
     in terms of the source value.
 -   `record`: as an args object. The keys are property names for the
