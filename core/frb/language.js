@@ -17,6 +17,7 @@ var levels = exports.precedenceLevels = [
         "sortedBlock",
         "groupBlock",
         "groupMapBlock",
+        "traverseBlock",
         "with"
     ],
     ["not", "neg", "number", "parent"],

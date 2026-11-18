@@ -1,5 +1,6 @@
 
 var Observers = require("./observers"),
+    TraverseObserver = require("./traverse-observer"),
     Operators = require("./operators"),
     LITERAL = "literal",
     VALUE = "value",
@@ -50,6 +51,7 @@ var semantics = compile.semantics = {
         groupMapBlock: Observers.makeGroupMapBlockObserver,
         minBlock: Observers.makeMinBlockObserver,
         maxBlock: Observers.makeMaxBlockObserver,
+        traverseBlock: TraverseObserver.makeTraverseBlockObserver,
         min: Observers.makeMinObserver,
         max: Observers.makeMaxObserver,
         enumerate: Observers.makeEnumerationObserver,

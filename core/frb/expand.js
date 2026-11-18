@@ -51,6 +51,16 @@ expand.semantics = {
             } else {
                 return syntax;
             }
+        }],[
+        // The step is evaluated in each node's scope, so like other blocks it
+        // is left as is, but depth arguments are evaluated in the outer scope.
+        "traverseBlock", function (syntax, scope, expand) {
+            var args = syntax.args,
+                expandedArgs = [expand(args[0], scope, expand), args[1]];
+            for (var i = 2; i < args.length; i++) {
+                expandedArgs.push(expand(args[i], scope, expand));
+            }
+            return {type: syntax.type, args: expandedArgs};
         }]]),
 
     expand: function (syntax, scope, expand) {

@@ -21,9 +21,34 @@ function makeBlockStringifier(type) {
     };
 }
 
+// Blocks with arguments before their {} body: args are [input, block, ...arguments],
+// e.g. traverse(minDepth, maxDepth){step}
+function makeBlockWithArgumentsStringifier(type) {
+    return function (syntax, scope, stringifier) {
+        var args = syntax.args,
+            chain = type,
+            i, countI;
+        if (args.length > 2) {
+            chain += "(";
+            for (i = 2, countI = args.length; i < countI; i++) {
+                chain += i > 2 ? ", " : "";
+                chain += stringifier.stringifyChild(args[i], scope);
+            }
+            chain += ")";
+        }
+        chain += "{" + stringifier.stringify(args[1], scope) + "}";
+        if (args[0].type === "value") {
+            return chain;
+        } else {
+            return stringifier.stringify(args[0], scope) + "." + chain;
+        }
+    };
+}
+
 stringify.semantics = {
 
     makeBlockStringifier: makeBlockStringifier,
+    makeBlockWithArgumentsStringifier: makeBlockWithArgumentsStringifier,
 
     stringifyChild: function stringifyChild(child, scope) {
         var arg = this.stringify(child, scope);
@@ -162,6 +187,7 @@ stringify.semantics = {
         groupMapBlock: makeBlockStringifier("groupMap"),
         minBlock: makeBlockStringifier("min"),
         maxBlock: makeBlockStringifier("max"),
+        traverseBlock: makeBlockWithArgumentsStringifier("traverse"),
 
         property: function (syntax, scope, stringifier) {
             if (syntax.args[0].type === "value") {
@@ -302,4 +328,3 @@ typeToToken.forEach(function (token, type) {
         return result.trim();
     }
 });
-

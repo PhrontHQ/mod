@@ -3,6 +3,7 @@ var Object = require("../collections/shim-object");
 var Map = require("../collections/map");
 var SortedSet = require("../collections/sorted-set");
 var Operators = require("./operators");
+var Traverse = require("./traverse");
 // var Scope = require("./scope");
 var parse = require("./parse");
 
@@ -205,6 +206,24 @@ var argCompilers = {
         };
     },
 
+    // start.traverse{step}, start.traverse(max){step}, start.traverse(min, max){step}
+    // See traverse.js for the semantics shared with the observer.
+    traverseBlock: function (evaluateStart, evaluateStep, evaluateFirstDepth, evaluateSecondDepth) {
+        var evaluateTraversal = Traverse.makeTraversalEvaluator(
+            evaluateStart,
+            evaluateStep,
+            arguments.length - 2,
+            evaluateFirstDepth,
+            evaluateSecondDepth
+        );
+        return function (scope) {
+            var result = [];
+            return evaluateTraversal(scope, function (node) {
+                result.push(node);
+            }) ? result : undefined;
+        };
+    },
+
     parent: function (evaluateExpression) {
         return function (scope) {
             return evaluateExpression(scope.parent);
@@ -292,6 +311,80 @@ var argCompilers = {
 
 argCompilers.evaluate = argCompilers.path;
 
+// Compiles the {type: "traverseBlock"} syntax into a function
+// (scope, visit) -> boolean, see Traverse.makeTraversalEvaluator.
+function compileTraversal(semantics, syntax) {
+    var args = syntax.args;
+    return Traverse.makeTraversalEvaluator(
+        semantics.compile(args[0]),
+        semantics.compile(args[1]),
+        args.length - 2,
+        args.length > 2 ? semantics.compile(args[2]) : undefined,
+        args.length > 3 ? semantics.compile(args[3]) : undefined
+    );
+}
+
+// Applied directly to a traverse{} block, these stop walking as soon as their
+// result is known, instead of collecting every node first. For example
+// traverse{parent}.has($ancestor) stops at $ancestor instead of walking up to
+// the root. Results are the same as the generic versions.
+var traversalCompilers = {
+
+    someBlock: function (syntax) {
+        var evaluateTraversal = compileTraversal(this, syntax.args[0]),
+            evaluatePredicate = this.compile(syntax.args[1]);
+        return function (scope) {
+            var found = false;
+            if (!evaluateTraversal(scope, function (node) {
+                if (evaluatePredicate(scope.nest(node))) {
+                    found = true;
+                    return false;
+                }
+            })) {
+                return undefined;
+            }
+            return found;
+        };
+    },
+
+    everyBlock: function (syntax) {
+        var evaluateTraversal = compileTraversal(this, syntax.args[0]),
+            evaluatePredicate = this.compile(syntax.args[1]);
+        return function (scope) {
+            var all = true;
+            if (!evaluateTraversal(scope, function (node) {
+                if (!evaluatePredicate(scope.nest(node))) {
+                    all = false;
+                    return false;
+                }
+            })) {
+                return undefined;
+            }
+            return all;
+        };
+    },
+
+    has: function (syntax) {
+        var evaluateTraversal = compileTraversal(this, syntax.args[0]),
+            evaluateSought = this.compile(syntax.args[1]);
+        return function (scope) {
+            var sought = evaluateSought(scope),
+                found = false;
+            if (!evaluateTraversal(scope, function (node) {
+                // same equality as Array#has, used by the generic version
+                if (Object.equals(node, sought)) {
+                    found = true;
+                    return false;
+                }
+            })) {
+                return undefined;
+            }
+            return found;
+        };
+    }
+
+};
+
 var operators = Object.clone(Operators, 1);
 
 Object.addEach(operators, {
@@ -318,13 +411,21 @@ var semantics = compile.semantics = {
 
     compilers: compilers,
     argCompilers: argCompilers,
+    traversalCompilers: traversalCompilers,
     operators: operators,
 
     compile: function (syntax) {
         var compilers = this.compilers;
         var argCompilers = this.argCompilers;
         var operators = this.operators;
-        if (compilers.hasOwnProperty(syntax.type)) {
+        if (
+            syntax.args &&
+            syntax.args[0] &&
+            syntax.args[0].type === "traverseBlock" &&
+            this.traversalCompilers.hasOwnProperty(syntax.type)
+        ) {
+            return this.traversalCompilers[syntax.type].call(this, syntax);
+        } else if (compilers.hasOwnProperty(syntax.type)) {
             return compilers[syntax.type].call(this, syntax);
         } else if (argCompilers.hasOwnProperty(syntax.type)) {
             var argEvaluators = syntax.args.map(this.compile, this);

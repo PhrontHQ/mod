@@ -28,7 +28,8 @@
         "+": "toNumber",
         "-": "neg",
         "!": "not",
-        "^": "parent"
+        "^": "parent",
+        "...": "spread"
     };
 
     var BLOCKS = {
@@ -41,7 +42,14 @@
         "group": "groupBlock",
         "groupMap": "groupMapBlock",
         "min": "minBlock",
-        "max": "maxBlock"
+        "max": "maxBlock",
+        "traverse": "traverseBlock"
+    };
+
+    // Blocks accepting arguments before their {} body, with the maximum count:
+    // traverse(maxDepth){step}, traverse(minDepth, maxDepth){step}
+    var BLOCK_ARGUMENTS = {
+        "traverse": 2
     };
 
     var STATEMENTS = {
@@ -215,12 +223,18 @@ chain
     }
 
 tail
-    = name:$(word) "{" _ expression:expression _ "}" {
+    = name:$(word) args:args? "{" _ expression:expression _ "}" {
+        if (args && !(BLOCKS[name] && args.length <= (BLOCK_ARGUMENTS[name] || 0))) {
+            error(
+                "\"" + name + "\" doesn't accept " + args.length +
+                " argument(s) before a {} block"
+            );
+        }
         if (BLOCKS[name]) {
             return function (previous) {
                 return {
                     type: BLOCKS[name],
-                    args: [previous, expression]
+                    args: [previous, expression].concat(args || [])
                 };
             }
         } else if (expression.type === "value") {
@@ -338,6 +352,9 @@ value
     }
     / "^" value:value {
         return {type: "parent", args: [value]};
+    }
+    / "..." value:value {
+        return {type: "spread", args: [value]};
     }
     / "(" expression:expression ")" {
         return expression;
