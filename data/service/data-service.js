@@ -6955,7 +6955,7 @@ DataService.addClassProperties(
                                 criteriaByKey: new Map(),
                                 criteria: [],
                                 streams: [],
-                                readExpressions: [],
+                                readExpressions: undefined,
                                 referrerOperations: []/*,
                                 hints: {}*/
                             };
@@ -6989,7 +6989,15 @@ DataService.addClassProperties(
                             
                         }
                         if (query.readExpressions) {
-                            queryParts.readExpressions.push.apply(queryParts.readExpressions, query.readExpressions);
+                            let i, n;
+                            //Consider changing DataQuery.readExpressions to Set
+                            if (!queryParts.readExpressions) {
+                                queryParts.readExpressions = new Set();
+                            }
+                            for (i = 0, n = query.readExpressions.length; i < n; i++) {
+                                queryParts.readExpressions.add(query.readExpressions[i]);
+                            }
+                            // queryParts.readExpressions.push.apply(queryParts.readExpressions, query.readExpressions);
                         }
 
                         if (!this._isCombineFetchDataMicrotaskQueued) {
@@ -7070,8 +7078,8 @@ DataService.addClassProperties(
 
                 query.hints = {};
 
-                if(queryParts.readExpressions && queryParts.readExpressions.length > 0) {
-                    query.readExpressions = queryParts.readExpressions;
+                if (queryParts.readExpressions && queryParts.readExpressions.size > 0) {
+                    query.readExpressions = Array.from(queryParts.readExpressions);
                 }
 
                 if (queryParts.referrerOperations) {

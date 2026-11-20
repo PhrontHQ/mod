@@ -1605,6 +1605,25 @@ RawDataService.addClassProperties({
             //Retrieves an existing object is responsible data service is uniquing, or creates one
             object = this.getDataObject(type, rawData, dataIdentifier, context);
 
+            // RawEmbeddedValueToObjectConverter uses resolveObjectForTypeRawData to retrieve
+            // first-class objects from the embedded raw data. In cases where there is a bidirectional 
+            // relationship such as Person.child <--> Person.parent, it was overwriting complete snapshots with
+            // incomplete ones. The flow was the following
+            //  
+            // 1. Record complete snapshot for aPersonWhoIsAParent
+            // 2. Map aPersonWhoIsAParent
+            // 3. Convert aPersonWhoIsAParent.child
+            // 4. Map aPersonWhoIsAChild 
+            // 5. Convert aPersonWhoIsAChild.parent
+            // 6. Record incomplete snapshot for aPersonWhoIsAParent. It is incomplete because it is derived
+            //    from the rawData passed to map aPersonWhoIsAChild.
+            // 
+            // The check below prevents this from happening. If the snapshot already exists (meaning the one stored in step 1),
+            // then don't record another. 
+            //
+            // A better fix would be to recognize that we are nested inside the mapping for aPersonWhoIsAParent.child
+            // and prevent the re-mapping of aPersonWhoIsAChild.parent
+
             if (this._snapshot.get(dataIdentifier)) {
                 return Promise.resolve(object);
             }
