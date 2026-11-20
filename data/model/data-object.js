@@ -337,6 +337,9 @@ exports.DataObject = class DataObject extends Target {
         if (this.publicationDate) {
             serializer.setProperty("publicationDate", this.publicationDate);
         }
+        if (this.dataIdentifier) {
+            serializer.setProperty("dataIdentifier", this.dataIdentifier);
+        }
     }
 
     //     serializeSelf(serializer) {
