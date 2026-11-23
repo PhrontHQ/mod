@@ -73,16 +73,48 @@
                 position: relative;
                 flex: 1;
                 justify-content: space-around;
-                /* mask-image: linear-gradient(to right, 
-                    transparent 0%, 
-                    black 5%, 
-                    black 95%, 
-                    transparent 100%);
-                -webkit-mask-image: linear-gradient(to right, 
-                    transparent 0%, 
-                    black 5%, 
-                    black 95%, 
-                    transparent 100%); */
+                /* No mask by default */
+                mask-image: none;
+                -webkit-mask-image: none;
+
+                /* Show both fades when scrollable in both directions */
+                &.mod--scrollable-both {
+                    mask-image: linear-gradient(to right, 
+                        transparent 0%, 
+                        black 5%, 
+                        black 95%, 
+                        transparent 100%);
+                    -webkit-mask-image: linear-gradient(to right, 
+                        transparent 0%, 
+                        black 5%, 
+                        black 95%, 
+                        transparent 100%);
+                }
+
+                /* Show only right fade when at start */
+                &.mod--scrollable-end {
+                    mask-image: linear-gradient(to right, 
+                        black 0%, 
+                        black 95%, 
+                        transparent 100%);
+                    -webkit-mask-image: linear-gradient(to right, 
+                        black 0%, 
+                        black 95%, 
+                        transparent 100%);
+                }
+
+                /* Show only left fade when at end */
+                &.mod--scrollable-start {
+                    mask-image: linear-gradient(to right, 
+                        transparent 0%, 
+                        black 5%, 
+                        black 100%);
+                    -webkit-mask-image: linear-gradient(to right, 
+                        transparent 0%, 
+                        black 5%, 
+                        black 100%);
+                }
+
 
 
                 > .ModSegmentedControl-segment {

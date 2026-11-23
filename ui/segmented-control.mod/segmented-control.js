@@ -85,10 +85,56 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             },
         });
         this.element?.classList.remove("mod--readyForAnimation");
+        
+        // Add scroll listener to detect overflow and show/hide fade
+        const segmentsElement = this.element.querySelector(".ModSegmentedControl-segments");
+        if (segmentsElement) {
+            this._handleSegmentsScroll = this._handleSegmentsScroll.bind(this);
+            segmentsElement.addEventListener("scroll", this._handleSegmentsScroll);
+            // Check initial scroll state
+            this._handleSegmentsScroll();
+        }
     }
+    
     exitDocument() {
         this.removePathChangeListener("_selectedOption", this);
         this._cancelHandleOptionsChange?.();
+        
+        // Remove scroll listener
+        const segmentsElement = this.element.querySelector(".ModSegmentedControl-segments");
+        if (segmentsElement && this._handleSegmentsScroll) {
+            segmentsElement.removeEventListener("scroll", this._handleSegmentsScroll);
+        }
+    }
+
+    _handleSegmentsScroll() {
+        const segmentsElement = this.element.querySelector(".ModSegmentedControl-segments");
+        if (!segmentsElement) return;
+        
+        const isScrollable = segmentsElement.scrollWidth > segmentsElement.clientWidth;
+        const isAtStart = segmentsElement.scrollLeft === 0;
+        const isAtEnd = segmentsElement.scrollLeft + segmentsElement.clientWidth >= segmentsElement.scrollWidth - 1;
+        
+        // Show mask if scrollable and not at start or not at end
+        if (isScrollable && !isAtStart && !isAtEnd) {
+            // Show both fades
+            segmentsElement.classList.add("mod--scrollable-both");
+            segmentsElement.classList.remove("mod--scrollable-end");
+            segmentsElement.classList.remove("mod--scrollable-start");
+        } else if (isScrollable && isAtStart && !isAtEnd) {
+            // Show only right fade
+            segmentsElement.classList.add("mod--scrollable-end");
+            segmentsElement.classList.remove("mod--scrollable-both");
+            segmentsElement.classList.remove("mod--scrollable-start");
+        } else if (isScrollable && !isAtStart && isAtEnd) {
+            // Show only left fade
+            segmentsElement.classList.add("mod--scrollable-start");
+            segmentsElement.classList.remove("mod--scrollable-both");
+            segmentsElement.classList.remove("mod--scrollable-end");
+        } else {
+            // No fade needed
+            segmentsElement.classList.remove("mod--scrollable-both", "mod--scrollable-start", "mod--scrollable-end");
+        }
     }
 
     handleChange(event) {
