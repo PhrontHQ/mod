@@ -45,7 +45,6 @@
                 border: 2px solid var(--visual-style-control-border-color);
                 box-sizing: border-box;
                 box-shadow: var(--visual-style-control-thumb-shadow); /** TODO Incorporate into visual-style? **/
-                z-index: 1;
                 pointer-events: none;
                 height: calc(100% - var(--mod-segmented-control-padding) * 2);
                 opacity: 0;
