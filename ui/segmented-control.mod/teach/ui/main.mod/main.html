@@ -10,7 +10,13 @@
                     "values": {
                         "element": {"#": "main"},
                         "visualStyle": {"@": "visualStyle"}
-                    }
+                    },
+                    "listeners": [
+                        {
+                            "type": "action",
+                            "listener": {"@": "owner"}
+                        }
+                    ]
                 },
                 "visualStyle": {
                     "prototype": "mod/ui/visual-style.mod",
@@ -136,6 +142,46 @@
                         "element": {"#": "responsiveSegmentedControlSegment"},
                         "value": {"<-": "@responsiveSegmentedControl:segment.object"}
                     }
+                },
+                "dynamicSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "dynamicSegmentedControl"},
+                        "options": {"<-": "@owner.dynamicOptions"},
+                        "selection": {"<->": "@owner.dynamicSelection"}
+                    }
+                },
+                "dynamicSegmentedControlSegment": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "dynamicSegmentedControlSegment"},
+                        "value": {"<-": "@dynamicSegmentedControl:segment.object"}
+                    }
+                },
+                "dynamicSegmentedControlDetails": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "dynamicSegmentedControlDetails"},
+                        "value": {
+                            "<-": "@owner.dynamicOptions.length + \" options — selected: \" + @owner.dynamicSelection"
+                        }
+                    }
+                },
+                "addDynamicOptionButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "addDynamicOptionButton"},
+                        "identifier": "addDynamicOption",
+                        "label": "+ Add option"
+                    }
+                },
+                "removeDynamicOptionButton": {
+                    "prototype": "mod/ui/button.mod",
+                    "values": {
+                        "element": {"#": "removeDynamicOptionButton"},
+                        "identifier": "removeDynamicOption",
+                        "label": "− Remove option"
+                    }
                 }
             }
         </script>
@@ -207,6 +253,27 @@
                     <label>Resize the window to see responsiveness:</label>
                     <div data-mod-id="responsiveSegmentedControl" class="flexible">
                         <div data-mod-id="responsiveSegmentedControlSegment"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Options & Horizontal Scroll -->
+            <div class="card column stretch">
+                <h2>Dynamic Options & Horizontal Scroll</h2>
+                <p class="hint">
+                    The options are added and removed at runtime. When there isn't enough space to
+                    comfortably display them all, the segments can be scrolled horizontally, and the
+                    thumb stays on the selected segment while scrolling. Selecting an option that is
+                    partially out of view scrolls it fully into view.
+                </p>
+                <div data-mod-id="dynamicSegmentedControl" class="flexible constrained">
+                    <div data-mod-id="dynamicSegmentedControlSegment"></div>
+                </div>
+                <div class="row">
+                    <div data-mod-id="addDynamicOptionButton"></div>
+                    <div data-mod-id="removeDynamicOptionButton"></div>
+                    <div class="details">
+                        <small><span data-mod-id="dynamicSegmentedControlDetails"></span></small>
                     </div>
                 </div>
             </div>

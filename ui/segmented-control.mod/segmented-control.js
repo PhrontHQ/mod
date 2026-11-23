@@ -18,6 +18,10 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
             // Controls whether animations should be enabled
             _shouldEnableAnimation: { value: false },
             _isChangingSelection: { value: false },
+            // Store the previously selected segment element
+            _previouslySelectedSegmentElement: { value: null },
+
+            _finishedInitialDraw: { value: false },
             /**
              * The path to the value within each option object.
              * If options are simple values, use 'this'.
@@ -119,7 +123,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         this.element?.classList.add("mod--readyForAnimation");
         this._readyForAnimation = true;
         // Listen for transition end to disable animations
-        this.thumbElement?.addEventListener("transitionend", this.handleTransitionEnd, { once: true });
+        this.thumbElement.addEventListener("transitionend", this.handleTransitionEnd, { once: true });
         this.needsDraw = true;
     }
 
@@ -131,6 +135,14 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         const segmentsElement = event.target;
         segmentsElement.removeEventListener("firstDraw", this.handleSegmentsFirstDraw, false);
         this.needsDraw = true;
+        // if(this.selection){
+        //      const { segments = {} } = this.templateObjects ?? {};
+        //     const { selectedIterations = [] } = segments ?? {};
+        //     const [selectedIteration] = selectedIterations;
+        //     const segmentElement = selectedIteration.firstElement;
+        //     this._moveThumbToSegment(segmentElement);
+        //     segmentElement.classList.add("mod--active");
+        // }
     };
 
     draw() {
@@ -145,11 +157,17 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
 
             if (selectedIteration) {
                 const segmentElement = selectedIteration.firstElement;
-                this._moveThumbToSegment(segmentElement);
-                this.thumbElement.style.display = "block";
+                // this._moveThumbToSegment(segmentElement);
+                this._animateThumbToSelection(segmentElement);
+                if (!this._finishedInitialDraw) {
+                    this._moveThumbToSegment(segmentElement);
+                     segmentElement.classList.add("mod--active");
+                    this._finishedInitialDraw = true;
+                }
             } else {
                 // If no segment is selected, hide the thumb
-                this.thumbElement.style.display = "none";
+                this.thumbElement.style.opacity = "0";
+                this._previouslySelectedSegmentElement = null;
             }
         } else {
             // Wait for the inner repetition segments to be drawn, before moving the thumb
@@ -158,15 +176,104 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
     }
 
     /**
-     * Handles the end of thumb transition animations
+     * Animates the thumb through a sequence of steps when selection changes
+     * @private
+     * @param {HTMLElement} newSegmentElement - The DOM element of the newly selected segment
      */
-    handleTransitionEnd = (_event) => {
-        if (this._isChangingSelection) {
-            this.element?.classList.remove("mod--readyForAnimation");
-            this._readyForAnimation = false;
-            this._isChangingSelection = false;
+    _animateThumbToSelection(newSegmentElement) {
+        if (!newSegmentElement || !this.thumbElement) return;
+
+        if (this._isChangingSelection && this._previouslySelectedSegmentElement) {
+            // Sequence: invisible → position at old → visible → remove old highlight → slide → add new highlight → invisible
+            this._executeSelectionAnimationSequence(newSegmentElement);
+        } else {
+            this._previouslySelectedSegmentElement = newSegmentElement;
         }
-    };
+    }
+
+    /**
+     * Executes the animation sequence for selection change
+     * @private
+     * @param {HTMLElement} newSegmentElement - The newly selected segment
+     */
+    _executeSelectionAnimationSequence(newSegmentElement) {
+        const oldSegmentElement = this._previouslySelectedSegmentElement;
+        // if (!oldSegmentElement) return;
+        // Step 1: Make thumb invisible (already invisible on initial state)
+        this.thumbElement.style.opacity = "0";
+        this.thumbElement.classList.remove("mod--animating");
+
+        requestAnimationFrame(() => {
+            // Step 2: Move thumb to old selection position (invisible)
+            this._moveThumbToSegment(oldSegmentElement);
+
+            requestAnimationFrame(() => {
+                // Step 3: Make thumb visible
+                this.thumbElement.style.opacity = "1";
+
+                requestAnimationFrame(() => {
+                    // Step 4: Remove highlighting from old selection
+                    oldSegmentElement.classList.remove("mod--active");
+
+                    requestAnimationFrame(() => {
+                        // Step 5: Enable transition FIRST by adding class
+                        this.thumbElement.classList.add("mod--animating");
+
+                        requestAnimationFrame(() => {
+                            // Step 5b: NOW move thumb to new selection (this will be transitioned)
+                            this._moveThumbToSegment(newSegmentElement);
+
+                            // Step 6 & 7: Add highlighting to new selection (happens during animation)
+
+                            // Track if we've already cleaned up to avoid double execution
+                            let hasCompletedAnimation = false;
+
+                            const handleAnimationEnd = (event) => {
+                                if (!hasCompletedAnimation) {
+                                    hasCompletedAnimation = true;
+                                    cleanup();
+                                }
+                            };
+
+                            const cleanup = () => {
+                                // newSegmentElement.addEventListener("transitionend", handleSegmentTransitionEnd);
+                                // Add the active class FIRST, synchronously
+                                newSegmentElement.classList.add("mod--active");
+                                this._completeThumbAnimation();
+                                this.thumbElement.removeEventListener("animationend", handleAnimationEnd);
+                                
+                                // Wait for the segment's styling to complete before hiding thumb
+                                const handleSegmentTransitionEnd = () => {
+                                    console.log("Transition ended for segment:", newSegmentElement);
+                                    newSegmentElement.removeEventListener("transitionend", handleSegmentTransitionEnd);
+                                };
+                                
+                                newSegmentElement.addEventListener("transitionend", handleSegmentTransitionEnd);
+                            };
+
+                            // Listen for animation end
+                            this.thumbElement.addEventListener("animationend", handleAnimationEnd);
+                        });
+                    });
+                });
+            });
+        });
+
+        this._previouslySelectedSegmentElement = newSegmentElement;
+    }
+
+    /**
+     * Completes the thumb animation by hiding it and cleaning up state
+     * @private
+     */
+    _completeThumbAnimation() {
+        // Step 8: Make thumb invisible
+        this.thumbElement.style.opacity = "0";
+        this.thumbElement.classList.remove("mod--animating");
+        this.element?.classList.remove("mod--readyForAnimation");
+        this._readyForAnimation = false;
+        this._isChangingSelection = false;
+    }
 
     /**
      * Moves the thumb element to match the position and size of the selected segment
@@ -179,7 +286,8 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
         // 1. --- BATCH READS ---
         // Read all required properties from the DOM at once.
         const { offsetHeight: height, offsetWidth: width, offsetLeft: left } = segmentElement;
-
+        const newRect = segmentElement.getBoundingClientRect();
+        const parentRect = segmentElement.parentElement.getBoundingClientRect();
         if (width === 0 || height === 0) {
             console.warn("Segment element has zero width or height, cannot position thumb.");
             return;
@@ -187,9 +295,9 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
 
         // 2. --- BATCH WRITES ---
         // Apply all style changes to the thumb element at once.
-        this.thumbElement.style.height = `${height}px`;
-        this.thumbElement.style.width = `${width}px`;
-        this.thumbElement.style.transform = `translate3d(${left}px, 0, 0)`;
+        this.thumbElement.style.height = `${newRect.height}px`;
+        this.thumbElement.style.width = `${newRect.width}px`;
+        this.thumbElement.style.transform = `translate3d(${newRect.left - parentRect.left}px, 0, 0)`;
     }
 
     /**

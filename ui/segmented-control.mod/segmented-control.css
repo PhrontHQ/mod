@@ -16,6 +16,11 @@
     --mod-segment-active-text: rgba(0, 0, 0, 1);
 }
 
+@keyframes thumbSlide {
+    0% { opacity: 1; }
+    100% { opacity: 1; }
+}
+
 @scope (.ModSegmentedControl) {
     :scope {
         display: flex;
@@ -28,12 +33,14 @@
             position: relative;
             flex: 1;
             border-radius: var(--visual-style-control-border-radius);
+            max-width: 100%;
 
             > .ModSegmentedControl-thumb {
                 position: absolute;
                 top: var(--mod-segmented-control-padding);
                 left: var(--mod-segmented-control-padding);
                 background: var(--visual-style-control-selection-fill);
+                /* background: red; */
                 backdrop-filter: blur(10px);
                 border: 2px solid var(--visual-style-control-border-color);
                 box-sizing: border-box;
@@ -41,16 +48,35 @@
                 z-index: 1;
                 pointer-events: none;
                 height: calc(100% - var(--mod-segmented-control-padding) * 2);
+                opacity: 0;
+                /* z-index: 10; */
+            }
+
+            > .ModSegmentedControl-thumb.mod--animating {
+                transition: var(--mod-segmented-control-thumb-transition);
+                animation: thumbSlide 0.35s cubic-bezier(0.375, 0.075, 0, 1.115) forwards;
             }
 
             > .ModSegmentedControl-segments {
                 display: flex;
                 flex-direction: row;
                 flex-wrap: nowrap;
-                overflow: hidden;
+                overflow-x: auto;
+                overflow-y: hidden;
                 position: relative;
                 flex: 1;
                 justify-content: space-around;
+                /* mask-image: linear-gradient(to right, 
+                    transparent 0%, 
+                    black 5%, 
+                    black 95%, 
+                    transparent 100%);
+                -webkit-mask-image: linear-gradient(to right, 
+                    transparent 0%, 
+                    black 5%, 
+                    black 95%, 
+                    transparent 100%); */
+
 
                 > .ModSegmentedControl-segment {
                     flex: 1;
@@ -73,6 +99,7 @@
                     font-family: inherit;
                     font-size: 1rem;
                     gap: 0.5rem;
+                    transition: background-color 0.01s;
 
                     &:hover:not(.mod--selected) {
                         background-color: var(--visual-style-control-hover-fill);
@@ -84,9 +111,14 @@
                         color: var(--mod-segment-active-text);
                     }
 
-                    &.mod--selected {
+                    /* &.mod--selected {
                         color: var(--visual-style-text-fill);
-                    }
+                        background-color: var(--visual-style-control-selection-fill); 
+                    } */
+
+                    &.mod--active {
+                        background-color: var(--visual-style-control-selection-fill);
+                    }       
 
                     > * {
                         pointer-events: none;
