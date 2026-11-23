@@ -240,15 +240,7 @@ const SegmentedControl = (exports.SegmentedControl = class SegmentedControl exte
                                 // Add the active class FIRST, synchronously
                                 newSegmentElement.classList.add("mod--active");
                                 this._completeThumbAnimation();
-                                this.thumbElement.removeEventListener("animationend", handleAnimationEnd);
-                                
-                                // Wait for the segment's styling to complete before hiding thumb
-                                const handleSegmentTransitionEnd = () => {
-                                    console.log("Transition ended for segment:", newSegmentElement);
-                                    newSegmentElement.removeEventListener("transitionend", handleSegmentTransitionEnd);
-                                };
-                                
-                                newSegmentElement.addEventListener("transitionend", handleSegmentTransitionEnd);
+                                this.thumbElement.removeEventListener("animationend", handleAnimationEnd);                                
                             };
 
                             // Listen for animation end
