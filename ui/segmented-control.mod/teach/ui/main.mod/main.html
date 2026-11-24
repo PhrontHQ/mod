@@ -127,6 +127,31 @@
                         "value": {"<-": "@iconSegmentedControl.selection"}
                     }
                 },
+                "labeledVisualSegmentedControl": {
+                    "prototype": "mod/ui/segmented-control.mod",
+                    "values": {
+                        "element": {"#": "labeledVisualSegmentedControl"},
+                        "options": {"<-": "@owner.labeledVisualOptions"},
+                        "selection": "Apple",
+                        "valuePath": "label"
+                    }
+                },
+                "labeledVisualSegmentedControlSegment": {
+                    "prototype": "mod/ui/labeled-visual.mod",
+                    "values": {
+                        "element": {"#": "labeledVisualSegmentedControlSegment"},
+                        "label": {"<-": "@labeledVisualSegmentedControl:segment.object.label"},
+                        "visual": {"<-": "@labeledVisualSegmentedControl:segment.object.visual"},
+                        "visualPosition": "start"
+                    }
+                },
+                "labeledVisualSegmentedControlSegmentSelectedOption": {
+                    "prototype": "mod/ui/text.mod",
+                    "values": {
+                        "element": {"#": "labeledVisualSegmentedControlSegmentSelectedOption"},
+                        "value": {"<-": "@labeledVisualSegmentedControl.selection"}
+                    }
+                },
                 "responsiveSegmentedControl": {
                     "prototype": "mod/ui/segmented-control.mod",
                     "values": {
@@ -241,6 +266,23 @@
                     <div class="details">
                         <small
                             >Selected option:&nbsp;<span data-mod-id="iconSegmentedControlSegmentSelectedOption"></span
+                        ></small>
+                    </div>
+                </div>
+            </div>
+
+
+             <!-- Labeled Visual Segmented Control -->
+            <div class="card column stretch">
+                <h2>Labeled Visual Segmented Control</h2>
+                <div class="row center">
+                    <label>With Labeled Visual:</label>
+                    <div data-mod-id="labeledVisualSegmentedControl" class="flexible">
+                        <div data-mod-id="labeledVisualSegmentedControlSegment"></div>
+                    </div>
+                    <div class="details">
+                        <small
+                            >Selected option:&nbsp;<span data-mod-id="labeledVisualSegmentedControlSegmentSelectedOption"></span
                         ></small>
                     </div>
                 </div>

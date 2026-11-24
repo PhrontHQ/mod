@@ -8,6 +8,13 @@ exports.Main = class Main extends Component {
         { label: "Monthly", value: "monthly" },
     ];
 
+    labeledVisualOptions = [
+        { label: "Apple", visual: "assets/apple.svg"},
+        { label: "Banana", visual: "assets/banana.svg"},
+        { label: "Grappe", visual: "assets/grappe.svg" },
+    ];
+    labeledVisualSelection = "option1";
+
     dynamicOptions = [
         "Lychee",
         "Papaya",
