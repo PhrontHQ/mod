@@ -75,6 +75,10 @@
                 /* No mask by default */
                 mask-image: none;
                 -webkit-mask-image: none;
+                
+                &::-webkit-scrollbar {
+                    display: none;
+                }
 
                 /* Show both fades when scrollable in both directions */
                 &.mod--scrollable-both {
